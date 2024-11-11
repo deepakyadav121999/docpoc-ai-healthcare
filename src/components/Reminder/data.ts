@@ -1,16 +1,15 @@
-
 const columns = [
-  {name: "NAME", uid: "name", sortable: true},
-  {name: "ENABLED ON", uid: "createdOn", sortable: true},
-  {name: "TOTAL TRIGGERS", uid: "totalTriggers", sortable: true},
-  {name: "ACTIVATED CHANNEL", uid: "channels"},
-  {name: "STATUS", uid: "status", sortable: true},
+  { name: "NAME", uid: "name", sortable: true },
+  { name: "ENABLED ON", uid: "createdOn", sortable: true },
+  { name: "TOTAL TRIGGERS", uid: "totalTriggers", sortable: true },
+  { name: "ACTIVATED CHANNEL", uid: "channels" },
+  { name: "STATUS", uid: "status", sortable: true },
 ];
 
 const statusOptions = [
-  {name: "Active", uid: "active"},
-  {name: "No Patient assigned", uid: "noPatientAssigned"},
-  {name: "Inactive", uid: "inactive"},
+  { name: "Active", uid: "active" },
+  { name: "No Patient assigned", uid: "noPatientAssigned" },
+  { name: "Inactive", uid: "inactive" },
 ];
 
 const users = [
@@ -56,4 +55,4 @@ const users = [
   },
 ];
 
-export {columns, users, statusOptions};
+export { columns, users, statusOptions };

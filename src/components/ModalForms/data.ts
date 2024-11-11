@@ -27,7 +27,7 @@ export const users = [
     key: "5",
     date: "30th March, 2023",
     doctor: "Dr. Haathi",
-    report:"https://cdn1.lalpathlabs.com/live/reports/WM17S.pdf",
+    report: "https://cdn1.lalpathlabs.com/live/reports/WM17S.pdf",
   },
   {
     key: "6",
@@ -40,5 +40,5 @@ export const users = [
     date: "30 Dec, 2023",
     doctor: "Dr. Fate",
     report: "https://cdn1.lalpathlabs.com/live/reports/WM17S.pdf",
-  }
+  },
 ];

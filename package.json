@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
     "@internationalized/date": "^3.5.4",
@@ -51,10 +51,13 @@
     "@types/react-modal": "^3.16.3",
     "@types/react-table": "^7.7.19",
     "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.1.0",
+    "eslint-config-next": "^15.0.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-tailwindcss": "^3.17.5",
     "postcss": "^8",
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
