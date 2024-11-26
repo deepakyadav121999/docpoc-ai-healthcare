@@ -171,23 +171,7 @@ export default function App() {
     );
   };
 
-  const ManageAccess = () => {
-    return <UserAccess/>;
-  };
-
-  const Details = () => {
-    return <DataTable />;
-  };
-
-  const tabKeys = {
-    Overview: { name: "Overview", screen: <OverView /> },
-    Details: { name: "Details", screen: <Details /> },
-    CreateEntry: { name: "Manage Access", screen: <ManageAccess /> },
-  };
-
   return (
-    // <div className="flex justify-center w-full px-4">
-      <TabDefault options={tabKeys} color={TOOL_TIP_COLORS.primary} />
-    // </div>
+    <OverView />
   );
 }

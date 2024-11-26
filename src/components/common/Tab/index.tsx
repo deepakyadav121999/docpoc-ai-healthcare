@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import { Tabs, Tab } from "@nextui-org/react";
 import { TOOL_TIP_COLORS } from "@/constants";
