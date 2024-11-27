@@ -18,10 +18,13 @@ const current = ROUTES.PAYMENT_DETAILS
 const Paymentdetail = () => {
   return (
     <DefaultLayout>
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl ">
         <Breadcrumb pageName="Payment" />
         <TabDefaultWithRoute current={current} options={PAYMENT_TAB_KEY} color={TOOL_TIP_COLORS.primary}/>
-       <PaymentDetails/>
+        <div className="mt-2">
+        <PaymentDetails/>
+        </div>
+       
       </div>
     </DefaultLayout>
   );
