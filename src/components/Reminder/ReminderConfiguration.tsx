@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { Accordion, AccordionItem, Avatar } from "@nextui-org/react";
 import ConfigTypes from "./ConfigTypes";

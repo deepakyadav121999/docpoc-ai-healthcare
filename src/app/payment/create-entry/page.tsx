@@ -1,27 +1,30 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import Reminder from "@/components/Reminder";
-import TabDefaultWithRoute from "@/components/common/TabWithRoute";
-import { REMINDER_TAB_KEYS } from "./routes";
-import { TOOL_TIP_COLORS } from "@/constants";
+import Payment from "@/components/Payments";
 import { ROUTES } from "@/constants/routes";
+import TabDefaultWithRoute from "@/components/common/TabWithRoute";
+import { PAYMENT_TAB_KEY } from "../routes";
+import { TOOL_TIP_COLORS } from "@/constants";
+import PaymentEntry from "@/components/Payments/PaymentEntry";
+
 export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
 };
-const current = ROUTES.REMINDER_OVERVIEW
+const current = ROUTES.PAYMENT_ENTRY
 
-const RemindersPage = () => {
+
+const PaymentEntrys = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="Reminder Notifications" />
-        <TabDefaultWithRoute current={current}  options={REMINDER_TAB_KEYS} color={TOOL_TIP_COLORS.primary}/>
-        <Reminder />
+        <Breadcrumb pageName="Payment" />
+        <TabDefaultWithRoute current={current} options={PAYMENT_TAB_KEY} color={TOOL_TIP_COLORS.primary}/>
+        <PaymentEntry />
       </div>
     </DefaultLayout>
   );
 };
 
-export default RemindersPage;
+export default PaymentEntrys;

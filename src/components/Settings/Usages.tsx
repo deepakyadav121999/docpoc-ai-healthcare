@@ -1,30 +1,16 @@
 "use client";
-import {
-  Autocomplete,
-  AutocompleteItem,
-  Button,
-  Checkbox,
-  CheckboxGroup,
-  Input,
-  Switch,
-  Textarea,
-  TimeInput,
-} from "@nextui-org/react";
-import { useState } from "react";
+
 import {
   GLOBAL_ACTION_ICON_COLOR,
   GLOBAL_DANGER_COLOR,
-  GLOBAL_ICON_COLOR,
-  TOOL_TIP_COLORS,
+  
 } from "@/constants";
-import { SVGIconProvider } from "@/constants/svgIconProvider";
-import { Time } from "@internationalized/date";
+
 import React from "react";
-import { IndianStatesList } from "@/constants/IndiaStates";
-import { medicalDepartments } from "@/constants/MedicalDepartments";
+
 import ChartCircular from "../Charts/ChartCircular";
 import { ApexOptions } from "apexcharts";
-import HighlightedText from "../common/HighLightedText";
+
 
 const Usages = () => {
   const series = [50, 200];

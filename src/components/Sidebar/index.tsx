@@ -21,12 +21,12 @@ const menuGroups = [
       {
         icon: <SVGIconProvider iconName="calendar" />,
         label: "Appointments",
-        route: "/appointment",
+        route: "/appointment/calendar",
       },
       {
         icon: <SVGIconProvider iconName="rupee" />,
         label: "Payments",
-        route: "/payment",
+        route: "/payment/overview",
       },
       {
         icon: <SVGIconProvider iconName="patient" />,

@@ -3,11 +3,14 @@ import React from "react";
 import { Tabs, Tab } from "@nextui-org/react";
 import { TOOL_TIP_COLORS } from "@/constants";
 
+
 export default function TabDefault(props: {
   color: TOOL_TIP_COLORS;
-  options: { [key: string]: { name: string; screen: any } };
+  options: { [key: string]: { name: string; screen: any} };
   itemsArray?: any[];
 }) {
+ 
+  
   return (
     <div className="flex flex-wrap gap-4 justify-center w-full px-4">
       <Tabs

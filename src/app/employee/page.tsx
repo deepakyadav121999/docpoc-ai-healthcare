@@ -3,7 +3,7 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import AppointmentCalendar from "@/components/BookingCalendar/AppointmentCalendar";
+
 import { TOOL_TIP_COLORS } from "@/constants";
 import TabDefaultWithRoute from "@/components/common/TabWithRoute";
 import { ROUTES } from "@/constants/routes";

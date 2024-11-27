@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import { TOOL_TIP_COLORS } from "@/constants";
+
 import DataStatsOne from "../DataStats/DataStatsOne";
-import TabDefault from "../common/Tab";
+
 import ChartLine from "../Charts/ChartLine";
 import { ApexOptions } from "apexcharts";
 
@@ -136,23 +136,16 @@ export default function App() {
     );
   };
 
-  const CreateEntry = () => {
-    return <></>;
-  };
+ 
 
-  const Details = () => {
-    return <DataStatsOne />;
-  };
+  
 
-  const tabKeys = {
-    Overview: { name: "Overview", screen: <OverView /> },
-    CreateEntry: { name: "Create Entry", screen: <CreateEntry /> },
-    Details: { name: "Details", screen: <Details /> },
-  };
+
 
   return (
     <div className="flex justify-center w-full px-4">
-      <TabDefault options={tabKeys} color={TOOL_TIP_COLORS.primary} />
+      
+      <OverView/>
     </div>
   );
 }
