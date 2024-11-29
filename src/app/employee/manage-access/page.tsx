@@ -18,11 +18,13 @@ const current = ROUTES.EMPLOYEE_MANAGE_ACCESS;
 const EmployeePage = () => {
   return (
     <DefaultLayout>
-      <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="employee/manage-access" />
+      <div className="mx-auto max-w-7xl ">
+        <Breadcrumb pageName="employee/manage-access " />
         <TabDefaultWithRoute current={current} color={TOOL_TIP_COLORS.primary} options={EMPLOYEE_TAB_KEYS}/>
-
-        <UserAccess/>
+  <div className="mt-2">
+  <UserAccess/>
+  </div>
+        
       </div>
     </DefaultLayout>
   );

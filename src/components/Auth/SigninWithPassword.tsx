@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { AuthData, UserSignIn } from "@/api/auth";
 import StyledButton from "../common/Button/StyledButton";
-
+import axios from 'axios';
 export default function SigninWithPassword() {
   const [data, setData] = useState({
     remember: false,
@@ -17,27 +17,41 @@ export default function SigninWithPassword() {
   const [errors, setShowErrors] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function handleSignIn(event: any) {
+ 
+
+  async function handleSignIn(event: React.FormEvent) {
     event.preventDefault();
     if (!email || !password) return;
+    
     setLoading(true);
-    const authData = AuthData();
-    const signInRequest = await UserSignIn({ email, password }, authData);
-    setLoading(false);
-    if (!signInRequest.access_token) {
-      const errorMessage = "Invalid email or password!";
-      setError(errorMessage);
+    setError('');
+    
+    try {
+      const response = await axios.post('http://127.0.0.1:3037/DocPOC/v1/auth/login', {
+        username: email,  
+        password: password,
+      });
+      
+      const { access_token } = response.data;
+      
+      if (access_token && access_token.length > 5) {
+        localStorage.setItem("docPocAuth_token", access_token);
+        window.location.reload();
+      } else {
+        throw new Error('Invalid token received');
+      }
+    } catch (error) {
+      setError("Invalid email or password!");
       setShowErrors(true);
       setTimeout(() => {
         setError("");
         setShowErrors(false);
       }, 8000);
-    }
-    if (signInRequest.access_token && signInRequest.access_token.length > 5) {
-      localStorage.setItem("docPocAuth_token", signInRequest.access_token);
-      window.location.reload();
+    } finally {
+      setLoading(false);
     }
   }
+  
 
   const ErrorMessages = () => {
     return (

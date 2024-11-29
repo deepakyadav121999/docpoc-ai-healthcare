@@ -5,7 +5,7 @@ import AppointmentCalendar from "@/components/BookingCalendar/AppointmentCalenda
 import { TOOL_TIP_COLORS } from "@/constants";
 import TabDefaultWithRoute from "@/components/common/TabWithRoute";
 import { ROUTES } from "@/constants/routes";
-import { APPOINTMENT_TAB_KEYS } from "../routes";
+import { APPOINTMENT_TAB_KEYS } from "./routes";
 
 export const metadata: Metadata = {
   title: "DocPOC.",
@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 const current = ROUTES.APPOINTMENT;
 const Appointments = () => {
+
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">

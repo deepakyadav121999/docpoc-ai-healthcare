@@ -40,7 +40,7 @@ const General = () => {
     setEdit(!edit);
   };
   return (
-    <div className="grid grid-cols-1 gap-9">
+    <div className="grid grid-cols-1 gap-9 m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">

@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 export const AppointmentCalendar: React.FC = () => {
+  const router = useRouter();
   const [currentView, setCurrentView] = useState<"month" | "week" | "day">(
     "month"
   );
@@ -188,6 +189,7 @@ export const AppointmentCalendar: React.FC = () => {
   };
 
   const openModal = (timestamp: number, hasBooking: boolean) => {
+    router.push("/appointment/add")
     setModalVisible(true);
     const date = new Date(timestamp);
     setModalData({ date, hasBooking });

@@ -1,16 +1,14 @@
 "use client";
 import React from "react";
-import { GLOBAL_ICON_COLOR_WHITE, TOOL_TIP_COLORS } from "@/constants";
-import DataStatsOne from "../DataStats/DataStatsOne";
-import TabDefault from "../common/Tab";
+import { GLOBAL_ICON_COLOR_WHITE} from "@/constants";
+
 import ChartLine from "../Charts/ChartLine";
-import DataTable from "./DataTable";
+
 import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { ApexOptions } from "apexcharts";
-import UserGroup from "./UserGroup";
-import UserAccess from "./UserAccess";
+
 
 export default function App() {
   const dataStatsList: dataStatsDefault[] = [
@@ -160,7 +158,7 @@ export default function App() {
   
   const OverView = () => {
     return (
-      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full m-1">
         <div className="flex flex-col w-full">
           <DataStatsDefault dataStatsList={dataStatsList} />
         </div>

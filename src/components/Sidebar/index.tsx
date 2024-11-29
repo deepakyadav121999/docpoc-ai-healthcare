@@ -21,7 +21,7 @@ const menuGroups = [
       {
         icon: <SVGIconProvider iconName="calendar" />,
         label: "Appointments",
-        route: "/appointment/calendar",
+        route: "/appointment",
       },
       {
         icon: <SVGIconProvider iconName="rupee" />,
@@ -68,12 +68,12 @@ const menuGroups = [
       {
         icon: <SVGIconProvider iconName="pie-circle" />,
         label: "Clinic/Hospital",
-        route: "/",
+        route: "/clinic",
       },
       {
         icon: <SVGIconProvider iconName="sign-out" />,
         label: "Sign Out",
-        route: "/auth/signout",
+        route: "/auth/signin",
       },
     ],
   },

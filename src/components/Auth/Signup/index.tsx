@@ -27,7 +27,7 @@ export default function SignUp({setAuthPage}: {setAuthPage: any}) {
         <p>
           Already have any account?{" "}
         </p>
-        <StyledButton label={'Sign In'} clickEvent={setAuthPage}/>
+       <Link href="/auth/signin"><StyledButton label={'Sign In'} clickEvent={setAuthPage}/></Link> 
       </div>
     </>
   );

@@ -5,8 +5,8 @@ import "@/css/satoshi.css";
 import "@/css/style.css";
 import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
-import SignUp from "./auth/signup";
-import SignIn from "./auth/signin";
+import SignUp from "./auth/signup/page";
+import SignIn from "./auth/signin/page";
 
 export default function RootLayout({
   children,
@@ -41,18 +41,18 @@ export default function RootLayout({
 
   if (!isAuthenticated) {
     return (
-      // <html lang="en">
-      //   <body suppressHydrationWarning={true}>
-      //     {isSignUpPage ? (
-      //       <SignUp setAuthPage={toggleAuthPage} />
-      //     ) : (
-      //       <SignIn setAuthPage={toggleAuthPage} />
-      //     )}
-      //   </body>
-      // </html>
       <html lang="en">
-      <body suppressHydrationWarning={true}>{children}</body>
-    </html>
+        <body suppressHydrationWarning={true}>
+          {isSignUpPage ? (
+            <SignUp setAuthPage={toggleAuthPage} />
+          ) : (
+            <SignIn setAuthPage={toggleAuthPage} />
+          )}
+        </body>
+      </html>
+    //   <html lang="en">
+    //   <body suppressHydrationWarning={true}>{children}</body>
+    // </html>
     );
   }
 

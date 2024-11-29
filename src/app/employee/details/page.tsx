@@ -18,11 +18,13 @@ const current = ROUTES.EMPLOYEE_DETAILS;
 const EmployeePage = () => {
   return (
     <DefaultLayout>
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl ">
         <Breadcrumb pageName="employee/details" />
         <TabDefaultWithRoute current={current} color={TOOL_TIP_COLORS.primary} options={EMPLOYEE_TAB_KEYS}/>
-
-        <DataTable/>
+  <div className="mt-2">
+  <DataTable/>
+  </div>
+       
       </div>
     </DefaultLayout>
   );

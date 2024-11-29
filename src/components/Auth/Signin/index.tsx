@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import GoogleSigninButton from "../GoogleSigninButton";
 import SigninWithPassword from "../SigninWithPassword";
 import StyledButton from "@/components/common/Button/StyledButton";
+import Link from "next/link";
 
 export default function Signin({ setAuthPage }: { setAuthPage: any }) {
   return (
@@ -23,7 +24,7 @@ export default function Signin({ setAuthPage }: { setAuthPage: any }) {
 
       <div className="mt-6 text-center">
         <p>Don’t have any account? </p>
-        <StyledButton label={'Sign Up'} clickEvent={setAuthPage}/>
+        <Link href="/auth/signup"> <StyledButton label={'Sign Up'} clickEvent={setAuthPage}/></Link>
       </div>
     </>
   );
