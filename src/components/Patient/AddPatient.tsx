@@ -15,7 +15,7 @@ import { TOOL_TIP_COLORS } from "@/constants";
 const AddPatient = () => {
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
-    branchId: "",
+    branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
     name: "",
     phone: "",
     email: "",
