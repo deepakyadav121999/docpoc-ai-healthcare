@@ -73,7 +73,7 @@ const menuGroups = [
       {
         icon: <SVGIconProvider iconName="sign-out" />,
         label: "Sign Out",
-        route: "/auth/signin",
+        route: "/auth/signout",
       },
     ],
   },
