@@ -10,12 +10,16 @@ import {
 } from "@nextui-org/react";
 import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
 import AddAppointment from "@/components/CalenderBox/AddAppointment";
+interface ParentComponentProps {
+  child: React.ReactNode;
+  headingName: string; 
+ }
 
-export default function App() {
+const App: React.FC<ParentComponentProps> = ({ child,headingName }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   return (
-    <>
+    <div className="">
       <Button
         color="primary"
         endContent={<PlusIcon />}
@@ -24,24 +28,25 @@ export default function App() {
       >
         Add New
       </Button>
+    
       <Modal
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: '15%'}}
+        style={{maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: '19%'}}
         classNames={{
           backdrop:
-            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20  ",
         }}
       >
-        <ModalContent>
+        <ModalContent >
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                Add New Appointment
+              <ModalHeader className="flex flex-col gap-1 ">
+               {headingName}
               </ModalHeader>
               <ModalBody>
-                <AddAppointment />
+               {child}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -52,6 +57,8 @@ export default function App() {
           )}
         </ModalContent>
       </Modal>
-    </>
+     
+    </div>
   );
 }
+export default App;

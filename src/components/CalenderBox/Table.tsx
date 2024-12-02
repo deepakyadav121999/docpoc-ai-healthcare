@@ -30,7 +30,8 @@ import { columns, users, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
-import OpaqueDefaultModel from "../common/Modal/OpaqueDefaultModal";
+import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+import AddAppointment from "./AddAppointment";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
@@ -258,7 +259,7 @@ export default function AppointmentTable() {
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModel />
+              <OpaqueDefaultModal headingName="Add New Appointment"  child={<AddAppointment/>}/>
             </div>
           </div>
           <div className="flex justify-between items-center">

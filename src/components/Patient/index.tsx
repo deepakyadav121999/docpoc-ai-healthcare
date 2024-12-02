@@ -8,7 +8,6 @@ import {
   TableRow,
   TableCell,
   Input,
-  Button,
   DropdownTrigger,
   Dropdown,
   DropdownMenu,
@@ -20,6 +19,13 @@ import {
   ChipProps,
   SortDescriptor,
   DatePicker,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
 } from "@nextui-org/react";
 import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -28,7 +34,9 @@ import { columns, users, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
-
+import AddAppointment from "../CalenderBox/AddAppointment";
+import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+import AddPatient from "./AddPatient";
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   inactive: "warning",
@@ -49,6 +57,9 @@ const INITIAL_VISIBLE_COLUMNS = [
 type User = (typeof users)[0];
 
 export default function App() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
     new Set([])
@@ -263,9 +274,8 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <Button color="primary" endContent={<PlusIcon />} style={{minHeight: 55}}>
-              Add New
-            </Button>
+           <OpaqueDefaultModal headingName="Add New Patient"  child={<AddPatient/>}/>
+
           </div>
         </div>
         <div className="flex justify-between items-center">
