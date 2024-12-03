@@ -19,7 +19,7 @@ const AddPatient = () => {
     name: "",
     phone: "",
     email: "",
-    displayPicture: "abc",
+    displayPicture: "abcvv2ee32fd",
     bloodGroup: "",
     dob: "",
     gender: "",

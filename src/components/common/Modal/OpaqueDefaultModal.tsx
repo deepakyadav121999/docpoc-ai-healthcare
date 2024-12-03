@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -9,44 +9,53 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
-import AddAppointment from "@/components/CalenderBox/AddAppointment";
+
 interface ParentComponentProps {
   child: React.ReactNode;
-  headingName: string; 
- }
+  headingName: string;
+}
 
-const App: React.FC<ParentComponentProps> = ({ child,headingName }) => {
+const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+  
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (isOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0"); 
+    } else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999"); 
+    }
+  }, [isOpen]);
+
   return (
-    <div className="">
-      <Button
-        color="primary"
-        endContent={<PlusIcon />}
-        onPress={onOpen}
-        style={{ minHeight: 55 }}
-      >
+    <div>
+      <Button color="primary"
+      endContent={<PlusIcon />}
+       onPress={onOpen}
+        style={{ minHeight: 55 }}>
         Add New
       </Button>
-    
+
       <Modal
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: '19%'}}
+        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "19%" }}
         classNames={{
-          backdrop:
-            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20  ",
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
         }}
       >
-        <ModalContent >
+        <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 ">
-               {headingName}
+              <ModalHeader className="flex flex-col gap-1">
+                {headingName}
               </ModalHeader>
               <ModalBody>
-               {child}
+                {child}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -57,8 +66,8 @@ const App: React.FC<ParentComponentProps> = ({ child,headingName }) => {
           )}
         </ModalContent>
       </Modal>
-     
     </div>
   );
-}
+};
+
 export default App;
