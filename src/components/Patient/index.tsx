@@ -73,6 +73,9 @@ export default function App() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
  const[totalPatient, setTotalPatient] = useState(0)
 
+
+
+
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -106,7 +109,34 @@ export default function App() {
     fetchPatients();
   
   }, [page,rowsPerPage]);
- console.log(users)
+  
+  const refreshPatients = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
+        params: { 
+          page: page,
+          pageSize: rowsPerPage,
+          from: '2024-12-04T03:32:25.812Z',
+          to: '2024-12-11T03:32:25.815Z',
+          status: ['Active', 'Inactive'],
+          notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused']
+         },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      setUsers(response.data.rows);
+      setTotalPatient(response.data.count);
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+
+//  console.log(users)
  type User = (typeof users)[0];
  
   
@@ -325,7 +355,7 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-           <OpaqueDefaultModal headingName="Add New Patient"  child={<AddPatient/>}/>
+           <OpaqueDefaultModal headingName="Add New Patient"  child={<AddPatient onPatientAdded={refreshPatients} />}/>
 
           </div>
         </div>

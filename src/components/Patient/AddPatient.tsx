@@ -10,16 +10,19 @@ import {
 import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
+interface AddPatientProps {
+  onPatientAdded: () => void; 
+}
 
+const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
-const AddPatient = () => {
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
     branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
     name: "",
     phone: "",
     email: "",
-    displayPicture: "abcvv2ee32fddd",
+    displayPicture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrUABrI0sYfGIk3rDpqPhosYWG11vkchK1LA&s",
     bloodGroup: "",
     dob: "",
     gender: "",
@@ -72,6 +75,24 @@ const handleSubmit = async (e: React.FormEvent) => {
         }
       );
       alert("Patient added successfully!");
+      setFormData({
+        branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
+        name: "",
+        phone: "",
+        email: "",
+        displayPicture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRu6EJJftxVumOjPQin95gRbhNzs4Kas4Kisg&s",
+        bloodGroup: "",
+        dob: "",
+        gender: "",
+        address: "",
+        isActive: true,
+        json: '{"allergies":["Peanut","Dust"]}',
+        documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
+        lastVisit: "2024-01-15T08:30:00.000Z",
+        status: "Active",
+        notificationStatus: '{"allergies":["Peanut","Dust"]}',
+      });
+      onPatientAdded()
     } catch (error: any) {
       alert(`Error adding patient: ${error.response?.data?.message || "Unknown error"}`);
     } finally {
