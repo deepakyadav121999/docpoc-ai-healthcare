@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -66,9 +66,13 @@ interface Patient {
 
 export default function App() {
 
-  const [users, setPatients] = React.useState<Patient[]>([]);
+  const [users, setUsers] = React.useState<Patient[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+ const[totalPatient, setTotalPatient] = useState(0)
+
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -77,8 +81,8 @@ export default function App() {
           "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469",
           {
             params: {
-              page: 1,
-              pageSize: 10,
+              page: page,
+              pageSize: rowsPerPage,
               from: '2024-12-04T03:32:25.812Z',
               to: '2024-12-11T03:32:25.815Z',
               status: ['Active', 'Inactive'],
@@ -90,8 +94,8 @@ export default function App() {
             },
           }
         );
-        setPatients(response.data.rows); 
-      
+        setUsers(response.data.rows); 
+        setTotalPatient(response.data.count)
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch patients.");
@@ -101,7 +105,7 @@ export default function App() {
 
     fetchPatients();
   
-  }, []);
+  }, [page,rowsPerPage]);
  console.log(users)
  type User = (typeof users)[0];
  
@@ -117,12 +121,12 @@ export default function App() {
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
-  const [page, setPage] = React.useState(1);
+ 
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -157,14 +161,9 @@ export default function App() {
     return filteredUsers;
   }, [users, filterValue, statusFilter]);
 
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(totalPatient / rowsPerPage);
 
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+  const items = filteredItems
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: User, b: User) => {
@@ -332,7 +331,7 @@ export default function App() {
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
-            Total {users.length} users
+            Total {totalPatient} users
           </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
@@ -364,7 +363,7 @@ export default function App() {
         <span className="w-[30%] text-small text-default-400">
           {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+            : `${selectedKeys.size} of ${users.length} selected`}
         </span>
         <Pagination
           isCompact
