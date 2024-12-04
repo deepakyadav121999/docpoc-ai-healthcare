@@ -43,9 +43,9 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "19%" }}
+        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "5%" }}
         classNames={{
-          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
       >
         <ModalContent>

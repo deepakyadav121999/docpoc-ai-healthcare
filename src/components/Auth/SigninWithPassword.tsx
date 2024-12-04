@@ -37,7 +37,9 @@ export default function SigninWithPassword() {
       if (access_token && access_token.length > 5) {
         localStorage.setItem("docPocAuth_token", access_token);
         window.location.reload();
-      } else {
+      } 
+    
+      else {
         throw new Error('Invalid token received');
       }
     } catch (error) {

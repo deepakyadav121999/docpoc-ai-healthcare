@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import axios from "axios";
 import {
   Table,
   TableHeader,
@@ -18,25 +19,20 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
-  DatePicker,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Button,
-  useDisclosure,
+
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
+
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
-import { columns, users, statusOptions } from "./data";
+import { columns, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
-import AddAppointment from "../CalenderBox/AddAppointment";
+
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddPatient from "./AddPatient";
+import { useEffect } from "react";
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   inactive: "warning",
@@ -54,10 +50,63 @@ const INITIAL_VISIBLE_COLUMNS = [
   "lastVisit"
 ];
 
-type User = (typeof users)[0];
+
+interface Patient {
+  id: string;
+  name: string;
+  age: number;
+  bloodGroup: string;
+  phone: string;
+  email: string;
+  status: string;
+  lastVisit: string;
+  displayPicture:string;
+
+}
 
 export default function App() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const [users, setPatients] = React.useState<Patient[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const token = localStorage.getItem("docPocAuth_token");
+        const response = await axios.get(
+          "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469",
+          {
+            params: {
+              page: 1,
+              pageSize: 10,
+              from: '2024-12-04T03:32:25.812Z',
+              to: '2024-12-11T03:32:25.815Z',
+              status: ['Active', 'Inactive'],
+              notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused']
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setPatients(response.data.rows); 
+      
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch patients.");
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  
+  }, []);
+ console.log(users)
+ type User = (typeof users)[0];
+ 
+  
+
 
 
   const [filterValue, setFilterValue] = React.useState("");
@@ -76,6 +125,9 @@ export default function App() {
   const [page, setPage] = React.useState(1);
 
   const hasSearchFilter = Boolean(filterValue);
+
+
+
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -131,7 +183,7 @@ export default function App() {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
+            avatarProps={{ radius: "lg", src: user.displayPicture }}
             description={user.email}
             name={cellValue}
           >
