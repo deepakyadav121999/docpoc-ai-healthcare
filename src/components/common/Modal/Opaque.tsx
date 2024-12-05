@@ -16,15 +16,21 @@ import {
 import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
-
-export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MODAL_TYPES, delete?:MODAL_TYPES}, modalTitle:string, actionButtonName?:string}) {
+import axios from "axios";
+export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MODAL_TYPES, delete?:MODAL_TYPES}, modalTitle:string, actionButtonName?:string, patientId: string}) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
+
+
+ 
+  
   const handleOpen = (backdrop: React.SetStateAction<string>, type:MODAL_TYPES | undefined) => {
     if(type == undefined ) return;
     setFormType(type);
     onOpen();
+   
+    
   };
   return (
     <>
@@ -49,7 +55,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                 {title}
               </ModalHeader>
               <ModalBody>
-                <ModalForm type={formType}/>
+                <ModalForm type={formType} patientId={props.patientId}/>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>

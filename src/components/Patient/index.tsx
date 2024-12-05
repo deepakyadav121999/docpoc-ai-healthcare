@@ -259,6 +259,7 @@ export default function App() {
             }}
             actionButtonName={"Ok"}
             modalTitle={"Patient"}
+            patientId={user.id}
           />
         );
       default:

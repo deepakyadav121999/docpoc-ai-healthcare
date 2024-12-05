@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardBody,
@@ -48,7 +48,7 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import IconButton from "../Buttons/IconButton";
 import { VisitHistoryTable } from "./VisitHistoryTable";
 import AddAppointment from "../CalenderBox/AddAppointment";
-
+import axios from "axios";
 const PlaceholderImage = () => (
   <svg width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
     <rect width="100%" height="100%" fill="#e0e0e0" />
@@ -65,7 +65,7 @@ const PlaceholderImage = () => (
   </svg>
 );
 
-export default function ModalForm(props: { type: string }) {
+export default function ModalForm(props: { type: string, patientId:string }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
   const [editSelectedPatient, setEditPatient] = useState(false);
@@ -74,11 +74,11 @@ export default function ModalForm(props: { type: string }) {
   const [editSelectedPatientStatus, setEditPatientStatus] = useState(false);
   const [editSelectedPatientEmail, setEditPatientEmail] = useState(false);
   const [editSelectedPatientPhone, setEditPatientPhone] = useState(false);
-  const [patientName, setPatientName] = useState("Sikha Kumari");
+  const [patientName, setPatientName] = useState("");
   const [employeeName, setEmployeeName] = useState("Sikha Kumari");
-  const [patientBloodGroup, setPatientBloodGroup] = useState("O+");
-  const [patientEmail, setPatientEmail] = useState("sikha@gmail.com");
-  const [patientPhone, setPatientPhone] = useState("+91 8763039387");
+  const [patientBloodGroup, setPatientBloodGroup] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
 
   const [editSelectedEmployee, setEditEmployee] = useState(false);
   const [editSelectedEmployeePhone, setEditEmployeePhone] = useState(false);
@@ -101,12 +101,45 @@ export default function ModalForm(props: { type: string }) {
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState(
     now(getLocalTimeZone())
   );
-  const [patientStatus, setPatientStatus] = useState("Active");
+  const [patientStatus, setPatientStatus] = useState("");
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
-  const [profilePhoto, setProfilePhoto] = useState(
-    "/images/user/user-male.jpg"
-  );
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const[lastVisit,setLastvisit] =useState()
+
+  
+  const fetchPatientById = async (patientId: string) => {
+    // setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${patientId}`;
+  
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+
+      
+      setPatientName(response.data.name)
+      setPatientPhone(response.data.phone)
+      setPatientBloodGroup(response.data.bloodGroup)
+      setPatientEmail(response.data.email)
+      setPatientStatus(response.data.status)
+      setProfilePhoto(response.data.displayPicture)
+      setLastvisit(response.data.lastVisit)
+    } catch (err) {
+      // setError("Failed to fetch patient.");
+    } finally {
+      // setLoading(false);
+    }
+  };
+useEffect(()=>{
+  fetchPatientById(props.patientId)
+},[])
+
 
   const editTime = () => {
     setEditVisitTime(!editVisitTime);
@@ -531,7 +564,7 @@ export default function ModalForm(props: { type: string }) {
                 className="object-cover"
                 height={200}
                 shadow="md"
-                src={USER_ICONS.FEMALE_USER}
+                src={profilePhoto}
                 width="100%"
               />
             </div>
@@ -544,16 +577,22 @@ export default function ModalForm(props: { type: string }) {
               </div>
 
               <div className="space-y-3">
+              <div className="flex items-center">
+                  <SVGIconProvider iconName="clock" />
+                  <p className="text-medium ml-2">
+                    <strong>Patient Name: </strong>{patientName}
+                  </p>
+                </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
                   <p className="text-medium ml-2">
-                    <strong>Last Visit: </strong>10:30 AM, June 15, 2024
+                    <strong>Last Visit: </strong>{lastVisit}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Status: </strong> Active
+                    <strong>Status: </strong> {patientStatus}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -881,19 +920,19 @@ export default function ModalForm(props: { type: string }) {
             <div className="flex items-center">
               <SVGIconProvider iconName="clock" />
               <p className="text-medium ml-2">
-                <strong>Name: </strong> Ramesh Singh
+                <strong>Name: </strong> {patientName}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
               <p className="text-medium ml-2">
-                <strong>email: </strong> ramesh@gmail.com
+                <strong>email: </strong>{patientEmail}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="phone" />
               <p className="text-medium ml-2">
-                <strong>phone: </strong> +91 8725370098
+                <strong>phone: </strong> {patientPhone}
               </p>
             </div>
           </div>
