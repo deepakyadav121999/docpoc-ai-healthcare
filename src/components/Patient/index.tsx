@@ -34,10 +34,12 @@ import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddPatient from "./AddPatient";
 import { useEffect } from "react";
 const statusColorMap: Record<string, ChipProps["color"]> = {
-  active: "success",
-  inactive: "warning",
-  blacklisted: "danger",
+  Active: "success",
+  Inactive: "warning",
+  Blacklisted: "danger",
 };
+import debounce from 'lodash.debounce';
+
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -60,7 +62,7 @@ interface Patient {
   email: string;
   status: string;
   lastVisit: string;
-  displayPicture:string;
+  displayPicture: string;
 
 }
 
@@ -71,58 +73,66 @@ export default function App() {
   const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
- const[totalPatient, setTotalPatient] = useState(0)
+  const [totalPatient, setTotalPatient] = useState(0)
 
+  const fetchPatients = async (searchName = "", selectedStatuses: string[] = []) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = searchName
+        ? `http://127.0.0.1:3037/DocPOC/v1/patient/name/${searchName}`
+        : "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+      const params = !searchName
+        ? {
+          page,
+          pageSize: rowsPerPage,
+          from: '2024-12-04T03:32:25.812Z',
+          to: '2024-12-11T03:32:25.815Z',
+          status: selectedStatuses.length ? selectedStatuses : ['Active', 'Inactive'],
+          notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused'],
+        }
+        : {};
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setUsers(response.data.rows || response.data);
+      setTotalPatient(response.data.count || response.data.length);
+      
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const token = localStorage.getItem("docPocAuth_token");
-        const response = await axios.get(
-          "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469",
-          {
-            params: {
-              page: page,
-              pageSize: rowsPerPage,
-              from: '2024-12-04T03:32:25.812Z',
-              to: '2024-12-11T03:32:25.815Z',
-              status: ['Active', 'Inactive'],
-              notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused']
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setUsers(response.data.rows); 
-        setTotalPatient(response.data.count)
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch patients.");
-        setLoading(false);
-      }
-    };
 
     fetchPatients();
-  
-  }, [page,rowsPerPage]);
-  
+
+  }, [page, rowsPerPage]);
+
   const refreshPatients = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
       const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
-        params: { 
+        params: {
           page: page,
           pageSize: rowsPerPage,
           from: '2024-12-04T03:32:25.812Z',
           to: '2024-12-11T03:32:25.815Z',
           status: ['Active', 'Inactive'],
           notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused']
-         },
+        },
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
       setUsers(response.data.rows);
@@ -133,13 +143,13 @@ export default function App() {
       setLoading(false);
     }
   };
-  
 
 
-//  console.log(users)
- type User = (typeof users)[0];
- 
-  
+
+
+  type User = (typeof users)[0];
+
+
 
 
 
@@ -156,7 +166,7 @@ export default function App() {
     column: "age",
     direction: "ascending",
   });
- 
+
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -276,19 +286,31 @@ export default function App() {
     []
   );
 
+
+
+  const debouncedFetchPatients = React.useMemo(
+    () => debounce((value: string) => fetchPatients(value), 500),
+    [fetchPatients]
+  );
+
   const onSearchChange = React.useCallback((value?: string) => {
-    if (value) {
-      setFilterValue(value);
-      setPage(1);
-    } else {
-      setFilterValue("");
-    }
-  }, []);
+    setFilterValue(value || "");
+    setPage(1);
+    debouncedFetchPatients(value || "");
+  }, [debouncedFetchPatients]);
+
 
   const onClear = React.useCallback(() => {
     setFilterValue("");
     setPage(1);
   }, []);
+  const onStatusFilterChange = (selected: Selection) => {
+    const selectedStatuses = Array.from(selected) as string[];
+    setStatusFilter(selected);  // Update the filter state
+    setPage(1);                  // Reset pagination to the first page
+    fetchPatients(filterValue, selectedStatuses);
+  };
+
 
   const topContent = React.useMemo(() => {
     return (
@@ -309,18 +331,18 @@ export default function App() {
                 <Button
                   endContent={<ChevronDownIcon className="text-small" />}
                   variant="flat"
-                  style={{minHeight: 55}}
+                  style={{ minHeight: 55 }}
                 >
                   Status
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
                 disallowEmptySelection
-                aria-label="Table Columns"
+                aria-label="Status Filter"
                 closeOnSelect={false}
                 selectedKeys={statusFilter}
                 selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
+                onSelectionChange={onStatusFilterChange}
               >
                 {statusOptions.map((status) => (
                   <DropdownItem key={status.uid} className="capitalize">
@@ -328,13 +350,14 @@ export default function App() {
                   </DropdownItem>
                 ))}
               </DropdownMenu>
+
             </Dropdown>
             <Dropdown>
               <DropdownTrigger className="hidden sm:flex">
                 <Button
                   endContent={<ChevronDownIcon className="text-small" />}
                   variant="flat"
-                  style={{minHeight: 55}}
+                  style={{ minHeight: 55 }}
                 >
                   Columns
                 </Button>
@@ -355,7 +378,7 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-           <OpaqueDefaultModal headingName="Add New Patient"  child={<AddPatient onPatientAdded={refreshPatients} />}/>
+            <OpaqueDefaultModal headingName="Add New Patient" child={<AddPatient onPatientAdded={refreshPatients} />} />
 
           </div>
         </div>
@@ -403,6 +426,7 @@ export default function App() {
           page={page}
           total={pages}
           onChange={setPage}
+
         />
         <div className="hidden sm:flex w-[30%] justify-end gap-2">
           <Button

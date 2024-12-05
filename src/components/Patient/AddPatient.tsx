@@ -11,7 +11,7 @@ import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 interface AddPatientProps {
-  onPatientAdded: () => void; 
+  onPatientAdded: () => void;
 }
 
 const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
@@ -22,7 +22,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     name: "",
     phone: "",
     email: "",
-    displayPicture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrUABrI0sYfGIk3rDpqPhosYWG11vkchK1LA&s",
+
     bloodGroup: "",
     dob: "",
     gender: "",
@@ -39,30 +39,30 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   const [loading, setLoading] = useState(false);
 
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const missingFields: string[] = [];
-  
+
     for (const key in formData) {
-      if (!formData[key as keyof typeof formData] && key !== "branchId") {
+      if (!formData[key as keyof typeof formData] && key !== "branchId" && key !== "isActive") {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
-  
+
     if (missingFields.length > 0) {
       alert(`The following fields are required: ${missingFields.join(", ")}`);
       return;
     }
-  
+
     setLoading(true);
-  
+
     const token = localStorage.getItem("docPocAuth_token");
     if (!token) {
       alert("No access token found. Please log in again.");
       setLoading(false);
       return;
     }
-  
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:3037/DocPOC/v1/patient",
@@ -80,7 +80,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         name: "",
         phone: "",
         email: "",
-        displayPicture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRu6EJJftxVumOjPQin95gRbhNzs4Kas4Kisg&s",
+
         bloodGroup: "",
         dob: "",
         gender: "",
@@ -99,7 +99,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <div className="grid grid-cols-1 gap-9">
@@ -107,7 +107,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <form onSubmit={handleSubmit}>
             <div className="p-6.5">
-             
+
               <div className="mb-4.5 flex flex-col gap-4.5">
                 <Input
                   label="Patient Name"
@@ -117,7 +117,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   isDisabled={!edit}
                 />
-                 <Autocomplete
+                <Autocomplete
                   label="Gender"
                   labelPlacement="outside"
                   variant="bordered"
@@ -169,7 +169,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
               </div>
 
-             
+
               <Textarea
                 label="Address"
                 labelPlacement="outside"
@@ -182,14 +182,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               <div className="flex justify-center mt-4">
                 <Checkbox
                   isSelected={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, isActive: value, status: value ? "Active" : "Inactive" })
+                  }
                   isDisabled={!edit}
                 >
                   Active Status
                 </Checkbox>
               </div>
 
-   
+
               {errors.length > 0 && (
                 <div className="text-red-500 mt-4">
                   {errors.map((error, index) => (
