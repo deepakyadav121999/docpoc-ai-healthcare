@@ -461,14 +461,8 @@ export default function App() {
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
-    <>
-    <div>
-          {loading && (
-            <div className="absolute inset-0 flex justify-center items-center  z-50">
-              <Spinner />
-            </div>
-          )}
-        </div>
+    <div className="relative">
+    
       <Table
         aria-label="Appointment Details"
         isHeaderSticky
@@ -510,6 +504,13 @@ export default function App() {
 
         </TableBody>
       </Table>
-    </>
+      <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
+    </div>
   );
 }
