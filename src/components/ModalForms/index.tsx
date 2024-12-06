@@ -106,6 +106,9 @@ export default function ModalForm(props: { type: string, patientId:string, onDat
    const[lastVisit,setLastvisit] =useState("");
    const[notificationStatus,setNotificationStatus] =useState("")
   const[branchId,setBranchId] = useState("")
+  const[patientDob, setPatientDob] = useState("")
+  const[gender,setGender]= useState("")
+
 
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
@@ -139,6 +142,8 @@ export default function ModalForm(props: { type: string, patientId:string, onDat
       setLastvisit(response.data.lastVisit)
       setNotificationStatus(response.data.notificationStatus)
       setBranchId(response.data.branchId)
+      setPatientDob(response.data.dob)
+      setGender(response.data.gender)
     } catch (err) {
       // setError("Failed to fetch patient.");
     } finally {
@@ -184,6 +189,8 @@ useEffect(()=>{
       bloodGroup: patientBloodGroup,
       status: patientStatus,
       notificationStatus: notificationStatus,
+      dob:patientDob,
+      gender:gender
     };
   
     props.onDataChange(updatedData); // Pass updated data to parent
@@ -195,6 +202,8 @@ useEffect(()=>{
     patientBloodGroup,
     patientStatus,
     notificationStatus,
+    patientDob,
+    gender
   ]);
 
   const editBloodGroup = () => {
