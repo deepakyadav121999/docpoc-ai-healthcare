@@ -11,7 +11,7 @@ import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
-import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button,} from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } from "@nextui-org/react";
 interface AddPatientProps {
   onPatientAdded: () => void;
 }
@@ -41,9 +41,9 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   const [loading, setLoading] = useState(false);
   // const [size, setSize] = useState('md');
   // const sizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "full"];
-  const {isOpen, onOpen, onClose} = useDisclosure();
-  const [message,setmessage] = useState('')
-  const [errmessage,seterrmessage] = useState('')
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [message, setmessage] = useState('')
+  const [errmessage, seterrmessage] = useState('')
   const handleOpen = () => {
     setmessage('')
     onClose()
@@ -125,9 +125,26 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
+                      setFormData({ ...formData, name: e.target.value });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent numeric and special character key presses
+                    if (
+                      !/^[a-zA-Z\s]$/.test(e.key) &&
+                      e.key !== "Backspace" &&
+                      e.key !== "Delete" &&
+                      e.key !== "ArrowLeft" &&
+                      e.key !== "ArrowRight"
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
                   isDisabled={!edit}
                 />
+
                 <Autocomplete
                   label="Gender"
                   labelPlacement="outside"
@@ -144,17 +161,42 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    if (/^\d*$/.test(e.target.value)) {
+                      setFormData({ ...formData, phone: e.target.value });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent non-numeric key presses except backspace, delete, and arrow keys
+                    if (
+                      !/^\d$/.test(e.key) &&
+                      e.key !== "Backspace" &&
+                      e.key !== "Delete" &&
+                      e.key !== "ArrowLeft" &&
+                      e.key !== "ArrowRight"
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
+                  maxLength={10}
                   isDisabled={!edit}
                 />
                 <Input
                   label="Email"
+                 
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onBlur={(e) => {
+                    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    // if (!emailRegex.test(e.target.value)) {
+                    //   setErrors((prev) => [...prev, "Please enter a valid email address."]);
+                    // }
+                  }}
                   isDisabled={!edit}
                 />
+
               </div>
 
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
@@ -226,27 +268,27 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
               </Button>
 
 
-              <Modal 
-   
-        isOpen={isOpen} 
-        onClose={onClose} 
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1"></ModalHeader>
-              <ModalBody>
-               {message?<p className="text-green-600">{message}</p>:<p className="text-red">{errmessage}</p>}
-              </ModalBody>
-              <ModalFooter>
-                <Button color="primary" onPress={handleOpen}>
-                 Ok
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+              <Modal
+
+                isOpen={isOpen}
+                onClose={onClose}
+              >
+                <ModalContent>
+                  {(onClose) => (
+                    <>
+                      <ModalHeader className="flex flex-col gap-1"></ModalHeader>
+                      <ModalBody>
+                        {message ? <p className="text-green-600">{message}</p> : <p className="text-red">{errmessage}</p>}
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button color="primary" onPress={handleOpen}>
+                          Ok
+                        </Button>
+                      </ModalFooter>
+                    </>
+                  )}
+                </ModalContent>
+              </Modal>
             </div>
           </form>
         </div>

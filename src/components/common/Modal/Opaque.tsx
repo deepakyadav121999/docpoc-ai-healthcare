@@ -21,7 +21,8 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
-
+  const[message,setmessage] =useState('')
+  const[error,seterror] = useState('')
   const handleDelete = async () => {
     const token = localStorage.getItem("docPocAuth_token");
     const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${props.patientId}`;
@@ -35,12 +36,12 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
       });
       // Handle successful deletion
       if (props.onPatientDelete) props.onPatientDelete();
-      alert("Patient deleted successfully!");
+      setmessage("Patient deleted successfully!");
      
       onClose(); // Close the modal after deletion
     } catch (error) {
       console.error("Error deleting patient:", error);
-      alert("Failed to delete the patient. Please try again.");
+      seterror("Failed to delete the patient. Please try again.");
     }
   };
 
@@ -101,6 +102,8 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                 <Button color="primary" onPress={handleSubmit}>
                   {props.actionButtonName || 'Submit'}
                 </Button>
+
+                
               </ModalFooter>
             </>
           )}
