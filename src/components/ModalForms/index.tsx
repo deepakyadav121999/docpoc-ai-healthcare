@@ -65,21 +65,16 @@ const PlaceholderImage = () => (
   </svg>
 );
 
-export default function ModalForm(props: { type: string, patientId:string }) {
+export default function ModalForm(props: { type: string, patientId:string,  onPatientUpdate: (updatedPatient: any) => void }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
-  const [editSelectedPatient, setEditPatient] = useState(false);
+ 
   const [editSelectedPatientBloodGroup, setEditPatientBloodGroup] =
     useState(false);
   const [editSelectedPatientStatus, setEditPatientStatus] = useState(false);
   const [editSelectedPatientEmail, setEditPatientEmail] = useState(false);
   const [editSelectedPatientPhone, setEditPatientPhone] = useState(false);
-  const [patientName, setPatientName] = useState("");
   const [employeeName, setEmployeeName] = useState("Sikha Kumari");
-  const [patientBloodGroup, setPatientBloodGroup] = useState("");
-  const [patientEmail, setPatientEmail] = useState("");
-  const [patientPhone, setPatientPhone] = useState("");
-
   const [editSelectedEmployee, setEditEmployee] = useState(false);
   const [editSelectedEmployeePhone, setEditEmployeePhone] = useState(false);
   const [editSelectedEmployeeEmail, setEditEmployeeEmail] = useState(false);
@@ -90,7 +85,6 @@ export default function ModalForm(props: { type: string, patientId:string }) {
   const [editSelectedEmployeeJoiningDate, setEditEmployeeJoiningDate] =
     useState(false);
   const [editSelectedEmployeeDOB, setEditEmployeeDOB] = useState(false);
-
   const [employeeEmail, setEmployeeEmail] = useState("gulli@gmail.com");
   const [employeeDesignation, setEmployeeDesignation] = useState("Nurse");
   const [employeePhone, setEmployeePhone] = useState("+91 8763039387");
@@ -101,11 +95,20 @@ export default function ModalForm(props: { type: string, patientId:string }) {
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState(
     now(getLocalTimeZone())
   );
-  const [patientStatus, setPatientStatus] = useState("");
+  const [editSelectedPatient, setEditPatient] = useState(false);
+  const [patientName, setPatientName] = useState("");
+  const [patientBloodGroup, setPatientBloodGroup] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
+   const [patientStatus, setPatientStatus] = useState("");
+   const [profilePhoto, setProfilePhoto] = useState("");
+   const[lastVisit,setLastvisit] =useState("")
+
+
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
-  const [profilePhoto, setProfilePhoto] = useState("");
-  const[lastVisit,setLastvisit] =useState()
+
+ 
 
   
   const fetchPatientById = async (patientId: string) => {
@@ -149,7 +152,7 @@ useEffect(()=>{
   };
 
   const editName = () => {
-    setPatientName("Rekha Pandey");
+    // setPatientName("Rekha Pandey");
     setEditPatient(!editSelectedPatient);
   };
   const editStatus = () => {
@@ -158,12 +161,12 @@ useEffect(()=>{
   };
 
   const editEmail = () => {
-    setPatientEmail("test@gmail.com");
+    // setPatientEmail("test@gmail.com");
     setEditPatientEmail(!editSelectedPatientEmail);
   };
 
   const editPhone = () => {
-    setPatientPhone("+91 8276536576");
+    // setPatientPhone("+91 8276536576");
     setEditPatientPhone(!editSelectedPatientPhone);
   };
 
@@ -687,6 +690,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Patient name.."
                         labelPlacement="outside"
+                        value={patientName}
+                        onChange={(e)=>setPatientName(e.target.value)}
                       />
                     </div>
                   )}
@@ -722,6 +727,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Patient status.."
                         labelPlacement="outside"
+                        value={patientStatus}
+                        onChange={(e)=>setPatientStatus(e.target.value)}
                       />
                     </div>
                   )}
@@ -757,6 +764,8 @@ useEffect(()=>{
                         type="email"
                         placeholder="Patient email.."
                         labelPlacement="outside"
+                        value={patientEmail}
+                        onChange={(e)=>setPatientEmail(e.target.value)}
                       />
                     </div>
                   )}
@@ -853,6 +862,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Patient Phone.."
                         labelPlacement="outside"
+                        value={patientPhone}
+                        onChange={(e)=>setPatientPhone(e.target.value)}
                       />
                     </div>
                   )}

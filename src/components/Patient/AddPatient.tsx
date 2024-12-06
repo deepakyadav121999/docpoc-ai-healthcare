@@ -1,6 +1,6 @@
 "use client";
 import {
-  Button,
+
   Checkbox,
   Input,
   Textarea,
@@ -10,6 +10,8 @@ import {
 import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
+import { useDisclosure } from "@nextui-org/react";
+import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button,} from "@nextui-org/react";
 interface AddPatientProps {
   onPatientAdded: () => void;
 }
@@ -37,9 +39,18 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-
+  // const [size, setSize] = useState('md');
+  // const sizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "full"];
+  const {isOpen, onOpen, onClose} = useDisclosure();
+  const [message,setmessage] = useState('')
+  const [errmessage,seterrmessage] = useState('')
+  const handleOpen = () => {
+    setmessage('')
+    onClose()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
     const missingFields: string[] = [];
 
@@ -50,7 +61,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     }
 
     if (missingFields.length > 0) {
-      alert(`The following fields are required: ${missingFields.join(", ")}`);
+      seterrmessage(`The following fields are required: ${missingFields.join(", ")}`);
       return;
     }
 
@@ -58,7 +69,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
     const token = localStorage.getItem("docPocAuth_token");
     if (!token) {
-      alert("No access token found. Please log in again.");
+      seterrmessage("No access token found. Please log in again.");
       setLoading(false);
       return;
     }
@@ -74,7 +85,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
           },
         }
       );
-      alert("Patient added successfully!");
+      setmessage("Patient added successfully!");
       setFormData({
         branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
         name: "",
@@ -94,7 +105,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       });
       onPatientAdded()
     } catch (error: any) {
-      alert(`Error adding patient: ${error.response?.data?.message || "Unknown error"}`);
+      seterrmessage(`Error adding patient: ${error.response?.data?.message || "Unknown error"}`);
     } finally {
       setLoading(false);
     }
@@ -207,11 +218,35 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 type="submit"
                 isDisabled={!edit || loading}
                 color={TOOL_TIP_COLORS.secondary}
+                onPress={onOpen}
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90"
                 style={{ minWidth: 300, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
+
+
+              <Modal 
+   
+        isOpen={isOpen} 
+        onClose={onClose} 
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1"></ModalHeader>
+              <ModalBody>
+               {message?<p className="text-green-600">{message}</p>:<p className="text-red">{errmessage}</p>}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onPress={handleOpen}>
+                 Ok
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
             </div>
           </form>
         </div>

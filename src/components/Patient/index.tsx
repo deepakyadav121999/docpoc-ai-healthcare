@@ -29,7 +29,7 @@ import { columns, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
-
+import { Spinner } from "@nextui-org/react";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddPatient from "./AddPatient";
 import { useEffect } from "react";
@@ -83,16 +83,21 @@ export default function App() {
         ? `http://127.0.0.1:3037/DocPOC/v1/patient/name/${searchName}`
         : "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
 
-      const params = !searchName
-        ? {
-          page,
-          pageSize: rowsPerPage,
-          from: '2024-12-04T03:32:25.812Z',
-          to: '2024-12-11T03:32:25.815Z',
-          status: selectedStatuses.length ? selectedStatuses : ['Active', 'Inactive'],
-          notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused'],
-        }
-        : {};
+
+      const params: any = {};
+
+
+      if (selectedStatuses.length) {
+        params.status = selectedStatuses;
+
+      } else {
+
+        params.page = page;
+        params.pageSize = rowsPerPage;
+        params.from = '2024-12-04T03:32:25.812Z';
+        params.to = '2024-12-11T03:32:25.815Z';
+        params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+      }
 
       const response = await axios.get(endpoint, {
         params,
@@ -104,7 +109,7 @@ export default function App() {
 
       setUsers(response.data.rows || response.data);
       setTotalPatient(response.data.count || response.data.length);
-      
+
     } catch (err) {
       setError("Failed to fetch patients.");
     } finally {
@@ -112,6 +117,8 @@ export default function App() {
     }
   };
 
+
+  // http://127.0.0.1:3037/DocPOC/v1/patient/?status[]=Inactive
 
 
   useEffect(() => {
@@ -260,6 +267,7 @@ export default function App() {
             actionButtonName={"Ok"}
             modalTitle={"Patient"}
             patientId={user.id}
+            onPatientDelete={refreshPatients}
           />
         );
       default:
@@ -316,6 +324,7 @@ export default function App() {
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
+
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
@@ -327,7 +336,7 @@ export default function App() {
             onValueChange={onSearchChange}
           />
           <div className="flex gap-3">
-            <Dropdown>
+            {/* <Dropdown>
               <DropdownTrigger className="hidden sm:flex">
                 <Button
                   endContent={<ChevronDownIcon className="text-small" />}
@@ -352,7 +361,7 @@ export default function App() {
                 ))}
               </DropdownMenu>
 
-            </Dropdown>
+            </Dropdown> */}
             <Dropdown>
               <DropdownTrigger className="hidden sm:flex">
                 <Button
@@ -452,41 +461,55 @@ export default function App() {
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
-    <Table
-      aria-label="Appointment Details"
-      isHeaderSticky
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[482px] ",
-      }}
-      selectedKeys={selectedKeys}
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSelectionChange={setSelectedKeys}
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
-        {(item) => (
-          <TableRow key={item.id}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+    <>
+    <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
+      <Table
+        aria-label="Appointment Details"
+        isHeaderSticky
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[482px] ",
+        }}
+        selectedKeys={selectedKeys}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={setSelectedKeys}
+        onSortChange={setSortDescriptor}
+      >
+        
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        
+        <TableBody emptyContent={""} items={sortedItems}>
+          {(item) => (
+
+            <TableRow key={item.id}>
+
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+
+        </TableBody>
+      </Table>
+    </>
   );
 }
