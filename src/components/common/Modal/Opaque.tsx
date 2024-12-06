@@ -21,8 +21,11 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
-  const[message,setmessage] =useState('')
+  const[message,setmessage] =useState('');
   const[error,seterror] = useState('')
+  const [updatedPatientData, setUpdatedPatientData] = useState({});
+ 
+
   const handleDelete = async () => {
     const token = localStorage.getItem("docPocAuth_token");
     const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${props.patientId}`;
@@ -57,16 +60,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
   }, [isOpen]);
 
   // Handle Submit button based on form type
-  const handleSubmit = () => {
-    if (formType === props.modalType.delete) {
-      handleDelete(); // Call delete function
-    }
-     else {
-      // Handle other actions (view/edit) here
-      onClose();
-    }
-  };
- 
+
   
   const handleOpen = (backdrop: React.SetStateAction<string>, type:MODAL_TYPES | undefined) => {
     if(type == undefined ) return;
@@ -75,6 +69,46 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
    
     
   };
+  const handleDataChange = (data: any) => {
+    setUpdatedPatientData(data); // Update state with child data
+  };
+
+  const handleEdit = async () => {
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = "http://127.0.0.1:3037/DocPOC/v1/patient";
+  
+    const requestData = {
+      id: props.patientId,
+      ...updatedPatientData, // Data collected from the form
+    };
+  
+    try {
+      const response = await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (props.onPatientDelete) props.onPatientDelete();
+      setmessage("Patient updated successfully!");
+      onClose(); // Close the modal after successful update
+    } catch (error) {
+      console.error("Error updating patient:", error);
+      seterror("Failed to update the patient. Please try again.");
+    }
+  };
+  const handleSubmit = () => {
+    if (formType === props.modalType.delete) {
+      handleDelete();
+    } else if (formType === props.modalType.edit) {
+      handleEdit(); // Call edit function
+    } else {
+      console.log(updatedPatientData); // Log other cases
+      onClose();
+    }
+  };
+ 
+
   return (
     <>
       <Dropdown>
@@ -90,7 +124,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
         </DropdownMenu>
       </Dropdown>
 
-      <Modal backdrop={"opaque"} isOpen={isOpen} onClose={onClose} style={{maxHeight: 900, maxWidth:800}}>
+      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{maxHeight: 900, maxWidth:800}}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -98,7 +132,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                 {title}
               </ModalHeader>
               <ModalBody>
-                <ModalForm type={formType} patientId={props.patientId}/>
+                <ModalForm type={formType} patientId={props.patientId} onDataChange={handleDataChange}/>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>

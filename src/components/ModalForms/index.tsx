@@ -66,7 +66,7 @@ const PlaceholderImage = () => (
   </svg>
 );
 
-export default function ModalForm(props: { type: string, patientId:string,}) {
+export default function ModalForm(props: { type: string, patientId:string, onDataChange: (data: any) => void}) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
  
@@ -103,13 +103,16 @@ export default function ModalForm(props: { type: string, patientId:string,}) {
   const [patientPhone, setPatientPhone] = useState("");
    const [patientStatus, setPatientStatus] = useState("");
    const [profilePhoto, setProfilePhoto] = useState("");
-   const[lastVisit,setLastvisit] =useState("")
-
+   const[lastVisit,setLastvisit] =useState("");
+   const[notificationStatus,setNotificationStatus] =useState("")
+  const[branchId,setBranchId] = useState("")
 
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
    const[loading,setLoading] = useState(false)
  
+ 
+
 
   
   const fetchPatientById = async (patientId: string) => {
@@ -134,6 +137,8 @@ export default function ModalForm(props: { type: string, patientId:string,}) {
       setPatientStatus(response.data.status)
       setProfilePhoto(response.data.displayPicture)
       setLastvisit(response.data.lastVisit)
+      setNotificationStatus(response.data.notificationStatus)
+      setBranchId(response.data.branchId)
     } catch (err) {
       // setError("Failed to fetch patient.");
     } finally {
@@ -153,23 +158,44 @@ useEffect(()=>{
   };
 
   const editName = () => {
-    // setPatientName("Rekha Pandey");
+    setPatientName(patientName);
     setEditPatient(!editSelectedPatient);
   };
   const editStatus = () => {
-    setPatientStatus("Inactive");
+    setPatientStatus(patientStatus);
     setEditPatientStatus(!editSelectedPatientStatus);
   };
 
   const editEmail = () => {
-    // setPatientEmail("test@gmail.com");
+    setPatientEmail(patientEmail);
     setEditPatientEmail(!editSelectedPatientEmail);
   };
 
   const editPhone = () => {
-    // setPatientPhone("+91 8276536576");
+    setPatientPhone(patientPhone);
     setEditPatientPhone(!editSelectedPatientPhone);
   };
+  useEffect(() => {
+    const updatedData = {
+      branchId: branchId,
+      name: patientName,
+      phone: patientPhone,
+      email: patientEmail,
+      bloodGroup: patientBloodGroup,
+      status: patientStatus,
+      notificationStatus: notificationStatus,
+    };
+  
+    props.onDataChange(updatedData); // Pass updated data to parent
+  }, [
+    branchId,
+    patientName,
+    patientPhone,
+    patientEmail,
+    patientBloodGroup,
+    patientStatus,
+    notificationStatus,
+  ]);
 
   const editBloodGroup = () => {
     setEditPatientBloodGroup(!editSelectedPatientBloodGroup);
@@ -290,6 +316,12 @@ useEffect(()=>{
       label: "AB+",
     },
   ]; // Example doctors list
+
+ 
+
+  
+
+
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     return (
@@ -709,7 +741,10 @@ useEffect(()=>{
                         placeholder="Patient name.."
                         labelPlacement="outside"
                         value={patientName}
-                        onChange={(e)=>setPatientName(e.target.value)}
+                        onChange={(e)=>{
+                          setPatientName(e.target.value)
+                         
+                        }}
                       />
                     </div>
                   )}
@@ -746,7 +781,10 @@ useEffect(()=>{
                         placeholder="Patient status.."
                         labelPlacement="outside"
                         value={patientStatus}
-                        onChange={(e)=>setPatientStatus(e.target.value)}
+                        onChange={(e)=>{
+                          setPatientStatus(e.target.value)
+                        
+                        }}
                       />
                     </div>
                   )}
@@ -783,7 +821,10 @@ useEffect(()=>{
                         placeholder="Patient email.."
                         labelPlacement="outside"
                         value={patientEmail}
-                        onChange={(e)=>setPatientEmail(e.target.value)}
+                        onChange={(e)=>{
+                          setPatientEmail(e.target.value)
+                       
+                        }}
                       />
                     </div>
                   )}
@@ -824,12 +865,13 @@ useEffect(()=>{
                         <DropdownMenu
                           aria-label="Dynamic Actions"
                           items={bloodGroupList}
-                          onAction={(key) =>
+                          onAction={(key) =>{
                             setPatientBloodGroup(
                               bloodGroupList.find((item) => item.key === key)
                                 ?.label ?? patientBloodGroup
                             )
-                          }
+                           
+                          }}
                         >
                           {(item) => (
                             <DropdownItem
@@ -881,7 +923,10 @@ useEffect(()=>{
                         placeholder="Patient Phone.."
                         labelPlacement="outside"
                         value={patientPhone}
-                        onChange={(e)=>setPatientPhone(e.target.value)}
+                        onChange={(e)=>{
+                          setPatientPhone(e.target.value)
+                          
+                        }}
                       />
                     </div>
                   )}
