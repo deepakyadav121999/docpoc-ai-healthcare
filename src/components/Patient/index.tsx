@@ -491,7 +491,7 @@ export default function App() {
           )}
         </TableHeader>
         
-        <TableBody emptyContent={""} items={sortedItems}>
+        <TableBody emptyContent={"No Patient Available"} items={sortedItems}>
           {(item) => (
 
             <TableRow key={item.id}>

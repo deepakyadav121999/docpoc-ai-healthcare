@@ -17,7 +17,7 @@ import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
 import axios from "axios";
-export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MODAL_TYPES, delete?:MODAL_TYPES}, modalTitle:string, actionButtonName?:string, patientId: string, onPatientDelete:() => void; onPatientUpdate: (updatedPatient: any) => void;  }) {
+export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MODAL_TYPES, delete?:MODAL_TYPES}, modalTitle:string, actionButtonName?:string, patientId: string, onPatientDelete:() => void;   }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
@@ -45,11 +45,16 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
     }
   };
 
-  const handleUpdate = (updatedPatient: any) => {
-    // Pass updated patient data back to parent
-    props.onPatientUpdate(updatedPatient);
-    onClose(); // Close the modal after successful update
-  };
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (isOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0"); 
+    } else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999"); 
+    }
+  }, [isOpen]);
 
   // Handle Submit button based on form type
   const handleSubmit = () => {
@@ -85,7 +90,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
         </DropdownMenu>
       </Dropdown>
 
-      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{maxHeight: 900, maxWidth:800}}>
+      <Modal backdrop={"opaque"} isOpen={isOpen} onClose={onClose} style={{maxHeight: 900, maxWidth:800}}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -93,7 +98,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                 {title}
               </ModalHeader>
               <ModalBody>
-                <ModalForm type={formType} patientId={props.patientId} onPatientUpdate={handleUpdate}/>
+                <ModalForm type={formType} patientId={props.patientId}/>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>

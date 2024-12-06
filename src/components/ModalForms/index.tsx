@@ -1,4 +1,5 @@
 "use client";
+import { Spinner } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -65,7 +66,7 @@ const PlaceholderImage = () => (
   </svg>
 );
 
-export default function ModalForm(props: { type: string, patientId:string,  onPatientUpdate: (updatedPatient: any) => void }) {
+export default function ModalForm(props: { type: string, patientId:string,}) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
  
@@ -107,12 +108,12 @@ export default function ModalForm(props: { type: string, patientId:string,  onPa
 
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
-
+   const[loading,setLoading] = useState(false)
  
 
   
   const fetchPatientById = async (patientId: string) => {
-    // setLoading(true);
+    setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
       const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${patientId}`;
@@ -136,7 +137,7 @@ export default function ModalForm(props: { type: string, patientId:string,  onPa
     } catch (err) {
       // setError("Failed to fetch patient.");
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 useEffect(()=>{
@@ -554,6 +555,14 @@ useEffect(()=>{
 
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
     return (
+      <>
+         <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
       <Card
         isBlurred
         className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
@@ -622,11 +631,20 @@ useEffect(()=>{
           </div>
         </CardBody>
       </Card>
+      </>
     );
   }
 
   if (props.type === MODAL_TYPES.EDIT_PATIENT) {
     return (
+      <>
+         <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
       <Card
         isBlurred
         className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
@@ -916,12 +934,21 @@ useEffect(()=>{
           </div>
         </CardBody>
       </Card>
+       </>
     );
   }
+ 
 
   if (props.type === MODAL_TYPES.DELETE_PATIENT) {
     return (
       <>
+         <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
           Are you sure you want to delete this patient?
         </h2>
