@@ -17,18 +17,20 @@ import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
 import axios from "axios";
-export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MODAL_TYPES, delete?:MODAL_TYPES}, modalTitle:string, actionButtonName?:string, patientId: string, onPatientDelete:() => void;   }) {
+export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edit: MODAL_TYPES, delete?: MODAL_TYPES }, modalTitle: string, actionButtonName?: string, userId: string, onPatientDelete: () => void; }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
-  const[message,setmessage] =useState('');
-  const[error,seterror] = useState('')
+  const [message, setmessage] = useState('');
+  const [error, seterror] = useState('')
   const [updatedPatientData, setUpdatedPatientData] = useState({});
- 
+  const [updatedEmployeeData, setUpdatedEmployeeData] = useState({})
+
+
 
   const handleDelete = async () => {
     const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${props.patientId}`;
+    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${props.userId}`;
 
     try {
       const response = await axios.delete(endpoint, {
@@ -40,11 +42,24 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
       // Handle successful deletion
       if (props.onPatientDelete) props.onPatientDelete();
       setmessage("Patient deleted successfully!");
-     
+
       onClose(); // Close the modal after deletion
     } catch (error) {
       console.error("Error deleting patient:", error);
       seterror("Failed to delete the patient. Please try again.");
+    }
+  };
+  const deleteEmployee = async () => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:3037/DocPOC/v1/user/${props.userId}`);
+      if (response.status === 200) {
+        if (props.onPatientDelete) props.onPatientDelete();
+        alert('Employee deleted successfully!');
+        // Add logic to refresh or update the UI here, if necessary
+      }
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      alert('Failed to delete the employee. Please try again.');
     }
   };
 
@@ -52,36 +67,45 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
     const header = document.querySelector("header");
     if (isOpen) {
       header?.classList.remove("z-999");
-      header?.classList.add("z-0"); 
+      header?.classList.add("z-0");
     } else {
       header?.classList.remove("z-0");
-      header?.classList.add("z-999"); 
+      header?.classList.add("z-999");
     }
   }, [isOpen]);
 
   // Handle Submit button based on form type
 
-  
-  const handleOpen = (backdrop: React.SetStateAction<string>, type:MODAL_TYPES | undefined) => {
-    if(type == undefined ) return;
+
+  const handleOpen = (backdrop: React.SetStateAction<string>, type: MODAL_TYPES | undefined) => {
+    if (type == undefined) return;
     setFormType(type);
     onOpen();
-   
-    
+
+
   };
   const handleDataChange = (data: any) => {
-    setUpdatedPatientData(data); // Update state with child data
+
+  if(props.modalType.edit){
+    if(MODAL_TYPES.EDIT_EMPLOYEE){
+      setUpdatedEmployeeData(data)
+    }
+    else if(MODAL_TYPES.EDIT_PATIENT){
+      setUpdatedPatientData(data);
+    }
+  }
   };
+
 
   const handleEdit = async () => {
     const token = localStorage.getItem("docPocAuth_token");
     const endpoint = "http://127.0.0.1:3037/DocPOC/v1/patient";
-  
+
     const requestData = {
-      id: props.patientId,
+      id: props.userId,
       ...updatedPatientData, // Data collected from the form
     };
-  
+
     try {
       const response = await axios.patch(endpoint, requestData, {
         headers: {
@@ -91,23 +115,100 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
       });
       if (props.onPatientDelete) props.onPatientDelete();
       setmessage("Patient updated successfully!");
-      onClose(); // Close the modal after successful update
+      onClose(); 
     } catch (error) {
       console.error("Error updating patient:", error);
       seterror("Failed to update the patient. Please try again.");
     }
   };
+
+  const handleEmployeeEdit = async () => {
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user`;
+
+    const requestData = {
+      id: props.userId,
+      ...updatedEmployeeData, 
+    };
+
+    try {
+      const response = await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (props.onPatientDelete) props.onPatientDelete();
+      setmessage("Patient updated successfully!");
+      alert("Patient updated successfully!");
+      onClose(); // Close the modal after successful update
+    } catch (error) {
+      console.error("Error updating patient:", error);
+      seterror("Failed to update the patient. Please try again.");
+      alert("Failed to update the patient. Please try again.");
+    }
+  };
+
+
+
   const handleSubmit = () => {
     if (formType === props.modalType.delete) {
+  
       handleDelete();
+  
+      deleteEmployee()
+    
+      
     } else if (formType === props.modalType.edit) {
-      handleEdit(); // Call edit function
-    } else {
+      
+        handleEdit();
+      
+  
+        handleEmployeeEdit()
+      
+    // Call edit function
+    } 
+
+
+    else {
       console.log(updatedPatientData); // Log other cases
       onClose();
     }
+
+    // case  MODAL_TYPES.EDIT_EMPLOYEE:
+    //   handleEmployeeEdit()
+    //    break;
+    // case MODAL_TYPES.EDIT_PATIENT:
+    //   handleEdit()
+    //   break;
+
+    // switch (props.modalType.delete) {
+    //   case MODAL_TYPES.DELETE_EMPLOYEE:
+    //     deleteEmployee()
+    //     break;
+    //   case MODAL_TYPES.DELETE_PATIENT:
+    //     handleDelete();
+    //     break;
+    //   // Add other cases as needed
+    //   default:
+    //     // console.warn("Unhandled modal type:", props.type);
+    //     onClose();
+    // }
+    // switch (props.modalType.edit) {
+    //   case MODAL_TYPES.EDIT_EMPLOYEE:
+    //     handleEmployeeEdit()
+    //     break;
+    //   case MODAL_TYPES.EDIT_PATIENT:
+    //     handleEdit()
+    //     break;
+    //   // Add other cases as needed
+    //   default:
+    //     // console.warn("Unhandled modal type:", props.type);
+    //     onClose();
+    // }
+
   };
- 
+
 
   return (
     <>
@@ -120,11 +221,13 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
         <DropdownMenu>
           <DropdownItem onPress={() => handleOpen("blur", props.modalType.view)}>View</DropdownItem>
           <DropdownItem onPress={() => handleOpen("blur", props.modalType.edit)}>Edit</DropdownItem>
-          {(props.modalType.delete && (<DropdownItem onPress={() => handleOpen("blur", props.modalType.delete)}>Delete</DropdownItem>) ) || <DropdownItem style={{display:"none"}}></DropdownItem>}
+          {(props.modalType.delete && (<DropdownItem onPress={() => handleOpen("blur", props.modalType.delete)}>Delete</DropdownItem>)) || <DropdownItem style={{ display: "none" }}></DropdownItem>}
         </DropdownMenu>
       </Dropdown>
 
-      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{maxHeight: 900, maxWidth:800}}>
+      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{ maxHeight: 600, maxWidth: 800 }}
+
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -132,7 +235,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                 {title}
               </ModalHeader>
               <ModalBody>
-                <ModalForm type={formType} patientId={props.patientId} onDataChange={handleDataChange}/>
+                <ModalForm type={formType} userId={props.userId} onDataChange={handleDataChange} />
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -142,7 +245,7 @@ export default function OpaqueModal(props:{modalType:{view:MODAL_TYPES, edit:MOD
                   {props.actionButtonName || 'Submit'}
                 </Button>
 
-                
+
               </ModalFooter>
             </>
           )}

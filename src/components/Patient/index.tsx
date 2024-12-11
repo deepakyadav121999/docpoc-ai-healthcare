@@ -266,7 +266,7 @@ export default function App() {
             }}
             actionButtonName={"Ok"}
             modalTitle={"Patient"}
-            patientId={user.id}
+            userId={user.id}
             onPatientDelete={refreshPatients}
           />
         );

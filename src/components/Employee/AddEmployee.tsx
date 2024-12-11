@@ -13,11 +13,12 @@ import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } from "@nextui-org/react";
-interface AddPatientProps {
-  onPatientAdded: () => void;
+import { useEffect } from "react";
+interface AddUsersProps {
+  onUsersAdded: () => void;
 }
 
-const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
+const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
@@ -25,48 +26,98 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     name: "",
     phone: "",
     email: "",
-
-    bloodGroup: "",
-    dob: "",
-    gender: "",
-    address: "",
-    isActive: true,
-    json: '{"allergies":["Peanut","Dust"]}',
-    documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-    lastVisit: "2024-01-15T08:30:00.000Z",
-    status: "Active",
-    notificationStatus: '{"allergies":["Peanut","Dust"]}',
+    userType: "",
+    code: "ST-ID/JKI2301/1021",
+    json: JSON.stringify({
+      dob: "",
+      designation: "",
+      workingHours: "",
+    }),
+    userName: "",
+    password: "",
   });
 
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  // const [size, setSize] = useState('md');
-  // const sizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "full"];
+  const [accessTypes, setAccessTypes] = useState({
+    setAppointments: false,
+    messagePatient: true,
+    editDoctor: true,
+  });
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [message, setmessage] = useState('')
-  const [errmessage, seterrmessage] = useState('')
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-  const handleOpen = () => {
-    setmessage('')
-    onClose()
-  }
+
+
+  const handleJsonUpdate = (key: string, value: string) => {
+    const updatedJson = JSON.parse(formData.json);
+    updatedJson[key] = value;
+    setFormData((prev) => ({
+      ...prev,
+      json: JSON.stringify(updatedJson),
+    }));
+  };
+
+  const handleAccessChange = (key: keyof typeof accessTypes, value: boolean) => {
+    setAccessTypes((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
+  const handleDobChange = (value: string) => {
+    const updatedJson = JSON.parse(formData.json);
+    updatedJson.dob = value; // Update the dob field in the JSON object
+    setFormData({
+      ...formData,
+      json: JSON.stringify(updatedJson), // Convert back to JSON string
+    });
+  };
 
+  const convertTo12HourFormat = (time: string): string => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
+    return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
+  const handleTimeChange = (key: "start" | "end", value: string) => {
+    const [hour, minute] = value.split(":").map(Number);
+    const period = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+    const formattedTime = `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
+
+    const updatedWorkingHours = JSON.parse(formData.json).workingHours || "";
+
+    let newWorkingHours = "";
+    if (key === "start") {
+      newWorkingHours = `${formattedTime} - ${updatedWorkingHours.split(" - ")[1] || ""
+        }`;
+    } else {
+      newWorkingHours = `${updatedWorkingHours.split(" - ")[0] || ""
+        } - ${formattedTime}`;
+    }
+
+    handleJsonUpdate("workingHours", newWorkingHours);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
-    const missingFields: string[] = [];
 
+    const missingFields: string[] = [];
     for (const key in formData) {
-      if (!formData[key as keyof typeof formData] && key !== "branchId" && key !== "isActive") {
+      if (
+        !formData[key as keyof typeof formData] &&
+        key !== "branchId"
+      ) {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
 
+
     if (missingFields.length > 0) {
+
       setModalMessage({
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
@@ -84,46 +135,66 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       return;
     }
 
+    // Add accessType to formData
+    const payload = {
+      ...formData,
+      accessType: JSON.stringify(accessTypes),
+    };
+
     try {
       const response = await axios.post(
-        "http://127.0.0.1:3037/DocPOC/v1/patient",
-        formData,
+        "http://127.0.0.1:3037/DocPOC/v1/user",
+        payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
       );
+      setModalMessage({ success: "User added successfully!", error: "" });
 
-      setModalMessage({ success: "Patient added successfully!", error: "" });
       setFormData({
         branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
         name: "",
         phone: "",
         email: "",
-        bloodGroup: "",
-        dob: "",
-        gender: "",
-        address: "",
-        isActive: true,
-        json: '{"allergies":["Peanut","Dust"]}',
-        documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-        lastVisit: "2024-01-15T08:30:00.000Z",
-        status: "Active",
-        notificationStatus: '{"allergies":["Peanut","Dust"]}',
+        userType: "",
+        code: "ST-ID/JKI2301/1021",
+        json: JSON.stringify({
+          dob: "",
+          designation: "",
+          workingHours: "",
+        }),
+        userName: "",
+        password: "",
       });
-      onPatientAdded()
+      setAccessTypes({
+        setAppointments: false,
+        messagePatient: false,
+        editDoctor: false,
+      });
+      onUsersAdded();
     } catch (error: any) {
-
       setModalMessage({
         success: "",
-        error: `Error adding Patient: ${error.response?.data?.message || "Unknown error"}`,
+        error: `Error adding user: ${error.response?.data?.message || "Unknown error"}`,
       });
+
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (header) {
+      // Only modify z-index when modal is open
+
+      header.classList.remove("z-999");
+      header.classList.add("z-0");
+
+    }
+  }, [isOpen]);
 
 
   return (
@@ -135,7 +206,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
               <div className="mb-4.5 flex flex-col gap-4.5">
                 <Input
-                  label="Patient Name"
+                  label="Name"
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.name}
@@ -160,16 +231,44 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 />
 
                 <Autocomplete
-                  label="Gender"
+                  label="User Type"
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Select Gender"
-                  defaultItems={[{ label: "Male" }, { label: "Female" }, { label: "Other" }]}
-                  onSelectionChange={(key) => setFormData({ ...formData, gender: key as string })}
+                  placeholder="Select User Type"
+                  defaultItems={[{ label: "SUPER_ADMIN" }]}
+                  onSelectionChange={(key) => setFormData({ ...formData, userType: key as string })}
                   isDisabled={!edit}
                 >
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete>
+                <Autocomplete
+                  label="Designation"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  placeholder="Select Designation"
+                  defaultItems={[{ label: "Doctor" }, { label: "Staff" }, { label: "Nurse" }]}
+                  onSelectionChange={(key) => handleJsonUpdate("designation", key as string)}
+                  isDisabled={!edit}
+                >
+                  {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
+                </Autocomplete>
+                <div className="flex gap-4">
+                  <Input
+                    label="From (Working Hours)"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    type="time"
+                    onChange={(e) => handleTimeChange("start", e.target.value)}
+                  />
+                  <Input
+                    label="To (Working Hours)"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    type="time"
+                    onChange={(e) => handleTimeChange("end", e.target.value)}
+                  />
+                </div>
+
                 <Input
                   label="Phone"
                   labelPlacement="outside"
@@ -203,62 +302,79 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   onBlur={(e) => {
-                    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    // if (!emailRegex.test(e.target.value)) {
-                    //   setErrors((prev) => [...prev, "Please enter a valid email address."]);
-                    // }
                   }}
                   isDisabled={!edit}
                 />
 
+
               </div>
 
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
-                <Autocomplete
-                  label="Blood Group"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  placeholder="Select Blood Group"
-                  defaultItems={[{ label: "A+" }, { label: "O+" }, { label: "B+" }, { label: "AB+" }]}
-                  onSelectionChange={(key) => setFormData({ ...formData, bloodGroup: key as string })}
-                  isDisabled={!edit}
-                >
-                  {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
-                </Autocomplete>
                 <Input
                   label="Date of Birth"
                   type="date"
                   labelPlacement="outside"
                   variant="bordered"
-                  value={formData.dob}
-                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  // value={JSON.parse(formData.json.dob)}
+                  onChange={(e) => handleDobChange(e.target.value)}
+                  isDisabled={!edit}
+                />
+
+
+              </div>
+              <div className="mb-4.5 flex flex-col gap-4.5">
+                {/* username */}
+                <Input
+                  label="Username"
+
+                  labelPlacement="outside"
+                  variant="bordered"
+                  value={formData.userName}
+                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                  onBlur={(e) => {
+
+                  }}
+                  isDisabled={!edit}
+                />
+              </div>
+
+              {/*password */}
+              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+                <Input
+                  label="Password"
+                  type="password"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   isDisabled={!edit}
                 />
               </div>
 
 
-              <Textarea
-                label="Address"
-                labelPlacement="outside"
-                variant="bordered"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                isDisabled={!edit}
-              />
-
-              <div className="flex justify-center mt-4">
-                <Checkbox
-                  isSelected={formData.isActive}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, isActive: value, status: value ? "Active" : "Inactive" })
-                  }
-                  isDisabled={!edit}
-                >
-                  Active Status
-                </Checkbox>
+              <div className="mb-4.5">
+                <p className="text-sm font-medium mb-2">Access Types:</p>
+                <div className="flex  gap-2">
+                  <Checkbox
+                    isSelected={accessTypes.setAppointments}
+                    onValueChange={(value) => handleAccessChange("setAppointments", value)}
+                  >
+                    Set Appointments
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.messagePatient}
+                    onValueChange={(value) => handleAccessChange("messagePatient", value)}
+                  >
+                    Message Patient
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.editDoctor}
+                    onValueChange={(value) => handleAccessChange("editDoctor", value)}
+                  >
+                    Edit Doctor
+                  </Checkbox>
+                </div>
               </div>
-
-
               {errors.length > 0 && (
                 <div className="text-red-500 mt-4">
                   {errors.map((error, index) => (
@@ -305,13 +421,14 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 </ModalContent>
               </Modal>
 
-
             </div>
           </form>
         </div>
       </div>
+
+
     </div>
   );
 };
 
-export default AddPatient;
+export default AddUsers;

@@ -28,12 +28,20 @@ import { columns, users, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
+import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+import { Spinner } from "@nextui-org/react";
+import AddEmployee from "./AddEmployee";
+import debounce from 'lodash.debounce';
+import axios from "axios";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   inactive: "warning",
   blacklisted: "danger",
 };
+
+
+
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -45,6 +53,20 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
   "lastVisit"
 ];
+interface Employee {
+  id: string;
+  name: string;
+  age: number;
+  bloodGroup: string;
+  phone: string;
+  email: string;
+  status: string;
+  lastVisit: string;
+  displayPicture: string;
+  isActive:string;
+  json:string;
+
+}
 
 type User = (typeof users)[0];
 
@@ -64,6 +86,95 @@ export default function DataTable() {
   });
   const [page, setPage] = React.useState(1);
 
+  const [users, setUsers] = React.useState<Employee[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+
+  const [totalUsers, setTotalUsers] = React.useState(0)
+  const fetchUsers = async (searchName = "", selectedStatuses: string[] = []) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = searchName
+        ? `http://127.0.0.1:3037/DocPOC/v1/user/name/${searchName}`
+        : "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+
+      const params: any = {};
+
+        params.page = page;
+        params.pageSize = rowsPerPage;
+        params.from = '2024-12-04T03:32:25.812Z';
+        params.to = '2024-12-11T03:32:25.815Z';
+      
+      
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setUsers(response.data.rows || response.data);
+      setTotalUsers(response.data.count || response.data.length);
+
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+
+    fetchUsers();
+
+  }, [page, rowsPerPage]);
+
+
+  const getAgeFromDob = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const currentDate = new Date();
+    
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+    
+    // Adjust age if the birthday hasn't occurred yet this year
+    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+      age--;
+    }
+  
+    return age;
+  };
+
+
+  const refreshUsers = async () => {
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
+        params: {
+          page: page,
+          pageSize: rowsPerPage,
+          from: '2024-12-04T03:32:25.812Z',
+          to: '2024-12-11T03:32:25.815Z',
+        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      setUsers(response.data.rows);
+      setTotalUsers(response.data.count);
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+type User = (typeof users)[0];
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
@@ -94,14 +205,9 @@ export default function DataTable() {
     return filteredUsers;
   }, [users, filterValue, statusFilter]);
 
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(totalUsers / rowsPerPage);
 
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+  const items = filteredItems;
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: User, b: User) => {
@@ -116,11 +222,28 @@ export default function DataTable() {
   const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
     const cellValue = user[columnKey as keyof User];
 
+
+    if (columnKey === "age") {
+  
+      let age = "";
+      try {
+        const userJson = JSON.parse(user.json);
+        const dob = userJson.dob || ""; 
+        age = getAgeFromDob(dob).toString(); 
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+  
+      return <p className="capitalize">{age}</p>;
+    }
+
+
+
     switch (columnKey) {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
+            avatarProps={{ radius: "lg", src: user.displayPicture }}
             description={user.email}
             name={cellValue}
           >
@@ -137,31 +260,38 @@ export default function DataTable() {
           </div>
         );
       case "status":
+        const status = user.isActive ? "Active" : "Inactive";
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[user.status]}
+            color={statusColorMap[status.toLowerCase()]}
             size="sm"
             variant="flat"
           >
-            {cellValue}
+            {status}
           </Chip>
         );
       case "actions":
         return (
           <OpaqueModal
-            modalType={{
-              view: MODAL_TYPES.VIEW_EMPLOYEE,
-              edit: MODAL_TYPES.EDIT_EMPLOYEE,
-              delete: MODAL_TYPES.DELETE_EMPLOYEE,
-            }}
-            actionButtonName={"Ok"}
-            modalTitle={"Employee"}
-          />
+          modalType={{
+            view: MODAL_TYPES.VIEW_EMPLOYEE,
+            edit: MODAL_TYPES.EDIT_EMPLOYEE,
+            delete: MODAL_TYPES.DELETE_EMPLOYEE,
+          }}
+          actionButtonName={"Ok"}
+          modalTitle={"Employee"}
+          userId={user.id}
+          onPatientDelete={refreshUsers}
+        />
         );
-      default:
-        return cellValue;
-    }
+        default:
+          return cellValue;
+      }
+
+        
+     
+    
   }, []);
 
   const onNextPage = React.useCallback(() => {
@@ -183,15 +313,25 @@ export default function DataTable() {
     },
     []
   );
+  const debouncedFetchUser = React.useMemo(
+    () => debounce((value: string) => fetchUsers(value), 500),
+    [fetchUsers]
+  );
 
   const onSearchChange = React.useCallback((value?: string) => {
-    if (value) {
-      setFilterValue(value);
-      setPage(1);
-    } else {
-      setFilterValue("");
-    }
-  }, []);
+    setFilterValue(value || "");
+    setPage(1);
+    debouncedFetchUser(value || "");
+  }, [debouncedFetchUser]);
+
+  // const onSearchChange = React.useCallback((value?: string) => {
+  //   if (value) {
+  //     setFilterValue(value|| " ");
+  //     setPage(1);
+  //   } else {
+  //     setFilterValue("");
+  //   }
+  // }, []);
 
   const onClear = React.useCallback(() => {
     setFilterValue("");
@@ -263,14 +403,12 @@ export default function DataTable() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <Button color="primary" endContent={<PlusIcon />} style={{minHeight: 55}}>
-              Add New
-            </Button>
+            <OpaqueDefaultModal headingName="Add New Employee" child={<AddEmployee onUsersAdded={refreshUsers} />} />
           </div>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
-            Total {users.length} users
+            Total {totalUsers} users
           </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
@@ -302,7 +440,7 @@ export default function DataTable() {
         <span className="w-[30%] text-small text-default-400">
           {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+            : `${selectedKeys.size} of ${users.length} selected`}
         </span>
         <Pagination
           isCompact
@@ -336,6 +474,7 @@ export default function DataTable() {
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
+    <div className="relative">
     <Table
       aria-label="Appointment Details"
       isHeaderSticky
@@ -372,5 +511,13 @@ export default function DataTable() {
         )}
       </TableBody>
     </Table>
+    <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
+    </div>
   );
 }

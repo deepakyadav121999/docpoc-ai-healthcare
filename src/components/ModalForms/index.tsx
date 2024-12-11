@@ -1,5 +1,5 @@
 "use client";
-import { Spinner } from "@nextui-org/react";
+import { Spinner, user } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -66,16 +66,18 @@ const PlaceholderImage = () => (
   </svg>
 );
 
-export default function ModalForm(props: { type: string, patientId:string, onDataChange: (data: any) => void}) {
+export default function ModalForm(props: { type: string, userId: string, onDataChange: (data: any) => void }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
- 
+
   const [editSelectedPatientBloodGroup, setEditPatientBloodGroup] =
     useState(false);
   const [editSelectedPatientStatus, setEditPatientStatus] = useState(false);
   const [editSelectedPatientEmail, setEditPatientEmail] = useState(false);
   const [editSelectedPatientPhone, setEditPatientPhone] = useState(false);
-  const [employeeName, setEmployeeName] = useState("Sikha Kumari");
+
+
+  const [employeeName, setEmployeeName] = useState("");
   const [editSelectedEmployee, setEditEmployee] = useState(false);
   const [editSelectedEmployeePhone, setEditEmployeePhone] = useState(false);
   const [editSelectedEmployeeEmail, setEditEmployeeEmail] = useState(false);
@@ -86,53 +88,51 @@ export default function ModalForm(props: { type: string, patientId:string, onDat
   const [editSelectedEmployeeJoiningDate, setEditEmployeeJoiningDate] =
     useState(false);
   const [editSelectedEmployeeDOB, setEditEmployeeDOB] = useState(false);
-  const [employeeEmail, setEmployeeEmail] = useState("gulli@gmail.com");
-  const [employeeDesignation, setEmployeeDesignation] = useState("Nurse");
-  const [employeePhone, setEmployeePhone] = useState("+91 8763039387");
-  const [employeeShiftTime, setEmployeeShiftTime] = useState(
-    "08:30 AM - 06:00 PM"
-  );
-  const [employeeDOB, setEmployeeDOB] = useState(now(getLocalTimeZone()));
-  const [employeeJoiningDate, setEmployeeJoiningDate] = useState(
-    now(getLocalTimeZone())
-  );
+
+  const [employeeEmail, setEmployeeEmail] = useState("");
+  const [employeeDesignation, setEmployeeDesignation] = useState("");
+  const [employeePhone, setEmployeePhone] = useState("");
+  const[emloyeeBranch, setEmployeeBranch] = useState("")
+  const [employeeShiftTime, setEmployeeShiftTime] = useState("");
+  const [employeeDOB, setEmployeeDOB] = useState("");
+  const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
   const [editSelectedPatient, setEditPatient] = useState(false);
   const [patientName, setPatientName] = useState("");
   const [patientBloodGroup, setPatientBloodGroup] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
-   const [patientStatus, setPatientStatus] = useState("");
-   const [profilePhoto, setProfilePhoto] = useState("");
-   const[lastVisit,setLastvisit] =useState("");
-   const[notificationStatus,setNotificationStatus] =useState("")
-  const[branchId,setBranchId] = useState("")
-  const[patientDob, setPatientDob] = useState("")
-  const[gender,setGender]= useState("")
+  const [patientStatus, setPatientStatus] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const [lastVisit, setLastvisit] = useState("");
+  const [notificationStatus, setNotificationStatus] = useState("")
+  const [branchId, setBranchId] = useState("")
+  const [patientDob, setPatientDob] = useState("")
+  const [gender, setGender] = useState("")
 
 
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
-   const[loading,setLoading] = useState(false)
- 
- 
+  const [loading, setLoading] = useState(false)
 
 
-  
-  const fetchPatientById = async (patientId: string) => {
+
+
+
+  const fetchPatientById = async (userId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${patientId}`;
-  
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${userId}`;
+
       const response = await axios.get(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-  
 
-      
+
+
       setPatientName(response.data.name)
       setPatientPhone(response.data.phone)
       setPatientBloodGroup(response.data.bloodGroup)
@@ -150,9 +150,50 @@ export default function ModalForm(props: { type: string, patientId:string, onDat
       setLoading(false);
     }
   };
-useEffect(()=>{
-  fetchPatientById(props.patientId)
-},[])
+
+  const fetchUsers = async (userId: string) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/${userId}`;
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const users = response.data;
+      const parsedJson = JSON.parse(users.json);
+      // Update state
+      setEmployeeName(users.name);
+      setEmployeeEmail(users.email);
+      setEmployeePhone(users.phone);
+      setEmployeeDOB(parsedJson.dob);
+      setEmployeeDesignation(parsedJson.designation);
+      setEmployeeShiftTime(parsedJson.workingHours);
+      setEmployeeJoiningDate(users.createdAt)
+      setEmployeeBranch(users.branchId)
+      console.log(users);
+    } catch (err) {
+      console.error("Failed to fetch users.", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    if (props.type === MODAL_TYPES.VIEW_PATIENT || props.type === MODAL_TYPES.EDIT_PATIENT || props.type === MODAL_TYPES.DELETE_PATIENT) {
+      fetchPatientById(props.userId);
+    }
+
+    if (props.type === MODAL_TYPES.VIEW_EMPLOYEE || props.type === MODAL_TYPES.EDIT_EMPLOYEE || props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
+      fetchUsers(props.userId);
+    }
+
+  }, [props.type, props.userId])
 
 
   const editTime = () => {
@@ -181,6 +222,7 @@ useEffect(()=>{
     setEditPatientPhone(!editSelectedPatientPhone);
   };
   useEffect(() => {
+    if (props.type === MODAL_TYPES.EDIT_PATIENT) {
     const updatedData = {
       branchId: branchId,
       name: patientName,
@@ -189,11 +231,26 @@ useEffect(()=>{
       bloodGroup: patientBloodGroup,
       status: patientStatus,
       notificationStatus: notificationStatus,
-      dob:patientDob,
-      gender:gender
+      dob: patientDob,
+      gender: gender
     };
-  
-    props.onDataChange(updatedData); // Pass updated data to parent
+
+    props.onDataChange(updatedData);
+   } 
+   else if(props.type === MODAL_TYPES.EDIT_EMPLOYEE){
+       const updatedData={
+        branchId:emloyeeBranch,
+        name:employeeName,
+        phone:employeePhone,
+        email:employeeEmail,
+        json:JSON.stringify({
+          dob:employeeDOB,
+          designation:employeeDesignation,
+          workingHours:employeeShiftTime
+        })
+       }
+       props.onDataChange(updatedData);
+   }
   }, [
     branchId,
     patientName,
@@ -203,7 +260,15 @@ useEffect(()=>{
     patientStatus,
     notificationStatus,
     patientDob,
-    gender
+    gender,
+    emloyeeBranch,
+    employeeName,
+    employeePhone,
+    employeeEmail,
+    employeeDOB,
+    employeeDesignation,
+    employeeShiftTime
+
   ]);
 
   const editBloodGroup = () => {
@@ -212,26 +277,26 @@ useEffect(()=>{
 
   const handleDateChange = (newDate: ZonedDateTime) => {
     setSelectedDate(newDate);
-    // setEditVisitTime(false);
+  
   };
 
   const editEmployeeName = () => {
-    setEmployeeName("Rekha Pandey");
+    setEmployeeName(employeeName);
     setEditEmployee(!editSelectedEmployee);
   };
 
   const editEmployeeEmail = () => {
-    setEmployeeEmail("test@gmail.com");
+    setEmployeeEmail(employeeEmail);
     setEditEmployeeEmail(!editSelectedEmployeeEmail);
   };
 
   const editEmployeePhone = () => {
-    setEmployeePhone("+91 8276536576");
+    setEmployeePhone(employeePhone);
     setEditEmployeePhone(!editSelectedEmployeePhone);
   };
 
   const editEmployeeDesignation = () => {
-    setEmployeeDesignation("Doctor (ENT Specialist)");
+    setEmployeeDesignation(employeeDesignation);
     setEditEmployeeDesignation(!editSelectedEmployeeDesignation);
   };
 
@@ -248,8 +313,8 @@ useEffect(()=>{
     setEditEmployeeJoiningDate(!editSelectedEmployeeJoiningDate);
   };
 
-  const editEmployeeDOB = (newDate: DateValue) => {
-    setEmployeeDOB(newDate);
+  const editEmployeeDOB = () => {
+    setEmployeeDOB(employeeDOB);
   };
 
   const editEmployeeDobTime = () => {
@@ -278,6 +343,15 @@ useEffect(()=>{
     return new Intl.DateTimeFormat("en-US", options).format(
       new Date(date.year, date.month - 1, date.day)
     );
+  };
+  const formatDateOne = (isoString: string): string => {
+    // Convert the ISO string to a Date object
+    const date = new Date(isoString);
+    // Format the date as YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   const formatTime = (date: ZonedDateTime) => {
@@ -326,9 +400,9 @@ useEffect(()=>{
     },
   ]; // Example doctors list
 
- 
 
-  
+
+
 
 
 
@@ -597,81 +671,81 @@ useEffect(()=>{
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
     return (
       <>
-         <div>
+        <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
               <Spinner />
             </div>
           )}
         </div>
-      <Card
-        isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <Image
-                alt="Patient photo"
-                className="object-cover"
-                height={200}
-                shadow="md"
-                src={profilePhoto}
-                width="100%"
-              />
-            </div>
-
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
-                  Patient Details
-                </h3>
+        <Card
+          isBlurred
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
+          shadow="sm"
+        >
+          <CardBody>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <Image
+                  alt="Patient photo"
+                  className="object-cover"
+                  height={200}
+                  shadow="md"
+                  src={profilePhoto}
+                  width="100%"
+                />
               </div>
 
-              <div className="space-y-3">
-              <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
-                    <strong>Patient Name: </strong>{patientName}
-                  </p>
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90">
+                    Patient Details
+                  </h3>
                 </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
-                    <strong>Last Visit: </strong>{lastVisit}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
-                    <strong>Status: </strong> {patientStatus}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <div style={{ marginLeft: -5 }}>
-                    <SVGIconProvider iconName="doctor" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="clock" />
+                    <p className="text-medium ml-2">
+                      <strong>Patient Name: </strong>{patientName}
+                    </p>
                   </div>
-                  <p className="text-medium ml-2">
-                    <strong>Last Appointed Doctor: </strong>Dr. Jane Smith
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <Accordion variant="splitted">
-                    <AccordionItem
-                      key="1"
-                      aria-label="Previous visits"
-                      title="Previous visits"
-                    >
-                      <VisitHistoryTable />
-                    </AccordionItem>
-                  </Accordion>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="clock" />
+                    <p className="text-medium ml-2">
+                      <strong>Last Visit: </strong>{lastVisit}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="calendar" />
+                    <p className="text-medium ml-2">
+                      <strong>Status: </strong> {patientStatus}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <div style={{ marginLeft: -5 }}>
+                      <SVGIconProvider iconName="doctor" />
+                    </div>
+                    <p className="text-medium ml-2">
+                      <strong>Last Appointed Doctor: </strong>Dr. Jane Smith
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <Accordion variant="splitted">
+                      <AccordionItem
+                        key="1"
+                        aria-label="Previous visits"
+                        title="Previous visits"
+                      >
+                        <VisitHistoryTable />
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
       </>
     );
   }
@@ -679,324 +753,324 @@ useEffect(()=>{
   if (props.type === MODAL_TYPES.EDIT_PATIENT) {
     return (
       <>
-         <div>
+        <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
               <Spinner />
             </div>
           )}
         </div>
-      <Card
-        isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <div>
-                <div className="relative drop-shadow-2">
-                  <Image
-                    src={profilePhoto}
-                    width={160}
-                    height={160}
-                    className="overflow-hidden rounded-full"
-                    alt="profile"
-                  />
+        <Card
+          isBlurred
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
+          shadow="sm"
+        >
+          <CardBody>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <div>
+                  <div className="relative drop-shadow-2">
+                    <Image
+                      src={profilePhoto}
+                      width={160}
+                      height={160}
+                      className="overflow-hidden rounded-full"
+                      alt="profile"
+                    />
+                  </div>
+
+                  <label
+                    htmlFor="profilePhoto"
+                    className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-16"
+                  >
+                    <SVGIconProvider
+                      iconName="camera"
+                      color={GLOBAL_ICON_COLOR_WHITE}
+                    />
+
+                    <input
+                      type="file"
+                      name="profilePhoto"
+                      id="profilePhoto"
+                      className="sr-only"
+                      accept="image/png, image/jpg, image/jpeg"
+                      onChange={handleProfilePhotoChange}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90">
+                    Patient Details
+                  </h3>
                 </div>
 
-                <label
-                  htmlFor="profilePhoto"
-                  className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-16"
-                >
-                  <SVGIconProvider
-                    iconName="camera"
-                    color={GLOBAL_ICON_COLOR_WHITE}
-                  />
-
-                  <input
-                    type="file"
-                    name="profilePhoto"
-                    id="profilePhoto"
-                    className="sr-only"
-                    accept="image/png, image/jpg, image/jpeg"
-                    onChange={handleProfilePhotoChange}
-                  />
-                </label>
-              </div>
-            </div>
-
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
-                  Patient Details
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
-                    <strong>Name: </strong>
-                    {!editSelectedPatient && patientName}
-                  </p>
-                  {editSelectedPatient && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Patient name.."
-                        labelPlacement="outside"
-                        value={patientName}
-                        onChange={(e)=>{
-                          setPatientName(e.target.value)
-                         
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedPatient && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editName}
-                      />
-                    )}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="clock" />
+                    <p className="text-medium ml-2">
+                      <strong>Name: </strong>
+                      {!editSelectedPatient && patientName}
+                    </p>
                     {editSelectedPatient && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editName}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
-                    <strong>Status: </strong>{" "}
-                    {!editSelectedPatientStatus && patientStatus}
-                  </p>
-                  {editSelectedPatientStatus && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Patient status.."
-                        labelPlacement="outside"
-                        value={patientStatus}
-                        onChange={(e)=>{
-                          setPatientStatus(e.target.value)
-                        
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedPatientStatus && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editStatus}
-                      />
-                    )}
-                    {editSelectedPatientStatus && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editStatus}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="email" />
-                  <p className="text-medium ml-2">
-                    <strong>Email: </strong>
-                    {!editSelectedPatientEmail && patientEmail}
-                  </p>
-                  {editSelectedPatientEmail && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="email"
-                        placeholder="Patient email.."
-                        labelPlacement="outside"
-                        value={patientEmail}
-                        onChange={(e)=>{
-                          setPatientEmail(e.target.value)
-                       
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedPatientEmail && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmail}
-                      />
-                    )}
-                    {editSelectedPatientEmail && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmail}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="blood-drop" />
-                  <p className="text-medium ml-2">
-                    <strong>Blood Group: </strong>
-                    {!editSelectedPatientBloodGroup && patientBloodGroup}
-                  </p>
-                  {editSelectedPatientBloodGroup && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button variant="bordered">
-                            {patientBloodGroup}
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu
-                          aria-label="Dynamic Actions"
-                          items={bloodGroupList}
-                          onAction={(key) =>{
-                            setPatientBloodGroup(
-                              bloodGroupList.find((item) => item.key === key)
-                                ?.label ?? patientBloodGroup
-                            )
-                           
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Patient name.."
+                          labelPlacement="outside"
+                          value={patientName}
+                          onChange={(e) => {
+                            setPatientName(e.target.value)
+
                           }}
-                        >
-                          {(item) => (
-                            <DropdownItem
-                              key={item.key}
-                              color={
-                                item.key === "delete" ? "danger" : "default"
-                              }
-                              className={
-                                item.key === "delete" ? "text-danger" : ""
-                              }
-                            >
-                              {item.label}
-                            </DropdownItem>
-                          )}
-                        </DropdownMenu>
-                      </Dropdown>
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedPatientBloodGroup && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editBloodGroup}
-                      />
+                        />
+                      </div>
                     )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatient && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editName}
+                        />
+                      )}
+                      {editSelectedPatient && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editName}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="calendar" />
+                    <p className="text-medium ml-2">
+                      <strong>Status: </strong>{" "}
+                      {!editSelectedPatientStatus && patientStatus}
+                    </p>
+                    {editSelectedPatientStatus && (
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Patient status.."
+                          labelPlacement="outside"
+                          value={patientStatus}
+                          onChange={(e) => {
+                            setPatientStatus(e.target.value)
+
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientStatus && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editStatus}
+                        />
+                      )}
+                      {editSelectedPatientStatus && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editStatus}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="email" />
+                    <p className="text-medium ml-2">
+                      <strong>Email: </strong>
+                      {!editSelectedPatientEmail && patientEmail}
+                    </p>
+                    {editSelectedPatientEmail && (
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Input
+                          type="email"
+                          placeholder="Patient email.."
+                          labelPlacement="outside"
+                          value={patientEmail}
+                          onChange={(e) => {
+                            setPatientEmail(e.target.value)
+
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientEmail && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editEmail}
+                        />
+                      )}
+                      {editSelectedPatientEmail && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editEmail}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="blood-drop" />
+                    <p className="text-medium ml-2">
+                      <strong>Blood Group: </strong>
+                      {!editSelectedPatientBloodGroup && patientBloodGroup}
+                    </p>
                     {editSelectedPatientBloodGroup && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editBloodGroup}
-                      />
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button variant="bordered">
+                              {patientBloodGroup}
+                            </Button>
+                          </DropdownTrigger>
+                          <DropdownMenu
+                            aria-label="Dynamic Actions"
+                            items={bloodGroupList}
+                            onAction={(key) => {
+                              setPatientBloodGroup(
+                                bloodGroupList.find((item) => item.key === key)
+                                  ?.label ?? patientBloodGroup
+                              )
+
+                            }}
+                          >
+                            {(item) => (
+                              <DropdownItem
+                                key={item.key}
+                                color={
+                                  item.key === "delete" ? "danger" : "default"
+                                }
+                                className={
+                                  item.key === "delete" ? "text-danger" : ""
+                                }
+                              >
+                                {item.label}
+                              </DropdownItem>
+                            )}
+                          </DropdownMenu>
+                        </Dropdown>
+                      </div>
                     )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="phone" />
-                  <p className="text-medium ml-2">
-                    <strong>Phone: </strong>
-                    {!editSelectedPatientPhone && patientPhone}
-                  </p>
-                  {editSelectedPatientPhone && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Patient Phone.."
-                        labelPlacement="outside"
-                        value={patientPhone}
-                        onChange={(e)=>{
-                          setPatientPhone(e.target.value)
-                          
-                        }}
-                      />
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientBloodGroup && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editBloodGroup}
+                        />
+                      )}
+                      {editSelectedPatientBloodGroup && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editBloodGroup}
+                        />
+                      )}
                     </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedPatientPhone && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editPhone}
-                      />
-                    )}
-                    {editSelectedPatientPhone && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editPhone}
-                      />
-                    )}
                   </div>
-                </div>
-                <div
-                  id="FileUpload"
-                  className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
-                >
-                  <input
-                    type="file"
-                    name="profilePhoto"
-                    id="profilePhoto"
-                    accept="image/png, image/jpg, image/jpeg"
-                    className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
-                  />
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
-                      <SVGIconProvider
-                        iconName="upload"
-                        color={GLOBAL_ACTION_ICON_COLOR}
-                      />
-                    </span>
-                    <p className="mt-2.5 text-body-sm font-medium">
-                      <span className="text-primary">Click to upload</span> or
-                      drag and drop any relevant document(s) of patient.
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="phone" />
+                    <p className="text-medium ml-2">
+                      <strong>Phone: </strong>
+                      {!editSelectedPatientPhone && patientPhone}
                     </p>
-                    <p className="mt-1 text-body-xs">
-                      PDF, DOC, PNG, JPG (max, 800 X 800px)
-                    </p>
+                    {editSelectedPatientPhone && (
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Patient Phone.."
+                          labelPlacement="outside"
+                          value={patientPhone}
+                          onChange={(e) => {
+                            setPatientPhone(e.target.value)
+
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientPhone && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editPhone}
+                        />
+                      )}
+                      {editSelectedPatientPhone && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editPhone}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    id="FileUpload"
+                    className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
+                  >
+                    <input
+                      type="file"
+                      name="profilePhoto"
+                      id="profilePhoto"
+                      accept="image/png, image/jpg, image/jpeg"
+                      className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
+                    />
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+                        <SVGIconProvider
+                          iconName="upload"
+                          color={GLOBAL_ACTION_ICON_COLOR}
+                        />
+                      </span>
+                      <p className="mt-2.5 text-body-sm font-medium">
+                        <span className="text-primary">Click to upload</span> or
+                        drag and drop any relevant document(s) of patient.
+                      </p>
+                      <p className="mt-1 text-body-xs">
+                        PDF, DOC, PNG, JPG (max, 800 X 800px)
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardBody>
-      </Card>
-       </>
+          </CardBody>
+        </Card>
+      </>
     );
   }
- 
+
 
   if (props.type === MODAL_TYPES.DELETE_PATIENT) {
     return (
       <>
-         <div>
+        <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
               <Spinner />
@@ -1064,31 +1138,31 @@ useEffect(()=>{
                 <div className="flex items-center">
                   <SVGIconProvider iconName="user" />
                   <p className="text-medium ml-2">
-                    <strong>Name: </strong>Binu Bhagat
+                    <strong>Name: </strong>{employeeName}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="email" />
                   <p className="text-medium ml-2">
-                    <strong>email: </strong>binu@browser.com
+                    <strong>email: </strong>{employeeEmail}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="phone" />
                   <p className="text-medium ml-2">
-                    <strong>Phone: </strong>+91- 8263765543
+                    <strong>Phone: </strong>+91- {employeePhone}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="icard" />
                   <p className="text-medium ml-2">
-                    <strong>Designation: </strong>Nurse
+                    <strong>Designation: </strong>{employeeDesignation}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
                   <p className="text-medium ml-2">
-                    <strong>Working Hours: </strong>8:30 AM - 6:00 PM
+                    <strong>Working Hours: </strong>{employeeShiftTime}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -1108,7 +1182,7 @@ useEffect(()=>{
                 <div className="flex items-center">
                   <SVGIconProvider iconName="birthday" />
                   <p className="text-medium ml-2">
-                    <strong>Date Of Birth: </strong> 27th Jan, 1991
+                    <strong>Date Of Birth: {employeeDOB}</strong>
                   </p>
                 </div>
               </div>
@@ -1183,6 +1257,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Patient name.."
                         labelPlacement="outside"
+                        value={employeeName}
+                        onChange={(e) => setEmployeeName(e.target.value)}
                       />
                     </div>
                   )}
@@ -1219,6 +1295,8 @@ useEffect(()=>{
                         type="email"
                         placeholder="Employee email.."
                         labelPlacement="outside"
+                        value={employeeEmail}
+                        onChange={(e) => setEmployeeEmail(e.target.value)}
                       />
                     </div>
                   )}
@@ -1254,6 +1332,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Employee phone.."
                         labelPlacement="outside"
+                        value={employeePhone}
+                        onChange={(e) => setEmployeePhone(e.target.value)}
                       />
                     </div>
                   )}
@@ -1289,6 +1369,8 @@ useEffect(()=>{
                         type="text"
                         placeholder="Employee designation.."
                         labelPlacement="outside"
+                        value={employeeDesignation}
+                        onChange={(e) => setEmployeeDesignation(e.target.value)}
                       />
                     </div>
                   )}
@@ -1316,21 +1398,24 @@ useEffect(()=>{
                     {!editSelectedEmployeeShiftTime && employeeShiftTime}
                   </p>
                   {editSelectedEmployeeShiftTime && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
+                    <div className="flex items-center">
                       <TimeInput
-                        defaultValue={new Time(11, 45)}
+                        // defaultValue="09:00 AM"
                         label="Start"
+                        onChange={(startTime) => {
+                          const endTime = (employeeShiftTime || "").split(" - ")[1] || "";
+                          setEmployeeShiftTime(`${startTime} - ${endTime}`);
+                        }}
                       />
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
+
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
                         <TimeInput
-                          defaultValue={new Time(20, 45)}
+                          // defaultValue="05:00 PM"
                           label="End"
+                          onChange={(endTime) => {
+                            const startTime = employeeShiftTime.split(" - ")[0] || "";
+                            setEmployeeShiftTime(`${startTime} - ${endTime}`);
+                          }}
                         />
                       </div>
                     </div>
@@ -1359,7 +1444,7 @@ useEffect(()=>{
                   </p>
                   {!editSelectedEmployeeJoiningDate && (
                     <p className="text-medium ml-2">
-                      {formatDate(employeeJoiningDate)}
+                      {formatDateOne(employeeJoiningDate)}
                     </p>
                   )}
 
@@ -1368,16 +1453,16 @@ useEffect(()=>{
                       className="flex items-center"
                       style={{ marginLeft: 10 }}
                     >
-                      <DatePicker
+                      {/* <DatePicker
                         showMonthAndYearPickers
                         label="Joining Date"
                         className="max-w-[284px]"
                         onChange={editEmployeeJoiningDate}
                         style={{ marginLeft: 0 }}
-                      />
+                      /> */}
                     </div>
                   )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
+                  {/* <div className="flex items-center" style={{ marginLeft: 10 }}>
                     {!editSelectedEmployeeJoiningDate && (
                       <IconButton
                         iconName="edit"
@@ -1392,7 +1477,7 @@ useEffect(()=>{
                         clickEvent={editEmployeeTime}
                       />
                     )}
-                  </div>
+                  </div> */}
                 </div>
                 <div className="flex items-center">
                   <div style={{ marginLeft: -5 }}>
@@ -1410,7 +1495,7 @@ useEffect(()=>{
                   </p>
                   {!editSelectedEmployeeDOB && (
                     <p className="text-medium ml-2">
-                      {formatDate(employeeDOB)}
+                      {employeeDOB}
                     </p>
                   )}
 
@@ -1419,12 +1504,14 @@ useEffect(()=>{
                       className="flex items-center"
                       style={{ marginLeft: 10 }}
                     >
-                      <DatePicker
-                        showMonthAndYearPickers
-                        label="Date Of Birth"
-                        className="max-w-[284px]"
-                        onChange={editEmployeeDOB}
-                        style={{ marginLeft: 0 }}
+                      <Input
+
+                        type="date"
+
+                        variant="bordered"
+                        value={employeeDOB}
+                        onChange={(e) => setEmployeeDOB(e.target.value)}
+
                       />
                     </div>
                   )}
@@ -1471,37 +1558,37 @@ useEffect(()=>{
             <div className="flex items-center">
               <SVGIconProvider iconName="user" />
               <p className="text-medium ml-2">
-                <strong>Name: </strong>Binu Bhagat
+                <strong>Name: </strong>{employeeName}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="email" />
               <p className="text-medium ml-2">
-                <strong>email: </strong>binu@browser.com
+                <strong>email: </strong>{employeeEmail}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="phone" />
               <p className="text-medium ml-2">
-                <strong>Phone: </strong>+91- 8263765543
+                <strong>Phone: </strong>+91- {employeePhone}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="icard" />
               <p className="text-medium ml-2">
-                <strong>Designation: </strong>Nurse
+                <strong>Designation: </strong>{employeeDesignation}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="clock" />
               <p className="text-medium ml-2">
-                <strong>Working Hours: </strong>8:30 AM - 6:00 PM
+                <strong>Working Hours: </strong>{employeeShiftTime}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
               <p className="text-medium ml-2">
-                <strong>Joined On: </strong> 27th Jan, 2021
+                <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
               </p>
             </div>
             <div className="flex items-center">
@@ -1515,14 +1602,14 @@ useEffect(()=>{
             <div className="flex items-center">
               <SVGIconProvider iconName="birthday" />
               <p className="text-medium ml-2">
-                <strong>Date Of Birth: </strong> 27th Jan, 1991
+                <strong>Date Of Birth: </strong> {employeeDOB}
               </p>
             </div>
           </div>
         </div>
       </>
     );
-    if(props.type == MODAL_TYPES.ADD_APPOINTMENT){
+    if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
       return (<><AddAppointment /></>);
     }
   }

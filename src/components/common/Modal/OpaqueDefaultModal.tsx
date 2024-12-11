@@ -21,12 +21,15 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   
   useEffect(() => {
     const header = document.querySelector("header");
-    if (isOpen) {
-      header?.classList.remove("z-999");
-      header?.classList.add("z-0"); 
-    } else {
-      header?.classList.remove("z-0");
-      header?.classList.add("z-999"); 
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
     }
   }, [isOpen]);
 
@@ -43,7 +46,7 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "5%" }}
+        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "10%" }}
         classNames={{
           backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
