@@ -11,6 +11,8 @@ export const metadata: Metadata = {
 
 const PatientPage = () => {
   return (
+    <>
+  
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Patients" />
@@ -18,6 +20,7 @@ const PatientPage = () => {
         <Patient />
       </div>
     </DefaultLayout>
+    </>
   );
 };
 

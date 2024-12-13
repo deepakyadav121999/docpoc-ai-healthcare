@@ -283,7 +283,12 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
               <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
-                  <ModalHeader>Message</ModalHeader>
+                  <ModalHeader>{
+                    loading ? (
+                      <div className="flex justify-center">
+                        <Spinner size="lg" />
+                      </div>):
+                  modalMessage.success?<p className="text-green-600">Success</p>: <p className="text-red-600">Error</p>}</ModalHeader>
                   <ModalBody>
                     {loading ? (
                       <div className="flex justify-center">

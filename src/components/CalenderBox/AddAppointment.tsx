@@ -8,24 +8,30 @@ import {
   Textarea,
   TimeInput,
 } from "@nextui-org/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import React from "react";
 import { IndianStatesList } from "@/constants/IndiaStates";
-
+interface AutocompleteItem {
+  value: string;
+  label: string;
+  description?: string;
+}
 const AddAppointment = () => {
   const [edit, setEdit] = useState(true);
+  const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [formData, setFormData] = useState({
     name: "XYZ Dental Clinic",
     doctorId: "",
     patientId: "",
-    branchId: "",
-    visitType: "",
-    startDateTime: "",
-    endDateTime: "",
+    branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
+    visitType: "0151308b-6419-437b-9b41-53c7de566724",
+    startDateTime: "2024-08-26T07:38:53.000Z",
+  endDateTime: "2024-08-26T07:38:53.000Z",
     code: "ST-ID/15",
     json: '{"dob":"28th Jan, 1996."}',
   });
@@ -38,7 +44,7 @@ const AddAppointment = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+   
   
     const token = localStorage.getItem("docPocAuth_token");
   
@@ -66,11 +72,93 @@ const AddAppointment = () => {
     } catch (error: any) {
       console.error("Error creating appointment:", error.response?.data || error.message);
       alert(`Error creating appointment: ${error.response?.data?.message || "Unknown error"}`);
+    }
+  };
+  const fetchPatients = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+
+      const params: any = {};
+   
+        params.page = 1;
+        params.pageSize = 50;
+        params.from = '2024-12-04T03:32:25.812Z';
+        params.to = '2024-12-11T03:32:25.815Z';
+        params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+      
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(response.data.rows)
+      const transformedPatients: AutocompleteItem[] = response.data.rows.map((patient: any) => ({
+        label: patient.name,
+        value: patient.id,
+        description: `${patient.phone} | ${patient.email}`,
+      }));
+      setPatientList(transformedPatients);
+      // setTotalPatient(response.data.count || response.data.length);
+
+    } catch (err) {
+      // setError("Failed to fetch patients.");
     } finally {
       setLoading(false);
     }
   };
-  
+
+  const fetchDoctors = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+
+      const params: any = {};
+
+        params.page =1;
+        params.pageSize = 50;
+        params.from = '2024-12-04T03:32:25.812Z';
+        params.to = '2024-12-11T03:32:25.815Z';
+      
+      
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+        label: doctor.name,
+        value: doctor.id,
+        description: `${doctor.phone} | ${doctor.email}`,
+      }));
+      setDoctorList(transformedDoctors)
+      // setUsers(response.data.rows || response.data);
+      // setTotalUsers(response.data.count || response.data.length);
+
+    } catch (err) {
+      // setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
+  useEffect(()=>{
+    fetchDoctors()
+    fetchPatients()
+  },[])
 
   return (
     <div className="  grid grid-cols-1 gap-9  ">
@@ -133,7 +221,7 @@ const AddAppointment = () => {
                   labelPlacement="outside"
                   variant="bordered"
                   isDisabled={!edit}
-                  defaultItems={IndianStatesList}
+                  defaultItems={patientList}
                   label="Select Patient"
                   placeholder="Search a Patient"
                   onSelectionChange={(key) => setFormData({ ...formData, patientId: key as string })}
@@ -149,7 +237,7 @@ const AddAppointment = () => {
                   labelPlacement="outside"
                   variant="bordered"
                   isDisabled={!edit}
-                  defaultItems={IndianStatesList}
+                  defaultItems={doctorList}
                   label="Select Doctor"
                   placeholder="Search a Doctor"
                   onSelectionChange={(key) => setFormData({ ...formData, doctorId: key as string })}

@@ -17,7 +17,7 @@ import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
 import axios from "axios";
-export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edit: MODAL_TYPES, delete?: MODAL_TYPES }, modalTitle: string, actionButtonName?: string, userId: string, onPatientDelete: () => void; }) {
+export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edit: MODAL_TYPES,  delete: MODAL_TYPES }, modalTitle: string, actionButtonName?: string, userId: string, onPatientDelete: () => void; }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
   const [formType, setFormType] = React.useState('');
@@ -74,7 +74,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     }
   }, [isOpen]);
 
-  // Handle Submit button based on form type
+
 
 
   const handleOpen = (backdrop: React.SetStateAction<string>, type: MODAL_TYPES | undefined) => {
@@ -87,10 +87,10 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleDataChange = (data: any) => {
 
   if(props.modalType.edit){
-    if(MODAL_TYPES.EDIT_EMPLOYEE){
+    if(formType === MODAL_TYPES.EDIT_EMPLOYEE){
       setUpdatedEmployeeData(data)
     }
-    else if(MODAL_TYPES.EDIT_PATIENT){
+    else if(formType === MODAL_TYPES.EDIT_PATIENT){
       setUpdatedPatientData(data);
     }
   }
@@ -103,7 +103,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
 
     const requestData = {
       id: props.userId,
-      ...updatedPatientData, // Data collected from the form
+      ...updatedPatientData, 
     };
 
     try {
@@ -114,11 +114,13 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         },
       });
       if (props.onPatientDelete) props.onPatientDelete();
+      alert("Patient updated successfully!")
       setmessage("Patient updated successfully!");
       onClose(); 
     } catch (error) {
       console.error("Error updating patient:", error);
       seterror("Failed to update the patient. Please try again.");
+      alert("Failed to update the patient. Please try again.");
     }
   };
 
@@ -140,73 +142,41 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       });
       if (props.onPatientDelete) props.onPatientDelete();
       setmessage("Patient updated successfully!");
-      alert("Patient updated successfully!");
+      // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
     } catch (error) {
       console.error("Error updating patient:", error);
       seterror("Failed to update the patient. Please try again.");
-      alert("Failed to update the patient. Please try again.");
+      // alert("Failed to update the patient. Please try again.");
     }
   };
 
-
-
   const handleSubmit = () => {
-    if (formType === props.modalType.delete) {
-  
+    console.log("Form Type:", formType);
+  console.log("Props Modal Type:", props.modalType);
+
+  if (formType === props.modalType.delete) {
+    console.log("Delete action triggered");
+    if (formType === MODAL_TYPES.DELETE_PATIENT) {
+      console.log("Running handleDelete");
       handleDelete();
-  
-      deleteEmployee()
-    
-      
-    } else if (formType === props.modalType.edit) {
-      
-        handleEdit();
-      
-  
-        handleEmployeeEdit()
-      
-    // Call edit function
-    } 
-
-
-    else {
-      console.log(updatedPatientData); // Log other cases
-      onClose();
+    } else if (formType === MODAL_TYPES.DELETE_EMPLOYEE) {
+      console.log("Running deleteEmployee");
+      deleteEmployee();
     }
-
-    // case  MODAL_TYPES.EDIT_EMPLOYEE:
-    //   handleEmployeeEdit()
-    //    break;
-    // case MODAL_TYPES.EDIT_PATIENT:
-    //   handleEdit()
-    //   break;
-
-    // switch (props.modalType.delete) {
-    //   case MODAL_TYPES.DELETE_EMPLOYEE:
-    //     deleteEmployee()
-    //     break;
-    //   case MODAL_TYPES.DELETE_PATIENT:
-    //     handleDelete();
-    //     break;
-    //   // Add other cases as needed
-    //   default:
-    //     // console.warn("Unhandled modal type:", props.type);
-    //     onClose();
-    // }
-    // switch (props.modalType.edit) {
-    //   case MODAL_TYPES.EDIT_EMPLOYEE:
-    //     handleEmployeeEdit()
-    //     break;
-    //   case MODAL_TYPES.EDIT_PATIENT:
-    //     handleEdit()
-    //     break;
-    //   // Add other cases as needed
-    //   default:
-    //     // console.warn("Unhandled modal type:", props.type);
-    //     onClose();
-    // }
-
+  } else if (formType === props.modalType.edit) {
+    console.log("Edit action triggered");
+    if (formType === MODAL_TYPES.EDIT_PATIENT) {
+      console.log("Running handleEdit");
+      handleEdit();
+    } else if (formType === MODAL_TYPES.EDIT_EMPLOYEE) {
+      console.log("Running handleEmployeeEdit");
+      handleEmployeeEdit();
+    }
+  } else {
+    console.log("No matching form type. Closing modal.");
+    onClose();
+  }
   };
 
 
