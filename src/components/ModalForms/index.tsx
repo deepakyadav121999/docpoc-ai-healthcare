@@ -92,7 +92,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [employeeEmail, setEmployeeEmail] = useState("");
   const [employeeDesignation, setEmployeeDesignation] = useState("");
   const [employeePhone, setEmployeePhone] = useState("");
-  const[emloyeeBranch, setEmployeeBranch] = useState("")
+  const [emloyeeBranch, setEmployeeBranch] = useState("")
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
@@ -223,34 +223,34 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   };
   useEffect(() => {
     if (props.type === MODAL_TYPES.EDIT_PATIENT) {
-    const updatedData = {
-      branchId: branchId,
-      name: patientName,
-      phone: patientPhone,
-      email: patientEmail,
-      bloodGroup: patientBloodGroup,
-      status: patientStatus,
-      notificationStatus: notificationStatus,
-      dob: patientDob,
-      gender: gender
-    };
+      const updatedData = {
+        branchId: branchId,
+        name: patientName,
+        phone: patientPhone,
+        email: patientEmail,
+        bloodGroup: patientBloodGroup,
+        status: patientStatus,
+        notificationStatus: notificationStatus,
+        dob: patientDob,
+        gender: gender
+      };
 
-    props.onDataChange(updatedData);
-   } 
-   else if(props.type === MODAL_TYPES.EDIT_EMPLOYEE){
-       const updatedData={
-        branchId:emloyeeBranch,
-        name:employeeName,
-        phone:employeePhone,
-        email:employeeEmail,
-        json:JSON.stringify({
-          dob:employeeDOB,
-          designation:employeeDesignation,
-          workingHours:employeeShiftTime
+      props.onDataChange(updatedData);
+    }
+    else if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
+      const updatedData = {
+        branchId: emloyeeBranch,
+        name: employeeName,
+        phone: employeePhone,
+        email: employeeEmail,
+        json: JSON.stringify({
+          dob: employeeDOB,
+          designation: employeeDesignation,
+          workingHours: employeeShiftTime
         })
-       }
-       props.onDataChange(updatedData);
-   }
+      }
+      props.onDataChange(updatedData);
+    }
   }, [
     branchId,
     patientName,
@@ -277,7 +277,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
   const handleDateChange = (newDate: ZonedDateTime) => {
     setSelectedDate(newDate);
-  
+
   };
 
   const editEmployeeName = () => {
@@ -1109,24 +1109,466 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
   if (props.type === MODAL_TYPES.VIEW_EMPLOYEE) {
     return (
-      <Card
-        isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <Image
-                alt="Patient photo"
-                className="object-cover"
-                height={200}
-                shadow="md"
-                src={USER_ICONS.FEMALE_USER}
-                width="100%"
-              />
-            </div>
+      <>
+        {loading ? <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <Spinner size="lg" />
+        </div> :
 
+
+          <Card
+            isBlurred
+            className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
+            shadow="sm"
+          >
+            <CardBody>
+              <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                <div className="relative col-span-6 md:col-span-4">
+                  <Image
+                    alt="Patient photo"
+                    className="object-cover"
+                    height={200}
+                    shadow="md"
+                    src={USER_ICONS.FEMALE_USER}
+                    width="100%"
+                  />
+                </div>
+
+                <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold text-foreground/90">
+                      Employee Details
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="user" />
+                      <p className="text-medium ml-2">
+                        <strong>Name: </strong>{employeeName}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="email" />
+                      <p className="text-medium ml-2">
+                        <strong>email: </strong>{employeeEmail}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="phone" />
+                      <p className="text-medium ml-2">
+                        <strong>Phone: </strong>+91- {employeePhone}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="icard" />
+                      <p className="text-medium ml-2">
+                        <strong>Designation: </strong>{employeeDesignation}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="clock" />
+                      <p className="text-medium ml-2">
+                        <strong>Working Hours: </strong>{employeeShiftTime}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="calendar" />
+                      <p className="text-medium ml-2">
+                        <strong>Joined On: </strong> 27th Jan, 2021
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <div style={{ marginLeft: -5 }}>
+                        <SVGIconProvider iconName="key" />
+                      </div>
+                      <p className="text-medium ml-2">
+                        <strong>Access Type: </strong>Super-Admin
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="birthday" />
+                      <p className="text-medium ml-2">
+                        <strong>Date Of Birth: {employeeDOB}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        }
+
+      </>
+    );
+  }
+
+  if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
+    return (
+      <>
+        {loading ?
+          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <Spinner size="lg" />
+          </div> :
+          <Card
+            isBlurred
+            className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
+            shadow="sm"
+          >
+            <CardBody>
+              <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                <div className="relative col-span-6 md:col-span-4">
+                  <div>
+                    <div className="relative drop-shadow-2">
+                      <Image
+                        src={profilePhoto}
+                        width={160}
+                        height={160}
+                        className="overflow-hidden rounded-full"
+                        alt="profile"
+                      />
+                    </div>
+
+                    <label
+                      htmlFor="profilePhoto"
+                      className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-5"
+                    >
+                      <SVGIconProvider
+                        iconName="camera"
+                        color={GLOBAL_ICON_COLOR_WHITE}
+                      />
+
+                      <input
+                        type="file"
+                        name="profilePhoto"
+                        id="profilePhoto"
+                        className="sr-only"
+                        accept="image/png, image/jpg, image/jpeg"
+                        onChange={handleProfilePhotoChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold text-foreground/90">
+                      Employee Details
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="user" />
+                      <p className="text-medium ml-2">
+                        <strong>Name: </strong>
+                        {!editSelectedEmployee && employeeName}
+                      </p>
+                      {editSelectedEmployee && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Input
+                            type="text"
+                            placeholder="Patient name.."
+                            labelPlacement="outside"
+                            value={employeeName}
+                            onChange={(e) => setEmployeeName(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployee && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeName}
+                          />
+                        )}
+                        {editSelectedEmployee && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeName}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="email" />
+                      <p className="text-medium ml-2">
+                        <strong>Email: </strong>
+                        {!editSelectedEmployeeEmail && employeeEmail}
+                      </p>
+                      {editSelectedEmployeeEmail && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Input
+                            type="email"
+                            placeholder="Employee email.."
+                            labelPlacement="outside"
+                            value={employeeEmail}
+                            onChange={(e) => setEmployeeEmail(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployeeEmail && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeEmail}
+                          />
+                        )}
+                        {editSelectedEmployeeEmail && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeEmail}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="phone" />
+                      <p className="text-medium ml-2">
+                        <strong>Phone: </strong>
+                        {!editSelectedEmployeePhone && employeePhone}
+                      </p>
+                      {editSelectedEmployeePhone && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Input
+                            type="text"
+                            placeholder="Employee phone.."
+                            labelPlacement="outside"
+                            value={employeePhone}
+                            onChange={(e) => setEmployeePhone(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployeePhone && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeePhone}
+                          />
+                        )}
+                        {editSelectedEmployeePhone && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeePhone}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="icard" />
+                      <p className="text-medium ml-2">
+                        <strong>Designation: </strong>
+                        {!editSelectedEmployeeDesignation && employeeDesignation}
+                      </p>
+                      {editSelectedEmployeeDesignation && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Input
+                            type="text"
+                            placeholder="Employee designation.."
+                            labelPlacement="outside"
+                            value={employeeDesignation}
+                            onChange={(e) => setEmployeeDesignation(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployeeDesignation && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeDesignation}
+                          />
+                        )}
+                        {editSelectedEmployeeDesignation && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeDesignation}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="clock" />
+                      <p className="text-medium ml-2">
+                        <strong>Working Hours: </strong>
+                        {!editSelectedEmployeeShiftTime && employeeShiftTime}
+                      </p>
+                      {editSelectedEmployeeShiftTime && (
+                        <div className="flex items-center">
+                          <TimeInput
+                            // defaultValue="09:00 AM"
+                            label="Start"
+                            onChange={(startTime) => {
+                              const endTime = (employeeShiftTime || "").split(" - ")[1] || "";
+                              setEmployeeShiftTime(`${startTime} - ${endTime}`);
+                            }}
+                          />
+
+                          <div className="flex items-center" style={{ marginLeft: 10 }}>
+                            <TimeInput
+                              // defaultValue="05:00 PM"
+                              label="End"
+                              onChange={(endTime) => {
+                                const startTime = employeeShiftTime.split(" - ")[0] || "";
+                                setEmployeeShiftTime(`${startTime} - ${endTime}`);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployeeShiftTime && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeShiftTime}
+                          />
+                        )}
+                        {editSelectedEmployeeShiftTime && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeShiftTime}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="calendar" />
+                      <p className="text-medium ml-2">
+                        <strong>Joined On: </strong>{" "}
+                      </p>
+                      {!editSelectedEmployeeJoiningDate && (
+                        <p className="text-medium ml-2">
+                          {formatDateOne(employeeJoiningDate)}
+                        </p>
+                      )}
+
+                      {editSelectedEmployeeJoiningDate && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          {/* <DatePicker
+                                       showMonthAndYearPickers
+                                       label="Joining Date"
+                                       className="max-w-[284px]"
+                                       onChange={editEmployeeJoiningDate}
+                                       style={{ marginLeft: 0 }}
+                                     /> */}
+                        </div>
+                      )}
+                      {/* <div className="flex items-center" style={{ marginLeft: 10 }}>
+                                   {!editSelectedEmployeeJoiningDate && (
+                                     <IconButton
+                                       iconName="edit"
+                                       color={GLOBAL_DANGER_COLOR}
+                                       clickEvent={editEmployeeTime}
+                                     />
+                                   )}
+                                   {editSelectedEmployeeJoiningDate && (
+                                     <IconButton
+                                       iconName="followup"
+                                       color={GLOBAL_SUCCESS_COLOR}
+                                       clickEvent={editEmployeeTime}
+                                     />
+                                   )}
+                                 </div> */}
+                    </div>
+                    <div className="flex items-center">
+                      <div style={{ marginLeft: -5 }}>
+                        <SVGIconProvider iconName="key" />
+                      </div>
+                      <p className="text-medium ml-2">
+                        <strong>Access Type: </strong>Super-Admin
+                      </p>
+                    </div>
+
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="birthday" />
+                      <p className="text-medium ml-2">
+                        <strong>Date Of Birth: </strong>{" "}
+                      </p>
+                      {!editSelectedEmployeeDOB && (
+                        <p className="text-medium ml-2">
+                          {employeeDOB}
+                        </p>
+                      )}
+
+                      {editSelectedEmployeeDOB && (
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Input
+
+                            type="date"
+
+                            variant="bordered"
+                            value={employeeDOB}
+                            onChange={(e) => setEmployeeDOB(e.target.value)}
+
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        {!editSelectedEmployeeDOB && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeDobTime}
+                          />
+                        )}
+                        {editSelectedEmployeeDOB && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeDobTime}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+        }
+
+
+      </>
+    );
+  }
+
+  if (props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
+    return (
+      <>
+        <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
+              Are you sure you want to delete this employee?
+            </h2>
+        {loading ?
+          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <Spinner size="lg" />
+          </div> :
             <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-foreground/90">
@@ -1168,7 +1610,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Joined On: </strong> 27th Jan, 2021
+                    <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -1182,431 +1624,14 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="birthday" />
                   <p className="text-medium ml-2">
-                    <strong>Date Of Birth: {employeeDOB}</strong>
+                    <strong>Date Of Birth: </strong> {employeeDOB}
                   </p>
                 </div>
               </div>
             </div>
-          </div>
-        </CardBody>
-      </Card>
-    );
-  }
+       
+        }
 
-  if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
-    return (
-      <Card
-        isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <div>
-                <div className="relative drop-shadow-2">
-                  <Image
-                    src={profilePhoto}
-                    width={160}
-                    height={160}
-                    className="overflow-hidden rounded-full"
-                    alt="profile"
-                  />
-                </div>
-
-                <label
-                  htmlFor="profilePhoto"
-                  className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-5"
-                >
-                  <SVGIconProvider
-                    iconName="camera"
-                    color={GLOBAL_ICON_COLOR_WHITE}
-                  />
-
-                  <input
-                    type="file"
-                    name="profilePhoto"
-                    id="profilePhoto"
-                    className="sr-only"
-                    accept="image/png, image/jpg, image/jpeg"
-                    onChange={handleProfilePhotoChange}
-                  />
-                </label>
-              </div>
-            </div>
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
-                  Employee Details
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="user" />
-                  <p className="text-medium ml-2">
-                    <strong>Name: </strong>
-                    {!editSelectedEmployee && employeeName}
-                  </p>
-                  {editSelectedEmployee && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Patient name.."
-                        labelPlacement="outside"
-                        value={employeeName}
-                        onChange={(e) => setEmployeeName(e.target.value)}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployee && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeName}
-                      />
-                    )}
-                    {editSelectedEmployee && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeName}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="email" />
-                  <p className="text-medium ml-2">
-                    <strong>Email: </strong>
-                    {!editSelectedEmployeeEmail && employeeEmail}
-                  </p>
-                  {editSelectedEmployeeEmail && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="email"
-                        placeholder="Employee email.."
-                        labelPlacement="outside"
-                        value={employeeEmail}
-                        onChange={(e) => setEmployeeEmail(e.target.value)}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeeEmail && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeEmail}
-                      />
-                    )}
-                    {editSelectedEmployeeEmail && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeEmail}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="phone" />
-                  <p className="text-medium ml-2">
-                    <strong>Phone: </strong>
-                    {!editSelectedEmployeePhone && employeePhone}
-                  </p>
-                  {editSelectedEmployeePhone && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Employee phone.."
-                        labelPlacement="outside"
-                        value={employeePhone}
-                        onChange={(e) => setEmployeePhone(e.target.value)}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeePhone && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeePhone}
-                      />
-                    )}
-                    {editSelectedEmployeePhone && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeePhone}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="icard" />
-                  <p className="text-medium ml-2">
-                    <strong>Designation: </strong>
-                    {!editSelectedEmployeeDesignation && employeeDesignation}
-                  </p>
-                  {editSelectedEmployeeDesignation && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Employee designation.."
-                        labelPlacement="outside"
-                        value={employeeDesignation}
-                        onChange={(e) => setEmployeeDesignation(e.target.value)}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeeDesignation && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeDesignation}
-                      />
-                    )}
-                    {editSelectedEmployeeDesignation && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeDesignation}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
-                    <strong>Working Hours: </strong>
-                    {!editSelectedEmployeeShiftTime && employeeShiftTime}
-                  </p>
-                  {editSelectedEmployeeShiftTime && (
-                    <div className="flex items-center">
-                      <TimeInput
-                        // defaultValue="09:00 AM"
-                        label="Start"
-                        onChange={(startTime) => {
-                          const endTime = (employeeShiftTime || "").split(" - ")[1] || "";
-                          setEmployeeShiftTime(`${startTime} - ${endTime}`);
-                        }}
-                      />
-
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
-                        <TimeInput
-                          // defaultValue="05:00 PM"
-                          label="End"
-                          onChange={(endTime) => {
-                            const startTime = employeeShiftTime.split(" - ")[0] || "";
-                            setEmployeeShiftTime(`${startTime} - ${endTime}`);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeeShiftTime && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeShiftTime}
-                      />
-                    )}
-                    {editSelectedEmployeeShiftTime && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeShiftTime}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
-                    <strong>Joined On: </strong>{" "}
-                  </p>
-                  {!editSelectedEmployeeJoiningDate && (
-                    <p className="text-medium ml-2">
-                      {formatDateOne(employeeJoiningDate)}
-                    </p>
-                  )}
-
-                  {editSelectedEmployeeJoiningDate && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {/* <DatePicker
-                        showMonthAndYearPickers
-                        label="Joining Date"
-                        className="max-w-[284px]"
-                        onChange={editEmployeeJoiningDate}
-                        style={{ marginLeft: 0 }}
-                      /> */}
-                    </div>
-                  )}
-                  {/* <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeeJoiningDate && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeTime}
-                      />
-                    )}
-                    {editSelectedEmployeeJoiningDate && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeTime}
-                      />
-                    )}
-                  </div> */}
-                </div>
-                <div className="flex items-center">
-                  <div style={{ marginLeft: -5 }}>
-                    <SVGIconProvider iconName="key" />
-                  </div>
-                  <p className="text-medium ml-2">
-                    <strong>Access Type: </strong>Super-Admin
-                  </p>
-                </div>
-
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="birthday" />
-                  <p className="text-medium ml-2">
-                    <strong>Date Of Birth: </strong>{" "}
-                  </p>
-                  {!editSelectedEmployeeDOB && (
-                    <p className="text-medium ml-2">
-                      {employeeDOB}
-                    </p>
-                  )}
-
-                  {editSelectedEmployeeDOB && (
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      <Input
-
-                        type="date"
-
-                        variant="bordered"
-                        value={employeeDOB}
-                        onChange={(e) => setEmployeeDOB(e.target.value)}
-
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
-                    {!editSelectedEmployeeDOB && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editEmployeeDobTime}
-                      />
-                    )}
-                    {editSelectedEmployeeDOB && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editEmployeeDobTime}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    );
-  }
-
-  if (props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
-    return (
-      <>
-        <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
-          Are you sure you want to delete this employee?
-        </h2>
-
-        <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-foreground/90">
-              Employee Details
-            </h3>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <SVGIconProvider iconName="user" />
-              <p className="text-medium ml-2">
-                <strong>Name: </strong>{employeeName}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="email" />
-              <p className="text-medium ml-2">
-                <strong>email: </strong>{employeeEmail}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="phone" />
-              <p className="text-medium ml-2">
-                <strong>Phone: </strong>+91- {employeePhone}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="icard" />
-              <p className="text-medium ml-2">
-                <strong>Designation: </strong>{employeeDesignation}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="clock" />
-              <p className="text-medium ml-2">
-                <strong>Working Hours: </strong>{employeeShiftTime}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="calendar" />
-              <p className="text-medium ml-2">
-                <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <div style={{ marginLeft: -5 }}>
-                <SVGIconProvider iconName="key" />
-              </div>
-              <p className="text-medium ml-2">
-                <strong>Access Type: </strong>Super-Admin
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="birthday" />
-              <p className="text-medium ml-2">
-                <strong>Date Of Birth: </strong> {employeeDOB}
-              </p>
-            </div>
-          </div>
-        </div>
       </>
     );
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
