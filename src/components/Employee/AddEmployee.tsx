@@ -6,13 +6,17 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
-  Spinner
+  Spinner,
+  TimeInput,
+
 } from "@nextui-org/react";
 import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } from "@nextui-org/react";
+import { SVGIconProvider } from "@/constants/svgIconProvider";
+import { Time } from "@internationalized/date";
 import { useEffect } from "react";
 interface AddUsersProps {
   onUsersAdded: () => void;
@@ -122,7 +126,9 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
+      onOpen();
       return;
+
     }
 
     setLoading(true);
@@ -132,6 +138,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       setModalMessage({ success: "", error: "No access token found. Please log in again." });
       setLoading(false);
+      onOpen();
       return;
     }
 
@@ -182,6 +189,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     } finally {
       setLoading(false);
+      onOpen();
     }
   };
 
@@ -253,20 +261,28 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete>
                 <div className="flex gap-4">
-                  <Input
+                 
+                  <TimeInput
+                    // color={TOOL_TIP_COLORS.secondary}
                     label="From (Working Hours)"
                     labelPlacement="outside"
                     variant="bordered"
-                    type="time"
-                    onChange={(e) => handleTimeChange("start", e.target.value)}
+                    // defaultValue={new Time(8, 45)}
+                    startContent={<SVGIconProvider iconName="clock" />}
+                    onChange={(e) => handleTimeChange("start", e.toString())} 
+                    isDisabled={!edit}
                   />
-                  <Input
+                  <TimeInput
+                    // color={TOOL_TIP_COLORS.secondary}
                     label="To (Working Hours)"
                     labelPlacement="outside"
                     variant="bordered"
-                    type="time"
-                    onChange={(e) => handleTimeChange("end", e.target.value)}
+                    // defaultValue={new Time(6, 45)} 
+                    startContent={<SVGIconProvider iconName="clock" />}
+                    onChange={(e) => handleTimeChange("end", e.toString())} 
+                    isDisabled={!edit}
                   />
+           
                 </div>
 
                 <Input
@@ -399,7 +415,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
               <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
-                <ModalHeader>{modalMessage.success?<p className="text-green-600">Success</p>: <p className="text-red-600">Error</p>}</ModalHeader>
+                  <ModalHeader>{modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
                   <ModalBody>
                     {loading ? (
                       <div className="flex justify-center">

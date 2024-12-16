@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect } from "react";
-import { Accordion, AccordionItem, Avatar } from "@nextui-org/react";
+import { Accordion, AccordionItem, Avatar,Spinner,
+  Modal, ModalContent, ModalBody, ModalFooter, Button,ModalHeader,  useDisclosure,
+ } from "@nextui-org/react";
 import UserAccessTypes from "./AccessTypes";
 import axios from "axios";
 
@@ -20,7 +22,9 @@ export default function UserAccess() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setUsers] = React.useState<Employee[]>([]);
   const [error, setError] = React.useState<string | null>(null);
-
+  const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
+  const [modalMessage, setModalMessage] = React.useState<{ success?: string; error?: string }>({});
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -76,10 +80,15 @@ export default function UserAccess() {
       );
 
       console.log("User updated successfully:", response.data);
-      alert("User updated successfully:")
+      onOpen()
+      setModalMessage({ success: "User updated successfully!" })
+
+      // alert("User updated successfully:")
     } catch (err) {
       console.error("Failed to update user:", err);
-      alert("Failed to update user")
+      // alert("Failed to update user")
+      onOpen()
+      setModalMessage({ error: "Failed to update user." });
     }
   };
 
@@ -87,11 +96,27 @@ export default function UserAccess() {
     fetchUsers();
   }, []);
 
-  if (loading) return <p>Loading users...</p>;
-  if (error) return <p>{error}</p>;
+ useEffect(() => {
+    const header = document.querySelector("header");
+    if (isOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0");
+    } else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999");
+    }
+  }, [isOpen]);
 
   return (
-    <Accordion selectionMode="multiple">
+    <>
+     <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center   z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
+     <Accordion selectionMode="multiple">
       {users.map((user) => (
         <AccordionItem
           key={user.id}
@@ -114,5 +139,35 @@ export default function UserAccess() {
         </AccordionItem>
       ))}
     </Accordion>
+    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+              {modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}
+              </ModalHeader>
+              <ModalBody>
+                {loading ? (
+                  <div className="flex justify-center">
+                    <Spinner size="lg" />
+                  </div>
+                ) : modalMessage.success ? (
+                  <p className="text-green-600">{modalMessage.success}</p>
+                ) : (
+                  <p className="text-red-600">{modalMessage.error}</p>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+    </>
+   
   );
 }

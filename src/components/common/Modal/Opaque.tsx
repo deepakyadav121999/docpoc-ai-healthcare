@@ -221,6 +221,9 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         handleEmployeeEdit();
       }
     }
+    else{
+      onClose()
+    }
   };
 
 
@@ -242,7 +245,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{ maxHeight: 600, maxWidth: 800 }}
 
       >
-        <ModalContent>
+        <ModalContent >
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">

@@ -116,6 +116,25 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
 
 
+  const handleTimeChange = (key: "start" | "end", value: string) => {
+    const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
+    const period = hour >= 12 ? "PM" : "AM"; // Determine AM/PM
+    const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+    const formattedTime = `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
+
+    const [start, end] = (employeeShiftTime || "").split(" - "); // Split the current working hours
+    let newShiftTime = "";
+
+    if (key === "start") {
+      newShiftTime = `${formattedTime} - ${end || ""}`;
+    } else {
+      newShiftTime = `${start || ""} - ${formattedTime}`;
+    }
+
+    setEmployeeShiftTime(newShiftTime); // Update the state variable
+  };
+
+
 
 
   const fetchPatientById = async (userId: string) => {
@@ -472,7 +491,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
     return (
       <Card
-        isBlurred
+        // isBlurred
         className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto"
         shadow="sm"
       >
@@ -679,7 +698,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           )}
         </div>
         <Card
-          isBlurred
+          // isBlurred
           className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
           shadow="sm"
         >
@@ -761,7 +780,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           )}
         </div>
         <Card
-          isBlurred
+          // isBlurred
           className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
           shadow="sm"
         >
@@ -1116,7 +1135,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
 
           <Card
-            isBlurred
+            // isBlurred
             className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
             shadow="sm"
           >
@@ -1210,7 +1229,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
             <Spinner size="lg" />
           </div> :
           <Card
-            isBlurred
+            // isBlurred
             className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
             shadow="sm"
           >
@@ -1414,22 +1433,26 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       {editSelectedEmployeeShiftTime && (
                         <div className="flex items-center">
                           <TimeInput
-                            // defaultValue="09:00 AM"
-                            label="Start"
-                            onChange={(startTime) => {
-                              const endTime = (employeeShiftTime || "").split(" - ")[1] || "";
-                              setEmployeeShiftTime(`${startTime} - ${endTime}`);
-                            }}
+                          color={TOOL_TIP_COLORS.secondary}
+                            label="From"
+                            labelPlacement="outside"
+                            variant="bordered"
+                       
+                            startContent={<SVGIconProvider iconName="clock" />}
+                            onChange={(e) => handleTimeChange("start", e.toString())}
+                            isDisabled={!editSelectedEmployeeShiftTime}
                           />
 
                           <div className="flex items-center" style={{ marginLeft: 10 }}>
                             <TimeInput
-                              // defaultValue="05:00 PM"
-                              label="End"
-                              onChange={(endTime) => {
-                                const startTime = employeeShiftTime.split(" - ")[0] || "";
-                                setEmployeeShiftTime(`${startTime} - ${endTime}`);
-                              }}
+                            color={TOOL_TIP_COLORS.secondary}
+                              label="To"
+                              labelPlacement="outside"
+                              variant="bordered"
+                          
+                              startContent={<SVGIconProvider iconName="clock" />}
+                              onChange={(e) => handleTimeChange("end", e.toString())}
+                              isDisabled={!editSelectedEmployeeShiftTime}
                             />
                           </div>
                         </div>
@@ -1563,73 +1586,73 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     return (
       <>
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
-              Are you sure you want to delete this employee?
-            </h2>
+          Are you sure you want to delete this employee?
+        </h2>
         {loading ?
           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
             <Spinner size="lg" />
           </div> :
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
-                  Employee Details
-                </h3>
-              </div>
+          <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-foreground/90">
+                Employee Details
+              </h3>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="user" />
-                  <p className="text-medium ml-2">
-                    <strong>Name: </strong>{employeeName}
-                  </p>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <SVGIconProvider iconName="user" />
+                <p className="text-medium ml-2">
+                  <strong>Name: </strong>{employeeName}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="email" />
+                <p className="text-medium ml-2">
+                  <strong>email: </strong>{employeeEmail}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="phone" />
+                <p className="text-medium ml-2">
+                  <strong>Phone: </strong>+91- {employeePhone}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="icard" />
+                <p className="text-medium ml-2">
+                  <strong>Designation: </strong>{employeeDesignation}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="clock" />
+                <p className="text-medium ml-2">
+                  <strong>Working Hours: </strong>{employeeShiftTime}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="calendar" />
+                <p className="text-medium ml-2">
+                  <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <div style={{ marginLeft: -5 }}>
+                  <SVGIconProvider iconName="key" />
                 </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="email" />
-                  <p className="text-medium ml-2">
-                    <strong>email: </strong>{employeeEmail}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="phone" />
-                  <p className="text-medium ml-2">
-                    <strong>Phone: </strong>+91- {employeePhone}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="icard" />
-                  <p className="text-medium ml-2">
-                    <strong>Designation: </strong>{employeeDesignation}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
-                    <strong>Working Hours: </strong>{employeeShiftTime}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
-                    <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <div style={{ marginLeft: -5 }}>
-                    <SVGIconProvider iconName="key" />
-                  </div>
-                  <p className="text-medium ml-2">
-                    <strong>Access Type: </strong>Super-Admin
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="birthday" />
-                  <p className="text-medium ml-2">
-                    <strong>Date Of Birth: </strong> {employeeDOB}
-                  </p>
-                </div>
+                <p className="text-medium ml-2">
+                  <strong>Access Type: </strong>Super-Admin
+                </p>
+              </div>
+              <div className="flex items-center">
+                <SVGIconProvider iconName="birthday" />
+                <p className="text-medium ml-2">
+                  <strong>Date Of Birth: </strong> {employeeDOB}
+                </p>
               </div>
             </div>
-       
+          </div>
+
         }
 
       </>
