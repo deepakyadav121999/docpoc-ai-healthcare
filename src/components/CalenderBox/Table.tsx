@@ -26,13 +26,14 @@ import {
 import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
-import { columns, users, statusOptions } from "./data";
+import { columns, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddAppointment from "./AddAppointment";
-
+import axios from "axios";
+import Appointments from "@/app/appointment/page";
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
@@ -42,13 +43,30 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "age",
+  "date",
   "time",
   "email",
   "status",
   "actions",
 ];
+interface appointments {
+  id: string;
+  name: string;
+  age: number;
+  bloodGroup: string;
+  phone: string;
+  email: string;
+  status: string;
+  lastVisit: string;
+  displayPicture: string;
+  isActive: string;
+  json: string;
+  startDateTime: string;
+  endDateTime: string
 
-type User = (typeof users)[0];
+}
+
+// type User = (typeof Appointments)[0];
 
 export default function AppointmentTable() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -67,7 +85,112 @@ export default function AppointmentTable() {
   });
   const [page, setPage] = useState(1);
 
-  const hasSearchFilter = filterValue.length > 0;
+
+  const [appointments, setAppointments] = React.useState<appointments[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [totalappointments, setTotalappointments] = React.useState(0)
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint ="http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+
+      const params: any = {};
+
+      params.page = page;
+      params.pageSize = rowsPerPage;
+      params.from = '2024-12-04T03:32:25.812Z';
+      params.to = '2024-12-11T03:32:25.815Z';
+
+
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setAppointments(response.data.rows || response.data);
+      setTotalappointments(response.data.count || response.data.length);
+
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+
+    fetchUsers();
+
+  }, [page, rowsPerPage]);
+
+  const getAgeFromDob = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const currentDate = new Date();
+
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+
+    // Adjust age if the birthday hasn't occurred yet this year
+    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age;
+  };
+
+  function extractTime(dateTime: string): string {
+    const date = new Date(dateTime);
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+  
+    // Convert to 12-hour format
+    hours = hours % 12 || 12;
+  
+    // Add leading zero to minutes if needed
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  
+    return `${hours}:${formattedMinutes} ${amPm}`;
+  }
+  const extractDate = (dateTimeString: string): string => {
+    const date = (dateTimeString);
+    return date &&  date.split("T")[0];
+  };
+
+
+  const refreshUsers = async () => {
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
+        params: {
+          page: page,
+          pageSize: rowsPerPage,
+          from: '2024-12-04T03:32:25.812Z',
+          to: '2024-12-11T03:32:25.815Z',
+        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      setAppointments(response.data.rows);
+      setTotalappointments(response.data.count);
+    } catch (err) {
+      setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  type User = (typeof appointments)[0];
+  const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -77,7 +200,7 @@ export default function AppointmentTable() {
   }, [visibleColumns]);
 
   const filteredItems = useMemo(() => {
-    let filteredUsers = [...users];
+    let filteredUsers = [...appointments];
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
@@ -96,17 +219,11 @@ export default function AppointmentTable() {
     return filteredUsers;
   }, [filterValue, statusFilter]);
 
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(totalappointments / rowsPerPage);
 
-  const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
 
   const sortedItems = useMemo(() => {
-    return [...items].sort((a: User, b: User) => {
+    return [...appointments].sort((a: User, b: User) => {
       const first = a[sortDescriptor.column as keyof User] as number | string;
       const second = b[sortDescriptor.column as keyof User] as number | string;
 
@@ -117,36 +234,79 @@ export default function AppointmentTable() {
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [sortDescriptor, items]);
+  }, [sortDescriptor, appointments]);
 
   const renderCell = useCallback((user: User, columnKey: React.Key) => {
     const cellValue = user[columnKey as keyof User];
+
+    if (columnKey === "age") {
+
+      let age = "";
+      try {
+        const userJson = JSON.parse(user.json);
+        // console.log(userJson.dob)
+        const dob = userJson.dob || "";
+        age = getAgeFromDob(dob).toString();
+        // console.log(age)
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+
+      return <p className="capitalize">{age}</p>;
+    }
+    if (columnKey === "time") {
+      const startTime = extractTime(user.startDateTime);
+      console.log(startTime);
+      
+      const endTime = user.endDateTime;
+      return <p className="capitalize">{startTime}-{extractTime(endTime)}</p>;
+
+    }
+    if (columnKey === "date") {
+      const startDate = extractDate(user.startDateTime);
+
+      const endDate = extractDate(user.endDateTime)
+
+      return <p>{startDate} - {endDate}</p>;
+    }
+
 
     switch (columnKey) {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
+            avatarProps={{ radius: "lg", src: user.displayPicture }}
             description={user.email}
             name={cellValue}
           />
         );
+        case "name":
+          return (
+            <User
+              avatarProps={{ radius: "lg", src: user.displayPicture }}
+              description={user.email}
+              name={cellValue}
+            >
+              {user.email}
+            </User>
+          );
       case "role":
         return (
           <div className="flex flex-col">
             <p className="font-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-xs capitalize text-gray-400">{user.team}</p>
+            <p className="text-xs capitalize text-gray-400">{ }</p>
           </div>
         );
       case "status":
+        const status = user.isActive ? "visiting" : "declined";
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[user.status]}
+            color={statusColorMap[status.toLowerCase()]}
             size="sm"
             variant="flat"
           >
-            {cellValue}
+            {status}
           </Chip>
         );
       case "actions":
@@ -159,6 +319,8 @@ export default function AppointmentTable() {
             }}
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
+            userId={user.id}
+            onPatientDelete={refreshUsers}
           />
         );
       default:
@@ -259,12 +421,12 @@ export default function AppointmentTable() {
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModal headingName="Add New Appointment"  child={<AddAppointment/>}/>
+              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment />} />
             </div>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-default-400 text-small">
-              Total {users.length} users
+              Total {totalappointments} users
             </span>
             <label className="flex items-center text-default-400 text-small">
               Rows per page:
@@ -283,7 +445,7 @@ export default function AppointmentTable() {
     );
   }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);
 
-  
+
   const paginationContent = (
     <div className="flex justify-end items-center w-full py-4">
       <Button
@@ -342,7 +504,7 @@ export default function AppointmentTable() {
         </TableBody>
       </Table>
       {paginationContent}
-      {addAppointmentModelToggle && (
+      {/*{addAppointmentModelToggle && (
         <OpaqueModal
         modalType={{
           view: MODAL_TYPES.VIEW_APPOINTMENT,
@@ -351,8 +513,10 @@ export default function AppointmentTable() {
         }}
         actionButtonName={"Ok"}
         modalTitle={"Appointment"}
+        userId="123"  
+        onPatientDelete={refreshUsers}
       />
-      )}
+      )} */}
     </>
   );
 }

@@ -79,7 +79,7 @@ export default function DataTable() {
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(50);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
@@ -99,17 +99,11 @@ export default function DataTable() {
       const endpoint = searchName
         ? `http://127.0.0.1:3037/DocPOC/v1/user/name/${searchName}`
         : "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
-
-
       const params: any = {};
-
         params.page = page;
         params.pageSize = rowsPerPage;
         params.from = '2024-12-04T03:32:25.812Z';
         params.to = '2024-12-11T03:32:25.815Z';
-      
-      
-
       const response = await axios.get(endpoint, {
         params,
         headers: {
@@ -117,23 +111,19 @@ export default function DataTable() {
           "Content-Type": "application/json",
         },
       });
-
       setUsers(response.data.rows || response.data);
       setTotalUsers(response.data.count || response.data.length);
-
     } catch (err) {
-      setError("Failed to fetch patients.");
+      setError("Failed to fetch users.");
     } finally {
       setLoading(false);
     }
   };
-
   React.useEffect(() => {
 
     fetchUsers();
 
   }, [page, rowsPerPage]);
-
 
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
@@ -179,31 +169,33 @@ type User = (typeof users)[0];
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
-
     return columns.filter((column) =>
       Array.from(visibleColumns).includes(column.uid)
     );
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...users];
+  let filteredUsers = [...users];
 
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
-      );
-    }
+  if (hasSearchFilter) {
+    filteredUsers = filteredUsers.filter((user) =>
+      user.name.toLowerCase().includes(filterValue.toLowerCase())
+    );
+  }
 
-    return filteredUsers;
-  }, [users, filterValue, statusFilter]);
+  // Apply the status filter
+  if (
+    statusFilter !== "all" &&
+    Array.from(statusFilter).length !== statusOptions.length
+  ) {
+    filteredUsers = filteredUsers.filter((user) => {
+      const userStatus = user.isActive ? "Active" : "Inactive"; // Map isActive to status
+      return Array.from(statusFilter).includes(userStatus);
+    });
+  }
+
+  return filteredUsers;
+}, [users, filterValue, statusFilter]);
 
   const pages = Math.ceil(totalUsers / rowsPerPage);
 
@@ -412,14 +404,14 @@ type User = (typeof users)[0];
           </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
-            <select
+            {/* <select
               className="bg-transparent outline-none text-default-400 text-small"
               onChange={onRowsPerPageChange}
             >
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="15">15</option>
-            </select>
+            </select> */}
           </label>
         </div>
       </div>

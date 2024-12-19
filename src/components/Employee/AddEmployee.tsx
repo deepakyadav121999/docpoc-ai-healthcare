@@ -415,7 +415,9 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
               <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
-                  <ModalHeader>{modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
+                  <ModalHeader>{loading ?(<div className="flex justify-center">
+                        
+                      </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
                   <ModalBody>
                     {loading ? (
                       <div className="flex justify-center">

@@ -25,6 +25,8 @@ import {
   Input,
   TimeInput,
   DateValue,
+  AutocompleteItem,
+  Autocomplete
 } from "@nextui-org/react";
 import {
   GLOBAL_ACTION_ICON_COLOR,
@@ -65,6 +67,12 @@ const PlaceholderImage = () => (
     </text>
   </svg>
 );
+interface AutocompleteItem {
+  value: string;
+  label: string;
+  description?: string;
+  dob?: string;
+}
 
 export default function ModalForm(props: { type: string, userId: string, onDataChange: (data: any) => void }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
@@ -108,14 +116,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [branchId, setBranchId] = useState("")
   const [patientDob, setPatientDob] = useState("")
   const [gender, setGender] = useState("")
-
-
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
   const [loading, setLoading] = useState(false)
 
-
-
+  const [appointmentDateTime, setAppointmentDateTime] = useState("");
+  const [appointmentPatientId, setAppointmentPatientId] = useState("");
+  const [appointmentBranch, setAppointmentBranch] = useState("");
+  const[appointmentName,setAppointmentName] =useState("")
+  const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
+  const [doctorId, setDoctorId] = useState('')
+  const [startDateTime, setStartDateTime] = useState<string>("");
+  const [endDateTime, setEndDateTime] = useState<string>("");
+ 
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
     const period = hour >= 12 ? "PM" : "AM"; // Determine AM/PM
@@ -135,6 +148,23 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   };
 
 
+  const combineDateWithTime = (existingDateTime: string, newTime: Time): string => {
+    const date = new Date(existingDateTime); // Get the existing date
+    date.setHours(newTime.hour, newTime.minute, 0, 0); // Set new time, keep milliseconds as zero
+    return date.toISOString(); // Convert to ISO string
+  };
+  
+
+  const handleTimeChangeAppointment = (time: Time, field: "startDateTime" | "endDateTime") => {
+    if (field === "startDateTime") {
+      const updatedStartDateTime = combineDateWithTime(startDateTime, time);
+      setStartDateTime(updatedStartDateTime);
+    } else {
+      const updatedEndDateTime = combineDateWithTime(endDateTime, time);
+      setEndDateTime(updatedEndDateTime);
+    }
+  };
+  
 
 
   const fetchPatientById = async (userId: string) => {
@@ -149,9 +179,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           "Content-Type": "application/json",
         },
       });
-
-
-
       setPatientName(response.data.name)
       setPatientPhone(response.data.phone)
       setPatientBloodGroup(response.data.bloodGroup)
@@ -164,7 +191,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setPatientDob(response.data.dob)
       setGender(response.data.gender)
     } catch (err) {
-      // setError("Failed to fetch patient.");
     } finally {
       setLoading(false);
     }
@@ -202,14 +228,94 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     }
   };
 
+  function extractTime(dateTime: string): string {
+    const date = new Date(dateTime);
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert to 12-hour format
+    hours = hours % 12 || 12;
+
+    // Add leading zero to minutes if needed
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+
+    return `${hours}:${formattedMinutes} ${amPm}`;
+  }
+  const extractDate = (dateTimeString: string): string => {
+    const date = dateTimeString;
+    return date.split("T")[0];
+  };
+  const fetchDoctors = async (branchId: string) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${branchId}`;
+      const params: any = {};
+      params.page = 1;
+      params.pageSize = 50;
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+        label: doctor.name,
+        value: doctor.id,
+        description: `${doctor.phone} | ${doctor.email}`,
+      }));
+      setDoctorList(transformedDoctors)
+
+
+    } catch (err) {
+      // setError("Failed to fetch patients.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAppointments = async (userId: string) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment/${userId}`;
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const users = response.data;
+      setAppointmentDateTime(users.startDateTime)
+      setAppointmentPatientId(users.patientId)
+      setAppointmentBranch(users.branchId)
+      fetchUsers(users.doctorId)
+      fetchDoctors(users.branchId)
+      setAppointmentName(users.name)
+      setStartDateTime(users.startDateTime); 
+      setEndDateTime(users.endDateTime);
+    } catch (err) {
+      console.error("Failed to fetch users.", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (props.type === MODAL_TYPES.VIEW_PATIENT || props.type === MODAL_TYPES.EDIT_PATIENT || props.type === MODAL_TYPES.DELETE_PATIENT) {
       fetchPatientById(props.userId);
     }
 
-    if (props.type === MODAL_TYPES.VIEW_EMPLOYEE || props.type === MODAL_TYPES.EDIT_EMPLOYEE || props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
+    else if (props.type === MODAL_TYPES.VIEW_EMPLOYEE || props.type === MODAL_TYPES.EDIT_EMPLOYEE || props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
       fetchUsers(props.userId);
+    }
+    else if (props.type === MODAL_TYPES.VIEW_APPOINTMENT || props.type === MODAL_TYPES.EDIT_APPOINTMENT || props.type === MODAL_TYPES.DELETE_APPOINTMENT) {
+      fetchAppointments(props.userId);
     }
 
   }, [props.type, props.userId])
@@ -219,6 +325,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     setEditVisitTime(!editVisitTime);
   };
   const editDoctor = () => {
+
+
     setEditDoctor(!editSelectedDoctor);
   };
 
@@ -270,6 +378,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       }
       props.onDataChange(updatedData);
     }
+    else if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
+      const updatedData = {
+        name: appointmentName,
+        branchId: appointmentBranch,
+        doctorId: doctorId,
+        patientId: appointmentPatientId,
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
+        type: "0151308b-6419-437b-9b41-53c7de566724"
+      }
+      props.onDataChange(updatedData);
+    }
+
   }, [
     branchId,
     patientName,
@@ -286,7 +407,13 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     employeeEmail,
     employeeDOB,
     employeeDesignation,
-    employeeShiftTime
+    employeeShiftTime,
+    appointmentName,
+    appointmentBranch,
+    doctorId,
+    appointmentPatientId,
+    startDateTime,
+    endDateTime
 
   ]);
 
@@ -325,7 +452,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   };
 
   const editEmployeeJoiningDate = (newDate: DateValue) => {
-    setEmployeeJoiningDate(newDate);
+    // setEmployeeJoiningDate(newDate);
   };
 
   const editEmployeeTime = () => {
@@ -352,17 +479,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       reader.readAsDataURL(file);
     }
   };
-
-  const formatDate = (date: ZonedDateTime) => {
-    const options: Intl.DateTimeFormatOptions = {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    };
-    return new Intl.DateTimeFormat("en-US", options).format(
-      new Date(date.year, date.month - 1, date.day)
-    );
-  };
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
     const date = new Date(isoString);
@@ -371,14 +487,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed
     const day = date.getDate().toString().padStart(2, "0");
     return `${year}-${month}-${day}`;
-  };
-
-  const formatTime = (date: ZonedDateTime) => {
-    const hours = date.hour;
-    const minutes = date.minute;
-    const period = hours >= 12 ? "PM" : "AM";
-    const adjustedHours = hours % 12 || 12;
-    return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
 
   const doctorsList = [
@@ -417,7 +525,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       key: "4",
       label: "AB+",
     },
-  ]; // Example doctors list
+  ];
+
 
 
 
@@ -457,13 +566,13 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
                   <p className="text-medium ml-2">
-                    <strong>Visiting Time: </strong> 10:30 AM
+                    <strong>Visiting Time: </strong> {extractTime(appointmentDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Date: </strong> June 15, 2024
+                    <strong>Date: </strong>{extractDate(appointmentDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -471,7 +580,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                     <SVGIconProvider iconName="doctor" />
                   </div>
                   <p className="text-medium ml-2">
-                    <strong>Appointed Doctor: </strong> Dr. Jane Smith
+                    <strong>Appointed Doctor: </strong> {employeeName}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -522,23 +631,32 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                   {!editVisitTime && (
                     <p className="text-medium ml-2">
                       <strong>Visiting Time: </strong>{" "}
-                      {formatTime(selectedDate)}
+                      {extractTime(appointmentDateTime)}
                     </p>
                   )}
 
                   {editVisitTime && (
                     <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
+                      className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
                     >
-                      <DatePicker
-                        label="Event Date"
+                      <TimeInput
+                        color={TOOL_TIP_COLORS.secondary}
+                        label="from"
+                        labelPlacement="outside"
                         variant="bordered"
-                        hideTimeZone
-                        showMonthAndYearPickers
-                        defaultValue={selectedDate}
-                        onChange={handleDateChange}
-                        style={{ marginLeft: 0 }}
+                        defaultValue={new Time(7, 38)}
+
+
+                        onChange={(time) => handleTimeChangeAppointment(time, "startDateTime")}
+                      />
+                      <TimeInput
+                        color={TOOL_TIP_COLORS.secondary}
+                        label="to"
+                        labelPlacement="outside"
+                        variant="bordered"
+                        defaultValue={new Time(8, 45)}
+
+                        onChange={(time) => handleTimeChangeAppointment(time, "endDateTime")}
                       />
                     </div>
                   )}
@@ -562,7 +680,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Date: </strong> {formatDate(selectedDate)}
+                    <strong>Date: </strong> {extractDate(appointmentDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -571,7 +689,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                   </div>
                   {!editSelectedDoctor && (
                     <p className="text-medium ml-2">
-                      <strong>Appointed Doctor: </strong> {selectedDoctor}
+                      <strong>Appointed Doctor: </strong> {employeeName}
                     </p>
                   )}
                   {editSelectedDoctor && (
@@ -583,35 +701,22 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         className="flex items-center"
                         style={{ marginLeft: 10 }}
                       >
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button variant="bordered">{selectedDoctor}</Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            aria-label="Dynamic Actions"
-                            items={doctorsList}
-                            onAction={(key) =>
-                              setSelectedDoctor(
-                                doctorsList.find((item) => item.key === key)
-                                  ?.label ?? selectedDoctor
-                              )
-                            }
-                          >
-                            {(item) => (
-                              <DropdownItem
-                                key={item.key}
-                                color={
-                                  item.key === "delete" ? "danger" : "default"
-                                }
-                                className={
-                                  item.key === "delete" ? "text-danger" : ""
-                                }
-                              >
-                                {item.label}
-                              </DropdownItem>
-                            )}
-                          </DropdownMenu>
-                        </Dropdown>
+                        <Autocomplete
+                          color={TOOL_TIP_COLORS.secondary}
+                          labelPlacement="outside"
+                          variant="bordered"
+                          isDisabled={!editSelectedDoctor}
+                          defaultItems={doctorList}
+                          label="Select Doctor"
+                          placeholder="Search a Doctor"
+                          onSelectionChange={(key) => setDoctorId(key as string)}
+                        >
+                          {(item) => (
+                            <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                              {item.label}
+                            </AutocompleteItem>
+                          )}
+                        </Autocomplete>
                       </div>
                     </>
                   )}
@@ -658,13 +763,13 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
             <div className="flex items-center">
               <SVGIconProvider iconName="clock" />
               <p className="text-medium ml-2">
-                <strong>Visit Time: </strong> 10:30 AM
+                <strong>Visit Time: </strong> {extractTime(appointmentDateTime)}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
               <p className="text-medium ml-2">
-                <strong>Date: </strong> June 15, 2024
+                <strong>Date: </strong> {extractDate(appointmentDateTime)}
               </p>
             </div>
             <div className="flex items-center">
@@ -672,7 +777,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <SVGIconProvider iconName="doctor" />
               </div>
               <p className="text-medium ml-2">
-                <strong>Appointed Doctor: </strong> Dr. Jane Smith
+                <strong>Appointed Doctor: </strong> {employeeName}
               </p>
             </div>
             <div className="flex items-center">
@@ -1433,11 +1538,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       {editSelectedEmployeeShiftTime && (
                         <div className="flex items-center">
                           <TimeInput
-                          color={TOOL_TIP_COLORS.secondary}
+                            color={TOOL_TIP_COLORS.secondary}
                             label="From"
                             labelPlacement="outside"
                             variant="bordered"
-                       
+
                             startContent={<SVGIconProvider iconName="clock" />}
                             onChange={(e) => handleTimeChange("start", e.toString())}
                             isDisabled={!editSelectedEmployeeShiftTime}
@@ -1445,11 +1550,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
                           <div className="flex items-center" style={{ marginLeft: 10 }}>
                             <TimeInput
-                            color={TOOL_TIP_COLORS.secondary}
+                              color={TOOL_TIP_COLORS.secondary}
                               label="To"
                               labelPlacement="outside"
                               variant="bordered"
-                          
+
                               startContent={<SVGIconProvider iconName="clock" />}
                               onChange={(e) => handleTimeChange("end", e.toString())}
                               isDisabled={!editSelectedEmployeeShiftTime}

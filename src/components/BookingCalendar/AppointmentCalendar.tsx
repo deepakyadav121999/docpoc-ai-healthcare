@@ -1,19 +1,89 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
+
 export const AppointmentCalendar: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [loading, setLoading] = useState(false)
+  const [totalAppointments, setTotalAppointments] = useState(0)
+  const [appointmentsByDate, setAppointmentsByDate] = useState<{ [key: string]: number }>({});
+  const [appointments, setAppointments] = useState<
+    Array<{ date: Date; title: string; description?: string; startDateTime: Date; endDateTime: Date; }>
+  >([
+  ]);
+  const [resulst, setResults] = useState([])
+  const fetchAppointments = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+
+      const params: any = {
+        page,
+        pageSize: rowsPerPage,
+        from: "2024-12-01T00:00:00.000Z", // Start of the month
+        to: "2024-12-31T23:59:59.999Z", // End of the month
+      };
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+
+      const grouped: { [key: string]: number } = {};
+      const appointmentList = response.data.rows.map((appointment: any) => {
+
+        const startDateTime = (appointment.startDateTime);
+        const endDateTime = (appointment.endDateTime);
+        console.log(startDateTime);
+
+
+
+        const date = startDateTime.split("T")[0]; // Extract UTC date
+        grouped[date] = (grouped[date] || 0) + 1;
+        console.log(date)
+        return {
+          startDateTime,
+          endDateTime,
+          title: appointment.name || "Appointment",
+        };
+      });
+
+      setAppointmentsByDate(grouped);
+      setAppointments(appointmentList);
+      setTotalAppointments(response.data.count || response.data.rows.length);
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments()
+  }, [])
+
+  //  if(loading===false){
+  //   console.log(totalAppointments)
+  //  } 
+  // console.log(appointments);
+  // let abc = resulst && resulst.map((item: any) => { return (item.startDateTime) })
+  // console.log(abc)
+  // console.log(resulst)
+
   const router = useRouter();
   const [currentView, setCurrentView] = useState<"month" | "week" | "day">(
     "month"
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [appointments, setAppointments] = useState<
-    Array<{ date: Date; title: string; description?: string }>
-  >([
-    { date: new Date(2023, 5, 15, 10, 0), title: "Doctor Appointment" },
-    { date: new Date(2023, 5, 16, 14, 30), title: "Team Meeting" },
-    { date: new Date(2023, 5, 17, 11, 0), title: "Dentist Appointment" },
-  ]);
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalData, setModalData] = useState<{
     date: Date;
@@ -49,12 +119,13 @@ export const AppointmentCalendar: React.FC = () => {
     }
   };
 
+
   const renderMonthView = () => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    const lastDay = new Date(Date.UTC(year, month + 1, 0));
+    const daysInMonth = lastDay.getUTCDate();
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayHeaders = days.map((day) => (
@@ -70,19 +141,28 @@ export const AppointmentCalendar: React.FC = () => {
 
     const daysCells = [];
     for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(year, month, i);
-      const isToday = date.toDateString() === new Date().toDateString();
-      const hasBooking = appointments.some(
-        (appt) => appt.date.toDateString() === date.toDateString()
-      );
+      const date = new Date(Date.UTC(year, month, i));
+      const dateKey = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const isToday =
+        new Date().toISOString().split("T")[0] === dateKey; // Compare in UTC
+      const hasBooking = appointmentsByDate[dateKey] > 0;
+
       daysCells.push(
-        <div
-          key={i}
-          className={`calendar-cell ${isToday ? "today" : ""} ${hasBooking ? "has-booking" : ""}`}
-          onClick={() => selectDate(year, month, i)}
-        >
-          {i}
-        </div>
+        <>
+          <div
+            key={i}
+            className={`calendar-cell ${isToday ? "today" : ""} ${hasBooking ? "has-booking" : ""}`}
+            onClick={() => selectDate(year, month, i)}
+          >
+            <div className="h-2/3 flex justify-center items-center" ><p>{i}</p></div>
+            {appointmentsByDate[dateKey] && (
+              <div className="flex justify-end items-end text-sm   h-1/3 ">
+                <p>{`${appointmentsByDate[dateKey]} appo...`}</p>
+              </div>
+            )}
+          </div>
+
+        </>
       );
     }
 
@@ -96,8 +176,11 @@ export const AppointmentCalendar: React.FC = () => {
   };
 
   const renderWeekView = () => {
-    const startOfWeek = new Date(selectedDate);
-    startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+    const startOfWeek = new Date(Date.UTC(
+      selectedDate.getUTCFullYear(),
+      selectedDate.getUTCMonth(),
+      selectedDate.getUTCDate() - selectedDate.getUTCDay()
+    ))
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayHeaders = days.map((day) => (
@@ -110,19 +193,27 @@ export const AppointmentCalendar: React.FC = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
-      const isToday = date.toDateString() === new Date().toDateString();
-      const hasBooking = appointments.some(
-        (appt) => appt.date.toDateString() === date.toDateString()
-      );
+      const dateKey = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const isToday = new Date().toISOString().split("T")[0] === dateKey; // Compare in UTC
+      const hasBooking = appointmentsByDate[dateKey] > 0;
+
       weekCells.push(
         <div
           key={i}
           className={`calendar-cell ${isToday ? "today" : ""} ${hasBooking ? "has-booking" : ""}`}
-          onClick={() =>
-            selectDate(date.getFullYear(), date.getMonth(), date.getDate())
-          }
+          onClick={() => {
+            setSelectedDate(new Date(date));
+            changeView("day");
+          }}
         >
-          {date.getDate()}
+          <div className="h-2/3 flex justify-center items-center">
+            <p>{date.getDate()}</p>
+          </div>
+          {appointmentsByDate[dateKey] && (
+            <div className="flex justify-end items-end text-sm h-1/3">
+              <p>{`${appointmentsByDate[dateKey]} appo...`}</p>
+            </div>
+          )}
         </div>
       );
     }
@@ -141,40 +232,130 @@ export const AppointmentCalendar: React.FC = () => {
 
     for (let hour = 8; hour < 21; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        const time = new Date(selectedDate);
-        time.setHours(hour, minute);
+        // const time = new Date(selectedDate);
+        // time.setHours(hour, minute);
+
+        const timeSlotStart = new Date(selectedDate);
+        timeSlotStart.setHours(hour, minute, 0, 0);
+        const timeSlotEnd = new Date(timeSlotStart);
+        timeSlotEnd.setMinutes(timeSlotStart.getMinutes() + 30);
         const isCurrentTime =
-          time.getHours() === currentTime.getHours() &&
-          time.getMinutes() <= currentTime.getMinutes() &&
-          time.getMinutes() + 30 > currentTime.getMinutes() &&
-          time.toDateString() === currentTime.toDateString();
+          timeSlotStart <= currentTime &&
+          timeSlotEnd > currentTime &&
+          timeSlotStart.toDateString() === currentTime.toDateString();
         const hasBooking = appointments.some(
           (appt) =>
-            appt.date.getFullYear() === time.getFullYear() &&
-            appt.date.getMonth() === time.getMonth() &&
-            appt.date.getDate() === time.getDate() &&
-            appt.date.getHours() === time.getHours() &&
-            appt.date.getMinutes() === time.getMinutes()
+            timeSlotStart >= new Date(appt.startDateTime) &&
+            timeSlotStart < new Date(appt.endDateTime)
         );
         const booking = appointments.find(
           (appt) =>
-            appt.date.getFullYear() === time.getFullYear() &&
-            appt.date.getMonth() === time.getMonth() &&
-            appt.date.getDate() === time.getDate() &&
-            appt.date.getHours() === time.getHours() &&
-            appt.date.getMinutes() === time.getMinutes()
+            timeSlotStart >= new Date(appt.startDateTime) &&
+            timeSlotStart < new Date(appt.endDateTime)
         );
+        const overlappingAppointments = appointments.filter(
+          (appt) =>
+            new Date(appt.startDateTime) < timeSlotEnd &&
+            new Date(appt.endDateTime) > timeSlotStart
+        );
+
+
+        const slotDuration = timeSlotEnd.getTime() - timeSlotStart.getTime();
+        let borderPercentage = 0;
+        overlappingAppointments.forEach((appt) => {
+          const apptStart = new Date(appt.startDateTime).getTime();
+          const apptEnd = new Date(appt.endDateTime).getTime();
+  
+          const overlapStart = Math.max(apptStart, timeSlotStart.getTime());
+          const overlapEnd = Math.min(apptEnd, timeSlotEnd.getTime());
+          const overlapDuration = overlapEnd - overlapStart;
+  
+          if (overlapDuration > 0) {
+            borderPercentage += (overlapDuration / slotDuration) * 100;
+          }
+        });
+  
+        // Cap border percentage at 100%
+        borderPercentage = Math.min(borderPercentage, 100);
+  
+        const gradientBorder = `linear-gradient(to right, var(--secondary-color) ${borderPercentage}%, transparent ${borderPercentage}%)`;
+   let displayTime = "";
+      if (booking) {
+        const bookingStart = new Date(booking.startDateTime);
+        const bookingEnd = new Date(booking.endDateTime);
+
+        if (timeSlotStart <= bookingStart && timeSlotEnd >= bookingEnd) {
+          // The appointment fully overlaps the slot
+          displayTime = `${bookingStart.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} - ${bookingEnd.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        } else if (timeSlotStart <= bookingStart) {
+          // The appointment starts during this slot
+          displayTime = `${bookingStart.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} - ${timeSlotEnd.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        } else if (timeSlotEnd >= bookingEnd) {
+          // The appointment ends during this slot
+          displayTime = `${timeSlotStart.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} - ${bookingEnd.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        }
+      }
+        
         dayCells.push(
           <div
             key={`${hour}-${minute}`}
-            className={`time-slot ${isCurrentTime ? "current-time" : ""} ${hasBooking ? "has-booking" : ""}`}
-            onClick={() => openModal(time.getTime(), !!hasBooking)}
+            className={`time-slot ${isCurrentTime ? "current-time" : ""} ${hasBooking ? "has-booking" : ""} flex justify-between p-1 gap-1`}
+            style={{
+              borderBottom: borderPercentage > 0 ? "3px solid transparent" : "none",
+              borderImageSource: borderPercentage > 0 ? gradientBorder : "none",
+              borderImageSlice: "0 0 1 0",
+            }}
+
+            onClick={() => !hasBooking && openModal(timeSlotStart.getTime(), false)}
           >
-            {time.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-            {booking ? ` - ${booking.title}` : ""}
+            <div className="flex w-2/4 items-center text-center justify-end ">
+              <p> {timeSlotStart.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}</p>
+
+            </div>
+
+            {/* ${timeSlotStart.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })} */}
+            <div className="flex w-2/4 justify-center items-center gap-1">
+              {/* <p className=" ">
+                 {booking ? `
+                 - ${timeSlotEnd.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+                ` : ""}
+                </p> */}
+                {booking && (
+              <p className="text-sm">{displayTime}</p>)
+                }
+                 <p className="text-sm">{ booking && booking.title}</p> 
+          
+             
+
+            </div>
+
           </div>
         );
       }
@@ -189,10 +370,11 @@ export const AppointmentCalendar: React.FC = () => {
   };
 
   const openModal = (timestamp: number, hasBooking: boolean) => {
-    router.push("/appointment/add")
-    setModalVisible(true);
-    const date = new Date(timestamp);
-    setModalData({ date, hasBooking });
+    if (!hasBooking) {
+      setModalVisible(true);
+      const date = new Date(timestamp);
+      setModalData({ date, hasBooking });
+    }
   };
 
   const closeModal = () => {
@@ -211,10 +393,11 @@ export const AppointmentCalendar: React.FC = () => {
     const description = (
       form.elements.namedItem("appointmentDescription") as HTMLTextAreaElement
     ).value;
-    setAppointments([...appointments, { date: dateTime, title, description }]);
+    // setAppointments([...appointments, { date: dateTime, title, description }]);
     setModalVisible(false);
     renderCalendar();
   };
+
 
   const getMonthYearString = () => {
     const options = { year: "numeric", month: "long" } as const;
@@ -223,74 +406,74 @@ export const AppointmentCalendar: React.FC = () => {
 
   return (
     <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-    <div className="calendar-container">
-      <h2>{getMonthYearString()}</h2>
-      <div className="calendar-header">
-        <div className="view-selector">
-          <button
-            className={`view-button ${currentView === "month" ? "active" : ""}`}
-            onClick={() => changeView("month")}
-          >
-            Month
-          </button>
-          <button
-            className={`view-button ${currentView === "week" ? "active" : ""}`}
-            onClick={() => changeView("week")}
-          >
-            This Week
-          </button>
-          <button
-            className={`view-button ${currentView === "day" ? "active" : ""}`}
-            onClick={() => changeView("day")}
-          >
-            Today
-          </button>
+      <div className="calendar-container">
+        <h2>{getMonthYearString()}</h2>
+        <div className="calendar-header">
+          <div className="view-selector">
+            <button
+              className={`view-button ${currentView === "month" ? "active" : ""}`}
+              onClick={() => changeView("month")}
+            >
+              Month
+            </button>
+            <button
+              className={`view-button ${currentView === "week" ? "active" : ""}`}
+              onClick={() => changeView("week")}
+            >
+              This Week
+            </button>
+            <button
+              className={`view-button ${currentView === "day" ? "active" : ""}`}
+              onClick={() => changeView("day")}
+            >
+              Today
+            </button>
+          </div>
+          {currentView === "month" && (
+            <div className="navigation-buttons">
+              <button className="nav-button" onClick={() => changeMonth("previous")}>
+                Previous
+              </button>
+              <button className="nav-button" onClick={() => changeMonth("next")}>
+                Next
+              </button>
+            </div>
+          )}
         </div>
-        {currentView === "month" && (
-          <div className="navigation-buttons">
-            <button className="nav-button" onClick={() => changeMonth("previous")}>
-              Previous
-            </button>
-            <button className="nav-button" onClick={() => changeMonth("next")}>
-              Next
-            </button>
+        <div id="calendar-view">{renderCalendar()}</div>
+
+        {modalVisible && (
+          <div className="modal" onClick={closeModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <span className="close" onClick={closeModal}>
+                &times;
+              </span>
+              <h2 id="modalTitle">
+                {modalData.hasBooking ? "View Appointment" : "Book Appointment"}
+              </h2>
+              <form id="appointmentForm" onSubmit={handleFormSubmit}>
+                <input
+                  type="text"
+                  name="appointmentTitle"
+                  placeholder="Appointment Title"
+                  required
+                />
+                <input
+                  type="datetime-local"
+                  name="appointmentDateTime"
+                  required
+                />
+                <textarea
+                  name="appointmentDescription"
+                  placeholder="Description"
+                ></textarea>
+                <button type="submit">Book Appointment</button>
+              </form>
+            </div>
           </div>
         )}
-      </div>
-      <div id="calendar-view">{renderCalendar()}</div>
 
-      {modalVisible && (
-        <div className="modal" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <span className="close" onClick={closeModal}>
-              &times;
-            </span>
-            <h2 id="modalTitle">
-              {modalData.hasBooking ? "View Appointment" : "Book Appointment"}
-            </h2>
-            <form id="appointmentForm" onSubmit={handleFormSubmit}>
-              <input
-                type="text"
-                name="appointmentTitle"
-                placeholder="Appointment Title"
-                required
-              />
-              <input
-                type="datetime-local"
-                name="appointmentDateTime"
-                required
-              />
-              <textarea
-                name="appointmentDescription"
-                placeholder="Description"
-              ></textarea>
-              <button type="submit">Book Appointment</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <style>{`
+        <style>{`
         :root {
           --primary-color: #015e75;
           --secondary-color: #2ecc71;
@@ -438,11 +621,15 @@ export const AppointmentCalendar: React.FC = () => {
 
         .calendar-cell.today {
           background-color: var(--primary-color);
-          color: white;
+          color:white;
         }
 
         .calendar-cell.has-booking {
           border: 2px solid var(--secondary-color);
+        display:flex;
+        flex-direction:column;
+        padding:1px;
+        
         }
 
         .calendar-cell.current-time {
@@ -457,9 +644,11 @@ export const AppointmentCalendar: React.FC = () => {
         }
 
         .time-slot {
+          padding:5px;
           display: flex;
           justify-content: center;
           align-items: center;
+          border-color: transparent;
           background-color: var(--calendar-cell-color);
           font-size: 18px;
           border-radius: 10px;
@@ -474,46 +663,53 @@ export const AppointmentCalendar: React.FC = () => {
         .time-slot:hover {
           box-shadow: inset 1px 1px 3px var(--shadow-color),
                       inset -1px -1px 6px var(--shadow-color);
+                     
         }
 
         .time-slot.has-booking {
-          border: 2px solid var(--highlight-color);
+        background-color: var(--primary-color);
+         color:white;
+           padding-bottom: 5px;
+           border-radius: 10px;
+           border: none;
+           border-bottom-width: 1.5px;
+           border-bottom-style: solid;
+           border-image-source: linear-gradient(to right, var(--secondary-color) 50%, transparent 50%);
+           border-image-slice: 0 0 1 0; /* Apply gradient only on the bottom */
         }
-
         .time-slot.current-time {
-          background-color: var(--primary-color);
-          color: white;
+          // background-color: var(--primary-color);
+          // color: white;
         }
 
-        .modal {
-          display: none;
-          position: fixed;
-          z-index: 1;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          overflow: auto;
-          background-color: rgba(0,0,0,0.4);
-        }
+       .modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
 
-        .modal-content {
-          background-color: var(--calendar-background-color);
-          margin: 15% auto;
-          padding: 20px;
-          border-radius: 20px;
-          box-shadow: 10px 10px 20px var(--shadow-color),
-                      -10px -10px 20px var(--shadow-color);
-          max-width: 500px;
-          width: 100%;
-        }
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 
-        .close {
-          color: #aaa;
-          float: right;
-          font-size: 28px;
-          font-weight: bold;
-        }
+.close {
+  float: right;
+  font-size: 1.5em;
+  font-weight: bold;
+  cursor: pointer;
+}
 
         .close:hover,
         .close:focus {
@@ -542,8 +738,10 @@ export const AppointmentCalendar: React.FC = () => {
         button[type="submit"]:hover {
           background-color: #2980b9;
         }
+
+
       `}</style>
-    </div>
+      </div>
     </div>
   );
 };

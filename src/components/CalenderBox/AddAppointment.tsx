@@ -19,43 +19,67 @@ interface AutocompleteItem {
   value: string;
   label: string;
   description?: string;
+  dob?: string;
 }
 const AddAppointment = () => {
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [formData, setFormData] = useState({
-    name: "XYZ Dental Clinic",
+    name: "",
     doctorId: "",
     patientId: "",
     branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
-    visitType: "0151308b-6419-437b-9b41-53c7de566724",
-    startDateTime: "2024-08-26T07:38:53.000Z",
-  endDateTime: "2024-08-26T07:38:53.000Z",
+    type: "0151308b-6419-437b-9b41-53c7de566724",
+    startDateTime: "",
+    endDateTime: "",
     code: "ST-ID/15",
-    json: '{"dob":"28th Jan, 1996."}',
+    json: '',
   });
   const [loading, setLoading] = useState(false);
 
+  const generateDateTime = (time: Time) => {
+    const currentDate = new Date(); // Use the current date
+    return new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      time.hour,
+      time.minute,
+      0
+    ).toISOString(); // Convert to ISO format
+  };
   const handleTimeChange = (time: Time, field: "startDateTime" | "endDateTime") => {
-    const isoTime = `${time.hour.toString().padStart(2, "0")}:${time.minute.toString().padStart(2, "0")}:00`;
+    const isoTime = generateDateTime(time);
     setFormData({ ...formData, [field]: isoTime });
+  };
+
+const handlePatientSelection = (patientId: string) => {
+    const selectedPatient = patientList.find((patient) => patient.value === patientId);
+    if (selectedPatient) {
+      setFormData({
+        ...formData,
+        patientId,
+        name: selectedPatient.label, // Set patient's name
+        json: JSON.stringify({ dob: selectedPatient.dob }), // Set patient's DOB
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   
-  
+
+
     const token = localStorage.getItem("docPocAuth_token");
-  
+
     if (!token) {
       alert("No access token found. Please log in again.");
       setLoading(false);
       return;
     }
-  
-    console.log("Token:", token); 
-  
+
+    console.log("Token:", token);
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:3037/DocPOC/v1/appointment",
@@ -82,13 +106,13 @@ const AddAppointment = () => {
 
 
       const params: any = {};
-   
-        params.page = 1;
-        params.pageSize = 50;
-        params.from = '2024-12-04T03:32:25.812Z';
-        params.to = '2024-12-11T03:32:25.815Z';
-        params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
-      
+
+      params.page = 1;
+      params.pageSize = 50;
+      params.from = '2024-12-04T03:32:25.812Z';
+      params.to = '2024-12-11T03:32:25.815Z';
+      params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+
 
       const response = await axios.get(endpoint, {
         params,
@@ -102,6 +126,7 @@ const AddAppointment = () => {
         label: patient.name,
         value: patient.id,
         description: `${patient.phone} | ${patient.email}`,
+        dob: patient.dob, // Include DOB
       }));
       setPatientList(transformedPatients);
       // setTotalPatient(response.data.count || response.data.length);
@@ -122,12 +147,12 @@ const AddAppointment = () => {
 
       const params: any = {};
 
-        params.page =1;
-        params.pageSize = 50;
-        params.from = '2024-12-04T03:32:25.812Z';
-        params.to = '2024-12-11T03:32:25.815Z';
-      
-      
+      params.page = 1;
+      params.pageSize = 50;
+      params.from = '2024-12-04T03:32:25.812Z';
+      params.to = '2024-12-11T03:32:25.815Z';
+
+
 
       const response = await axios.get(endpoint, {
         params,
@@ -155,10 +180,21 @@ const AddAppointment = () => {
 
 
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchDoctors()
     fetchPatients()
-  },[])
+  }, [])
+
+  useEffect(() => {
+    const defaultStartTime = generateDateTime(new Time(7, 38)); // Default start time
+    const defaultEndTime = generateDateTime(new Time(8, 45)); // Default end time
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      startDateTime: defaultStartTime,
+      endDateTime: defaultEndTime,
+    }));
+  }, []);
+
 
   return (
     <div className="  grid grid-cols-1 gap-9  ">
@@ -224,7 +260,7 @@ const AddAppointment = () => {
                   defaultItems={patientList}
                   label="Select Patient"
                   placeholder="Search a Patient"
-                  onSelectionChange={(key) => setFormData({ ...formData, patientId: key as string })}
+                  onSelectionChange={(key) => handlePatientSelection(key as string)}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
@@ -281,3 +317,19 @@ const AddAppointment = () => {
 };
 
 export default AddAppointment;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -26,6 +26,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const [error, seterror] = useState('')
   const [updatedPatientData, setUpdatedPatientData] = useState({});
   const [updatedEmployeeData, setUpdatedEmployeeData] = useState({})
+  const [updatedAppointmentData, setUpdatedAppointmentData] = useState({})
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -70,18 +71,42 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         setModalMessage({ success: "emplyee deleted", error: "" });
         setNotificationOpen(true)
         if (props.onPatientDelete) props.onPatientDelete();
-        // alert('Employee deleted successfully!');
-
-
-
-        // Add logic to refresh or update the UI here, if necessary
-
       }
     } catch (error) {
       setNotificationOpen(true)
       console.error('Error deleting employee:', error);
       setModalMessage({ success: "", error: "Failed to delete the employee. Please try" });
       seterror('Failed to delete the employee. Please try again.');
+
+    }
+    finally {
+      setLoading(false);
+      setNotificationOpen(true);
+    }
+  };
+
+  const deleteAppointment = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("docPocAuth_token");
+
+       const endpoint =`http://127.0.0.1:3037/DocPOC/v1/appointment/${props.userId}`
+    try {
+      const response = await axios.delete(endpoint,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status === 200) {
+      
+        setModalMessage({ success: "appointment deleted", error: "" });
+        setNotificationOpen(true)
+        if (props.onPatientDelete) props.onPatientDelete();
+      }
+    } catch (error) {
+      setNotificationOpen(true)
+      console.error('Error deleting appointment:', error);
+      setModalMessage({ success: "", error: "Failed to delete the appointment. Please try" });
+      seterror('Failed to delete the appointment. Please try again.');
 
     }
     finally {
@@ -119,6 +144,9 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       }
       else if (formType === MODAL_TYPES.EDIT_PATIENT) {
         setUpdatedPatientData(data);
+      }
+      else if(formType === MODAL_TYPES.EDIT_APPOINTMENT){
+        setUpdatedAppointmentData(data)
       }
     }
   };
@@ -198,6 +226,43 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     }
   };
 
+  const handleAppointmentEdit = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment`;
+
+    const requestData = {
+      id: props.userId,
+      ...updatedAppointmentData,
+    };
+
+    try {
+      const response = await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (props.onPatientDelete) props.onPatientDelete();
+      setmessage("appointment updated successfully!");
+      setModalMessage({ success: "appointment updated successfully!", error: " " });
+      setNotificationOpen(true)
+      // alert("Patient updated successfully!");
+      onClose(); // Close the modal after successful update
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      setModalMessage({ success: "", error: "Error updating appointment" });
+      seterror("Error updating appointment");
+      setNotificationOpen(true)
+      // alert("Failed to update the patient. Please try again.");
+    }
+    finally {
+      setLoading(false);
+      setNotificationOpen(true);
+      onClose();
+    }
+  };
+
   const handleSubmit = () => {
     console.log("Form Type:", formType);
     console.log("Props Modal Type:", props.modalType);
@@ -211,6 +276,9 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         console.log("Running deleteEmployee");
         deleteEmployee();
       }
+      else if(formType === MODAL_TYPES.DELETE_APPOINTMENT){
+        deleteAppointment()
+      }
     } else if (formType === props.modalType.edit) {
       console.log("Edit action triggered");
       if (formType === MODAL_TYPES.EDIT_PATIENT) {
@@ -219,6 +287,9 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       } else if (formType === MODAL_TYPES.EDIT_EMPLOYEE) {
         console.log("Running handleEmployeeEdit");
         handleEmployeeEdit();
+      }
+      else if(formType === MODAL_TYPES.EDIT_APPOINTMENT){
+        handleAppointmentEdit()
       }
     }
     else{
