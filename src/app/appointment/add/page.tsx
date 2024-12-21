@@ -16,7 +16,7 @@ const AddAppointmentPage = () => {
       <div className="mx-auto max-w-7xl  ">
         <Breadcrumb pageName="appointment/add" />
 
-        <AddAppointment />
+        <AddAppointment onUsersAdded={()=>{}}/>
       </div>
     </DefaultLayout>
   );

@@ -16,7 +16,7 @@ const SettingsPage = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="Settings" />
+        <Breadcrumb pageName="Clinic" />
      <TabDefaultWithRoute current={current}  options={SETTING_TAB_KEYS} color={TOOL_TIP_COLORS.primary}/>
         <Settings />
       </div>

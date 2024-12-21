@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, {useEffect , useState } from "react";
 import { GLOBAL_ICON_COLOR_WHITE} from "@/constants";
 
 import ChartLine from "../Charts/ChartLine";
@@ -8,39 +8,122 @@ import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { ApexOptions } from "apexcharts";
-
+import axios from "axios";
+import { Spinner } from "@nextui-org/spinner";
 
 export default function App() {
-  const dataStatsList: dataStatsDefault[] = [
-    {
-      icon: (
-        <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE}/>
-      ),
-      color: "#4b9c78",
-      title: "new doctors (since last month)",
-      value: "Total Doctors: 3",
-      growthRate: 0,
-    },
-    {
-      icon: (
-        <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />
-      ),
-      color: "#FF9C55",
-      title: "new employees (since last month)",
-      value: "Total Staff: 10",
-      growthRate: 2,
-    },
-    {
-      icon: (
-        <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
-      ),
-      color: "#8155FF",
-      title: "new nurses (since last month)",
-      value: "Total Nurses: 6",
-      growthRate: 0,
-    }
-  ];
+  const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
+  const [loading, setLoading] = useState(true);
 
+
+
+  // const dataStatsList: dataStatsDefault[] = [
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE}/>
+  //     ),
+  //     color: "#4b9c78",
+  //     title: "new doctors (since last month)",
+  //     value: "Total Doctors: 3",
+  //     growthRate: 0,
+  //   },
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />
+  //     ),
+  //     color: "#FF9C55",
+  //     title: "new employees (since last month)",
+  //     value: "Total Staff: 10",
+  //     growthRate: 2,
+  //   },
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+  //     ),
+  //     color: "#8155FF",
+  //     title: "new nurses (since last month)",
+  //     value: "Total Nurses: 6",
+  //     growthRate: 0,
+  //   }
+  // ];
+
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+      const params = {
+        page: 1,
+        pageSize: 100,
+        from: "2024-12-04T03:32:25.812Z",
+        to: "2024-12-11T03:32:25.815Z",
+      };
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const users = response.data.rows || [];
+
+      // Parse and count doctors, nurses, and staff
+      let doctorCount = 0;
+      let nurseCount = 0;
+      let staffCount = 0;
+
+      users.forEach((user:any) => {
+        try {
+          const parsedJson = JSON.parse(user.json || "{}");
+          const designation = parsedJson.designation?.toLowerCase();
+
+          if (designation === "doctor") {
+            doctorCount++;
+          } else if (designation === "nurse") {
+            nurseCount++;
+          } else {
+            staffCount++;
+          }
+        } catch (error) {
+          console.error("Error parsing user json:", error);
+        }
+      });
+
+      // Update dataStatsList with real data
+      setDataStatsList([
+        {
+          icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#4b9c78",
+          title: "new doctors (since last month)",
+          value: `Total Doctors: ${doctorCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+        {
+          icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#FF9C55",
+          title: "new employees (since last month)",
+          value: `Total Staff: ${staffCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+        {
+          icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#8155FF",
+          title: "new nurses (since last month)",
+          value: `Total Nurses: ${nurseCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+      ]);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
   const series = [
     {
       name: "Received Amount",
@@ -160,7 +243,12 @@ export default function App() {
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full m-1">
         <div className="flex flex-col w-full">
-          <DataStatsDefault dataStatsList={dataStatsList} />
+          {  loading ? (
+            <div className="absolute inset-0 flex justify-center items-center  z-50">
+            <Spinner />
+          </div>):<DataStatsDefault dataStatsList={dataStatsList} />
+          }
+          
         </div>
         <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
           <ChartLine options={options} series={series} label="Total Strength Overview"/>

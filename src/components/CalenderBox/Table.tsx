@@ -34,6 +34,7 @@ import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddAppointment from "./AddAppointment";
 import axios from "axios";
 import Appointments from "@/app/appointment/page";
+import debounce from 'lodash.debounce';
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
@@ -89,7 +90,8 @@ export default function AppointmentTable() {
   const [appointments, setAppointments] = React.useState<appointments[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [totalappointments, setTotalappointments] = React.useState(0)
+  const [totalappointments, setTotalappointments] = React.useState(0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -98,13 +100,17 @@ export default function AppointmentTable() {
       const endpoint ="http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
 
 
-      const params: any = {};
+      const params: any = {
+       page:page,
+      pageSize: rowsPerPage,
 
-      params.page = page;
-      params.pageSize = rowsPerPage;
-      params.from = '2024-12-04T03:32:25.812Z';
-      params.to = '2024-12-11T03:32:25.815Z';
-
+      }
+      if (selectedDate) {
+        const startOfDay = new Date(selectedDate).toISOString(); // Convert to ISO string
+        const endOfDay = new Date(new Date(selectedDate).setHours(23, 59, 59, 999)).toISOString();
+        params.from = startOfDay;
+        params.to = endOfDay;
+      }
 
 
       const response = await axios.get(endpoint, {
@@ -116,7 +122,7 @@ export default function AppointmentTable() {
       });
 
       setAppointments(response.data.rows || response.data);
-      setTotalappointments(response.data.count || response.data.length);
+      setTotalappointments(response.data.count);
 
     } catch (err) {
       setError("Failed to fetch patients.");
@@ -124,11 +130,36 @@ export default function AppointmentTable() {
       setLoading(false);
     }
   };
+  const searchAppointments = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint =
+        "http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469"; // Replace with actual search endpoint
+      const response = await axios.get(endpoint, {
+        params: {
+           page,
+          pageSize: 1000, 
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setAppointments(response.data.rows || []);
+      setTotalappointments(response.data.count || response.data.rows.length);
+      setPage(1); // Reset to the first page
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   React.useEffect(() => {
 
-    fetchUsers();
-
+      fetchUsers();
+    
   }, [page, rowsPerPage]);
 
   const getAgeFromDob = (dob: string): number => {
@@ -175,8 +206,6 @@ export default function AppointmentTable() {
         params: {
           page: page,
           pageSize: rowsPerPage,
-          from: '2024-12-04T03:32:25.812Z',
-          to: '2024-12-11T03:32:25.815Z',
         },
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -270,6 +299,16 @@ export default function AppointmentTable() {
       return <p>{startDate} - {endDate}</p>;
     }
 
+    if (columnKey === "email") {
+      try {
+        const userJson = JSON.parse(user.json || "{}");
+        const email = userJson.email || "N/A"; // Fallback to "N/A" if email is missing
+        return <p>{email}</p>;
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+    }
+
 
     switch (columnKey) {
       case "name":
@@ -298,7 +337,7 @@ export default function AppointmentTable() {
           </div>
         );
       case "status":
-        const status = user.isActive ? "visiting" : "declined";
+        const status = user.startDateTime ? "visiting" : "declined";
         return (
           <Chip
             className="capitalize"
@@ -341,10 +380,17 @@ export default function AppointmentTable() {
     setAddAppointmentModelToggle((prev) => !prev);
   }, []);
 
-  const onSearchChange = useCallback((value?: string) => {
-    setFilterValue(value || "");
-    setPage(1);
-  }, []);
+
+//  const debouncedFetchUser = React.useMemo(
+//      () => debounce((value: string) => searchAppointments(), 500),
+//      [fetchUsers]
+//    );
+ 
+   const onSearchChange = React.useCallback((value?: string) => {
+     setFilterValue(value || "");
+     setPage(1);
+    //  debouncedFetchUser(value || "");
+   },[]);
 
   const onClear = useCallback(() => {
     setFilterValue("");
@@ -362,13 +408,24 @@ export default function AppointmentTable() {
               placeholder="Search by name..."
               startContent={<SearchIcon />}
               value={filterValue}
-              onClear={onClear}
+              onClear={() => onClear()}
               onValueChange={onSearchChange}
             />
             <DatePicker
               showMonthAndYearPickers
               label="Appointment date"
               className="max-w-[284px]"
+              onBlur={(date) => {
+                if (date && date instanceof Date && !isNaN(date.getTime())) {
+                  setSelectedDate(date.toISOString().split('T')[0]);
+                  setPage(1);
+                  fetchUsers();
+                } else {
+                  setSelectedDate(null);
+                  setPage(1);
+                  fetchUsers();
+                }
+              }}
             />
             <div className="flex gap-3">
               <Dropdown>
@@ -421,12 +478,12 @@ export default function AppointmentTable() {
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment />} />
+              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={refreshUsers}/>} />
             </div>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-default-400 text-small">
-              Total {totalappointments} users
+              Total {totalappointments} Appointments
             </span>
             <label className="flex items-center text-default-400 text-small">
               Rows per page:
@@ -437,6 +494,7 @@ export default function AppointmentTable() {
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="15">15</option>
+                <option value="1000">15</option>
               </select>
             </label>
           </div>

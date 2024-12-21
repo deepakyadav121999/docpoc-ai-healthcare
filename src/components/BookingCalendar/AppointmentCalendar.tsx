@@ -2,7 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-
+import AddAppointment from "../CalenderBox/AddAppointment";
+import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+} from "@nextui-org/react";
 
 export const AppointmentCalendar: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -10,10 +20,12 @@ export const AppointmentCalendar: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [totalAppointments, setTotalAppointments] = useState(0)
   const [appointmentsByDate, setAppointmentsByDate] = useState<{ [key: string]: number }>({});
+  
   const [appointments, setAppointments] = useState<
     Array<{ date: Date; title: string; description?: string; startDateTime: Date; endDateTime: Date; }>
   >([
   ]);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [resulst, setResults] = useState([])
   const fetchAppointments = async () => {
     setLoading(true);
@@ -69,6 +81,19 @@ export const AppointmentCalendar: React.FC = () => {
   useEffect(() => {
     fetchAppointments()
   }, [])
+   useEffect(() => {
+      const header = document.querySelector("header");
+      if (header) {
+        // Only modify z-index when modal is open
+        if (isOpen) {
+          header.classList.remove("z-999");
+          header.classList.add("z-0");
+        } else {
+          header.classList.remove("z-0");
+          header.classList.add("z-999");
+        }
+      }
+    }, [isOpen]);
 
   //  if(loading===false){
   //   console.log(totalAppointments)
@@ -87,8 +112,10 @@ export const AppointmentCalendar: React.FC = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalData, setModalData] = useState<{
     date: Date;
+    startTime: string; // Store the clicked start time
+    endTime: string; 
     hasBooking: boolean;
-  }>({ date: new Date(), hasBooking: false });
+  }>({ date: new Date(), startTime: "", endTime: "", hasBooking: false });
 
   useEffect(() => {
     renderCalendar();
@@ -324,7 +351,9 @@ export const AppointmentCalendar: React.FC = () => {
               borderImageSlice: "0 0 1 0",
             }}
 
-            onClick={() => !hasBooking && openModal(timeSlotStart.getTime(), false)}
+            onClick={() =>
+              !hasBooking && openModal(selectedDate.getTime(), false, timeSlotStart, timeSlotEnd)
+            }
           >
             <div className="flex w-2/4 items-center text-center justify-end ">
               <p> {timeSlotStart.toLocaleTimeString([], {
@@ -369,11 +398,16 @@ export const AppointmentCalendar: React.FC = () => {
     changeView("day");
   };
 
-  const openModal = (timestamp: number, hasBooking: boolean) => {
+  const openModal = (timestamp: number, hasBooking: boolean, startTime: Date, endTime: Date) => {
     if (!hasBooking) {
       setModalVisible(true);
-      const date = new Date(timestamp);
-      setModalData({ date, hasBooking });
+      setModalData({
+        date: new Date(timestamp),
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        hasBooking,
+      });
+      onOpen()
     }
   };
 
@@ -443,34 +477,36 @@ export const AppointmentCalendar: React.FC = () => {
         <div id="calendar-view">{renderCalendar()}</div>
 
         {modalVisible && (
-          <div className="modal" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <span className="close" onClick={closeModal}>
-                &times;
-              </span>
-              <h2 id="modalTitle">
-                {modalData.hasBooking ? "View Appointment" : "Book Appointment"}
-              </h2>
-              <form id="appointmentForm" onSubmit={handleFormSubmit}>
-                <input
-                  type="text"
-                  name="appointmentTitle"
-                  placeholder="Appointment Title"
-                  required
-                />
-                <input
-                  type="datetime-local"
-                  name="appointmentDateTime"
-                  required
-                />
-                <textarea
-                  name="appointmentDescription"
-                  placeholder="Description"
-                ></textarea>
-                <button type="submit">Book Appointment</button>
-              </form>
-            </div>
-          </div>
+         
+             <Modal
+        backdrop="opaque"
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "10%" }}
+        classNames={{
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+               <p>Add New Appointment</p>
+              </ModalHeader>
+              <ModalBody>
+               <AddAppointment onUsersAdded={fetchAppointments}/>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+            
+        
         )}
 
         <style>{`

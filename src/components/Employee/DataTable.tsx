@@ -96,9 +96,7 @@ export default function DataTable() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = searchName
-        ? `http://127.0.0.1:3037/DocPOC/v1/user/name/${searchName}`
-        : "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
       const params: any = {};
         params.page = page;
         params.pageSize = rowsPerPage;
@@ -186,16 +184,20 @@ type User = (typeof users)[0];
   // Apply the status filter
   if (
     statusFilter !== "all" &&
-    Array.from(statusFilter).length !== statusOptions.length
+    Array.from(statusFilter).length > 0 // Ensure there are selected statuses
   ) {
     filteredUsers = filteredUsers.filter((user) => {
-      const userStatus = user.isActive ? "Active" : "Inactive"; // Map isActive to status
-      return Array.from(statusFilter).includes(userStatus);
+      const userStatus = user.isActive ? "active" : "inactive"; // Map isActive to "active" or "inactive"
+      return Array.from(statusFilter).includes(userStatus); // Check if it matches selected statuses
     });
   }
 
+
   return filteredUsers;
 }, [users, filterValue, statusFilter]);
+const handleStatusFilterChange = (selected: Selection) => {
+  setStatusFilter(selected);
+};
 
   const pages = Math.ceil(totalUsers / rowsPerPage);
 
@@ -360,7 +362,7 @@ type User = (typeof users)[0];
                 closeOnSelect={false}
                 selectedKeys={statusFilter}
                 selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
+                onSelectionChange={handleStatusFilterChange}
               >
                 {statusOptions.map((status) => (
                   <DropdownItem key={status.uid} className="capitalize">
@@ -403,8 +405,8 @@ type User = (typeof users)[0];
             Total {totalUsers} users
           </span>
           <label className="flex items-center text-default-400 text-small">
-            Rows per page:
-            {/* <select
+            {/* Rows per page:
+            <select
               className="bg-transparent outline-none text-default-400 text-small"
               onChange={onRowsPerPageChange}
             >
