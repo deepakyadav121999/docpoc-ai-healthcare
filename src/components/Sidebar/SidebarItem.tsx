@@ -41,8 +41,8 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
           <SidebarDropdown item={item.children} />
         </div>
       )}
-    </li>
+    </li> 
   );
 };
 
-export default SidebarItem;
+export default SidebarItem; 

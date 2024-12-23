@@ -36,7 +36,7 @@ export default function UserAccess() {
         page: 1,
         pageSize: 50,
         from: "2024-12-04T03:32:25.812Z",
-        to: "2024-12-11T03:32:25.815Z",
+        to: "2024-12-11T03:32:25.815Z", 
       };
 
       const response = await axios.get(endpoint, {
@@ -53,7 +53,7 @@ export default function UserAccess() {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   const handleUpdate = async (updatedUser: Employee) => {
 

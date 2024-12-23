@@ -18,7 +18,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Clinic" />
           <Clinic />
-          </div>
+          </div> 
       </DefaultLayout>
     </>
   );

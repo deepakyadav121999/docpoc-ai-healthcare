@@ -63,7 +63,7 @@ const Clinic = () => {
     apiCheck()
     
   },[])
-
+    
 
   // const [selectedDepartments] = useState([
   //   "orthopedics",
@@ -72,9 +72,10 @@ const Clinic = () => {
   //   "pediatrics",
   // ]);
 
-  const flipEdit = () => {
-    // setEdit(!edit);
-  };
+  // const flipEdit = () => {
+  //   // setEdit(!edit);
+  // };
+  
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");

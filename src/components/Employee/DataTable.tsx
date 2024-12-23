@@ -73,7 +73,7 @@ type User = (typeof users)[0];
 export default function DataTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
+    new Set([])  
   );
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
@@ -513,5 +513,5 @@ const handleStatusFilterChange = (selected: Selection) => {
           )}
         </div>
     </div>
-  );
+  ); 
 }
