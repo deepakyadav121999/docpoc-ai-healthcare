@@ -45,7 +45,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     name: "",
     doctorId: "",
     patientId: "",
-    branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
     type: "0151308b-6419-437b-9b41-53c7de566724",
     startDateTime:"",
     endDateTime:"" ,
@@ -140,9 +139,41 @@ const handlePatientSelection = (patientId: string) => {
     console.log("Token:", token);
 
     try {
+
+      const token = localStorage.getItem("docPocAuth_token");
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+      const payload ={
+        ...formData,
+        branchId: fetchedBranchId
+      }
       const response = await axios.post(
         "http://127.0.0.1:3037/DocPOC/v1/appointment",
-        formData,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -169,7 +200,34 @@ const handlePatientSelection = (patientId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/list/${fetchedBranchId}`;
 
 
       const params: any = {};
@@ -209,7 +267,32 @@ const handlePatientSelection = (patientId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
 
 
       const params: any = {};

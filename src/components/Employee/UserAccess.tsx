@@ -12,7 +12,6 @@ interface Employee {
   name: string;
   phone: string;
   email: string;
- 
   json: string;
   accessType: string; // JSON string
  
@@ -29,8 +28,38 @@ export default function UserAccess() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
+
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+
+
       const endpoint =
-        "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+        `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
 
       const params = {
         page: 1,

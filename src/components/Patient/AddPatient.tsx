@@ -21,7 +21,6 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
-    branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
     name: "",
     phone: "",
     email: "",
@@ -83,11 +82,43 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       setLoading(false);
       return;
     }
-
+      
     try {
+      const token = localStorage.getItem("docPocAuth_token");
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+     
+      const payload ={
+        ...formData,
+        branchId:fetchedBranchId
+       }
       const response = await axios.post(
         "http://127.0.0.1:3037/DocPOC/v1/patient",
-        formData,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,9 +127,9 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         }
       );
 
+     
       setModalMessage({ success: "Patient added successfully!", error: "" });
       setFormData({
-        branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
         name: "",
         phone: "",
         email: "",
@@ -286,7 +317,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   <ModalHeader>{
                     loading ? (
                       <div className="flex justify-center">
-                        <Spinner size="lg" />
+              
                       </div>):
                   modalMessage.success?<p className="text-green-600">Success</p>: <p className="text-red-600">Error</p>}</ModalHeader>
                   <ModalBody>

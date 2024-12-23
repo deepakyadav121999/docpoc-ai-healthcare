@@ -97,7 +97,35 @@ export default function AppointmentTable() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint ="http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+     
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+      const endpoint =`http://127.0.0.1:3037/DocPOC/v1/appointment/list/${fetchedBranchId}`;
 
 
       const params: any = {
@@ -194,28 +222,6 @@ export default function AppointmentTable() {
   const extractDate = (dateTimeString: string): string => {
     const date = (dateTimeString);
     return date &&  date.split("T")[0];
-  };
-
-
-  const refreshUsers = async () => {
-
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
-        params: {
-          page: page,
-          pageSize: rowsPerPage,
-        },
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      setAppointments(response.data.rows);
-      setTotalappointments(response.data.count);
-    } catch (err) {
-      setError("Failed to fetch patients.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   type User = (typeof appointments)[0];
@@ -359,7 +365,7 @@ export default function AppointmentTable() {
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId={user.id}
-            onPatientDelete={refreshUsers}
+            onPatientDelete={fetchUsers}
           />
         );
       default:
@@ -478,7 +484,7 @@ export default function AppointmentTable() {
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={refreshUsers}/>} />
+              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={fetchUsers}/>} />
             </div>
           </div>
           <div className="flex justify-between items-center">

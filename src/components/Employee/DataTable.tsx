@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -89,14 +89,41 @@ export default function DataTable() {
   const [users, setUsers] = React.useState<Employee[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [totalUsers, setTotalUsers] = React.useState(0);
 
-
-  const [totalUsers, setTotalUsers] = React.useState(0)
   const fetchUsers = async (searchName = "", selectedStatuses: string[] = []) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = "http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
       const params: any = {};
         params.page = page;
         params.pageSize = rowsPerPage;
@@ -118,9 +145,7 @@ export default function DataTable() {
     }
   };
   React.useEffect(() => {
-
     fetchUsers();
-
   }, [page, rowsPerPage]);
 
   const getAgeFromDob = (dob: string): number => {
@@ -136,30 +161,6 @@ export default function DataTable() {
     }
   
     return age;
-  };
-
-
-  const refreshUsers = async () => {
-
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/user/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
-        params: {
-          page: page,
-          pageSize: rowsPerPage,
-          from: '2024-12-04T03:32:25.812Z',
-          to: '2024-12-11T03:32:25.815Z',
-        },
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      setUsers(response.data.rows);
-      setTotalUsers(response.data.count);
-    } catch (err) {
-      setError("Failed to fetch patients.");
-    } finally {
-      setLoading(false);
-    }
   };
 
 type User = (typeof users)[0];
@@ -276,7 +277,7 @@ const handleStatusFilterChange = (selected: Selection) => {
           actionButtonName={"Ok"}
           modalTitle={"Employee"}
           userId={user.id}
-          onPatientDelete={refreshUsers}
+          onPatientDelete={fetchUsers}
         />
         );
         default:
@@ -397,7 +398,7 @@ const handleStatusFilterChange = (selected: Selection) => {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <OpaqueDefaultModal headingName="Add New Employee" child={<AddEmployee onUsersAdded={refreshUsers} />} />
+            <OpaqueDefaultModal headingName="Add New Employee" child={<AddEmployee onUsersAdded={fetchUsers} />} />
           </div>
         </div>
         <div className="flex justify-between items-center">

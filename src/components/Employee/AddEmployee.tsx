@@ -26,7 +26,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
-    branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
     name: "",
     phone: "",
     email: "",
@@ -54,6 +53,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
+
+ 
+ 
+  
 
   const handleJsonUpdate = (key: string, value: string) => {
     const updatedJson = JSON.parse(formData.json);
@@ -109,6 +112,8 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     handleJsonUpdate("workingHours", newWorkingHours);
   };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -144,14 +149,46 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       onOpen();
       return;
     }
-
-    // Add accessType to formData
-    const payload = {
-      ...formData,
-      accessType: JSON.stringify(accessTypes),
-    };
-
     try {
+      const token = localStorage.getItem("docPocAuth_token");
+    
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        
+        console.error("No hospitals found.");
+        return;
+      }
+
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+       
+        console.warn("No branches found for the hospital.");
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+
+      const payload = {
+        ...formData,
+        branchId:fetchedBranchId,
+        accessType: JSON.stringify(accessTypes),
+      };
+
       const response = await axios.post(
         "http://127.0.0.1:3037/DocPOC/v1/user",
         payload,
@@ -164,7 +201,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       setModalMessage({ success: "User added successfully!", error: "" });
 
       setFormData({
-        branchId: "12a1c77b-39ed-47e6-b6aa-0081db2c1469",
         name: "",
         phone: "",
         email: "",

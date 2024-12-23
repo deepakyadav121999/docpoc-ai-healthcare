@@ -79,19 +79,39 @@ export default function App() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
+      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+
+      const fetchedBranchId = branchResponse.data[0]?.id;
+
+
       const endpoint = searchName
         ? `http://127.0.0.1:3037/DocPOC/v1/patient/name/${searchName}`
-        : "http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469";
-
-
+        : `http://127.0.0.1:3037/DocPOC/v1/patient/list/${fetchedBranchId}`;
       const params: any = {};
-
-
       if (selectedStatuses.length) {
         params.status = selectedStatuses;
-
       } else {
-
         params.page = page;
         params.pageSize = rowsPerPage;
         params.from = '2024-12-04T03:32:25.812Z';
@@ -127,39 +147,7 @@ export default function App() {
 
   }, [page, rowsPerPage]);
 
-  const refreshPatients = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const response = await axios.get("http://127.0.0.1:3037/DocPOC/v1/patient/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469", {
-        params: {
-          page: page,
-          pageSize: rowsPerPage,
-          from: '2024-12-04T03:32:25.812Z',
-          to: '2024-12-11T03:32:25.815Z',
-          status: ['Active', 'Inactive'],
-          notificationStatus: ['Whatsapp notifications paused', 'SMS notifications paused']
-        },
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      setUsers(response.data.rows);
-      setTotalPatient(response.data.count);
-    } catch (err) {
-      setError("Failed to fetch patients.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-
-
   type User = (typeof users)[0];
-
-
-
-
-
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
     new Set([])
@@ -267,7 +255,7 @@ export default function App() {
             actionButtonName={"Ok"}
             modalTitle={"Patient"}
             userId={user.id}
-            onPatientDelete={refreshPatients}
+            onPatientDelete={fetchPatients}
           />
         );
       default:
@@ -388,7 +376,7 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <OpaqueDefaultModal headingName="Add New Patient" child={<AddPatient onPatientAdded={refreshPatients} />} />
+            <OpaqueDefaultModal headingName="Add New Patient" child={<AddPatient onPatientAdded={fetchPatients} />} />
 
           </div>
         </div>
