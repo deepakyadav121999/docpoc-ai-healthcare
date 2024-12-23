@@ -6,19 +6,14 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = () => {
-    setLoading(true);
-    const updatedPageName =
-      pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
-    
-      setPageName(updatedPageName);
-   
-  };
-  useEffect(() => {
-    if (loading && pageName === item.label.toLowerCase()) {
-      // Stop spinner once the UI is updated with the current page
-      setLoading(false);
+    if (pageName !== item.label.toLowerCase()) {
+      setLoading(true);
+      setPageName(item.label.toLowerCase());
     }
-  }, [pageName, item.label, loading]);
+  };
+   
+  
+
 
   return (
     <li>
@@ -41,7 +36,8 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
       </Link>
 
       {item.children && (
-        <div className={`${pageName !== item.label.toLowerCase() && "hidden"}`}>
+        <div className={`${pageName !== item.label.toLowerCase() && "hidden"}transition-all duration-300`}
+        onAnimationEnd={() => setLoading(false)}>
           <SidebarDropdown item={item.children} />
         </div>
       )}

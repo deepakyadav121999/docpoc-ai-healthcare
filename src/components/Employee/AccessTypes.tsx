@@ -60,8 +60,14 @@ export default function UserAccessTypes({ user, onSubmit }: UserAccessTypesProps
         onChange={(selected) => setAccessKeys(selected as string[])}
       >
         <Checkbox value="setAppointments">Edit/Create Appointments</Checkbox>
-        <Checkbox value="messagePatient">Message Patient</Checkbox>
+        {/* <Checkbox value="messagePatient">Message Patient</Checkbox> */}
         <Checkbox value="editDoctor">Edit Doctor</Checkbox>
+        <Checkbox value="editCreatePatients">Edit/Create Patients</Checkbox>
+        <Checkbox value="editCreateStaffs">Edit/Create Staffs</Checkbox>
+        <Checkbox value="editCreateReminders">
+            Edit/Create Reminders
+          </Checkbox>
+          <Checkbox value="editCreatePayments">Edit/Create Payments</Checkbox>
       </CheckboxGroup>
       </div>
       <div style={{ marginTop: 10 }}>

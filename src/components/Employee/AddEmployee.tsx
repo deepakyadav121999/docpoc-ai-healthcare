@@ -45,8 +45,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const [loading, setLoading] = useState(false);
   const [accessTypes, setAccessTypes] = useState({
     setAppointments: false,
-    messagePatient: true,
     editDoctor: true,
+    editCreatePatients: true,
+    editCreateStaffs:true,
+    editCreateReminders:false,
+    editCreatePayments:true,
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -177,8 +180,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
       setAccessTypes({
         setAppointments: false,
-        messagePatient: false,
-        editDoctor: false,
+    editDoctor: false,
+    editCreatePatients: false,
+    editCreateStaffs:false,
+    editCreateReminders:false,
+    editCreatePayments:true,
       });
       onUsersAdded();
     } catch (error: any) {
@@ -260,7 +266,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 >
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete>
-                <div className="flex gap-4">
+                <div className="flex gap-2 flex-wrap">
                  
                   <TimeInput
                     // color={TOOL_TIP_COLORS.secondary}
@@ -368,9 +374,9 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               </div>
 
 
-              <div className="mb-4.5">
+              <div className="mb-4.5 flex ">
                 <p className="text-sm font-medium mb-2">Access Types:</p>
-                <div className="flex  gap-2">
+                <div className="flex  gap-2 flex-wrap">
                   <Checkbox
                     isSelected={accessTypes.setAppointments}
                     onValueChange={(value) => handleAccessChange("setAppointments", value)}
@@ -378,17 +384,37 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     Set Appointments
                   </Checkbox>
                   <Checkbox
-                    isSelected={accessTypes.messagePatient}
-                    onValueChange={(value) => handleAccessChange("messagePatient", value)}
-                  >
-                    Message Patient
-                  </Checkbox>
-                  <Checkbox
                     isSelected={accessTypes.editDoctor}
                     onValueChange={(value) => handleAccessChange("editDoctor", value)}
                   >
                     Edit Doctor
                   </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.editCreatePatients}
+                    onValueChange={(value) => handleAccessChange("editCreatePatients", value)}
+                  >
+                  Edit/Create Patients
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.editCreateStaffs}
+                    onValueChange={(value) => handleAccessChange("editCreateStaffs", value)}
+                  >
+             Edit/Create Staffs
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.editCreateReminders}
+                    onValueChange={(value) => handleAccessChange("editCreateReminders", value)}
+                  >
+               Edit/Create Reminders
+                  </Checkbox>
+                  <Checkbox
+                    isSelected={accessTypes.editCreatePayments}
+                    onValueChange={(value) => handleAccessChange("editCreatePayments", value)}
+                  >
+               Edit/Create Payments
+                  </Checkbox>
+
+                
                 </div>
               </div>
               {errors.length > 0 && (
