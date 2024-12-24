@@ -13,8 +13,8 @@ import { Spinner } from "@nextui-org/spinner";
 
 export default function App() {
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(false);
+    const[brancId,setBranchId] = useState()
 
 
   // const dataStatsList: dataStatsDefault[] = [
@@ -67,6 +67,7 @@ export default function App() {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
+      console.log(fetchedHospitalId)
       const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
@@ -80,7 +81,8 @@ export default function App() {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-
+       console.log(fetchedBranchId)
+       setBranchId(fetchedBranchId)
 
       const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
       const params = {
@@ -96,15 +98,16 @@ export default function App() {
           "Content-Type": "application/json",
         },
       });
-
+ 
       const users = response.data.rows || [];
-
+      console.log(users)
       // Parse and count doctors, nurses, and staff
       let doctorCount = 0;
       let nurseCount = 0;
       let staffCount = 0;
 
       users.forEach((user:any) => {
+        setLoading(true)
         try {
           const parsedJson = JSON.parse(user.json || "{}");
           const designation = parsedJson.designation?.toLowerCase();
@@ -121,7 +124,7 @@ export default function App() {
         }
       });
 
-      // Update dataStatsList with real data
+     
       setDataStatsList([
         {
           icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
@@ -176,7 +179,8 @@ export default function App() {
     }
   };
   useEffect(() => {
-    fetchUsers();
+   fetchUsers()
+     
   }, []);
   const series = [
     {

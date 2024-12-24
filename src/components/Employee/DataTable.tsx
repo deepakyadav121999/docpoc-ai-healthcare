@@ -90,6 +90,7 @@ export default function DataTable() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
   const [totalUsers, setTotalUsers] = React.useState(0);
+  const[branchId, setBranchId] = useState('')
 
   const fetchUsers = async (searchName = "", selectedStatuses: string[] = []) => {
     setLoading(true);
@@ -121,7 +122,7 @@ export default function DataTable() {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-
+      setBranchId(fetchedBranchId)
 
       const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
       const params: any = {};
@@ -145,7 +146,7 @@ export default function DataTable() {
     }
   };
   React.useEffect(() => {
-    fetchUsers();
+     fetchUsers();
   }, [page, rowsPerPage]);
 
   const getAgeFromDob = (dob: string): number => {
