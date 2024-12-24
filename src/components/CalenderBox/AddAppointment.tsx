@@ -292,6 +292,8 @@ const handlePatientSelection = (patientId: string) => {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
+
+      
       const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
 
 

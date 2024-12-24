@@ -149,6 +149,29 @@ export default function App() {
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch users:", error);
+      setDataStatsList([
+        {
+          icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#4b9c78",
+          title: "new doctors (since last month)",
+          value: "Total Doctors: 0",
+          growthRate: 0,
+        },
+        {
+          icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#FF9C55",
+          title: "new employees (since last month)",
+          value: "Total Staff: 0",
+          growthRate: 0,
+        },
+        {
+          icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+          color: "#8155FF",
+          title: "new nurses (since last month)",
+          value: "Total Nurses: 0",
+          growthRate: 0,
+        },
+      ]);
       setLoading(false);
     }
   };

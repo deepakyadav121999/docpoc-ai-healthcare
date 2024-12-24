@@ -29,7 +29,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     name: "",
     phone: "",
     email: "",
-    userType: "",
     code: "ST-ID/JKI2301/1021",
     json: JSON.stringify({
       dob: "",
@@ -204,7 +203,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         name: "",
         phone: "",
         email: "",
-        userType: "",
         code: "ST-ID/JKI2301/1021",
         json: JSON.stringify({
           dob: "",
@@ -260,6 +258,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.name}
+                  color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
                     if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
                       setFormData({ ...formData, name: e.target.value });
@@ -280,7 +279,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   isDisabled={!edit}
                 />
 
-                <Autocomplete
+                {/* <Autocomplete
                   label="User Type"
                   labelPlacement="outside"
                   variant="bordered"
@@ -290,22 +289,23 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   isDisabled={!edit}
                 >
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
-                </Autocomplete>
+                </Autocomplete> */}
                 <Autocomplete
                   label="Designation"
                   labelPlacement="outside"
                   variant="bordered"
                   placeholder="Select Designation"
-                  defaultItems={[{ label: "Doctor" }, { label: "Staff" }, { label: "Nurse" }]}
+                  defaultItems={[{ label: "Admin" },{ label: "Doctor" }, { label: "Staff" }, { label: "Nurse" } ]}
                   onSelectionChange={(key) => handleJsonUpdate("designation", key as string)}
                   isDisabled={!edit}
+                  color={TOOL_TIP_COLORS.secondary}
                 >
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete>
                 <div className="flex gap-2 flex-wrap">
                  
                   <TimeInput
-                    // color={TOOL_TIP_COLORS.secondary}
+                    color={TOOL_TIP_COLORS.secondary}
                     label="From (Working Hours)"
                     labelPlacement="outside"
                     variant="bordered"
@@ -315,7 +315,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     isDisabled={!edit}
                   />
                   <TimeInput
-                    // color={TOOL_TIP_COLORS.secondary}
+                    color={TOOL_TIP_COLORS.secondary}
                     label="To (Working Hours)"
                     labelPlacement="outside"
                     variant="bordered"
@@ -332,6 +332,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.phone}
+                  color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
                     if (/^\d*$/.test(e.target.value)) {
                       setFormData({ ...formData, phone: e.target.value });
@@ -354,7 +355,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 />
                 <Input
                   label="Email"
-
+                  color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.email}
@@ -369,6 +370,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
                 <Input
+                  color={TOOL_TIP_COLORS.secondary}
                   label="Date of Birth"
                   type="date"
                   labelPlacement="outside"
@@ -384,7 +386,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 {/* username */}
                 <Input
                   label="Username"
-
+                  color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.userName}
@@ -399,6 +401,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               {/*password */}
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
                 <Input
+                  color={TOOL_TIP_COLORS.secondary}
                   label="Password"
                   type="password"
                   labelPlacement="outside"
