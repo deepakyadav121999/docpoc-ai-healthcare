@@ -176,6 +176,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       if (!branchResponse.data || branchResponse.data.length === 0) {
        
         console.warn("No branches found for the hospital.");
+        setModalMessage({
+          success: "",
+          error: `No branches found for the hospital."}`,
+        });
         return;
       }
 

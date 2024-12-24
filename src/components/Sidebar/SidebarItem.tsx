@@ -1,19 +1,24 @@
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
 import { Spinner } from "@nextui-org/spinner";
+
 const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
   const [loading, setLoading] = useState(false);
 
-  const handleClick = () => {
-    if (pageName !== item.label.toLowerCase()) {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    // Check if the item has children (dropdown functionality)
+    if (item.children) {
+      e.preventDefault(); // Prevent navigation for dropdown toggle
+      const updatedPageName =
+        pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
+      setPageName(updatedPageName);
+    } else {
+      // Start loading only if it's a navigation link
       setLoading(true);
       setPageName(item.label.toLowerCase());
     }
   };
-   
-  
-
 
   return (
     <li>
@@ -28,21 +33,58 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
       >
         {item.icon}
         {item.label}
-        {loading && (
-          <div className="">
+        {/* Show spinner only when loading */}
+        {!item.children && loading && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
             <Spinner size="sm" />
           </div>
         )}
+        {/* Badge for messages */}
+        {item.message && (
+          <span className="absolute right-11.5 top-1/2 -translate-y-1/2 rounded-full bg-red-light-6 px-1.5 py-px text-[10px] font-medium leading-[17px] text-red">
+            {item.message}
+          </span>
+        )}
+        {/* Pro badge */}
+        {item.pro && (
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md bg-primary px-1.5 py-px text-[10px] font-medium leading-[17px] text-white">
+            Pro
+          </span>
+        )}
+        {/* Dropdown toggle icon */}
+        {item.children && (
+          <svg
+            className={`absolute right-3.5 top-1/2 -translate-y-1/2 fill-current ${
+              pageName === item.label.toLowerCase() ? "rotate-180" : ""
+            }`}
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M10.5525 7.72801C10.81 7.50733 11.1899 7.50733 11.4474 7.72801L17.864 13.228C18.1523 13.4751 18.1857 13.9091 17.9386 14.1974C17.6915 14.4857 17.2575 14.5191 16.9692 14.272L10.9999 9.15549L5.03068 14.272C4.7424 14.5191 4.30838 14.4857 4.06128 14.1974C3.81417 13.9091 3.84756 13.4751 4.13585 13.228L10.5525 7.72801Z"
+              fill=""
+            />
+          </svg>
+        )}
       </Link>
 
+      {/* Dropdown items */}
       {item.children && (
-        <div className={`${pageName !== item.label.toLowerCase() && "hidden"}transition-all duration-300`}
-        onAnimationEnd={() => setLoading(false)}>
+        <div
+          className={`translate transform overflow-hidden transition-all duration-300 ${
+            pageName === item.label.toLowerCase() ? "block" : "hidden"
+          }`}
+        >
           <SidebarDropdown item={item.children} />
         </div>
       )}
-    </li> 
+    </li>
   );
 };
 
-export default SidebarItem; 
+export default SidebarItem;

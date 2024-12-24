@@ -146,6 +146,7 @@ export default function DataTable() {
     }
   };
   React.useEffect(() => {
+    
      fetchUsers();
   }, [page, rowsPerPage]);
 

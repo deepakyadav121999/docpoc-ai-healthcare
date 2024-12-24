@@ -151,7 +151,7 @@ export default function App() {
 
       setLoading(false);
     } catch (error) {
-      console.error("Failed to fetch users:", error);
+      console.log("Failed to fetch users:", error);
       setDataStatsList([
         {
           icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
