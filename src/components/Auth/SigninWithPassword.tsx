@@ -4,7 +4,10 @@ import Link from "next/link";
 // import { AuthData, UserSignIn } from "@/api/auth";
 import StyledButton from "../common/Button/StyledButton";
 import axios from 'axios';
+import { useRouter } from "next/navigation";
 export default function SigninWithPassword() {
+  const router = useRouter();
+
   const [data, setData] = useState({
     remember: false,
   });
@@ -36,7 +39,9 @@ export default function SigninWithPassword() {
       
       if (access_token && access_token.length > 5) {
         localStorage.setItem("docPocAuth_token", access_token);
-        window.location.reload();
+        router.push("/")
+        // window.location.reload();
+      
       } 
     
       else {
