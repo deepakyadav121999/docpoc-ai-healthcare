@@ -5,7 +5,7 @@ import { AuthData, UserSignIn } from "@/api/auth";
 import StyledButton from "../common/Button/StyledButton";
 import axios from 'axios';
 import { useRouter } from "next/navigation";
-export default function SigninWithPassword() {
+export default function SigninWithPassword({ setAuthPage, onLogin }: { setAuthPage: () => void; onLogin: (token: string) => void }) {
   const router = useRouter();
 
   const [data, setData] = useState({
@@ -36,11 +36,12 @@ export default function SigninWithPassword() {
       });
       
       const { access_token } = response.data;
-      
+      // const token = "your_auth_token";
+      onLogin(access_token);
       if (access_token && access_token.length > 5) {
         localStorage.setItem("docPocAuth_token", access_token);
         router.push("/")
-        // window.location.reload();
+        window.location.reload();
       
       } 
     

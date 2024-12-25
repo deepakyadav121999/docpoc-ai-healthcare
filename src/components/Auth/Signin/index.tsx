@@ -5,7 +5,7 @@ import SigninWithPassword from "../SigninWithPassword";
 import StyledButton from "@/components/common/Button/StyledButton";
 import Link from "next/link";
 
-export default function Signin({ setAuthPage }: { setAuthPage: any }) {
+export default function Signin({ setAuthPage, onLogin }: { setAuthPage: () => void; onLogin: (token: string) => void }) {
   return (
     <>
       <GoogleSigninButton text="Sign in" />
@@ -19,7 +19,7 @@ export default function Signin({ setAuthPage }: { setAuthPage: any }) {
       </div>
 
       <div>
-        <SigninWithPassword />
+        <SigninWithPassword  setAuthPage={setAuthPage} onLogin={onLogin}/>
       </div>
 
       <div className="mt-6 text-center">

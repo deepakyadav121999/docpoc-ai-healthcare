@@ -4,7 +4,7 @@ import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { AuthData, UserSignIn, UserSignUp } from "@/api/auth";
-
+import axios from "axios";
 const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
 
 export default function SignupWithPassword() {
@@ -20,7 +20,7 @@ export default function SignupWithPassword() {
   const [error, setError] = useState("");
   const [errors, setShowErrors] = useState(false);
   const [countryCode] = useState("in");
-
+ 
   const [dropdownOption, setDropdownOption] = useState("");
 
   const [timer, setTimer] = useState(0);
@@ -45,72 +45,99 @@ export default function SignupWithPassword() {
 
   async function handleSignUp(event: { preventDefault: () => void }) {
     event.preventDefault();
-
+  
     // Reset error state
     setError("");
     setShowErrors(false);
-
+  
     // Validate form fields
     if (!dropdownOption) {
       setError("Please select a valid clinic size.");
       setShowErrors(true);
       return;
     }
-
+  
     if (data.signUpMethod === "email" && (!email || !password)) {
       setError("Please fill in all required fields.");
       setShowErrors(true);
       return;
     }
-
+  
     if (data.signUpMethod === "phone" && !phone) {
       setError("Please fill in all required fields.");
       setShowErrors(true);
       return;
     }
-
+  
     setIsSigningUp(true);
     const authData = AuthData();
+  
+    // Construct the payload
+    const userPayload = {
+      branchId: "f159f698-9c77-41ad-ba91-e8e7e767ac16", // Replace with actual branchId logic if dynamic
+      name: data.signUpMethod === "email" ? email.split("@")[0] : phone,
+      phone: data.signUpMethod === "phone" ? phone : undefined,
+      email: data.signUpMethod === "email" ? email : undefined,
+      userType: authData.defautUserType,
+      code: "ST-ID/JKI2301/1021", // Replace with actual code logic if dynamic
+      accessType: authData.defaultAccessType,
+      json: JSON.stringify({ clinicSize: dropdownOption }),
+      userName: data.signUpMethod === "email" ? email : phone,
+      password,
+    };
+  
     try {
-      if (data.signUpMethod === "phone") {
-        startTimer();
-      }
-
-      const signUpRequest = await UserSignUp(
-        { email, password, phone, clinicSize: dropdownOption },
-        authData
+      const response = await axios.post(
+        "http://127.0.0.1:3037/DocPOC/v1/user", // API URL
+        userPayload
       );
+  
+      // Check for successful response
+      if (response.status === 201 && response.data) {
+        const signInData = {
+          // phone: userPayload.phone,
+          username: userPayload.email,
+          password: userPayload.password,
+        };
+  
+        // Automatically sign in the user
+        const signInResponse =  await axios.post(
+          "http://127.0.0.1:3037/DocPOC/v1/auth/login",signInData);
 
-      if (!signUpRequest.id) {
-        const errorMessage = "The email or phone number is already in use!";
-        setError(errorMessage);
-        setShowErrors(true);
-        setTimeout(() => {
-          setError("");
-          setShowErrors(false);
-        }, 8000);
-        setTimer(0);
-        setIsSigningUp(false);
-        return;
-      }
-
-      const signIn = await UserSignIn(
-        { phone: signUpRequest.phone, email: signUpRequest.email, password },
-        authData
-      );
-
-      if (signIn.access_token) {
-        localStorage.setItem("docPocAuth_token", signIn.access_token);
-        window.location.reload();
-      }
+          if (
+            signInResponse.status === 201 &&
+            signInResponse.data &&
+            signInResponse.data.access_token
+          ) {
+            const { access_token, access_type } = signInResponse.data;
+    
+            console.log("Access Type:", access_type); // Log for debugging
+    
+            if (!access_type) {
+              throw new Error("Access type is missing in the response.");
+            }
+    
+            // Save the token and reload the page
+            localStorage.setItem("docPocAuth_token", access_token);
+            window.location.reload();
+          } else {
+            throw new Error(
+              signInResponse.data?.message || "Sign-in failed. Access token is missing."
+            );
+          }
+        } else {
+          throw new Error("Sign-up failed. Please try again.");
+        }
     } catch (err) {
       console.error("Signup failed", err);
-      setError("Signup failed, please try again.");
+      setError("Signup failed. Please check your details or try again later.");
       setShowErrors(true);
+      setIsSigningUp(false);
+    } finally {
       setIsSigningUp(false);
     }
   }
-
+  
   const ErrorMessages = () => (
     <div className="flex gap-12">
       <ul
