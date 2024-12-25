@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { usePathname, useRouter } from 'next/navigation'; 
 import { AuthData, UserSignIn, UserSignUp } from "@/api/auth";
 import axios from "axios";
 const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
@@ -27,7 +28,7 @@ export default function SignupWithPassword() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [buttonText, setButtonText] = useState("Sign Up");
   const timerCount = 10;
-
+ const router = useRouter(); 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | undefined;
     if (timer > 0) {
@@ -74,16 +75,16 @@ export default function SignupWithPassword() {
   
     // Construct the payload
     const userPayload = {
-      branchId: "f159f698-9c77-41ad-ba91-e8e7e767ac16", // Replace with actual branchId logic if dynamic
+      // branchId: "f159f698-9c77-41ad-ba91-e8e7e767ac16", // Replace with actual branchId logic if dynamic
       name: data.signUpMethod === "email" ? email.split("@")[0] : phone,
       phone: data.signUpMethod === "phone" ? phone : undefined,
       email: data.signUpMethod === "email" ? email : undefined,
-      userType: authData.defautUserType,
+     
       code: "ST-ID/JKI2301/1021", // Replace with actual code logic if dynamic
       accessType: authData.defaultAccessType,
       json: JSON.stringify({ clinicSize: dropdownOption }),
-      userName: data.signUpMethod === "email" ? email : phone,
-      password,
+      userName: data.signUpMethod === "email" ? email : undefined,
+      password:password
     };
   
     try {
@@ -104,31 +105,19 @@ export default function SignupWithPassword() {
         const signInResponse =  await axios.post(
           "http://127.0.0.1:3037/DocPOC/v1/auth/login",signInData);
 
-          if (
-            signInResponse.status === 201 &&
-            signInResponse.data &&
-            signInResponse.data.access_token
-          ) {
-            const { access_token, access_type } = signInResponse.data;
+            const { access_token } = await signInResponse.data;
     
-            console.log("Access Type:", access_type); // Log for debugging
+            console.log("Access Token:", access_token); // Log for debugging
     
-            if (!access_type) {
-              throw new Error("Access type is missing in the response.");
-            }
-    
-            // Save the token and reload the page
-            localStorage.setItem("docPocAuth_token", access_token);
-            window.location.reload();
-          } else {
-            throw new Error(
-              signInResponse.data?.message || "Sign-in failed. Access token is missing."
-            );
-          }
-        } else {
-          throw new Error("Sign-up failed. Please try again.");
-        }
-    } catch (err) {
+         
+            if (access_token) {
+              localStorage.setItem("docPocAuth_token", access_token);
+              router.push("/")
+              // window.location.reload(); 
+          } 
+        
+    }
+   } catch (err) {
       console.error("Signup failed", err);
       setError("Signup failed. Please check your details or try again later.");
       setShowErrors(true);

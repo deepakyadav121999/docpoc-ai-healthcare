@@ -24,8 +24,9 @@ export default function RootLayout({
     if (token) {
       setIsAuthenticated(true);
     }
+   
     setIsLoading(false);
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     // Redirect to sign-in if not authenticated and trying to access non-auth routes
@@ -34,10 +35,12 @@ export default function RootLayout({
     }
 
     // Redirect to the main page after successful login
-    if (isAuthenticated && pathname === '/auth/signin') {
+    if (isAuthenticated && pathname === '/auth/signin' || isAuthenticated && pathname === '/auth/signup' ) {
       router.push('/');  // Change '/main' to the appropriate main route in your app
     }
   }, [isAuthenticated, pathname, router]);
+
+
 
   const toggleAuthPage = () => {
     setIsSignUpPage((prev) => !prev);
