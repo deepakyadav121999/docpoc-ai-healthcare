@@ -127,7 +127,7 @@ const ClinicBranch = () => {
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-    const response = await axios.post(`${API_URL}/hospital`, hospitalData,
+    const response = await axios.get(`${API_URL}/hospital`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
