@@ -13,6 +13,7 @@ import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } from "@nextui-org/react";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 interface AddPatientProps {
   onPatientAdded: () => void;
 }
@@ -83,10 +84,10 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       setLoading(false);
       return;
     }
-      
+
     try {
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -112,11 +113,11 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-     
-      const payload ={
+
+      const payload = {
         ...formData,
-        branchId:fetchedBranchId
-       }
+        branchId: fetchedBranchId
+      }
       const response = await axios.post(
         `${API_URL}/patient`,
         payload,
@@ -128,7 +129,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         }
       );
 
-     
+
       setModalMessage({ success: "Patient added successfully!", error: "" });
       setFormData({
         name: "",
@@ -313,7 +314,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
 
-              <Modal isOpen={isOpen} onClose={handleModalClose}>
+              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{
                     loading ? (
@@ -340,8 +341,13 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal>
-
+              </Modal> */}
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
 
             </div>
           </form>

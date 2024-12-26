@@ -19,8 +19,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
-import { Time} from "@internationalized/date";
+import { Time } from "@internationalized/date";
 import React from "react";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 
 interface AutocompleteItem {
   value: string;
@@ -30,7 +31,7 @@ interface AutocompleteItem {
 }
 interface AddUsersProps {
   onUsersAdded: () => void;
-   
+
 }
 const API_URL = process.env.API_URL;
 const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
@@ -40,15 +41,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
-  
+
 
   const [formData, setFormData] = useState({
     name: "",
     doctorId: "",
     patientId: "",
     type: "0151308b-6419-437b-9b41-53c7de566724",
-    startDateTime:"",
-    endDateTime:"" ,
+    startDateTime: "",
+    endDateTime: "",
     code: "ST-ID/15",
     json: '',
   });
@@ -59,13 +60,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const amPm = hours >= 12 ? 'PM' : 'AM';
-  
+
     // Convert to 12-hour format
     hours = hours % 12 || 12;
-  
+
     // Add leading zero to minutes if needed
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  
+
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
 
@@ -75,8 +76,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       currentDate.getFullYear(),
       currentDate.getMonth(),
       currentDate.getDate(),
-     time && time.hour,
-     time && time.minute,
+      time && time.hour,
+      time && time.minute,
       0
     ).toISOString(); // Convert to ISO format
   };
@@ -85,17 +86,17 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     setFormData({ ...formData, [field]: isoTime });
   };
 
-const handlePatientSelection = (patientId: string) => {
+  const handlePatientSelection = (patientId: string) => {
     const selectedPatient = patientList.find((patient) => patient.value === patientId);
     if (selectedPatient) {
       setFormData({
         ...formData,
         patientId,
-        name: selectedPatient.label, 
-        json: JSON.stringify({ 
-          dob: selectedPatient.dob ,
-       email: selectedPatient.description?.split(" | ")[1] || ""
-         }), 
+        name: selectedPatient.label,
+        json: JSON.stringify({
+          dob: selectedPatient.dob,
+          email: selectedPatient.description?.split(" | ")[1] || ""
+        }),
       });
     }
   };
@@ -130,7 +131,7 @@ const handlePatientSelection = (patientId: string) => {
     const token = localStorage.getItem("docPocAuth_token");
 
     if (!token) {
-     
+
       setModalMessage({ success: "", error: "No access token found. Please log in again." });
       setLoading(false);
       onOpen();
@@ -142,7 +143,7 @@ const handlePatientSelection = (patientId: string) => {
     try {
 
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -168,7 +169,7 @@ const handlePatientSelection = (patientId: string) => {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-      const payload ={
+      const payload = {
         ...formData,
         branchId: fetchedBranchId
       }
@@ -185,15 +186,15 @@ const handlePatientSelection = (patientId: string) => {
       console.log("Appointment Created:", response.data);
       setModalMessage({ success: "Appointment created successfully!", error: "" });
 
-       onUsersAdded();
+      onUsersAdded();
     } catch (error: any) {
       console.error("Error creating appointment:", error.response?.data || error.message);
       setModalMessage({
         success: "",
         error: `Error creating appointment: ${error.response?.data?.message || "Unknown error"}`,
       });
-     
-     
+
+
     }
     setLoading(false)
   };
@@ -201,7 +202,7 @@ const handlePatientSelection = (patientId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -294,7 +295,7 @@ const handlePatientSelection = (patientId: string) => {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
-      
+
       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
 
 
@@ -347,7 +348,7 @@ const handlePatientSelection = (patientId: string) => {
       endDateTime: defaultEndTime,
     }));
   }, []);
-  
+
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -472,7 +473,7 @@ const handlePatientSelection = (patientId: string) => {
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
-              <Modal isOpen={isOpen} onClose={handleModalClose}>
+              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                         
@@ -496,7 +497,14 @@ const handlePatientSelection = (patientId: string) => {
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal>
+              </Modal> */}
+              
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
 
             </div>
           </form>

@@ -24,14 +24,15 @@ import { Time } from "@internationalized/date";
 import React from "react";
 import { IndianStatesList } from "@/constants/IndiaStates";
 import { medicalDepartments } from "@/constants/MedicalDepartments";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const [edit, setEdit] = useState(false);
   const [isMultipleBranch, setIsMultipleBranch] = useState(false);
-    const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-     const { isOpen, onOpen, onClose } = useDisclosure();
-      const [loading, setLoading] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [loading, setLoading] = useState(false);
   const [workingDays] = useState([
     "monday",
     "tuesday",
@@ -41,8 +42,8 @@ const Clinic = () => {
     "saturday",
     "sunday"
   ]);
- 
-    
+
+
 
   // const [selectedDepartments] = useState([
   //   "orthopedics",
@@ -54,11 +55,11 @@ const Clinic = () => {
   // const flipEdit = () => {
   //   // setEdit(!edit);
   // };
-  
+
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");
-  const[hospitalId,setHospitalId] = useState("")
+  const [hospitalId, setHospitalId] = useState("")
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
     phone: "",
@@ -81,7 +82,7 @@ const Clinic = () => {
   };
 
 
-   const locationDetact =()=>{
+  const locationDetact = () => {
     try {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -98,9 +99,9 @@ const Clinic = () => {
       console.error("Error detecting location or creating hospital:", error);
       // alert("An error occurred while detecting location.");
     }
-   }
+  }
 
-   const handleModalClose = () => {
+  const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
@@ -109,7 +110,7 @@ const Clinic = () => {
   };
   const handleDetectLocation = async () => {
     try {
-        locationDetact()
+      locationDetact()
       const hospitalData = {
         name: clinicDetails.name,
         phone: clinicDetails.phone,
@@ -127,7 +128,7 @@ const Clinic = () => {
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-    const response = await axios.post(`${API_URL}/hospital`, hospitalData,
+      const response = await axios.post(`${API_URL}/hospital`, hospitalData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -135,11 +136,11 @@ const Clinic = () => {
           },
         }
       );
-      const { id } = response.data; 
+      const { id } = response.data;
       setHospitalId(id);
 
       // alert("Hospital created successfully");
-      
+
     } catch (error) {
       console.error("Error creating hospital:", error);
       // alert("Failed to create hospital.");
@@ -177,7 +178,7 @@ const Clinic = () => {
           },
         }
       );
-        setModalMessage({
+      setModalMessage({
         success: "Hospital created successfully",
         error: ``,
       });
@@ -185,7 +186,7 @@ const Clinic = () => {
     } catch (error) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
-        setModalMessage({
+      setModalMessage({
         success: "",
         error: `Error creating branch: ${error}`,
       });
@@ -193,7 +194,7 @@ const Clinic = () => {
     setLoading(false)
   };
 
- 
+
 
   return (
     <div className="grid grid-cols-1 gap-9 m-2">
@@ -206,12 +207,12 @@ const Clinic = () => {
             </h3>
             <div>
               <Switch
-               checked={isMultipleBranch}
-               onChange={() => setIsMultipleBranch(!isMultipleBranch)}
+                checked={isMultipleBranch}
+                onChange={() => setIsMultipleBranch(!isMultipleBranch)}
                 size="lg"
                 color="secondary"
-                  // isDisabled={!edit}
-                  onClick={flipEdit}
+                // isDisabled={!edit}
+                onClick={flipEdit}
               >
                 Edit
               </Switch>
@@ -228,7 +229,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
                 <Input
                   key="inside"
@@ -240,7 +241,7 @@ const Clinic = () => {
                   maxLength={15}
                   value={clinicDetails.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
                 <Input
                   key="inside"
@@ -251,7 +252,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
               </div>
               <div className="flex flex-col w-full">
@@ -261,7 +262,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedWorkingDays}
                   onChange={handleWorkingDaysChange}
-                isDisabled={!edit}
+                  isDisabled={!edit}
                 >
                   {workingDays.map((day) => (
                     <Checkbox key={day} value={day}>
@@ -345,7 +346,7 @@ const Clinic = () => {
                   maxLength={6}
                   value={clinicDetails.pincode}
                   onChange={(e) => handleInputChange("pincode", e.target.value)}
-                isDisabled={!edit}
+                  isDisabled={!edit}
                 />
               </div>
               <div className="flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
@@ -358,7 +359,7 @@ const Clinic = () => {
                   value={detectedLocation}
                   isReadOnly
                   color={TOOL_TIP_COLORS.secondary}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
 
                 <Button
@@ -366,7 +367,7 @@ const Clinic = () => {
                   onClick={handleDetectLocation}
                   type="button"
                   style={{ marginTop: 20 }}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 >
                   Detect Location
                 </Button>
@@ -378,7 +379,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedDepartments}
                   onChange={handleDepartmentsChange}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 >
                   {medicalDepartments.map((department) => (
                     <Checkbox key={department.value} value={department.value}>
@@ -393,10 +394,10 @@ const Clinic = () => {
                   Leave unchecked if appointments from your website needs admin(s)
                   action to confirm booking.
                 </label>
-                <Checkbox color={TOOL_TIP_COLORS.secondary} 
-                isDisabled={!edit}
+                <Checkbox color={TOOL_TIP_COLORS.secondary}
+                  isDisabled={!edit}
                 >
-                  
+
                   All appointments gets confirmed by default.
                 </Checkbox>
               </div>
@@ -414,7 +415,7 @@ const Clinic = () => {
                 Save Changes
               </Button>
 
-                <Modal isOpen={isOpen} onClose={handleModalClose}>
+              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                       
@@ -438,7 +439,14 @@ const Clinic = () => {
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal>
+              </Modal> */}
+
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
             </div>
           </form>
         </div>

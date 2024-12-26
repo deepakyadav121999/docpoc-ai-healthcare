@@ -24,6 +24,7 @@ import { Time } from "@internationalized/date";
 import React from "react";
 import { IndianStatesList } from "@/constants/IndiaStates";
 import { medicalDepartments } from "@/constants/MedicalDepartments";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
 const API_URL = process.env.API_URL;
 const ClinicBranch = () => {
@@ -414,7 +415,7 @@ const ClinicBranch = () => {
                 Save Changes
               </Button>
 
-                <Modal isOpen={isOpen} onClose={handleModalClose}>
+                {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                       
@@ -438,7 +439,13 @@ const ClinicBranch = () => {
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal>
+              </Modal> */}
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
             </div>
           </form>
         </div>

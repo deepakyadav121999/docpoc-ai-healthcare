@@ -18,6 +18,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } fro
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import { useEffect } from "react";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 interface AddUsersProps {
   onUsersAdded: () => void;
 }
@@ -45,17 +46,17 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     setAppointments: false,
     editDoctor: true,
     editCreatePatients: true,
-    editCreateStaffs:true,
-    editCreateReminders:false,
-    editCreatePayments:true,
+    editCreateStaffs: true,
+    editCreateReminders: false,
+    editCreatePayments: true,
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
 
- 
- 
-  
+
+
+
 
   const handleJsonUpdate = (key: string, value: string) => {
     const updatedJson = JSON.parse(formData.json);
@@ -150,7 +151,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
     try {
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -159,7 +160,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         },
       });
       if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        
+
         console.error("No hospitals found.");
         return;
       }
@@ -174,7 +175,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
 
       if (!branchResponse.data || branchResponse.data.length === 0) {
-       
+
         console.warn("No branches found for the hospital.");
         setModalMessage({
           success: "",
@@ -188,7 +189,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       const payload = {
         ...formData,
-        branchId:fetchedBranchId,
+        branchId: fetchedBranchId,
         accessType: JSON.stringify(accessTypes),
       };
 
@@ -218,11 +219,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
       setAccessTypes({
         setAppointments: false,
-    editDoctor: false,
-    editCreatePatients: false,
-    editCreateStaffs:false,
-    editCreateReminders:false,
-    editCreatePayments:true,
+        editDoctor: false,
+        editCreatePatients: false,
+        editCreateStaffs: false,
+        editCreateReminders: false,
+        editCreatePayments: true,
       });
       onUsersAdded();
     } catch (error: any) {
@@ -299,7 +300,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   placeholder="Select Designation"
-                  defaultItems={[{ label: "Admin" },{ label: "Doctor" }, { label: "Staff" }, { label: "Nurse" } ]}
+                  defaultItems={[{ label: "Admin" }, { label: "Doctor" }, { label: "Staff" }, { label: "Nurse" }]}
                   onSelectionChange={(key) => handleJsonUpdate("designation", key as string)}
                   isDisabled={!edit}
                   color={TOOL_TIP_COLORS.secondary}
@@ -307,7 +308,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete>
                 <div className="flex gap-2 flex-wrap">
-                 
+
                   <TimeInput
                     color={TOOL_TIP_COLORS.secondary}
                     label="From (Working Hours)"
@@ -315,7 +316,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     variant="bordered"
                     // defaultValue={new Time(8, 45)}
                     startContent={<SVGIconProvider iconName="clock" />}
-                    onChange={(e) => handleTimeChange("start", e.toString())} 
+                    onChange={(e) => handleTimeChange("start", e.toString())}
                     isDisabled={!edit}
                   />
                   <TimeInput
@@ -325,10 +326,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     variant="bordered"
                     // defaultValue={new Time(6, 45)} 
                     startContent={<SVGIconProvider iconName="clock" />}
-                    onChange={(e) => handleTimeChange("end", e.toString())} 
+                    onChange={(e) => handleTimeChange("end", e.toString())}
                     isDisabled={!edit}
                   />
-           
+
                 </div>
 
                 <Input
@@ -436,28 +437,28 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     isSelected={accessTypes.editCreatePatients}
                     onValueChange={(value) => handleAccessChange("editCreatePatients", value)}
                   >
-                  Edit/Create Patients
+                    Edit/Create Patients
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreateStaffs}
                     onValueChange={(value) => handleAccessChange("editCreateStaffs", value)}
                   >
-             Edit/Create Staffs
+                    Edit/Create Staffs
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreateReminders}
                     onValueChange={(value) => handleAccessChange("editCreateReminders", value)}
                   >
-               Edit/Create Reminders
+                    Edit/Create Reminders
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreatePayments}
                     onValueChange={(value) => handleAccessChange("editCreatePayments", value)}
                   >
-               Edit/Create Payments
+                    Edit/Create Payments
                   </Checkbox>
 
-                
+
                 </div>
               </div>
               {errors.length > 0 && (
@@ -482,7 +483,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
 
-              <Modal isOpen={isOpen} onClose={handleModalClose}>
+              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                         
@@ -506,7 +507,13 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal>
+              </Modal> */}
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
 
             </div>
           </form>
