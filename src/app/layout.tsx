@@ -31,16 +31,18 @@ export default function RootLayout({
   useEffect(() => {
     if (isLoading) return;
     // Redirect to sign-in if not authenticated and trying to access non-auth routes
-    if (!isAuthenticated && pathname !== '/auth/signin' && pathname !== '/auth/signup') {
-      router.push('/auth/signin');  // Redirect to sign-in page
+    if (!isAuthenticated) {
+      // Redirect unauthenticated users trying to access protected routes
+      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+        router.push("/auth/signin");
+      }
+    } else {
+      // Prevent redirecting authenticated users to '/' on page refresh
+      if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+        router.push("/");
+      }
     }
-
-    // Redirect to the main page after successful login
-    if (isAuthenticated && pathname === '/auth/signin' || pathname === '/auth/signup' ) {
-      router.push('/');  // Change '/main' to the appropriate main route in your app
-    }
-  }, [isAuthenticated, pathname, router]);
-
+  }, [isAuthenticated, isLoading, pathname, router]);
 
 
   const toggleAuthPage = () => {
