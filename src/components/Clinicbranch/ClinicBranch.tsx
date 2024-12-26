@@ -26,7 +26,7 @@ import { IndianStatesList } from "@/constants/IndiaStates";
 import { medicalDepartments } from "@/constants/MedicalDepartments";
 import axios from "axios";
 const API_URL = process.env.API_URL;
-const Clinic = () => {
+const ClinicBranch = () => {
   const [edit, setEdit] = useState(false);
   const [isMultipleBranch, setIsMultipleBranch] = useState(false);
     const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -213,7 +213,7 @@ const Clinic = () => {
                   // isDisabled={!edit}
                   onClick={flipEdit}
               >
-                Edit
+                Has Multiple Branch
               </Switch>
             </div>
           </div>
@@ -447,4 +447,4 @@ const Clinic = () => {
   );
 };
 
-export default Clinic;
+export default ClinicBranch;

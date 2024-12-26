@@ -32,6 +32,7 @@ interface AddUsersProps {
   onUsersAdded: () => void;
    
 }
+const API_URL = process.env.API_URL;
 const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
@@ -142,7 +143,7 @@ const handlePatientSelection = (patientId: string) => {
 
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -154,7 +155,7 @@ const handlePatientSelection = (patientId: string) => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -172,7 +173,7 @@ const handlePatientSelection = (patientId: string) => {
         branchId: fetchedBranchId
       }
       const response = await axios.post(
-        "http://127.0.0.1:3037/DocPOC/v1/appointment",
+        `${API_URL}/appointment`,
         payload,
         {
           headers: {
@@ -201,7 +202,7 @@ const handlePatientSelection = (patientId: string) => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -213,7 +214,7 @@ const handlePatientSelection = (patientId: string) => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -227,7 +228,7 @@ const handlePatientSelection = (patientId: string) => {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/list/${fetchedBranchId}`;
+      const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
 
 
       const params: any = {};
@@ -267,7 +268,7 @@ const handlePatientSelection = (patientId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -279,7 +280,7 @@ const handlePatientSelection = (patientId: string) => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -294,7 +295,7 @@ const handlePatientSelection = (patientId: string) => {
       const fetchedBranchId = branchResponse.data[0]?.id;
 
       
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
+      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
 
 
       const params: any = {};

@@ -16,7 +16,7 @@ interface Employee {
   accessType: string; // JSON string
  
 }
-
+const API_URL = process.env.API_URL;
 export default function UserAccess() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setUsers] = React.useState<Employee[]>([]);
@@ -30,7 +30,7 @@ export default function UserAccess() {
       const token = localStorage.getItem("docPocAuth_token");
 
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -42,7 +42,7 @@ export default function UserAccess() {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ export default function UserAccess() {
 
 
       const endpoint =
-        `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
+        `${API_URL}/user/list/${fetchedBranchId}`;
 
       const params = {
         page: 1,
@@ -88,7 +88,7 @@ export default function UserAccess() {
 
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user`;
+      const endpoint = `${API_URL}/user`;
 
       const response = await axios.patch(
         endpoint,

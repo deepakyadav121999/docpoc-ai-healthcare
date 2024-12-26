@@ -5,6 +5,7 @@ import React from "react";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Settings from "@/components/Settings";
 import Clinic from "@/components/Clinic/Clinic";
+import ClinicBranch from "@/components/Clinicbranch/ClinicBranch";
 export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
@@ -17,7 +18,7 @@ export default function Home() {
         {/* <ECommerce /> */}
         <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Clinic" />
-          <Clinic />
+       <ClinicBranch/>
           </div> 
       </DefaultLayout>
     </>

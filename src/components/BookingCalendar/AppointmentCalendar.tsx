@@ -14,6 +14,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 
+const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
@@ -32,7 +33,7 @@ export const AppointmentCalendar: React.FC = () => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -44,7 +45,7 @@ export const AppointmentCalendar: React.FC = () => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -58,7 +59,7 @@ export const AppointmentCalendar: React.FC = () => {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment/list/${fetchedBranchId}`;
+      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
       const params: any = {
         page,

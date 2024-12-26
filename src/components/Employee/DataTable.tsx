@@ -69,7 +69,7 @@ interface Employee {
 }
 
 type User = (typeof users)[0];
-
+const API_URL = process.env.API_URL;
 export default function DataTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
@@ -97,7 +97,7 @@ export default function DataTable() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -109,7 +109,7 @@ export default function DataTable() {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ export default function DataTable() {
       const fetchedBranchId = branchResponse.data[0]?.id;
       setBranchId(fetchedBranchId)
 
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${fetchedBranchId}`;
+      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
       const params: any = {};
         params.page = page;
         params.pageSize = rowsPerPage;

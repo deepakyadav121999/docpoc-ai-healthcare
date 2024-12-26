@@ -68,7 +68,7 @@ interface appointments {
 }
 
 // type User = (typeof Appointments)[0];
-
+const API_URL = process.env.API_URL;
 export default function AppointmentTable() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
@@ -99,7 +99,7 @@ export default function AppointmentTable() {
       const token = localStorage.getItem("docPocAuth_token");
      
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ export default function AppointmentTable() {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -125,7 +125,7 @@ export default function AppointmentTable() {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
-      const endpoint =`http://127.0.0.1:3037/DocPOC/v1/appointment/list/${fetchedBranchId}`;
+      const endpoint =`${API_URL}/appointment/list/${fetchedBranchId}`;
 
 
       const params: any = {
@@ -163,7 +163,7 @@ export default function AppointmentTable() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
       const endpoint =
-        "http://127.0.0.1:3037/DocPOC/v1/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469"; // Replace with actual search endpoint
+        `${API_URL}/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469`; // Replace with actual search endpoint
       const response = await axios.get(endpoint, {
         params: {
            page,

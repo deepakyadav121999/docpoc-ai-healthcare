@@ -2,6 +2,7 @@
 import React from "react";
 
 import General from "./General";
+import Clinic from "../Clinic/Clinic";
 
 
 export default function App() {
@@ -55,7 +56,7 @@ export default function App() {
   return (
     <>
 
-      <General/>
+      <Clinic/>
     </>
   
   );

@@ -21,7 +21,7 @@ import { useEffect } from "react";
 interface AddUsersProps {
   onUsersAdded: () => void;
 }
-
+const API_URL = process.env.API_URL;
 const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   const [edit, setEdit] = useState(true);
@@ -151,7 +151,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -165,7 +165,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -193,7 +193,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       };
 
       const response = await axios.post(
-        "http://127.0.0.1:3037/DocPOC/v1/user",
+        `${API_URL}/user`,
         payload,
         {
           headers: {

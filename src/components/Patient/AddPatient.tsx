@@ -16,6 +16,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } fro
 interface AddPatientProps {
   onPatientAdded: () => void;
 }
+const API_URL = process.env.API_URL;
 
 const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
@@ -86,7 +87,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = "http://127.0.0.1:3037/DocPOC/v1/hospital";
+      const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,7 +99,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `http://127.0.0.1:3037/DocPOC/v1/hospital/branches/${fetchedHospitalId}`;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -117,7 +118,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         branchId:fetchedBranchId
        }
       const response = await axios.post(
-        "http://127.0.0.1:3037/DocPOC/v1/patient",
+        `${API_URL}/patient`,
         payload,
         {
           headers: {
