@@ -38,6 +38,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
+  const [appointmentTypeList, setAppointmentTypeList] = useState<AutocompleteItem[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
@@ -47,7 +48,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     name: "",
     doctorId: "",
     patientId: "",
-    type: "0151308b-6419-437b-9b41-53c7de566724",
+    type: "",
     startDateTime: "",
     endDateTime: "",
     code: "ST-ID/15",
@@ -330,13 +331,76 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       setLoading(false);
     }
   };
+  const handleTypeSelection = (typeId: string) => {
+    setFormData({ ...formData, type: typeId });
+  };
 
-
-
+  const fetchAppointmentTypes = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+  
+      // Step 1: Fetch Hospital
+      const hospitalEndpoint = `${API_URL}/hospital`;
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        throw new Error("No hospital data found.");
+      }
+  
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+  
+      // Step 2: Fetch Branch
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        throw new Error("No branch data found.");
+      }
+  
+      const fetchedBranchId = branchResponse.data[0].id;
+  
+      // Step 3: Fetch Appointment Types
+      const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
+      const response = await axios.get(appointmentTypeEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No appointment types found.");
+      }
+  
+      // Transform and Set Appointment Types
+      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
+        label: type.name,
+        value: type.id,
+      }));
+      setAppointmentTypeList(transformedTypes);
+    } catch (error) {
+      console.error("Error fetching appointment types:", error|| error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   useEffect(() => {
     fetchDoctors()
     fetchPatients()
+    fetchAppointmentTypes();
   }, [])
 
   useEffect(() => {
@@ -421,6 +485,24 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   isDisabled={!edit}
+                  defaultItems={appointmentTypeList}
+                  label="Select Appointment Type"
+                  placeholder="Search Appointment Type"
+                  onSelectionChange={(key) => handleTypeSelection(key as string)}
+                >
+                  {(item) => (
+                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+              </div>
+              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+                <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
                   defaultItems={patientList}
                   label="Select Patient"
                   placeholder="Search a Patient"
@@ -449,6 +531,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   )}
                 </Autocomplete>
               </div>
+              
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
                   Mark uncheck if no notification has to be sent for appointment.
