@@ -8,7 +8,7 @@ import {
   AutocompleteItem,
   Spinner
 } from "@nextui-org/react";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
@@ -26,7 +26,6 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     name: "",
     phone: "",
     email: "",
-
     bloodGroup: "",
     dob: "",
     gender: "",
@@ -157,6 +156,15 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+      const header = document.querySelector("header");
+      if (header) {
+        // Only modify z-index when modal is open
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+  
+      }
+    }, [isOpen]);
 
 
   return (

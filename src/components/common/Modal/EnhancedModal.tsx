@@ -94,7 +94,7 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
   // };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}>
       <ModalContent>
         <ModalHeader>
           {/* {loading ? (

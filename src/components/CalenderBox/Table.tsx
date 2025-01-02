@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState,useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -91,6 +91,7 @@ export default function AppointmentTable() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
   const [totalappointments, setTotalappointments] = React.useState(0);
+   const [totalUsers, setTotalUsers] = React.useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -124,10 +125,7 @@ export default function AppointmentTable() {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-
       const endpoint =`${API_URL}/appointment/list/${fetchedBranchId}`;
-
-
       const params: any = {
        page:page,
       pageSize: rowsPerPage,
@@ -150,7 +148,10 @@ export default function AppointmentTable() {
       });
 
       setAppointments(response.data.rows || response.data);
-      setTotalappointments(response.data.count);
+      const total = response.data.count || response.data.length;
+      console.log("Total Appointments:", total);
+      setTotalappointments(total);
+      setTotalUsers(response.data.count || response.data.length);
 
     } catch (err) {
       setError("Failed to fetch patients.");
@@ -184,11 +185,12 @@ export default function AppointmentTable() {
     }
   };
 
-  React.useEffect(() => {
-
+ useEffect(() => {
       fetchUsers();
-    
   }, [page, rowsPerPage]);
+
+  console.log(totalappointments);
+  
 
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
@@ -254,7 +256,7 @@ export default function AppointmentTable() {
     return filteredUsers;
   }, [filterValue, statusFilter]);
 
-  const pages = Math.ceil(totalappointments / rowsPerPage);
+  const pages = totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
 
 
   const sortedItems = useMemo(() => {
@@ -489,7 +491,7 @@ export default function AppointmentTable() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-default-400 text-small">
-              Total {totalappointments} Appointments
+            {`Total ${totalUsers} Appointments`}
             </span>
             <label className="flex items-center text-default-400 text-small">
               Rows per page:
@@ -557,7 +559,7 @@ export default function AppointmentTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={sortedItems}>
+        <TableBody emptyContent={"No Appointment Available"} items={sortedItems}>
           {(item: User) => (
             <TableRow key={item.id}>
               {(columnKey) => (

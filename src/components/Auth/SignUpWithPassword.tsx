@@ -97,7 +97,7 @@ export default function SignupWithPassword() {
       if (response.status === 201 && response.data) {
         const signInData = {
           // phone: userPayload.phone,
-          username: userPayload.email,
+          username: userPayload.userName,
           password: userPayload.password,
         };
   

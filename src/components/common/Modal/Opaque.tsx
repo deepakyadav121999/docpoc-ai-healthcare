@@ -18,6 +18,8 @@ import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
 import axios from "axios";
+import EnhancedModal from "./EnhancedModal";
+
 export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edit: MODAL_TYPES, delete: MODAL_TYPES }, modalTitle: string, actionButtonName?: string, userId: string, onPatientDelete: () => void; }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
@@ -30,6 +32,8 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+
+ 
 
   const handleDelete = async () => {
     setLoading(true);
@@ -266,6 +270,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleSubmit = () => {
     console.log("Form Type:", formType);
     console.log("Props Modal Type:", props.modalType);
+    if (loading) return;
 
     if (formType === props.modalType.delete) {
       console.log("Delete action triggered");
@@ -296,7 +301,12 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       onClose()
     }
   };
+  const handleModalClose = () => {
+    setModalMessage({ success: "", error: "" });
+    setNotificationOpen(false)
+    // onClose();
 
+  };
 
   return (
     <>
@@ -362,6 +372,12 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
           </ModalFooter>
         </ModalContent>
       </Modal>
+         {/* <EnhancedModal
+                isOpen={isNotificationOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              /> */}
     </>
   );
 }

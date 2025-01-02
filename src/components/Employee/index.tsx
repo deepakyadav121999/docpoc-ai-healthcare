@@ -13,7 +13,7 @@ import { Spinner } from "@nextui-org/spinner";
 const API_URL = process.env.API_URL;
 export default function App() {
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
     const[brancId,setBranchId] = useState()
 
 
@@ -51,8 +51,6 @@ export default function App() {
   const fetchUsers = async () => {
     try {
 
-
-
       const token = localStorage.getItem("docPocAuth_token");
     
       const hospitalEndpoint = `${API_URL}/hospital`;
@@ -63,6 +61,30 @@ export default function App() {
         },
       });
       if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        setDataStatsList([
+          {
+            icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+            color: "#4b9c78",
+            title: "new doctors (since last month)",
+            value: "Total Doctors: 0",
+            growthRate: 0,
+          },
+          {
+            icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+            color: "#FF9C55",
+            title: "new employees (since last month)",
+            value: "Total Staff: 0",
+            growthRate: 0,
+          },
+          {
+            icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+            color: "#8155FF",
+            title: "new nurses (since last month)",
+            value: "Total Nurses: 0",
+            growthRate: 0,
+          },
+        ]);
+        setLoading(false)
         return;
       }
 
@@ -76,7 +98,7 @@ export default function App() {
         },
       });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
+      if (!branchResponse.data || branchResponse.data.length === 0) { 
         return;
       }
 
@@ -180,7 +202,29 @@ export default function App() {
   };
   useEffect(() => {
    fetchUsers()
-     
+  //  setDataStatsList([
+  //   {
+  //     icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+  //     color: "#4b9c78",
+  //     title: "new doctors (since last month)",
+  //     value: "Total Doctors: 0",
+  //     growthRate: 0,
+  //   },
+  //   {
+  //     icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+  //     color: "#FF9C55",
+  //     title: "new employees (since last month)",
+  //     value: "Total Staff: 0",
+  //     growthRate: 0,
+  //   },
+  //   {
+  //     icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+  //     color: "#8155FF",
+  //     title: "new nurses (since last month)",
+  //     value: "Total Nurses: 0",
+  //     growthRate: 0,
+  //   },
+  // ]);
   }, []);
   const series = [
     {

@@ -196,7 +196,7 @@ export default function App() {
     return filteredUsers;
   }, [users, filterValue, statusFilter]);
 
-  const pages = Math.ceil(totalPatient / rowsPerPage);
+  const pages = totalPatient > 0 ? Math.ceil(totalPatient / rowsPerPage) : 1;
 
   const items = filteredItems
 

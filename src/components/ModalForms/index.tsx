@@ -1763,7 +1763,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       </>
     );
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
-      return (<><AddAppointment /></>);
+      return (<><AddAppointment onUsersAdded={()=>{}}/></>);
     }
   }
   return null;

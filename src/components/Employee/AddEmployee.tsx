@@ -242,7 +242,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     const header = document.querySelector("header");
     if (header) {
       // Only modify z-index when modal is open
-
       header.classList.remove("z-999");
       header.classList.add("z-0");
 

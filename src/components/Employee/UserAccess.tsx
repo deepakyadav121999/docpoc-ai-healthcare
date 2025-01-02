@@ -5,6 +5,7 @@ import { Accordion, AccordionItem, Avatar,Spinner,
  } from "@nextui-org/react";
 import UserAccessTypes from "./AccessTypes";
 import axios from "axios";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 
 interface Employee {
   id: string;
@@ -168,7 +169,7 @@ export default function UserAccess() {
         </AccordionItem>
       ))}
     </Accordion>
-    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} >
+    {/* <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} >
         <ModalContent>
           {(onClose) => (
             <>
@@ -194,7 +195,13 @@ export default function UserAccess() {
             </>
           )}
         </ModalContent>
-      </Modal>
+      </Modal> */}
+       <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={onClose}
+              />
 
     </>
    

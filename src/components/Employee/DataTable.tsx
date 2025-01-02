@@ -105,6 +105,7 @@ export default function DataTable() {
         },
       });
       if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      
         return;
       }
 
@@ -149,6 +150,8 @@ export default function DataTable() {
     
      fetchUsers();
   }, [page, rowsPerPage]);
+  console.log(users)
+  console.log(totalUsers)
 
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
@@ -202,7 +205,7 @@ const handleStatusFilterChange = (selected: Selection) => {
   setStatusFilter(selected);
 };
 
-  const pages = Math.ceil(totalUsers / rowsPerPage);
+const pages = totalUsers > 0 ? Math.ceil(totalUsers / rowsPerPage) : 1;
 
   const items = filteredItems;
 

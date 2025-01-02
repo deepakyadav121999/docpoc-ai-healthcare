@@ -26,6 +26,7 @@ import { IndianStatesList } from "@/constants/IndiaStates";
 import { medicalDepartments } from "@/constants/MedicalDepartments";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
+import { parseTime } from "@internationalized/date";
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const [edit, setEdit] = useState(false);
@@ -60,6 +61,10 @@ const Clinic = () => {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");
   const [hospitalId, setHospitalId] = useState("")
+  const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
+const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
+
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
     phone: "",
@@ -70,6 +75,7 @@ const Clinic = () => {
     shiftStart: "",
     shiftEnd: "",
   });
+  
   const handleInputChange = (field: string, value: string) => {
     setClinicDetails({ ...clinicDetails, [field]: value });
   };
@@ -108,9 +114,94 @@ const Clinic = () => {
   const flipEdit = () => {
     setEdit(!edit);
   };
-  const handleDetectLocation = async () => {
+  // const handleDetectLocation = async () => {
+  //   try {
+  //     locationDetact()
+  //     const hospitalData = {
+  //       name: clinicDetails.name,
+  //       phone: clinicDetails.phone,
+  //       email: clinicDetails.email,
+  //       ninId: "NA1092KU872882",
+  //       json: JSON.stringify({
+  //         state: clinicDetails.state,
+  //         pincode: clinicDetails.pincode,
+  //         address: clinicDetails.address,
+  //         shiftStart: clinicDetails.shiftStart,
+  //         shiftEnd: clinicDetails.shiftEnd,
+  //         workingDays: selectedWorkingDays,
+  //         multipleBranch: isMultipleBranch,
+  //         googleLocation: detectedLocation
+  //       }),
+  //     };
+  //     const token = localStorage.getItem("docPocAuth_token");
+  //     const response = await axios.post(`${API_URL}/hospital`, hospitalData,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     const { id } = response.data;
+  //     setHospitalId(id);
+
+  //     // alert("Hospital created successfully");
+
+  //   } catch (error) {
+  //     console.error("Error creating hospital:", error);
+  //     // alert("Failed to create hospital.");
+  //   }
+  // };
+  const fetchHospitalDetails = async () => {
     try {
-      locationDetact()
+      const token = localStorage.getItem("docPocAuth_token");
+      const response = await axios.get(`${API_URL}/hospital`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = response.data;
+      console.log(data)
+
+      if (data.length>0) {
+        const hospital = data[0];
+        const parsedJson = hospital.json ? JSON.parse(hospital.json) : {};
+
+        setHospitalId(hospital.id);
+        setClinicDetails({
+          name: hospital.name,
+          phone: hospital.phone,
+          email: hospital.email,
+           state: parsedJson.state || "",
+        pincode: parsedJson.pincode || "",
+        address: parsedJson.address || "",
+        shiftStart: parsedJson.shiftStart || "",
+        shiftEnd: parsedJson.shiftEnd || "",
+        });
+        setSelectedWorkingDays(parsedJson.workingDays || []);
+      setSelectedDepartments(parsedJson.departments || []);
+      setIsMultipleBranch(parsedJson.multipleBranch || false);
+      setDetectedLocation(parsedJson.googleLocation || "");
+      setShiftStartTime(parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null);
+      setShiftEndTime(parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null);
+      setHospitalId(hospital.id)
+      const fetchedStateKey = IndianStatesList.find(
+        (item) => item.label === parsedJson.state
+      )?.value;
+
+      setSelectedStateKey(fetchedStateKey || null);
+
+      }
+    } catch (error) {
+      console.error("Error fetching hospital details:", error);
+    }
+  }; 
+  
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
       const hospitalData = {
         name: clinicDetails.name,
         phone: clinicDetails.phone,
@@ -124,64 +215,80 @@ const Clinic = () => {
           shiftEnd: clinicDetails.shiftEnd,
           workingDays: selectedWorkingDays,
           multipleBranch: isMultipleBranch,
-          googleLocation: detectedLocation
-        }),
-      };
-      const token = localStorage.getItem("docPocAuth_token");
-      const response = await axios.post(`${API_URL}/hospital`, hospitalData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const { id } = response.data;
-      setHospitalId(id);
-
-      // alert("Hospital created successfully");
-
-    } catch (error) {
-      console.error("Error creating hospital:", error);
-      // alert("Failed to create hospital.");
-    }
-  };
-
-  const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      const branchData = {
-        hospitalId: hospitalId,
-        name: detectedLocation,
-        phone: clinicDetails.phone,
-        email: clinicDetails.email,
-        ninId: "NA1092KU872882",
-        json: JSON.stringify({
-          state: clinicDetails.state,
-          pincode: clinicDetails.pincode,
-          address: clinicDetails.address,
-          shiftStart: clinicDetails.shiftStart,
-          shiftEnd: clinicDetails.shiftEnd,
-          workingDays: selectedWorkingDays,
+          googleLocation: detectedLocation,
           departments: selectedDepartments,
-          multipleBranch: isMultipleBranch,
-          googleLocation: detectedLocation
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-      await axios.post(`${API_URL}/hospital/branch`, branchData,
-        {
+     
+   
+         
+     
+      const requestData = {
+        id: hospitalId,
+        ...hospitalData,
+      };
+
+      if (hospitalId) {
+      await axios.patch(`${API_URL}/hospital`, requestData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
-      );
-      setModalMessage({
-        success: "Hospital created successfully",
-        error: ``,
-      });
+        });
+        
+        setModalMessage({
+          success: "Hospital details updated successfully",
+          error: "",
+        });
+      }
+
+      else{
+        const response = await axios.post(`${API_URL}/hospital`, hospitalData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const { id } = response.data;
+        setHospitalId(id);
+
+        const branchData = {
+          hospitalId: id,
+          name: detectedLocation,
+          phone: clinicDetails.phone,
+          email: clinicDetails.email,
+          ninId: "NA1092KU872882",
+          json: JSON.stringify({
+            state: clinicDetails.state,
+            pincode: clinicDetails.pincode,
+            address: clinicDetails.address,
+            shiftStart: clinicDetails.shiftStart,
+            shiftEnd: clinicDetails.shiftEnd,
+            workingDays: selectedWorkingDays,
+            departments: selectedDepartments,
+            multipleBranch: isMultipleBranch,
+            googleLocation: detectedLocation
+          }),
+        };
+        await axios.post(`${API_URL}/hospital/branch`, branchData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setModalMessage({
+          success: "Hospital created successfully",
+          error: ``,
+        });
+      }
+      
+      // const token = localStorage.getItem("docPocAuth_token");
+     
       // alert("Branch created successfully!");
     } catch (error) {
       console.error("Error creating branch:", error);
@@ -194,6 +301,9 @@ const Clinic = () => {
     setLoading(false)
   };
 
+ useEffect(()=>{
+fetchHospitalDetails()
+ },[])
 
 
   return (
@@ -280,7 +390,8 @@ const Clinic = () => {
                   label="Shift Start Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(8, 45)}
+                  // value={shiftStartTime}
+                  // defaultValue={new Time(8, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleInputChange("shiftStart", time.toString())}
@@ -290,7 +401,8 @@ const Clinic = () => {
                   label="Shift End Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(6, 45)}
+                  // value={shiftEndTime}
+                  // defaultValue={new Time(6, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleInputChange("shiftEnd", time.toString())}
@@ -319,11 +431,16 @@ const Clinic = () => {
                   labelPlacement="outside"
                   variant="bordered"
                   isDisabled={!edit}
+                selectedKey={selectedStateKey}
                   // defaultSelectedKey="karnataka"
                   defaultItems={IndianStatesList}
                   label="Select State"
                   placeholder="Search a state"
-                  onSelectionChange={(state) => handleInputChange("state", state as string)}
+                  onSelectionChange={(key) => {
+                    const selectedState = IndianStatesList.find((item) => item.value === key);
+                    handleInputChange("state", selectedState?.label || "");
+                    setSelectedStateKey(key ? key as string:null);
+                  }}
                 >
                   {(IndianStatesList) => (
                     <AutocompleteItem
@@ -364,7 +481,7 @@ const Clinic = () => {
 
                 <Button
                   color="secondary"
-                  onClick={handleDetectLocation}
+                  onClick={locationDetact}
                   type="button"
                   style={{ marginTop: 20 }}
                   isDisabled={!edit}
