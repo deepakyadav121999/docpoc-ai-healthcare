@@ -43,7 +43,7 @@ const Clinic = () => {
     "saturday",
     "sunday"
   ]);
-
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
 
   // const [selectedDepartments] = useState([
@@ -185,6 +185,7 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
       setDetectedLocation(parsedJson.googleLocation || "");
       setShiftStartTime(parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null);
       setShiftEndTime(parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null);
+   
       setHospitalId(hospital.id)
       const fetchedStateKey = IndianStatesList.find(
         (item) => item.label === parsedJson.state
@@ -201,6 +202,46 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    const errors: Record<string, string> = {};
+
+    if (!clinicDetails.name.trim()){
+
+    errors.name = "Clinic/Hospital name is required.";
+    }
+    if (!clinicDetails.phone.trim()) errors.phone = "Contact number is required.";
+    if (!/^\d{10}$/.test(clinicDetails.phone.trim())) errors.phone = "Contact number must be a valid 10-digit number.";
+    if (!clinicDetails.email.trim()) errors.email = "Email is required.";
+    if (!/^\S+@\S+\.\S+$/.test(clinicDetails.email.trim())) errors.email = "Email is not valid.";
+    if (!clinicDetails.state.trim()) errors.state = "State is required.";
+    if (!clinicDetails.pincode.trim()) errors.pincode = "Pincode is required.";
+    if (!/^\d{6}$/.test(clinicDetails.pincode.trim())) errors.pincode = "Pincode must be a valid 6-digit number.";
+    if (!clinicDetails.address.trim()) errors.address = "Visiting address is required.";
+    if (!shiftStartTime) errors.shiftStart = "Shift start time is required.";
+    if (!shiftEndTime) errors.shiftEnd = "Shift end time is required.";
+    if (selectedWorkingDays.length === 0) errors.workingDays = "At least one working day must be selected.";
+    if (selectedDepartments.length === 0) errors.departments = "At least one department must be selected.";
+  
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors); // Set the errors in state for further use
+      setLoading(false);
+  
+      // Build the modal message for displaying required fields
+      const errorMessage = Object.entries(errors)
+        .map(([field, message]) => `- ${message}`)
+        .join("\n");
+  
+      setModalMessage({
+        success: "",
+        error: `Please address the following issues:\n${errorMessage}`,
+      });
+  
+      onOpen(); // Open the modal to show the errors
+      return;
+    }
+  
+    setErrors({});
+
     try {
       const hospitalData = {
         name: clinicDetails.name,
@@ -290,12 +331,12 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
       // const token = localStorage.getItem("docPocAuth_token");
      
       // alert("Branch created successfully!");
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
       setModalMessage({
         success: "",
-        error: `Error creating branch: ${error}`,
+        error: `Error creating branch: ${error.message}`,
       });
     }
     setLoading(false)
@@ -340,6 +381,7 @@ fetchHospitalDetails()
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   isDisabled={!edit}
+                  // errorMessage={errors.name}
                 />
                 <Input
                   key="inside"
@@ -390,22 +432,31 @@ fetchHospitalDetails()
                   label="Shift Start Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  // value={shiftStartTime}
+                  value={shiftStartTime}
                   // defaultValue={new Time(8, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleInputChange("shiftStart", time.toString())}
+                  // onChange={(time) => handleInputChange("shiftStart", time.toString())}
+                  onChange={(time) => {
+                    setShiftStartTime(time); // Update the Time state
+                    handleInputChange("shiftStart", time.toString()); // Update clinicDetails state
+                  }}
                 />
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
                   label="Shift End Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  // value={shiftEndTime}
+                  value={shiftEndTime}
                   // defaultValue={new Time(6, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleInputChange("shiftEnd", time.toString())}
+                  // onChange={(time) => handleInputChange("shiftEnd", time.toString())}
+                
+                  onChange={(time) => {
+                    setShiftEndTime(time); // Update the Time state
+                    handleInputChange("shiftEnd", time.toString()); // Update clinicDetails state
+                  }}
                 />
               </div>
               <div style={{ marginTop: 20 }}>
