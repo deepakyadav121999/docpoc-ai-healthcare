@@ -137,7 +137,23 @@ export default function App() {
     }
   };
 
-
+  const extractTime = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Convert to 12-hour format and handle midnight as 12
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    return `${hours}:${formattedMinutes} ${ampm}`;
+  };
+  const extractDate = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
+  };
+  
   // http://127.0.0.1:3037/DocPOC/v1/patient/?status[]=Inactive
 
 
@@ -227,9 +243,9 @@ export default function App() {
       case "lastVisit":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{cellValue}</p>
+            <p className="text-bold text-small capitalize">{extractDate(cellValue as string)}</p>
             <p className="text-bold text-tiny capitalize text-default-400">
-              {user.lastVisit}
+              {extractTime(user.lastVisit)}
             </p>
           </div>
         );
