@@ -63,8 +63,8 @@ interface appointments {
   isActive: string;
   json: string;
   startDateTime: string;
-  endDateTime: string
-
+  endDateTime: string;
+ dateTime:string;
 }
 
 // type User = (typeof Appointments)[0];
@@ -126,6 +126,7 @@ export default function AppointmentTable() {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
       const endpoint =`${API_URL}/appointment/list/${fetchedBranchId}`;
+      
       const params: any = {
        page:page,
       pageSize: rowsPerPage,
@@ -300,11 +301,11 @@ export default function AppointmentTable() {
 
     }
     if (columnKey === "date") {
-      const startDate = extractDate(user.startDateTime);
+      const startDate = extractDate(user.dateTime);
 
       const endDate = extractDate(user.endDateTime)
 
-      return <p>{startDate} - {endDate}</p>;
+      return <p>{startDate}</p>;
     }
 
     if (columnKey === "email") {
