@@ -44,6 +44,7 @@ import {
   ZonedDateTime,
   getLocalTimeZone,
   now,
+  
 } from "@internationalized/date";
 import ToolTip from "../Tooltip";
 import { VerticalDotsIcon } from "../CalenderBox/VerticalDotsIcon";
@@ -73,6 +74,7 @@ interface AutocompleteItem {
   description?: string;
   dob?: string;
 }
+
 
 export default function ModalForm(props: { type: string, userId: string, onDataChange: (data: any) => void }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
@@ -123,12 +125,24 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [appointmentDateTime, setAppointmentDateTime] = useState("");
   const [appointmentPatientId, setAppointmentPatientId] = useState("");
   const [appointmentBranch, setAppointmentBranch] = useState("");
-  const[appointmentName,setAppointmentName] =useState("")
+  const [appointmentName, setAppointmentName] = useState("")
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [doctorId, setDoctorId] = useState('')
-  const [startDateTime, setStartDateTime] = useState<string>("");
-  const [endDateTime, setEndDateTime] = useState<string>("");
- 
+  // const [startDateTime, setStartDateTime] = useState<string>("");
+  // const [endDateTime, setEndDateTime] = useState<string>("");
+
+  const [startDateTime, setStartDateTime] = useState('');
+  const [endDateTime, setEndDateTime] = useState('');
+
+//   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
+// const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));   
+   // Default time
+   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
+const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      // Default time
+
+
+  const[appointmentDate,setAppointmentDate] =useState("")
+
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
     const period = hour >= 12 ? "PM" : "AM"; // Determine AM/PM
@@ -153,18 +167,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     date.setHours(newTime.hour, newTime.minute, 0, 0); // Set new time, keep milliseconds as zero
     return date.toISOString(); // Convert to ISO string
   };
-  
+
 
   const handleTimeChangeAppointment = (time: Time, field: "startDateTime" | "endDateTime") => {
     if (field === "startDateTime") {
       const updatedStartDateTime = combineDateWithTime(startDateTime, time);
+      
       setStartDateTime(updatedStartDateTime);
     } else {
       const updatedEndDateTime = combineDateWithTime(endDateTime, time);
       setEndDateTime(updatedEndDateTime);
     }
   };
-  
+
 
 
   const fetchPatientById = async (userId: string) => {
@@ -227,7 +242,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setLoading(false);
     }
   };
-
+ 
+  interface Time {
+    hour: number;
+    minute: number;
+  }
+  function extractTimeAsObject(dateTime: string): Time {
+    const date = new Date(dateTime);
+  
+    return {
+      hour: date.getHours(),
+      minute: date.getMinutes(),
+    };
+  }
   function extractTime(dateTime: string): string {
     const date = new Date(dateTime);
     let hours = date.getHours();
@@ -294,10 +321,17 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setAppointmentPatientId(users.patientId)
       setAppointmentBranch(users.branchId)
       fetchUsers(users.doctorId)
+      setDoctorId(users.doctorId)
       fetchDoctors(users.branchId)
       setAppointmentName(users.name)
-      setStartDateTime(users.startDateTime); 
+      setStartDateTime(users.startDateTime);
       setEndDateTime(users.endDateTime);
+      setAppointmentDate(users.dateTime)
+      const startTimeObject = extractTimeAsObject(users.startDateTime);
+      const endTimeObject = extractTimeAsObject(users.endDateTime);
+      setShiftStartTime(startTimeObject)
+     
+      setShiftEndTime(endTimeObject)
     } catch (err) {
       console.error("Failed to fetch users.", err);
     } finally {
@@ -566,13 +600,13 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
                   <p className="text-medium ml-2">
-                    <strong>Visiting Time: </strong> {extractTime(appointmentDateTime)}
+                    <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Date: </strong>{extractDate(appointmentDateTime)}
+                    <strong>Date: </strong>{extractDate(appointmentDate)}
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -631,7 +665,9 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                   {!editVisitTime && (
                     <p className="text-medium ml-2">
                       <strong>Visiting Time: </strong>{" "}
-                      {extractTime(appointmentDateTime)}
+                      {/* {extractTime(startDateTime)} */}
+
+                    {extractTime(startDateTime)}-{extractTime(endDateTime)}
                     </p>
                   )}
 
@@ -644,19 +680,25 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         label="from"
                         labelPlacement="outside"
                         variant="bordered"
-                        defaultValue={new Time(7, 38)}
-
-
-                        onChange={(time) => handleTimeChangeAppointment(time, "startDateTime")}
+                        // defaultValue={new Time(7, 38)}
+                        // value={shiftStartTime}
+                        onChange={(time) => {
+                          handleTimeChangeAppointment(time, "startDateTime");
+                          setShiftStartTime(time);
+                        }
+                        }
                       />
                       <TimeInput
                         color={TOOL_TIP_COLORS.secondary}
                         label="to"
                         labelPlacement="outside"
                         variant="bordered"
-                        defaultValue={new Time(8, 45)}
-
-                        onChange={(time) => handleTimeChangeAppointment(time, "endDateTime")}
+                        // defaultValue={new Time(8, 45)}
+                        // value={shiftEndTime}
+                        onChange={(time) =>{
+                          setShiftEndTime(time);
+                          handleTimeChangeAppointment(time, "endDateTime")
+                        } }
                       />
                     </div>
                   )}
@@ -680,9 +722,12 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
                   <p className="text-medium ml-2">
-                    <strong>Date: </strong> {extractDate(appointmentDateTime)}
+                    <strong>Date: </strong> 
+                    {extractDate(appointmentDate)}
                   </p>
                 </div>
+
+
                 <div className="flex items-center">
                   <div style={{ marginLeft: -5 }}>
                     <SVGIconProvider iconName="doctor" />
@@ -709,7 +754,12 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           defaultItems={doctorList}
                           label="Select Doctor"
                           placeholder="Search a Doctor"
-                          onSelectionChange={(key) => setDoctorId(key as string)}
+                          onSelectionChange={(key) => {
+                            const selectedDoctor = doctorList.find((doc) => doc.value === key);
+                            setDoctorId(key as string);
+                            setEmployeeName(selectedDoctor?.label || "");
+                          }}
+
                         >
                           {(item) => (
                             <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
@@ -1763,7 +1813,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       </>
     );
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
-      return (<><AddAppointment onUsersAdded={()=>{}}/></>);
+      return (<><AddAppointment onUsersAdded={() => { }} /></>);
     }
   }
   return null;

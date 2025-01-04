@@ -45,18 +45,6 @@ const Clinic = () => {
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-
-  // const [selectedDepartments] = useState([
-  //   "orthopedics",
-  //   "dental",
-  //   "ent",
-  //   "pediatrics",
-  // ]);
-
-  // const flipEdit = () => {
-  //   // setEdit(!edit);
-  // };
-
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");
@@ -106,7 +94,6 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
       // alert("An error occurred while detecting location.");
     }
   }
-
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
@@ -114,44 +101,6 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
   const flipEdit = () => {
     setEdit(!edit);
   };
-  // const handleDetectLocation = async () => {
-  //   try {
-  //     locationDetact()
-  //     const hospitalData = {
-  //       name: clinicDetails.name,
-  //       phone: clinicDetails.phone,
-  //       email: clinicDetails.email,
-  //       ninId: "NA1092KU872882",
-  //       json: JSON.stringify({
-  //         state: clinicDetails.state,
-  //         pincode: clinicDetails.pincode,
-  //         address: clinicDetails.address,
-  //         shiftStart: clinicDetails.shiftStart,
-  //         shiftEnd: clinicDetails.shiftEnd,
-  //         workingDays: selectedWorkingDays,
-  //         multipleBranch: isMultipleBranch,
-  //         googleLocation: detectedLocation
-  //       }),
-  //     };
-  //     const token = localStorage.getItem("docPocAuth_token");
-  //     const response = await axios.post(`${API_URL}/hospital`, hospitalData,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     const { id } = response.data;
-  //     setHospitalId(id);
-
-  //     // alert("Hospital created successfully");
-
-  //   } catch (error) {
-  //     console.error("Error creating hospital:", error);
-  //     // alert("Failed to create hospital.");
-  //   }
-  // };
   const fetchHospitalDetails = async () => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
@@ -261,10 +210,7 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-     
    
-         
-     
       const requestData = {
         id: hospitalId,
         ...hospitalData,
@@ -328,9 +274,6 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
         });
       }
       
-      // const token = localStorage.getItem("docPocAuth_token");
-     
-      // alert("Branch created successfully!");
     } catch (error:any) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
@@ -451,8 +394,6 @@ fetchHospitalDetails()
                   // defaultValue={new Time(6, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  // onChange={(time) => handleInputChange("shiftEnd", time.toString())}
-                
                   onChange={(time) => {
                     setShiftEndTime(time); // Update the Time state
                     handleInputChange("shiftEnd", time.toString()); // Update clinicDetails state
@@ -467,7 +408,6 @@ fetchHospitalDetails()
                   labelPlacement="outside"
                   variant="bordered"
                   label="Visiting Address"
-                  // defaultValue="H No.123 Panchayat Bhawan, Phulera Gram Panchayat, 965244"
                   errorMessage="The address should be at max 255 characters long."
                   value={clinicDetails.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
@@ -582,33 +522,6 @@ fetchHospitalDetails()
               >
                 Save Changes
               </Button>
-
-              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
-                <ModalContent>
-                  <ModalHeader>{loading ?(<div className="flex justify-center">
-                      
-                      </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
-                  <ModalBody>
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <Spinner size="lg" />
-                      </div>
-                    ) : modalMessage.success ? (
-                      <p className="text-green-600">{modalMessage.success}</p>
-                    ) : (
-                      <p className="text-red-600">{modalMessage.error}</p>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    {!loading && (
-                      <Button color="primary" onPress={handleModalClose}>
-                        Ok
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </ModalContent>
-              </Modal> */}
-
               <EnhancedModal
                 isOpen={isOpen}
                 loading={loading}
