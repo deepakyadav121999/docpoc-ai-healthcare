@@ -138,6 +138,9 @@ export default function AppointmentTable() {
         params.from = startOfDay;
         params.to = endOfDay;
       }
+      if (filterValue) {
+        params.search = filterValue.trim(); // API should accept a "search" parameter for filtering
+      }
 
 
       const response = await axios.get(endpoint, {
@@ -188,7 +191,7 @@ export default function AppointmentTable() {
 
  useEffect(() => {
       fetchUsers();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage,filterValue]);
 
   console.log(totalappointments);
   
@@ -394,12 +397,20 @@ export default function AppointmentTable() {
 //      () => debounce((value: string) => searchAppointments(), 500),
 //      [fetchUsers]
 //    );
+const debouncedFetchUsers = useCallback(
+  debounce((searchValue: string) => {
+    setFilterValue(searchValue);
+    fetchUsers();
+  }, 500), // Adjust debounce time as needed
+  []
+);
  
    const onSearchChange = React.useCallback((value?: string) => {
      setFilterValue(value || "");
      setPage(1);
     //  debouncedFetchUser(value || "");
    },[]);
+
 
   const onClear = useCallback(() => {
     setFilterValue("");

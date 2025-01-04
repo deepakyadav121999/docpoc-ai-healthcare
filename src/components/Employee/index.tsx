@@ -1,20 +1,21 @@
 "use client";
-import React, {useEffect , useState } from "react";
-import { GLOBAL_ICON_COLOR_WHITE} from "@/constants";
+import React, { useEffect, useState } from "react";
+import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
 
 import ChartLine from "../Charts/ChartLine";
-
+import { Spacer } from "@nextui-org/react";
 import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { ApexOptions } from "apexcharts";
 import axios from "axios";
+import CustomCard from "./CustomCard";
 import { Spinner } from "@nextui-org/spinner";
 const API_URL = process.env.API_URL;
 export default function App() {
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
   const [loading, setLoading] = useState(true);
-    const[brancId,setBranchId] = useState()
+  const [brancId, setBranchId] = useState()
 
 
   // const dataStatsList: dataStatsDefault[] = [
@@ -52,7 +53,7 @@ export default function App() {
     try {
 
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -98,13 +99,13 @@ export default function App() {
         },
       });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) { 
+      if (!branchResponse.data || branchResponse.data.length === 0) {
         return;
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-       console.log(fetchedBranchId)
-       setBranchId(fetchedBranchId)
+      console.log(fetchedBranchId)
+      setBranchId(fetchedBranchId)
 
       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
       const params = {
@@ -120,7 +121,7 @@ export default function App() {
           "Content-Type": "application/json",
         },
       });
- 
+
       const users = response.data.rows || [];
       console.log(users)
       // Parse and count doctors, nurses, and staff
@@ -128,7 +129,7 @@ export default function App() {
       let nurseCount = 0;
       let staffCount = 0;
 
-      users.forEach((user:any) => {
+      users.forEach((user: any) => {
         setLoading(true)
         try {
           const parsedJson = JSON.parse(user.json || "{}");
@@ -146,7 +147,7 @@ export default function App() {
         }
       });
 
-     
+
       setDataStatsList([
         {
           icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
@@ -201,30 +202,30 @@ export default function App() {
     }
   };
   useEffect(() => {
-   fetchUsers()
-  //  setDataStatsList([
-  //   {
-  //     icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
-  //     color: "#4b9c78",
-  //     title: "new doctors (since last month)",
-  //     value: "Total Doctors: 0",
-  //     growthRate: 0,
-  //   },
-  //   {
-  //     icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
-  //     color: "#FF9C55",
-  //     title: "new employees (since last month)",
-  //     value: "Total Staff: 0",
-  //     growthRate: 0,
-  //   },
-  //   {
-  //     icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
-  //     color: "#8155FF",
-  //     title: "new nurses (since last month)",
-  //     value: "Total Nurses: 0",
-  //     growthRate: 0,
-  //   },
-  // ]);
+    fetchUsers()
+    //  setDataStatsList([
+    //   {
+    //     icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#4b9c78",
+    //     title: "new doctors (since last month)",
+    //     value: "Total Doctors: 0",
+    //     growthRate: 0,
+    //   },
+    //   {
+    //     icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#FF9C55",
+    //     title: "new employees (since last month)",
+    //     value: "Total Staff: 0",
+    //     growthRate: 0,
+    //   },
+    //   {
+    //     icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#8155FF",
+    //     title: "new nurses (since last month)",
+    //     value: "Total Nurses: 0",
+    //     growthRate: 0,
+    //   },
+    // ]);
   }, []);
   const series = [
     {
@@ -232,7 +233,7 @@ export default function App() {
       data: [75, 60, 75, 90, 110, 180, 200],
     }
   ];
-  
+
   const options: ApexOptions = {
     legend: {
       show: false,
@@ -275,7 +276,7 @@ export default function App() {
     stroke: {
       curve: "smooth",
     },
-  
+
     markers: {
       size: 0,
     },
@@ -340,20 +341,24 @@ export default function App() {
     },
   };
 
-  
+
   const OverView = () => {
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full m-1">
-        <div className="flex flex-col w-full">
-          {  loading ? (
-            <div className="absolute inset-0 flex justify-center items-center  z-50">
-            <Spinner />
-          </div>):<DataStatsDefault dataStatsList={dataStatsList} />
+        <div className="flex flex-col w-full justify-between">
+          {loading ? (
+             <div className="grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3">
+             {/* Render CustomCard components in a responsive grid */}
+             <CustomCard />
+             <CustomCard />
+             <CustomCard />
+           </div>
+          ) : <DataStatsDefault dataStatsList={dataStatsList} />
           }
-          
+
         </div>
         <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
-          <ChartLine options={options} series={series} label="Total Strength Overview"/>
+          <ChartLine options={options} series={series} label="Total Strength Overview" />
         </div>
       </div>
     );

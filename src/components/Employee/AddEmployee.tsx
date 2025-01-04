@@ -30,7 +30,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     name: "",
     phone: "",
     email: "",
-    code: "ST-ID/JKI2301/1021",
+   
     json: JSON.stringify({
       dob: "",
       designation: "",
@@ -126,7 +126,17 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
-
+    const jsonFields = JSON.parse(formData.json);
+    if (!jsonFields.dob) {
+      missingFields.push("Date of Birth");
+    }
+    if (!jsonFields.designation) {
+      missingFields.push("Designation");
+    }
+    if (!jsonFields.workingHours || jsonFields.workingHours.trim() === " - ") {
+      missingFields.push("Working Hours");
+    }
+    
 
     if (missingFields.length > 0) {
 
@@ -208,7 +218,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         name: "",
         phone: "",
         email: "",
-        code: "ST-ID/JKI2301/1021",
+       
         json: JSON.stringify({
           dob: "",
           designation: "",
@@ -227,10 +237,24 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
       onUsersAdded();
     } catch (error: any) {
-      setModalMessage({
-        success: "",
-        error: `Error adding user: ${error.response?.data?.message || "Unknown error"}`,
-      });
+      if (error.response) {
+        // Extract and display the error message from the response
+        const apiErrorMessage =
+          error.response.data.message && Array.isArray(error.response.data.message)
+            ? error.response.data.message[0].message
+            : error.response.data.message || "Unknown error occurred";
+  
+        setModalMessage({
+          success: "",
+          error: apiErrorMessage,
+        });
+      } else {
+        // Handle network errors or unexpected errors
+        setModalMessage({
+          success: "",
+          error: error.message || "An unexpected error occurred.",
+        });
+      }
 
     } finally {
       setLoading(false);

@@ -13,7 +13,8 @@ import {
   ModalBody,
   Spinner,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  DateInput
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -44,16 +45,28 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    doctorId: string;
+    patientId: string;
+    type: string;
+    dateTime: string;
+    startDateTime: Date | string;
+    endDateTime: Date | string;
+    code: string;
+    json: string;
+  }>({
     name: "",
     doctorId: "",
     patientId: "",
     type: "",
+    dateTime: "",
     startDateTime: "",
     endDateTime: "",
     code: "ST-ID/15",
-    json: '',
+    json: "",
   });
+  
   const [loading, setLoading] = useState(false);
 
   function extractTime(dateTime: string): string {
@@ -71,8 +84,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
 
-  const generateDateTime = (time: Time) => {
-    const currentDate = new Date(); // Use the current date
+  const generateDateTime = (baseDate: string,time: Time) => {
+    const currentDate = new Date(baseDate); // Use the current date
     return new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -80,12 +93,20 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       time && time.hour,
       time && time.minute,
       0
-    ).toISOString(); // Convert to ISO format
+    )// Convert to ISO format
   };
+
   const handleTimeChange = (time: Time, field: "startDateTime" | "endDateTime") => {
-    const isoTime = generateDateTime(time);
+    if (!formData.dateTime) {
+      setModalMessage({ success: "", error: "Please select a date before setting the time." });
+      onOpen();
+      return;
+    }
+  
+    const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
     setFormData({ ...formData, [field]: isoTime });
   };
+
 
   const handlePatientSelection = (patientId: string) => {
     const selectedPatient = patientList.find((patient) => patient.value === patientId);
@@ -404,14 +425,17 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   }, [])
 
   useEffect(() => {
-    const defaultStartTime = generateDateTime(new Time(7, 38)); // Default start time
-    const defaultEndTime = generateDateTime(new Time(8, 45)); // Default end time
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      startDateTime: defaultStartTime,
-      endDateTime: defaultEndTime,
-    }));
-  }, []);
+    if (formData.dateTime) {
+      const defaultStartTime = generateDateTime(formData.dateTime, new Time(8, 30));
+      const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        startDateTime: defaultStartTime,
+        endDateTime: defaultEndTime,
+      }));
+    }
+  }, [formData.dateTime]);
+  
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -423,6 +447,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     }
   }, [isOpen]);
+
+  const minDate = new Date(); // Today
+  const maxDate = new Date();
+  maxDate.setMonth(minDate.getMonth() + 1);
+
+  const handleDateChange = (date: string) => {
+    setFormData({ ...formData, dateTime: date });
+  };
 
   return (
     <div className="  grid grid-cols-1 gap-9  ">
@@ -445,12 +477,27 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
               <div className="flex flex-col w-full"></div>
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <Input
+                  label="Appointment Date"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isDisabled={!edit}
+                  type="date"
+                  value={formData.dateTime || ""}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                />
+
+
+              </div>
+
+              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment Start Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(7, 45)}
+                  defaultValue={new Time(8, 30)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "startDateTime")}
@@ -460,7 +507,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   label="Appointment End Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(8, 45)}
+                  defaultValue={new Time(9)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "endDateTime")}

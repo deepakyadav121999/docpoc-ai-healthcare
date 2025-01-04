@@ -148,10 +148,25 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       onPatientAdded()
     } catch (error: any) {
 
-      setModalMessage({
-        success: "",
-        error: `Error adding Patient: ${error.response?.data?.message || "Unknown error"}`,
-      });
+      if (error.response) {
+        // Extract and display the error message from the response
+        const apiErrorMessage =
+          error.response.data.message && Array.isArray(error.response.data.message)
+            ? error.response.data.message[0].message
+            : error.response.data.message || "Unknown error occurred";
+  
+        setModalMessage({
+          success: "",
+          error: apiErrorMessage,
+        });
+      } else {
+        // Handle network errors or unexpected errors
+        setModalMessage({
+          success: "",
+          error: error.message || "An unexpected error occurred.",
+        });
+      }
+
     } finally {
       setLoading(false);
     }

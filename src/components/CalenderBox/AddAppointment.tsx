@@ -45,17 +45,28 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    doctorId: string;
+    patientId: string;
+    type: string;
+    dateTime: string;
+    startDateTime: Date | string;
+    endDateTime: Date | string;
+    code: string;
+    json: string;
+  }>({
     name: "",
     doctorId: "",
     patientId: "",
     type: "",
-    dateTime:" ",
+    dateTime: "",
     startDateTime: "",
     endDateTime: "",
     code: "ST-ID/15",
-    json: '',
+    json: "",
   });
+  
   const [loading, setLoading] = useState(false);
 
   function extractTime(dateTime: string): string {
@@ -415,15 +426,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   useEffect(() => {
     if (formData.dateTime) {
-      const defaultStartTime = generateDateTime(formData.dateTime, new Time(7, 38)); // Default start
-      const defaultEndTime = generateDateTime(formData.dateTime, new Time(8, 45));   // Default end
-      // setFormData((prevFormData) => ({
-      //   ...prevFormData,
-      //   startDateTime: defaultStartTime,
-      //   endDateTime: defaultEndTime,
-      // }));
+      const defaultStartTime = generateDateTime(formData.dateTime, new Time(8, 30));
+      const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        startDateTime: defaultStartTime,
+        endDateTime: defaultEndTime,
+      }));
     }
   }, [formData.dateTime]);
+  
 
   useEffect(() => {
     const header = document.querySelector("header");
