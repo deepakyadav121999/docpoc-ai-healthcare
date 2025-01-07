@@ -49,21 +49,23 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       });
       // Handle successful deletion
 
-      if (props.onPatientDelete) props.onPatientDelete();
+      // if (props.onPatientDelete) props.onPatientDelete();
       setModalMessage({ success: "Patient deleted successfully!", error: "" });
-      setmessage("Patient deleted successfully!");
+      // setmessage("Patient deleted successfully!");
       setNotificationOpen(true)
+      setTimeout(() => {
+        if (props.onPatientDelete) props.onPatientDelete();
+      }, 2000);
 
     } catch (error) {
-
       console.error("Error deleting patient:", error);
       setModalMessage({ success: "", error: "Failed to delete the patient. Please try" });
-      seterror("Failed to delete the patient. Please try again.");
+      // seterror("Failed to delete the patient. Please try again.");
       setNotificationOpen(true)
     }
     finally {
       setLoading(false);
-      setNotificationOpen(true);
+      // setNotificationOpen(true);
     }
   };
   const deleteEmployee = async () => {
@@ -71,21 +73,23 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     try {
       const response = await axios.delete(`http://127.0.0.1:3037/DocPOC/v1/user/${props.userId}`);
       if (response.status === 200) {
-        setmessage('emplyee deleted')
+        // setmessage('emplyee deleted')
         setModalMessage({ success: "emplyee deleted", error: "" });
         setNotificationOpen(true)
-        if (props.onPatientDelete) props.onPatientDelete();
+        setTimeout(() => {
+          if (props.onPatientDelete) props.onPatientDelete();
+        }, 2000);
       }
     } catch (error) {
       setNotificationOpen(true)
       console.error('Error deleting employee:', error);
       setModalMessage({ success: "", error: "Failed to delete the employee. Please try" });
-      seterror('Failed to delete the employee. Please try again.');
+      // seterror('Failed to delete the employee. Please try again.');
 
     }
     finally {
       setLoading(false);
-      setNotificationOpen(true);
+      // setNotificationOpen(true);
     }
   };
 
@@ -104,24 +108,26 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       
         setModalMessage({ success: "appointment deleted", error: "" });
         setNotificationOpen(true)
-        if (props.onPatientDelete) props.onPatientDelete();
+        setTimeout(() => {
+          if (props.onPatientDelete) props.onPatientDelete();
+        }, 2000);
       }
     } catch (error) {
       setNotificationOpen(true)
       console.error('Error deleting appointment:', error);
       setModalMessage({ success: "", error: "Failed to delete the appointment. Please try" });
-      seterror('Failed to delete the appointment. Please try again.');
+      // seterror('Failed to delete the appointment. Please try again.');
 
     }
     finally {
       setLoading(false);
-      setNotificationOpen(true);
+      // setNotificationOpen(true);
     }
   };
 
   useEffect(() => {
     const header = document.querySelector("header");
-    if (isOpen) {
+    if (isOpen || isNotificationOpen) {
       header?.classList.remove("z-999");
       header?.classList.add("z-0");
     } 
@@ -133,7 +139,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       header?.classList.remove("z-0");
       header?.classList.add("z-999");
     }
-  }, [isOpen]);
+  }, [isOpen, isNotificationOpen]);
 
 
 

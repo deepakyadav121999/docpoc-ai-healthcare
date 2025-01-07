@@ -30,12 +30,21 @@ interface AutocompleteItem {
   description?: string;
   dob?: string;
 }
-interface AddUsersProps {
+interface NewAppointmentProps {
   onUsersAdded: () => void;
-
+  startDateTime: string; // ISO string for start time
+  endDateTime: string; // ISO string for end time
+  date: any; // ISO string for the selected date
 }
+
 const API_URL = process.env.API_URL;
-const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+const NewAppointment: React.FC<NewAppointmentProps> = ({ 
+  onUsersAdded, 
+  startDateTime, 
+  endDateTime, 
+  date 
+}) => {
+  
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
@@ -45,28 +54,46 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
 
-  const [formData, setFormData] = useState<{
-    name: string;
-    doctorId: string;
-    patientId: string;
-    type: string;
-    dateTime: string;
-    startDateTime: Date | string;
-    endDateTime: Date | string;
-    code: string;
-    json: string;
-  }>({
+const inputDate = new Date(date);
+const correctedDate = new Date(inputDate.getTime() - inputDate.getTimezoneOffset() * 60000);
+// Format as ISO
+const dateTime = correctedDate.toISOString().split("T")[0];
+// console.log(startDateTime)
+
+
+  // const [formData, setFormData] = useState<{
+  //   name: string;
+  //   doctorId: string;
+  //   patientId: string;
+  //   type: string;
+  //   dateTime: string;
+  //   startDateTime: Date | string;
+  //   endDateTime: Date | string;
+  //   code: string;
+  //   json: string;
+  // }>({
+  //   name: "",
+  //   doctorId: "",
+  //   patientId: "",
+  //   type: "",
+  //   dateTime: "",
+  //   startDateTime: "",
+  //   endDateTime: "",
+  //   code: "ST-ID/15",
+  //   json: "",
+  // });
+
+  const [formData, setFormData] = useState({
     name: "",
     doctorId: "",
     patientId: "",
     type: "",
-    dateTime: "",
-    startDateTime: "",
-    endDateTime: "",
+    dateTime, // Pre-filled with the prop value
+    startDateTime, // Pre-filled with the prop value
+    endDateTime, // Pre-filled with the prop value
     code: "ST-ID/15",
     json: "",
   });
-  
   const [loading, setLoading] = useState(false);
 
   function extractTime(dateTime: string): string {
@@ -325,8 +352,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       params.page = 1;
       params.pageSize = 50;
-      params.from = '2024-12-04T03:32:25.812Z';
-      params.to = '2024-12-11T03:32:25.815Z';
+      // params.from = '2024-12-04T03:32:25.812Z';
+      // params.to = '2024-12-11T03:32:25.815Z';
 
 
 
@@ -337,7 +364,26 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           "Content-Type": "application/json",
         },
       });
-      const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+      const allUsers = response.data.rows;
+
+      // Filter and transform only doctors
+      const doctors = allUsers.filter((user: any) => {
+        try {
+          const userJson = JSON.parse(user.json);
+          return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+        } catch (err) {
+          console.error("Error parsing JSON for user:", user, err);
+          return false;
+        }
+      });
+
+
+      // const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+      //   label: doctor.name,
+      //   value: doctor.id,
+      //   description: `${doctor.phone} | ${doctor.email}`,
+      // }));
+      const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
         label: doctor.name,
         value: doctor.id,
         description: `${doctor.phone} | ${doctor.email}`,
@@ -424,17 +470,25 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     fetchAppointmentTypes();
   }, [])
 
+  // useEffect(() => {
+  //   if (formData.dateTime) {
+  //     const defaultStartTime = generateDateTime(formData.dateTime, new Time(8, 30));
+  //     const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       startDateTime: defaultStartTime,
+  //       endDateTime: defaultEndTime,
+  //     }));
+  //   }
+  // }, [formData.dateTime]);
   useEffect(() => {
-    if (formData.dateTime) {
-      const defaultStartTime = generateDateTime(formData.dateTime, new Time(8, 30));
-      const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        startDateTime: defaultStartTime,
-        endDateTime: defaultEndTime,
-      }));
-    }
-  }, [formData.dateTime]);
+    setFormData((prev) => ({
+      ...prev,
+      dateTime,
+      startDateTime,
+      endDateTime,
+    }));
+  }, [dateTime, startDateTime, endDateTime]);
   
 
   useEffect(() => {
@@ -484,7 +538,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   color={TOOL_TIP_COLORS.secondary}
                   isDisabled={!edit}
                   type="date"
-                  value={formData.dateTime || ""}
+                  value={formData.dateTime}
                   onChange={(e) => handleDateChange(e.target.value)}
                 />
 
@@ -497,7 +551,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   label="Appointment Start Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(8, 30)}
+                  // defaultValue={new Time(8, 30)}
+                  defaultValue={
+                    formData.startDateTime
+                      ? new Time(new Date(formData.startDateTime).getHours(), new Date(formData.startDateTime).getMinutes())
+                      : new Time(8, 30)
+                  }
+
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "startDateTime")}
@@ -507,7 +567,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   label="Appointment End Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(9)}
+                  // defaultValue={new Time(9)}
+                  defaultValue={
+                    formData.endDateTime
+                      ? new Time(new Date(formData.endDateTime).getHours(), new Date(formData.endDateTime).getMinutes())
+                      : new Time(9, 0)
+                  }
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "endDateTime")}
@@ -603,31 +668,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
-              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
-                <ModalContent>
-                  <ModalHeader>{loading ?(<div className="flex justify-center">
-                        
-                      </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
-                  <ModalBody>
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <Spinner size="lg" />
-                      </div>
-                    ) : modalMessage.success ? (
-                      <p className="text-green-600">{modalMessage.success}</p>
-                    ) : (
-                      <p className="text-red-600">{modalMessage.error}</p>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    {!loading && (
-                      <Button color="primary" onPress={handleModalClose}>
-                        Ok
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </ModalContent>
-              </Modal> */}
+
               
               <EnhancedModal
                 isOpen={isOpen}
@@ -644,7 +685,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   );
 };
 
-export default AddAppointment;
+export default NewAppointment;
 
 
 

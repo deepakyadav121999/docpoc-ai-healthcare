@@ -169,9 +169,9 @@ export default function AppointmentTable() {
 
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
-      // console.log("Total Appointments:", total);
       setTotalappointments(total);
-      setTotalUsers(response.data.count || response.data.length);
+      setTotalUsers(total);
+      console.log(total)
 
     } catch (err) {
       setError("Failed to fetch patients.");
@@ -240,8 +240,9 @@ export default function AppointmentTable() {
       });
   
       setAppointments(response.data.rows || response.data);
-      setTotalappointments(response.data.count || response.data.length);
-      setTotalUsers(response.data.count || response.data.length);
+      const total = response.data.count || response.data.length;
+      setTotalappointments(total);
+      setTotalUsers(total);
     } catch (err) {
       setError("Failed to fetch appointments.");
     } finally {
@@ -254,6 +255,7 @@ export default function AppointmentTable() {
     fetchUsers();
 
   }, [page, rowsPerPage,filterValue,statusFilter]);
+
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
     const currentDate = new Date();
@@ -566,7 +568,7 @@ export default function AppointmentTable() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-default-400 text-small">
-              {`Total ${totalUsers} Appointments`}
+              {`Total ${totalappointments} Appointments`}
             </span>
             <label className="flex items-center text-default-400 text-small">
               Rows per page:
