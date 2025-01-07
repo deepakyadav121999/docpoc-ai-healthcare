@@ -75,6 +75,14 @@ export default function App() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [totalPatient, setTotalPatient] = useState(0)
 
+   useEffect(() => {
+      localStorage.setItem("page", String(page));
+    }, [page]);
+  
+    useEffect(() => {
+      localStorage.setItem("rowsPerPage", String(rowsPerPage));
+    }, [rowsPerPage]);
+
   const fetchPatients = async (searchName = "", selectedStatuses: string[] = []) => {
     setLoading(true);
     try {
@@ -103,6 +111,8 @@ export default function App() {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
+  const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
+      const initialRowsPerPage = parseInt(localStorage.getItem("rowsPerPage") || "5", 10);
 
 
       const endpoint = searchName
@@ -112,8 +122,8 @@ export default function App() {
       if (selectedStatuses.length) {
         params.status = selectedStatuses;
       } else {
-        params.page = page;
-        params.pageSize = rowsPerPage;
+        params.page = initialPage;
+        params.pageSize = initialRowsPerPage;
         params.from = '2024-12-04T03:32:25.812Z';
         params.to = '2024-12-11T03:32:25.815Z';
         params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];

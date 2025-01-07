@@ -351,7 +351,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       </Modal>
 
 
-      <Modal backdrop={"blur"} isOpen={isNotificationOpen} onClose={() => setNotificationOpen(false)}>
+      {/* <Modal backdrop={"blur"} isOpen={isNotificationOpen} onClose={() => setNotificationOpen(false)}>
         <ModalContent>
           <ModalHeader>{modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
           <ModalBody>
@@ -371,13 +371,14 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
-         {/* <EnhancedModal
+      </Modal> */}
+      
+         <EnhancedModal
                 isOpen={isNotificationOpen}
                 loading={loading}
                 modalMessage={modalMessage}
                 onClose={handleModalClose}
-              /> */}
+              />
     </>
   );
 }

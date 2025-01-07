@@ -3,10 +3,41 @@ import Link from "next/link";
 import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { useRouter } from "next/navigation";
+import React,{useEffect} from "react";
+import axios from "axios";
 
+const API_URL = process.env.API_URL;
+interface Profile {
+  id: string;
+  userName: string;
+}
 const DropdownUser = () => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("docPocAuth_token");
+    const profileEndpoint = `${API_URL}/auth/profile`;
+
+    try {
+      const response = await axios.get(profileEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setProfile(response.data); // Set the profile data after fetching
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
+
+  useEffect(()=>{
+    fetchProfile()
+  },[])
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -30,7 +61,7 @@ const DropdownUser = () => {
         </span>
 
         <span className="flex items-center gap-2 font-medium text-dark dark:text-dark-6">
-          <span className="hidden lg:block">Jhon Smith</span>
+          <span className="hidden lg:block">  {profile?.userName.split('@')[0] || "Loading..."}</span>
 
           <svg
             className={`fill-current duration-200 ease-in ${dropdownOpen && "rotate-180"}`}
@@ -74,10 +105,10 @@ const DropdownUser = () => {
 
             <span className="block">
               <span className="block font-medium text-dark dark:text-white">
-                Jhon Smith
+               {profile?.userName.split('@')[0] || "Loading..."}
               </span>
               <span className="block font-medium text-dark-5 dark:text-dark-6">
-                jonson@nextadmin.com
+              {profile?.userName || "Loading..."}
               </span>
             </span>
           </div>

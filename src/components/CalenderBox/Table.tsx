@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useMemo, useState,useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -64,7 +64,7 @@ interface appointments {
   json: string;
   startDateTime: string;
   endDateTime: string;
- dateTime:string;
+  dateTime: string;
 }
 
 // type User = (typeof Appointments)[0];
@@ -78,28 +78,45 @@ export default function AppointmentTable() {
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [page, setPage] = useState(1);
+
+  // const [rowsPerPage, setRowsPerPage] = useState<number>(
+  //   parseInt(localStorage.getItem("rowsPerPage") || "5", 10) // Retrieve rowsPerPage from local storage
+  // );
+  // const [page, setPage] = useState<number>(
+  //   parseInt(localStorage.getItem("page") || "1", 10) // Retrieve page from local storage
+  // );
+
   const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
     useState(false);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
-  const [page, setPage] = useState(1);
-
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [appointments, setAppointments] = React.useState<appointments[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
   const [totalappointments, setTotalappointments] = React.useState(0);
-   const [totalUsers, setTotalUsers] = React.useState(0);
+  const [totalUsers, setTotalUsers] = React.useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
+  useEffect(() => {
+    localStorage.setItem("page", String(page));
+  }, [page]);
+
+  useEffect(() => {
+    localStorage.setItem("rowsPerPage", String(rowsPerPage));
+  }, [rowsPerPage]);
+
   const fetchUsers = async () => {
+
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-     
-    
+
+
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -125,13 +142,12 @@ export default function AppointmentTable() {
       }
 
       const fetchedBranchId = branchResponse.data[0]?.id;
-      const endpoint =`${API_URL}/appointment/list/${fetchedBranchId}`;
-      
-      const params: any = {
-       page:page,
-      pageSize: rowsPerPage,
+      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
-      }
+      const params: any = {
+        page: page,  // Use currentPage here
+        pageSize: rowsPerPage,  // Use currentRowsPerPage here
+      };
       if (selectedDate) {
         const startOfDay = new Date(selectedDate).toISOString(); // Convert to ISO string
         const endOfDay = new Date(new Date(selectedDate).setHours(23, 59, 59, 999)).toISOString();
@@ -153,7 +169,7 @@ export default function AppointmentTable() {
 
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
-      console.log("Total Appointments:", total);
+      // console.log("Total Appointments:", total);
       setTotalappointments(total);
       setTotalUsers(response.data.count || response.data.length);
 
@@ -163,39 +179,81 @@ export default function AppointmentTable() {
       setLoading(false);
     }
   };
-  const searchAppointments = async () => {
+
+  const fetchUpdatedAppointments = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint =
-        `${API_URL}/appointment/list/12a1c77b-39ed-47e6-b6aa-0081db2c1469`; // Replace with actual search endpoint
-      const response = await axios.get(endpoint, {
-        params: {
-           page,
-          pageSize: 1000, 
-        },
+  
+      const hospitalEndpoint = `${API_URL}/hospital`;
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      setAppointments(response.data.rows || []);
-      setTotalappointments(response.data.count || response.data.rows.length);
-      setPage(1); // Reset to the first page
-    } catch (error) {
-      console.error("Search failed:", error);
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        return;
+      }
+  
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        return;
+      }
+  
+      const fetchedBranchId = branchResponse.data[0]?.id;
+      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
+  
+      const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
+      const initialRowsPerPage = parseInt(localStorage.getItem("rowsPerPage") || "5", 10);
+
+      const params: any = {
+        page: initialPage, // Use current page
+        pageSize: initialRowsPerPage, // Use current rowsPerPage
+      };
+  
+      if (selectedDate) {
+        const startOfDay = new Date(selectedDate).toISOString();
+        const endOfDay = new Date(new Date(selectedDate).setHours(23, 59, 59, 999)).toISOString();
+        params.from = startOfDay;
+        params.to = endOfDay;
+      }
+  
+      if (filterValue) {
+        params.search = filterValue.trim();
+      }
+  
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      setAppointments(response.data.rows || response.data);
+      setTotalappointments(response.data.count || response.data.length);
+      setTotalUsers(response.data.count || response.data.length);
+    } catch (err) {
+      setError("Failed to fetch appointments.");
     } finally {
       setLoading(false);
     }
   };
-
- useEffect(() => {
-      fetchUsers();
-  }, [page, rowsPerPage,filterValue]);
-
-  console.log(totalappointments);
   
 
+  useEffect(() => {
+    fetchUsers();
+
+  }, [page, rowsPerPage,filterValue,statusFilter]);
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
     const currentDate = new Date();
@@ -216,18 +274,18 @@ export default function AppointmentTable() {
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const amPm = hours >= 12 ? 'PM' : 'AM';
-  
+
     // Convert to 12-hour format
     hours = hours % 12 || 12;
-  
+
     // Add leading zero to minutes if needed
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  
+
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
   const extractDate = (dateTimeString: string): string => {
     const date = (dateTimeString);
-    return date &&  date.split("T")[0];
+    return date && date.split("T")[0];
   };
 
   type User = (typeof appointments)[0];
@@ -290,15 +348,15 @@ export default function AppointmentTable() {
         age = getAgeFromDob(dob).toString();
         // console.log(age)
       } catch (error) {
-        console.error("Error parsing JSON:", error);
+        // console.error("Error parsing JSON:", error);
       }
 
       return <p className="capitalize">{age}</p>;
     }
     if (columnKey === "time") {
       const startTime = extractTime(user.startDateTime);
-      console.log(startTime);
-      
+      // console.log(startTime);
+
       const endTime = user.endDateTime;
       return <p className="capitalize">{startTime}-{extractTime(endTime)}</p>;
 
@@ -317,7 +375,7 @@ export default function AppointmentTable() {
         const email = userJson.email || "N/A"; // Fallback to "N/A" if email is missing
         return <p>{email}</p>;
       } catch (error) {
-        console.error("Error parsing JSON:", error);
+        // console.error("Error parsing JSON:", error);
       }
     }
 
@@ -331,16 +389,16 @@ export default function AppointmentTable() {
             name={cellValue}
           />
         );
-        case "name":
-          return (
-            <User
-              avatarProps={{ radius: "lg", src: user.displayPicture }}
-              description={user.email}
-              name={cellValue}
-            >
-              {user.email}
-            </User>
-          );
+      case "name":
+        return (
+          <User
+            avatarProps={{ radius: "lg", src: user.displayPicture }}
+            description={user.email}
+            name={cellValue}
+          >
+            {user.email}
+          </User>
+        );
       case "role":
         return (
           <div className="flex flex-col">
@@ -371,7 +429,8 @@ export default function AppointmentTable() {
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId={user.id}
-            onPatientDelete={fetchUsers}
+            onPatientDelete={fetchUpdatedAppointments}
+
           />
         );
       default:
@@ -381,7 +440,9 @@ export default function AppointmentTable() {
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
+
   }, []);
+
 
   const onRowsPerPageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setRowsPerPage(Number(e.target.value));
@@ -393,23 +454,23 @@ export default function AppointmentTable() {
   }, []);
 
 
-//  const debouncedFetchUser = React.useMemo(
-//      () => debounce((value: string) => searchAppointments(), 500),
-//      [fetchUsers]
-//    );
-const debouncedFetchUsers = useCallback(
-  debounce((searchValue: string) => {
-    setFilterValue(searchValue);
-    fetchUsers();
-  }, 500), // Adjust debounce time as needed
-  []
-);
- 
-   const onSearchChange = React.useCallback((value?: string) => {
-     setFilterValue(value || "");
-     setPage(1);
+  //  const debouncedFetchUser = React.useMemo(
+  //      () => debounce((value: string) => searchAppointments(), 500),
+  //      [fetchUsers]
+  //    );
+  const debouncedFetchUsers = useCallback(
+    debounce((searchValue: string) => {
+      setFilterValue(searchValue);
+      fetchUsers();
+    }, 500), // Adjust debounce time as needed
+    []
+  );
+
+  const onSearchChange = React.useCallback((value?: string) => {
+    setFilterValue(value || "");
+    setPage(1);
     //  debouncedFetchUser(value || "");
-   },[]);
+  }, []);
 
 
   const onClear = useCallback(() => {
@@ -498,12 +559,14 @@ const debouncedFetchUsers = useCallback(
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={fetchUsers}/>} />
+              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={
+                fetchUpdatedAppointments}
+              />} />
             </div>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-default-400 text-small">
-            {`Total ${totalUsers} Appointments`}
+              {`Total ${totalUsers} Appointments`}
             </span>
             <label className="flex items-center text-default-400 text-small">
               Rows per page:
@@ -537,7 +600,7 @@ const debouncedFetchUsers = useCallback(
       <Pagination
         page={page}
         total={pages}
-        onChange={handlePageChange}
+        onChange={(newPage) => handlePageChange(newPage)}
         className="mx-4"
       />
       <Button
