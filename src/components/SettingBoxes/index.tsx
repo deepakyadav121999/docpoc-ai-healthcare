@@ -1,8 +1,49 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-
+import axios from "axios";
+const API_URL = process.env.API_URL;
 const SettingBoxes = () => {
+
+const[profile,setProfile] =useState()
+
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("docPocAuth_token");
+    const profileEndpoint = `${API_URL}/auth/profile`;
+  
+    try {
+      // First API call to fetch profile data
+      const response = await axios.get(profileEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const profileData = response.data;
+      // setProfile(profileData); // Set the profile data after fetching
+  
+      // Once profile data is fetched, get the user details using the profile's id
+      if (profileData.id) {
+        const userEndpoint = `http://127.0.0.1:3037/DocPOC/v1/user/${profileData.id}`;
+        const userResponse = await axios.get(userEndpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        // Handle the user data response
+        console.log("User data:", userResponse.data);
+        // You can now use the user data as needed
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
+  
+
+
   return (
     <>
       <div className="grid grid-cols-5 gap-8">

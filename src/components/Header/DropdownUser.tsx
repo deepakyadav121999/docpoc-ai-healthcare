@@ -10,6 +10,9 @@ const API_URL = process.env.API_URL;
 interface Profile {
   id: string;
   userName: string;
+  email:string;
+  name:string;
+
 }
 const DropdownUser = () => {
   const router = useRouter();
@@ -29,11 +32,28 @@ const DropdownUser = () => {
           "Content-Type": "application/json",
         },
       });
-      setProfile(response.data); // Set the profile data after fetching
+      const profileData = response.data;
+     
+      
+      if (profileData.id) {
+        const userEndpoint = `${API_URL}/user/${profileData.id}`;
+        const userResponse = await axios.get(userEndpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setProfile(userResponse.data); 
+        // Handle the user data response
+        console.log("User data:", userResponse.data);
+        // You can now use the user data as needed
+      }
+      // Set the profile data after fetching
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
   };
+
 
   useEffect(()=>{
     fetchProfile()
@@ -61,7 +81,7 @@ const DropdownUser = () => {
         </span>
 
         <span className="flex items-center gap-2 font-medium text-dark dark:text-dark-6">
-          <span className="hidden lg:block">  {profile?.userName.split('@')[0] || "Loading..."}</span>
+          <span className="hidden lg:block">  {profile?.name || "Loading..."}</span>
 
           <svg
             className={`fill-current duration-200 ease-in ${dropdownOpen && "rotate-180"}`}
@@ -105,10 +125,10 @@ const DropdownUser = () => {
 
             <span className="block">
               <span className="block font-medium text-dark dark:text-white">
-               {profile?.userName.split('@')[0] || "Loading..."}
+               {profile?.name || "Loading..."}
               </span>
               <span className="block font-medium text-dark-5 dark:text-dark-6">
-              {profile?.userName || "Loading..."}
+              {profile?.email || "Loading..."}
               </span>
             </span>
           </div>
