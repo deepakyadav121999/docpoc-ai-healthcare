@@ -124,7 +124,12 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     if (isOpen) {
       header?.classList.remove("z-999");
       header?.classList.add("z-0");
-    } else {
+    } 
+    // else if(isNotificationOpen) {
+    //     header?.classList.remove("z-999");
+    //   header?.classList.add("z-0");
+    // }
+    else{
       header?.classList.remove("z-0");
       header?.classList.add("z-999");
     }

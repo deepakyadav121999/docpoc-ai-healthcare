@@ -1,5 +1,6 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from "@nextui-org/react";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 // import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"; // Example: Heroicons
 const AnimatedSuccessIcon = () => (
   <motion.svg
@@ -92,6 +93,10 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
   //   }
   //   return null;
   // };
+
+
+ 
+
 
   return (
     <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}>

@@ -325,8 +325,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       params.page = 1;
       params.pageSize = 50;
-      params.from = '2024-12-04T03:32:25.812Z';
-      params.to = '2024-12-11T03:32:25.815Z';
+      // params.from = '2024-12-04T03:32:25.812Z';
+      // params.to = '2024-12-11T03:32:25.815Z';
 
 
 
@@ -337,7 +337,26 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           "Content-Type": "application/json",
         },
       });
-      const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+      const allUsers = response.data.rows;
+
+      // Filter and transform only doctors
+      const doctors = allUsers.filter((user: any) => {
+        try {
+          const userJson = JSON.parse(user.json);
+          return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+        } catch (err) {
+          console.error("Error parsing JSON for user:", user, err);
+          return false;
+        }
+      });
+
+
+      // const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
+      //   label: doctor.name,
+      //   value: doctor.id,
+      //   description: `${doctor.phone} | ${doctor.email}`,
+      // }));
+      const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
         label: doctor.name,
         value: doctor.id,
         description: `${doctor.phone} | ${doctor.email}`,
