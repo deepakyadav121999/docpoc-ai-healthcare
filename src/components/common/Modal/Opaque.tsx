@@ -48,7 +48,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         },
       });
       // Handle successful deletion
-
+      onClose()
       // if (props.onPatientDelete) props.onPatientDelete();
       setModalMessage({ success: "Patient deleted successfully!", error: "" });
       // setmessage("Patient deleted successfully!");
@@ -58,6 +58,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       }, 2000);
 
     } catch (error) {
+      onClose()
       console.error("Error deleting patient:", error);
       setModalMessage({ success: "", error: "Failed to delete the patient. Please try" });
       // seterror("Failed to delete the patient. Please try again.");
@@ -65,6 +66,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     }
     finally {
       setLoading(false);
+      onClose()
       // setNotificationOpen(true);
     }
   };
@@ -74,6 +76,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       const response = await axios.delete(`http://127.0.0.1:3037/DocPOC/v1/user/${props.userId}`);
       if (response.status === 200) {
         // setmessage('emplyee deleted')
+        onClose()
         setModalMessage({ success: "emplyee deleted", error: "" });
         setNotificationOpen(true)
         setTimeout(() => {
@@ -81,6 +84,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         }, 2000);
       }
     } catch (error) {
+      onClose()
       setNotificationOpen(true)
       console.error('Error deleting employee:', error);
       setModalMessage({ success: "", error: "Failed to delete the employee. Please try" });
@@ -88,6 +92,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
 
     }
     finally {
+      onClose()
       setLoading(false);
       // setNotificationOpen(true);
     }
@@ -105,7 +110,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         },
       });
       if (response.status === 200) {
-      
+        onClose()
         setModalMessage({ success: "appointment deleted", error: "" });
         setNotificationOpen(true)
         setTimeout(() => {
@@ -117,11 +122,12 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
       console.error('Error deleting appointment:', error);
       setModalMessage({ success: "", error: "Failed to delete the appointment. Please try" });
       // seterror('Failed to delete the appointment. Please try again.');
-
+      onClose()
     }
     finally {
       setLoading(false);
       // setNotificationOpen(true);
+      onClose()
     }
   };
 
