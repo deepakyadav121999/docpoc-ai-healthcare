@@ -51,6 +51,7 @@ const Clinic = () => {
   const [hospitalId, setHospitalId] = useState("")
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
 const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+
 const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
 
   const [clinicDetails, setClinicDetails] = useState({

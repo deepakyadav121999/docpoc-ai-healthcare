@@ -42,6 +42,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const [appointmentTypeList, setAppointmentTypeList] = useState<AutocompleteItem[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  const [appointmentStatusList, setAppointmentStatusList] = useState<AutocompleteItem[]>([]);
 
 
 
@@ -55,6 +56,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     endDateTime: Date | string;
     code: string;
     json: string;
+    status: string;
   }>({
     name: "",
     doctorId: "",
@@ -65,6 +67,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     endDateTime: "",
     code: "ST-ID/15",
     json: "",
+    status: "",
   });
   
   const [loading, setLoading] = useState(false);
@@ -193,7 +196,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const fetchedBranchId = branchResponse.data[0]?.id;
       const payload = {
         ...formData,
-        branchId: fetchedBranchId
+        branchId: fetchedBranchId,
       }
       const response = await axios.post(
         `${API_URL}/appointment`,
@@ -211,11 +214,35 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       onUsersAdded();
     } catch (error: any) {
       console.error("Error creating appointment:", error.response?.data || error.message);
+      // setModalMessage({
+      //   success: "",
+      //   error: `Error creating appointment: ${error.response?.data?.message || "Unknown error"}`,
+      // });
+      let errorMessage = "An unknown error occurred.";
+  
+      if (error.response?.data) {
+        const errorData = error.response.data;
+    
+        if (Array.isArray(errorData.message)) {
+          // Extracting error messages from the array
+          errorMessage = errorData.message
+            .map((msg: any) => msg.message) // Access the `message` property from each object
+            .join(", ");
+        } else if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+    
       setModalMessage({
         success: "",
-        error: `Error creating appointment: ${error.response?.data?.message || "Unknown error"}`,
+        error: `Error creating appointment: ${errorMessage}`,
       });
-
+    
+      // onOpen();
 
     }
     setLoading(false)
@@ -374,7 +401,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const handleTypeSelection = (typeId: string) => {
     setFormData({ ...formData, type: typeId });
   };
-
+  const handleStatusSelection = (statusId: string) => {
+    setFormData({ ...formData, status: statusId });
+  };
   const fetchAppointmentTypes = async () => {
     setLoading(true);
     try {
@@ -418,6 +447,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           "Content-Type": "application/json",
         },
       });
+      const appointmentStatusEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
+      const response2 = await axios.get(appointmentStatusEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
   
       if (!response.data || response.data.length === 0) {
         throw new Error("No appointment types found.");
@@ -429,6 +466,74 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         value: type.id,
       }));
       setAppointmentTypeList(transformedTypes);
+
+      const transformedStatus: AutocompleteItem[] = response2.data.map((type: any) => ({
+        label: type.status,
+        value: type.id,
+      }));
+    
+      setAppointmentStatusList(transformedStatus);
+    } catch (error) {
+      console.error("Error fetching appointment types:", error|| error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchAppointmentStatus  = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+  
+      // Step 1: Fetch Hospital
+      const hospitalEndpoint = `${API_URL}/hospital`;
+      const hospitalResponse = await axios.get(hospitalEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+        throw new Error("No hospital data found.");
+      }
+  
+      const fetchedHospitalId = hospitalResponse.data[0].id;
+  
+      // Step 2: Fetch Branch
+      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      const branchResponse = await axios.get(branchEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!branchResponse.data || branchResponse.data.length === 0) {
+        throw new Error("No branch data found.");
+      }
+  
+      const fetchedBranchId = branchResponse.data[0].id;
+  
+      // Step 3: Fetch Appointment Types
+      const appointmentTypeEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
+      const response = await axios.get(appointmentTypeEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+   console.log("response will come here")
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No appointment types found.");
+      }
+  
+      // Transform and Set Appointment Types
+      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
+        label: type.status,
+        value: type.id,
+      }));
+      console.log("status is",transformedTypes)
+      setAppointmentStatusList(transformedTypes);
     } catch (error) {
       console.error("Error fetching appointment types:", error|| error);
     } finally {
@@ -436,11 +541,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
   };
   
+  
 
   useEffect(() => {
     fetchDoctors()
     fetchPatients()
     fetchAppointmentTypes();
+    fetchAppointmentStatus()
   }, [])
 
   useEffect(() => {
@@ -563,6 +670,25 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   )}
                 </Autocomplete>
               </div>
+
+              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+                <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  defaultItems={appointmentStatusList}
+                  label="Select Appointment Status"
+                  placeholder="Search Appointment Status"
+                  onSelectionChange={(key) => handleStatusSelection(key as string)}
+                >
+                  {(item) => (
+                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+              </div>
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
@@ -622,7 +748,37 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
-              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
+          
+              <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
+
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+export default AddAppointment;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                         
@@ -648,35 +804,4 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 </ModalContent>
               </Modal> */}
               
-              <EnhancedModal
-                isOpen={isOpen}
-                loading={loading}
-                modalMessage={modalMessage}
-                onClose={handleModalClose}
-              />
-
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AddAppointment;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -1,11 +1,30 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
-const API_URL = process.env.API_URL;
-const SettingBoxes = () => {
 
-const[profile,setProfile] =useState()
+const API_URL = process.env.API_URL;
+
+
+interface UserProfile {
+  id: string;
+  branchId: string | null;
+  name: string;
+  phone: string |number| null;
+  email: string;
+  isActive: boolean;
+  json: string;
+  accessType: string;
+  createdBy: string | null;
+  modifiedBy: string | null;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+const SettingBoxes = () => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [formData, setFormData] = useState<Partial<UserProfile>>({});
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
@@ -25,7 +44,7 @@ const[profile,setProfile] =useState()
   
       // Once profile data is fetched, get the user details using the profile's id
       if (profileData.id) {
-        const userEndpoint = `http://127.0.0.1:3037/DocPOC/v1/user/${profileData.id}`;
+        const userEndpoint = `${API_URL}/user/${profileData.id}`;
         const userResponse = await axios.get(userEndpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -35,13 +54,45 @@ const[profile,setProfile] =useState()
   
         // Handle the user data response
         console.log("User data:", userResponse.data);
+        setUserProfile(userResponse.data)
+        setFormData(userResponse.data);
         // You can now use the user data as needed
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
   };
-  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (userProfile?.id) {
+      const token = localStorage.getItem("docPocAuth_token");
+      const userEndpoint = `${API_URL}/user`;
+
+      try {
+        const response = await axios.patch(userEndpoint, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("Profile updated successfully:", response.data);
+        setUserProfile(response.data); // Update the state with the response
+      } catch (error) {
+        console.error("Error updating profile:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
 
   return (
@@ -55,7 +106,7 @@ const[profile,setProfile] =useState()
               </h3>
             </div>
             <div className="p-7">
-              <form>
+              <form onSubmit={handleSave}>
                 <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                   <div className="w-full sm:w-1/2">
                     <label
@@ -91,10 +142,11 @@ const[profile,setProfile] =useState()
                       <input
                         className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                         type="text"
-                        name="fullName"
+                        name="name"
                         id="fullName"
-                        placeholder="Devid Jhon"
-                        defaultValue="Devid Jhon"
+                        placeholder="name"
+                        value={formData.name || ""}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -128,10 +180,11 @@ const[profile,setProfile] =useState()
                       <input
                         className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                         type="text"
-                        name="phoneNumber"
+                        name="phone"
                         id="phoneNumber"
-                        placeholder="+990 3343 7865"
-                        defaultValue="+990 3343 7865"
+                        placeholder="+910000000000"
+                        value={formData.phone || ""}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -165,10 +218,11 @@ const[profile,setProfile] =useState()
                     <input
                       className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                       type="email"
-                      name="emailAddress"
+                      name="email"
                       id="emailAddress"
-                      placeholder="devidjond45@gmail.com"
-                      defaultValue="devidjond45@gmail.com"
+                      placeholder={userProfile?.email}
+                      value={formData.email || ""}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -209,8 +263,8 @@ const[profile,setProfile] =useState()
                       type="text"
                       name="Username"
                       id="Username"
-                      placeholder="devidjhon24"
-                      defaultValue="devidjhon24"
+                      placeholder={userProfile?.email}
+                      value={formData.email || ""}
                     />
                   </div>
                 </div>
@@ -247,8 +301,8 @@ const[profile,setProfile] =useState()
                       id="bio"
                       rows={6}
                       placeholder="Write your bio here"
-                      defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam lacinia turpis tortor, consequat efficitur mi congue a. Curabitur cursus, ipsum ut lobortis sodales, enim arcu pellentesque lectus
- ac suscipit diam sem a felis. Cras sapien ex, blandit eu dui et suscipit gravida nunc. Sed sed est quis dui."
+                      value={formData.json || ""}
+                      onChange={handleInputChange}
                     ></textarea>
                   </div>
                 </div>
@@ -256,7 +310,7 @@ const[profile,setProfile] =useState()
                 <div className="flex justify-end gap-3">
                   <button
                     className="flex justify-center rounded-[7px] border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
-                    type="submit"
+                    // type="submit"
                   >
                     Cancel
                   </button>

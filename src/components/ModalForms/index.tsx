@@ -40,12 +40,13 @@ import {
 } from "@/constants";
 import StyledButton from "../common/Button/StyledButton";
 import {
-  Time,
   ZonedDateTime,
   getLocalTimeZone,
   now,
+  parseTime,
   
 } from "@internationalized/date";
+
 import ToolTip from "../Tooltip";
 import { VerticalDotsIcon } from "../CalenderBox/VerticalDotsIcon";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
@@ -53,6 +54,8 @@ import IconButton from "../Buttons/IconButton";
 import { VisitHistoryTable } from "./VisitHistoryTable";
 import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
+import { Time } from "@internationalized/date";
+
 const PlaceholderImage = () => (
   <svg width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
     <rect width="100%" height="100%" fill="#e0e0e0" />
@@ -128,7 +131,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [appointmentName, setAppointmentName] = useState("")
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [doctorId, setDoctorId] = useState('')
-  // const [startDateTime, setStartDateTime] = useState<string>("");
+  const [startDateTimeDisp, setStartDateTimeDisp] = useState<string>("");
   // const [endDateTime, setEndDateTime] = useState<string>("");
 
   const [startDateTime, setStartDateTime] = useState('');
@@ -137,8 +140,80 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 //   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
 // const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));   
    // Default time
-   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
-const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      // Default time
+   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
+const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+
+// function extractTimeDisplay(datetimeStr: string): string {
+//   // Parse the ISO 8601 string into a Date object
+//   const date = new Date(datetimeStr);
+
+//   // Adjust for offset (e.g., +6:30)
+//   const offsetHours = 6;
+//   const offsetMinutes = 30;
+//   date.setUTCHours(date.getUTCHours() + offsetHours);
+//   date.setUTCMinutes(date.getUTCMinutes() + offsetMinutes);
+
+//   // Format the time to HH:MM:SS
+//   const hours = String(date.getUTCHours()).padStart(2, '0');
+//   const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+//   const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+
+//   return `${hours}:${minutes}:${seconds}`;
+// }
+// function extractTimeDisplay(datetimeStr: string): string {
+//   // Parse the ISO 8601 string into a Date object
+//   const date = new Date(datetimeStr);
+
+//   // Adjust for the desired offset (e.g., +6:30)
+//   const offsetHours = 6;
+//   const offsetMinutes = 30;
+//   const adjustedTime = new Date(
+//     date.getTime() + offsetHours * 60 * 60 * 1000 + offsetMinutes * 60 * 1000
+//   );
+
+//   // Format the time to HH:MM:SS
+//   const hours = String(adjustedTime.getUTCHours()).padStart(2, '0');
+//   const minutes = String(adjustedTime.getUTCMinutes()).padStart(2, '0');
+//   const seconds = String(adjustedTime.getUTCSeconds()).padStart(2, '0');
+
+//   return `${hours}:${minutes}:${seconds}`;
+// }
+
+function extractTimeDisplay(datetimeStr: string): string {
+  // Parse the ISO 8601 string into a Date object
+  const date = new Date(datetimeStr);
+
+  // Extract the UTC hours, minutes, and seconds
+  let hours = date.getUTCHours();
+  let minutes = date.getUTCMinutes();
+  const seconds = date.getUTCSeconds();
+
+  // Apply the offset (e.g., +6:30)
+  const offsetHours = 6;
+  const offsetMinutes = 30;
+  hours -= 1;
+  // Apply offset to minutes
+  minutes += offsetMinutes;
+  if (minutes >= 60) {
+    minutes -= 60;
+    hours += 1;
+  }
+
+  // Apply offset to hours
+  hours += offsetHours;
+  if (hours >= 24) {
+    hours -= 24; // Handle overflow to the next day
+  }
+
+  // Format the time components to always display two digits
+  const formattedHours = String(hours).padStart(2, "0");
+  const formattedMinutes = String(minutes).padStart(2, "0");
+  const formattedSeconds = String(seconds).padStart(2, "0");
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+
+
 
 
   const[appointmentDate,setAppointmentDate] =useState("")
@@ -243,18 +318,19 @@ const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      //
     }
   };
  
-  interface Time {
-    hour: number;
-    minute: number;
-  }
-  function extractTimeAsObject(dateTime: string): Time {
-    const date = new Date(dateTime);
+  // interface Time {
+  //   hour: number;
+  //   minute: number;
+  // }
+  // function extractTimeAsObject(dateTime: string): Time {
+  //   const date = new Date(dateTime);
   
-    return {
-      hour: date.getHours(),
-      minute: date.getMinutes(),
-    };
-  }
+  //   return {
+  //     hour: date.getHours(),
+  //     minute: date.getMinutes(),
+  //   };
+  // }
+
   function extractTime(dateTime: string): string {
     const date = new Date(dateTime);
     let hours = date.getHours();
@@ -327,18 +403,29 @@ const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      //
       setStartDateTime(users.startDateTime);
       setEndDateTime(users.endDateTime);
       setAppointmentDate(users.dateTime)
-      const startTimeObject = extractTimeAsObject(users.startDateTime);
-      const endTimeObject = extractTimeAsObject(users.endDateTime);
-      setShiftStartTime(startTimeObject)
+
+      // const startTimeObject = extractTimeAsObject(users.startDateTime);
+      
+      // const endTimeObject = extractTimeAsObject(users.endDateTime);
+      // setShiftStartTime(startTimeObject)
      
-      setShiftEndTime(endTimeObject)
+      // setShiftEndTime(endTimeObject)
+
+        const startTimeObject = extractTimeDisplay(users.startDateTime);
+    
+      const endTimeObject = extractTimeDisplay(users.endDateTime);
+
+      setShiftStartTime(users.startDateTime? parseTime( startTimeObject):null) 
+     setStartDateTimeDisp(startTimeObject)
+
+      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject):null)
     } catch (err) {
       console.error("Failed to fetch users.", err);
     } finally {
       setLoading(false);
     }
   };
-
+//  console.log(startDateTimeDisp)
 
   useEffect(() => {
     if (props.type === MODAL_TYPES.VIEW_PATIENT || props.type === MODAL_TYPES.EDIT_PATIENT || props.type === MODAL_TYPES.DELETE_PATIENT) {
@@ -681,7 +768,7 @@ const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      //
                         labelPlacement="outside"
                         variant="bordered"
                         // defaultValue={new Time(7, 38)}
-                        // value={shiftStartTime}
+                        value={shiftStartTime}
                         onChange={(time) => {
                           handleTimeChangeAppointment(time, "startDateTime");
                           setShiftStartTime(time);
@@ -694,7 +781,7 @@ const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));      //
                         labelPlacement="outside"
                         variant="bordered"
                         // defaultValue={new Time(8, 45)}
-                        // value={shiftEndTime}
+                        value={shiftEndTime}
                         onChange={(time) =>{
                           setShiftEndTime(time);
                           handleTimeChangeAppointment(time, "endDateTime")

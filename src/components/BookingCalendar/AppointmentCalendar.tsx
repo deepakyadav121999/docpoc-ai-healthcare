@@ -847,6 +847,101 @@ const renderDayView = () => {
            border-image-source: linear-gradient(to right, var(--secondary-color) 50%, transparent 50%);
            border-image-slice: 0 0 1 0; /* Apply gradient only on the bottom */
 }
+           @media (max-width: 1024px) {
+  .calendar-container {
+    width: 90%; /* Reduce width on smaller screens */
+    padding: 20px; /* Adjust padding */
+  }
+
+  .calendar-header {
+    flex-direction: column; /* Stack header elements */
+    align-items: flex-start;
+  }
+
+  .view-selector {
+    flex-wrap: wrap; /* Allow wrapping of view buttons */
+    gap: 5px; /* Reduce gap between buttons */
+  }
+
+  .navigation-buttons {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .calendar-grid {
+    gap: 5px; /* Reduce gap between calendar cells */
+  }
+
+  .calendar-cell {
+    font-size: 14px; /* Smaller font size for cells */
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-container {
+    width: 95%; /* Further reduce width */
+    padding: 15px; /* Adjust padding */
+  }
+
+  h2 {
+    font-size: 20px; /* Reduce header font size */
+  }
+
+  .view-button {
+    font-size: 12px; /* Smaller buttons for smaller screens */
+    padding: 8px 10px;
+  }
+
+  .nav-button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .calendar-grid {
+    gap: 5px;
+  }
+
+  .calendar-cell {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-container {
+    width: 100%; /* Take full width */
+    padding: 10px; /* Minimal padding */
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .view-selector {
+    flex-direction: column; /* Stack view buttons vertically */
+    gap: 5px;
+  }
+
+  .navigation-buttons {
+    flex-direction: column; /* Stack navigation buttons vertically */
+    gap: 5px;
+  }
+
+  .calendar-grid {
+    gap: 2px; /* Minimal gap */
+  }
+
+  .calendar-cell {
+    font-size: 10px; /* Smallest font size for readability */
+    padding: 5px; /* Reduce padding */
+  }
+
+  .modal-content {
+    width: 100%; /* Use full width for modal on small screens */
+    max-width: none;
+    padding: 15px;
+  }
+}
 
 
       `}</style>
