@@ -479,67 +479,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       setLoading(false);
     }
   };
-  const fetchAppointmentStatus  = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-  
-      // Step 1: Fetch Hospital
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        throw new Error("No hospital data found.");
-      }
-  
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-  
-      // Step 2: Fetch Branch
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        throw new Error("No branch data found.");
-      }
-  
-      const fetchedBranchId = branchResponse.data[0].id;
-  
-      // Step 3: Fetch Appointment Types
-      const appointmentTypeEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
-      const response = await axios.get(appointmentTypeEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-   console.log("response will come here")
-      if (!response.data || response.data.length === 0) {
-        throw new Error("No appointment types found.");
-      }
-  
-      // Transform and Set Appointment Types
-      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
-        label: type.status,
-        value: type.id,
-      }));
-      console.log("status is",transformedTypes)
-      setAppointmentStatusList(transformedTypes);
-    } catch (error) {
-      console.error("Error fetching appointment types:", error|| error);
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
   
   
 
@@ -547,7 +487,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     fetchDoctors()
     fetchPatients()
     fetchAppointmentTypes();
-    fetchAppointmentStatus()
   }, [])
 
   useEffect(() => {
