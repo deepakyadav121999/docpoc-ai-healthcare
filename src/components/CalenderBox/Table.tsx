@@ -38,10 +38,14 @@ import { CalendarDate, parseDate } from "@internationalized/date";
 import debounce from 'lodash.debounce';
 import { DateInput } from "@nextui-org/react";
 import { now, getLocalTimeZone } from "@internationalized/date";
+import { color } from "framer-motion";
+
+
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
   unsure: "warning",
+  
 };
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -68,6 +72,7 @@ interface appointments {
   startDateTime: string;
   endDateTime: string;
   dateTime: string;
+  statusName:string;
 }
 
 // type User = (typeof Appointments)[0];
@@ -107,6 +112,8 @@ export default function AppointmentTable() {
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
+  const [statusCache, setStatusCache] = React.useState<Record<string, string>>({});
+
 
   useEffect(() => {
     localStorage.setItem("page", String(page));
@@ -176,7 +183,7 @@ export default function AppointmentTable() {
           "Content-Type": "application/json",
         },
       });
-
+   console.log(response)
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
       setTotalappointments(total);
@@ -190,84 +197,36 @@ export default function AppointmentTable() {
     }
   };
 
-  const fetchUpdatedAppointments = async () => {
-    setLoading(true);
+  const fetchStatusById = async (statusId: string): Promise<string> => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
-
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
+  
+      // Make an API call to fetch the list of statuses
+      const response = await axios.get(`http://127.0.0.1:3037/DocPOC/v1/appointment/status/detail/${statusId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
-      }
-
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
-
-      const fetchedBranchId = branchResponse.data[0]?.id;
-      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
-
-      const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
-      const initialRowsPerPage = parseInt(localStorage.getItem("rowsPerPage") || "5", 10);
-
-      const params: any = {
-        page: initialPage, // Use current page
-        pageSize: initialRowsPerPage, // Use current rowsPerPage
-      };
-
-      // if (selectedDate) {
-      //   const startOfDay = new Date(selectedDate).toISOString();
-      //   const endOfDay = new Date(new Date(selectedDate).setHours(23, 59, 59, 999)).toISOString();
-      //   params.from = startOfDay;
-      //   params.to = endOfDay;
-      // }
-
-      if (selectedDate) {
-        params.appointmentDate = selectedDate;
-      }
-
-      if (filterValue) {
-        params.search = filterValue.trim();
-      }
-
-      const response = await axios.get(endpoint, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      setAppointments(response.data.rows || response.data);
-      const total = response.data.count || response.data.length;
-      setTotalappointments(response.data.count);
-      setTotalUsers(total);
-    } catch (err) {
-      setError("Failed to fetch appointments.");
-    } finally {
-      setLoading(false);
+  
+      console.log("Response from status API:", response.data); // Debugging: log the API response
+  
+      // Ensure the response data is an array and search for the matching status ID
+     
+  
+      // Return the status name if found, otherwise fallback to "Unknown"
+      return  response.data.status
+    } catch (error) {
+      console.error("Error fetching status:", error);
+      return "Unknown"; // Fallback in case of any error
     }
   };
+  
+
 
 
   useEffect(() => {
     fetchUsers();
-
 
   }, [page, rowsPerPage, filterValue, selectedDate]);
   console.log(totalappointments)
@@ -395,8 +354,7 @@ export default function AppointmentTable() {
         // console.error("Error parsing JSON:", error);
       }
     }
-
-
+  
     switch (columnKey) {
       case "name":
         return (
@@ -406,6 +364,9 @@ export default function AppointmentTable() {
             name={cellValue}
           />
         );
+
+
+        
       case "name":
         return (
           <User
@@ -424,7 +385,8 @@ export default function AppointmentTable() {
           </div>
         );
       case "status":
-        const status = user.startDateTime ? "visiting" : "declined";
+        // const status = user.startDateTime ? "visiting" : "declined";
+        const status =  user.statusName
         return (
           <Chip
             className="capitalize"
@@ -446,7 +408,7 @@ export default function AppointmentTable() {
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId={user.id}
-            onPatientDelete={fetchUpdatedAppointments}
+            onPatientDelete={fetchUsers}
           />
         );
       default:
@@ -622,7 +584,7 @@ export default function AppointmentTable() {
                 </DropdownMenu>
               </Dropdown>
               <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={
-                fetchUpdatedAppointments}
+                fetchUsers}
               />} />
             </div>
           </div>
@@ -707,7 +669,16 @@ export default function AppointmentTable() {
         </TableBody>
       </Table>
       {paginationContent}
-      {/*{addAppointmentModelToggle && (
+    </>
+  );
+}
+
+
+
+
+
+
+ {/*{addAppointmentModelToggle && (
         <OpaqueModal
         modalType={{
           view: MODAL_TYPES.VIEW_APPOINTMENT,
@@ -720,6 +691,3 @@ export default function AppointmentTable() {
         onPatientDelete={refreshUsers}
       />
       )} */}
-    </>
-  );
-}
