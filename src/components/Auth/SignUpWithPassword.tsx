@@ -6,7 +6,18 @@ import "react-phone-input-2/lib/style.css";
 import { usePathname, useRouter } from 'next/navigation'; 
 import { AuthData, UserSignIn, UserSignUp } from "@/api/auth";
 import axios from "axios";
+import { useDisclosure } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react";
+import { Spinner, Button, Input } from "@nextui-org/react";
+
 const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
+const API_URL = process.env.API_URL;
 
 export default function SignupWithPassword() {
   const [data, setData] = useState({
@@ -18,6 +29,7 @@ export default function SignupWithPassword() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [errors, setShowErrors] = useState(false);
   const [countryCode] = useState("in");
@@ -27,8 +39,20 @@ export default function SignupWithPassword() {
   const [timer, setTimer] = useState(0);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [buttonText, setButtonText] = useState("Sign Up");
+  const [loading, setLoading] = useState(false);
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
+  const router = useRouter();
   const timerCount = 10;
- const router = useRouter(); 
+
+  const handleModalClose = () => {
+    setModalMessage({ success: "", error: "" });
+    onClose();
+  };
+
+
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | undefined;
     if (timer > 0) {
@@ -46,86 +70,133 @@ export default function SignupWithPassword() {
 
   async function handleSignUp(event: { preventDefault: () => void }) {
     event.preventDefault();
-  
-    // Reset error state
     setError("");
-    setShowErrors(false);
-  
-    // Validate form fields
-    if (!dropdownOption) {
-      setError("Please select a valid clinic size.");
-      setShowErrors(true);
+    if (data.signUpMethod === "phone" && !phone) {
+      setError("Please enter a valid phone number.");
       return;
     }
-  
+
     if (data.signUpMethod === "email" && (!email || !password)) {
       setError("Please fill in all required fields.");
-      setShowErrors(true);
       return;
     }
-  
-    if (data.signUpMethod === "phone" && !phone) {
-      setError("Please fill in all required fields.");
-      setShowErrors(true);
-      return;
-    }
-  
-    setIsSigningUp(true);
-    const authData = AuthData();
-  
-    // Construct the payload
-    const userPayload = {
-      // branchId: "f159f698-9c77-41ad-ba91-e8e7e767ac16", // Replace with actual branchId logic if dynamic
-      name: data.signUpMethod === "email" ? email.split("@")[0] : phone,
-      phone: data.signUpMethod === "phone" ? phone : undefined,
-      email: data.signUpMethod === "email" ? email : undefined,
-     
-      code: "ST-ID/JKI2301/1021", // Replace with actual code logic if dynamic
-      accessType: authData.defaultAccessType,
-      json: JSON.stringify({ clinicSize: dropdownOption }),
-      userName: data.signUpMethod === "email" ? email : undefined,
-      password:password
-    };
-  
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:3037/DocPOC/v1/user", // API URL
-        userPayload
-      );
-  
-      // Check for successful response
-      if (response.status === 201 && response.data) {
-        const signInData = {
-          // phone: userPayload.phone,
-          username: userPayload.userName,
-          password: userPayload.password,
-        };
-  
-        // Automatically sign in the user
-        const signInResponse =  await axios.post(
-          "http://127.0.0.1:3037/DocPOC/v1/auth/login",signInData);
 
-            const { access_token } = await signInResponse.data;
-    
-            console.log("Access Token:", access_token); // Log for debugging
-    
-         
-            if (access_token) {
-              localStorage.setItem("docPocAuth_token", access_token);
-              router.push("/")
-              // window.location.reload(); 
-          } 
-        
+    if (!dropdownOption) {
+      setError("Please select a valid clinic size.");
+      return;
     }
-   } catch (err) {
-      console.error("Signup failed", err);
-      setError("Signup failed. Please check your details or try again later.");
-      setShowErrors(true);
-      setIsSigningUp(false);
-    } finally {
-      setIsSigningUp(false);
+
+    if (data.signUpMethod === "phone") {
+      try {
+        setLoading(true);
+        const response = await axios.post(`${API_URL}/auth/otp/generate`, {
+          phone,
+        });
+        if (response.status === 200) {
+          setIsOtpModalOpen(true); // Open OTP modal
+        }
+      } catch (err) {
+        console.error("Failed to generate OTP:", err);
+        setModalMessage({ success: "", error: "Failed to send OTP." });
+        onOpen();
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Handle email-based signup
+      await handleEmailSignUp();
     }
   }
+
+  async function handleEmailSignUp() {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/user`, {
+        name: email.split("@")[0],
+        email,
+        password,
+        code: "ST-ID/JKI2301/1021",
+        accessType: "defaultAccessType",
+        json: JSON.stringify({ clinicSize: dropdownOption }),
+        userName: email,
+      });
+      if (response.status === 201) {
+        const signInResponse = await axios.post(`${API_URL}/auth/login`, {
+          username: email,
+          password,
+        });
+        const { access_token } = signInResponse.data;
+        if (access_token) {
+          localStorage.setItem("docPocAuth_token", access_token);
+          router.push("/");
+        }
+      }
+    } catch (err) {
+      console.error("Signup failed", err);
+      setModalMessage({
+        success: "",
+        error: "Signup failed. Please check your details or try again later.",
+      });
+      onOpen();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleOtpVerification() {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/auth/otp/verify`, {
+        phone,
+        otp,
+      });
+      if (response.status === 200) {
+        setIsOtpModalOpen(false);
+        const { message, access_token } = response.data;
+        if (access_token) {
+          localStorage.setItem("docPocAuth_token", access_token);
+          router.push("/");
+        } else if (message.includes("Please create a password")) {
+          setIsPasswordModalOpen(true); // Open password modal
+        }
+      }
+    } catch (err) {
+      console.error("OTP verification failed:", err);
+      setModalMessage({ success: "", error: "Invalid or expired OTP." });
+      onOpen();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handlePasswordSetup() {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/auth/set-password`, {
+        phone,
+        otp,
+        password,
+      });
+      if (response.status === 200) {
+        const { access_token } = response.data;
+        if (access_token) {
+          localStorage.setItem("docPocAuth_token", access_token);
+          router.push("/");
+        }
+      }
+    } catch (err) {
+      console.error("Password setup failed:", err);
+      setModalMessage({
+        success: "",
+        error: "Failed to set password. Please try again later.",
+      });
+      onOpen();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
   
   const ErrorMessages = () => (
     <div className="flex gap-12">
@@ -333,8 +404,565 @@ export default function SignupWithPassword() {
               buttonText
             )}
           </button>
+
+
         </div>
       </form>
+
+      {/* OTP Modal */}
+      <Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+        <ModalContent>
+          <ModalHeader>
+            <h4>Enter OTP</h4>
+          </ModalHeader>
+          <ModalBody>
+            <Input
+              // clearable
+              // bordered
+              label="Enter OTP"
+              placeholder="6-digit OTP"
+              fullWidth
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              // auto
+              disabled={loading}
+              onPress={handleOtpVerification}
+              color="primary"
+            >
+              {loading ? <Spinner size="lg" /> : "Verify OTP"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Password Setup Modal */}
+      <Modal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h4>Set Your Password</h4>
+          </ModalHeader>
+          <ModalBody>
+            <Input
+              // bordered
+              label="Password"
+              placeholder="Enter a secure password"
+              fullWidth
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              // auto
+              disabled={loading}
+              onPress={handlePasswordSetup}
+              color="primary"
+            >
+              {loading ? <Spinner size="lg" /> : "Set Password"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* General Error/Success Modal */}
+      <Modal isOpen={isOpen} onClose={handleModalClose}>
+        <ModalContent>
+          <ModalHeader>
+            {loading ? (
+              <Spinner size="lg" />
+            ) : modalMessage.success ? (
+              <p className="text-green-600">Success</p>
+            ) : (
+              <p className="text-red-600">Error</p>
+            )}
+          </ModalHeader>
+          <ModalBody>
+            {loading ? (
+              <div className="flex justify-center">
+                <Spinner size="lg" />
+              </div>
+            ) : modalMessage.success ? (
+              <p className="text-green-600">{modalMessage.success}</p>
+            ) : (
+              <p className="text-red-600">{modalMessage.error}</p>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            {!loading && (
+              <Button color="primary" onPress={handleModalClose}>
+                Ok
+              </Button>
+            )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
+   
   );
 }
+
+
+
+
+
+
+
+
+// async function handleSignUp(event: { preventDefault: () => void }) {
+//   event.preventDefault();
+
+//   // Reset error state
+//   setError("");
+//   setShowErrors(false);
+
+//   // Validate form fields
+//   if (!dropdownOption) {
+//     setError("Please select a valid clinic size.");
+//     setShowErrors(true);
+//     return;
+//   }
+
+//   if (data.signUpMethod === "email" && (!email || !password)) {
+//     setError("Please fill in all required fields.");
+//     setShowErrors(true);
+//     return;
+//   }
+
+//   if (data.signUpMethod === "phone" && !phone) {
+//     setError("Please fill in all required fields.");
+//     setShowErrors(true);
+//     return;
+//   }
+
+//   setIsSigningUp(true);
+//   const authData = AuthData();
+
+//   // Construct the payload
+//   const userPayload = {
+//     // branchId: "f159f698-9c77-41ad-ba91-e8e7e767ac16", // Replace with actual branchId logic if dynamic
+//     name: data.signUpMethod === "email" ? email.split("@")[0] : phone,
+//     phone: data.signUpMethod === "phone" ? phone : undefined,
+//     email: data.signUpMethod === "email" ? email : undefined,
+   
+//     code: "ST-ID/JKI2301/1021", // Replace with actual code logic if dynamic
+//     accessType: authData.defaultAccessType,
+//     json: JSON.stringify({ clinicSize: dropdownOption }),
+//     userName: data.signUpMethod === "email" ? email : undefined,
+//     password:password
+//   };
+
+//   try {
+//     const response = await axios.post(
+//       `${API_URL}/user`, // API URL
+//       userPayload
+//     );
+
+//     // Check for successful response
+//     if (response.status === 201 && response.data) {
+//       const signInData = {
+//         // phone: userPayload.phone,
+//         username: userPayload.userName,
+//         password: userPayload.password,
+//       };
+
+//       // Automatically sign in the user
+//       const signInResponse =  await axios.post(
+//         `${API_URL}/auth/login`,signInData);
+
+//           const { access_token } = await signInResponse.data;
+  
+//           console.log("Access Token:", access_token); // Log for debugging
+  
+       
+//           if (access_token) {
+//             localStorage.setItem("docPocAuth_token", access_token);
+//             router.push("/")
+//             // window.location.reload(); 
+//         } 
+      
+//   }
+//  } catch (err) {
+//     console.error("Signup failed", err);
+//     setError("Signup failed. Please check your details or try again later.");
+//     setShowErrors(true);
+//     setIsSigningUp(false);
+//   } finally {
+//     setIsSigningUp(false);
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+// import React, { useState, useEffect } from "react";
+// import PhoneInput from "react-phone-input-2";
+// import "react-phone-input-2/lib/style.css";
+// import { useRouter } from "next/navigation";
+// import axios from "axios";
+// import {
+//   Modal,
+//   ModalContent,
+//   ModalHeader,
+//   ModalBody,
+//   ModalFooter,
+//   useDisclosure
+// } from "@nextui-org/react";
+// import { Spinner, Button, Input } from "@nextui-org/react";
+
+
+// const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
+// const API_URL = process.env.API_URL;
+
+// export default function SignupWithPassword() {
+//   const [data, setData] = useState({ signUpMethod: "email" });
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [phone, setPhone] = useState("");
+//   const [otp, setOtp] = useState("");
+//   const [dropdownOption, setDropdownOption] = useState("");
+//   const [error, setError] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+//   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+//   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+//   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
+//   const router = useRouter();
+
+//   const handleModalClose = () => {
+//     setModalMessage({ success: "", error: "" });
+//     onClose();
+//   };
+
+//   // Function to handle signup
+//   async function handleSignUp(event: { preventDefault: () => void }) {
+//     event.preventDefault();
+//     setError("");
+//     if (data.signUpMethod === "phone" && !phone) {
+//       setError("Please enter a valid phone number.");
+//       return;
+//     }
+
+//     if (data.signUpMethod === "email" && (!email || !password)) {
+//       setError("Please fill in all required fields.");
+//       return;
+//     }
+
+//     if (!dropdownOption) {
+//       setError("Please select a valid clinic size.");
+//       return;
+//     }
+
+//     if (data.signUpMethod === "phone") {
+//       try {
+//         setLoading(true);
+//         const response = await axios.post(`${API_URL}/auth/otp/generate`, {
+//           phone,
+//         });
+//         if (response.status === 200) {
+//           setIsOtpModalOpen(true); // Open OTP modal
+//         }
+//       } catch (err) {
+//         console.error("Failed to generate OTP:", err);
+//         setModalMessage({ success: "", error: "Failed to send OTP." });
+//         onOpen();
+//       } finally {
+//         setLoading(false);
+//       }
+//     } else {
+//       // Handle email-based signup
+//       await handleEmailSignUp();
+//     }
+//   }
+
+//   async function handleEmailSignUp() {
+//     try {
+//       setLoading(true);
+//       const response = await axios.post(`${API_URL}/user`, {
+//         name: email.split("@")[0],
+//         email,
+//         password,
+//         code: "ST-ID/JKI2301/1021",
+//         accessType: "defaultAccessType",
+//         json: JSON.stringify({ clinicSize: dropdownOption }),
+//         userName: email,
+//       });
+//       if (response.status === 201) {
+//         const signInResponse = await axios.post(`${API_URL}/auth/login`, {
+//           username: email,
+//           password,
+//         });
+//         const { access_token } = signInResponse.data;
+//         if (access_token) {
+//           localStorage.setItem("docPocAuth_token", access_token);
+//           router.push("/");
+//         }
+//       }
+//     } catch (err) {
+//       console.error("Signup failed", err);
+//       setModalMessage({
+//         success: "",
+//         error: "Signup failed. Please check your details or try again later.",
+//       });
+//       onOpen();
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function handleOtpVerification() {
+//     try {
+//       setLoading(true);
+//       const response = await axios.post(`${API_URL}/auth/otp/verify`, {
+//         phone,
+//         otp,
+//       });
+//       if (response.status === 200) {
+//         setIsOtpModalOpen(false);
+//         const { message, access_token } = response.data;
+//         if (access_token) {
+//           localStorage.setItem("docPocAuth_token", access_token);
+//           router.push("/");
+//         } else if (message.includes("Please create a password")) {
+//           setIsPasswordModalOpen(true); // Open password modal
+//         }
+//       }
+//     } catch (err) {
+//       console.error("OTP verification failed:", err);
+//       setModalMessage({ success: "", error: "Invalid or expired OTP." });
+//       onOpen();
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function handlePasswordSetup() {
+//     try {
+//       setLoading(true);
+//       const response = await axios.post(`${API_URL}/auth/set-password`, {
+//         phone,
+//         otp,
+//         password,
+//       });
+//       if (response.status === 200) {
+//         const { access_token } = response.data;
+//         if (access_token) {
+//           localStorage.setItem("docPocAuth_token", access_token);
+//           router.push("/");
+//         }
+//       }
+//     } catch (err) {
+//       console.error("Password setup failed:", err);
+//       setModalMessage({
+//         success: "",
+//         error: "Failed to set password. Please try again later.",
+//       });
+//       onOpen();
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   return (
+//     <>
+//       <form onSubmit={handleSignUp}>
+//         <div className="mb-4">
+//           <label className="mb-2.5 block font-medium">Sign Up Method</label>
+//           <div className="flex gap-4">
+//             <button
+//               type="button"
+//               className={`w-full rounded-lg border p-3 font-medium ${
+//                 data.signUpMethod === "email"
+//                   ? "border-primary"
+//                   : "border-stroke"
+//               }`}
+//               onClick={() => setData({ ...data, signUpMethod: "email" })}
+//             >
+//               Email & Password
+//             </button>
+//             <button
+//               type="button"
+//               className={`w-full rounded-lg border p-3 font-medium ${
+//                 data.signUpMethod === "phone"
+//                   ? "border-primary"
+//                   : "border-stroke"
+//               }`}
+//               onClick={() => setData({ ...data, signUpMethod: "phone" })}
+//             >
+//               Mobile Number & OTP
+//             </button>
+//           </div>
+//         </div>
+
+//         {data.signUpMethod === "email" && (
+//           <div>
+//             <Input
+//               // clearable
+//               // bordered
+//               label="Email"
+//               placeholder="Enter your email"
+//               fullWidth
+//               onChange={(e) => setEmail(e.target.value)}
+//             />
+//             <Input
+//               // bordered
+//               label="Password"
+//               placeholder="Enter your password"
+//               fullWidth
+//               onChange={(e) => setPassword(e.target.value)}
+//             />
+//           </div>
+//         )}
+
+//         {data.signUpMethod === "phone" && (
+//           <PhoneInput
+//             country="in"
+//             value={phone}
+//             onChange={(value) => setPhone(value)}
+//             inputStyle={{
+//               width: "100%",
+//               borderRadius: "8px",
+//               padding: "15px",
+//             }}
+//           />
+//         )}
+
+//         <div className="mb-4">
+//           <select
+//             value={dropdownOption}
+//             onChange={(e) => setDropdownOption(e.target.value)}
+//             className="w-full rounded-lg border py-[15px] px-6"
+//           >
+//             <option value="" disabled>
+//               Select Clinic Size
+//             </option>
+//             {placeholderOptions.map((option, index) => (
+//               <option key={index} value={option}>
+//                 {option}
+//               </option>
+//             ))}
+//           </select>
+//         </div>
+
+//         <Button type="submit" disabled={loading} >
+//           {loading ? <Spinner size="lg" /> : "Sign Up"}
+//         </Button>
+//       </form>
+
+//       {/* OTP Modal */}
+//       <Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+//         <ModalContent>
+//           <ModalHeader>
+//             <h4>Enter OTP</h4>
+//           </ModalHeader>
+//           <ModalBody>
+//             <Input
+//               // clearable
+//               // bordered
+//               label="Enter OTP"
+//               placeholder="6-digit OTP"
+//               fullWidth
+//               value={otp}
+//               onChange={(e) => setOtp(e.target.value)}
+//             />
+//           </ModalBody>
+//           <ModalFooter>
+//             <Button
+//               // auto
+//               disabled={loading}
+//               onPress={handleOtpVerification}
+//               color="primary"
+//             >
+//               {loading ? <Spinner size="lg" /> : "Verify OTP"}
+//             </Button>
+//           </ModalFooter>
+//         </ModalContent>
+//       </Modal>
+
+//       {/* Password Setup Modal */}
+//       <Modal
+//         isOpen={isPasswordModalOpen}
+//         onClose={() => setIsPasswordModalOpen(false)}
+//       >
+//         <ModalContent>
+//           <ModalHeader>
+//             <h4>Set Your Password</h4>
+//           </ModalHeader>
+//           <ModalBody>
+//             <Input
+//               // bordered
+//               label="Password"
+//               placeholder="Enter a secure password"
+//               fullWidth
+//               onChange={(e) => setPassword(e.target.value)}
+//             />
+//           </ModalBody>
+//           <ModalFooter>
+//             <Button
+//               // auto
+//               disabled={loading}
+//               onPress={handlePasswordSetup}
+//               color="primary"
+//             >
+//               {loading ? <Spinner size="lg" /> : "Set Password"}
+//             </Button>
+//           </ModalFooter>
+//         </ModalContent>
+//       </Modal>
+
+//       {/* General Error/Success Modal */}
+//       <Modal isOpen={isOpen} onClose={handleModalClose}>
+//         <ModalContent>
+//           <ModalHeader>
+//             {loading ? (
+//               <Spinner size="lg" />
+//             ) : modalMessage.success ? (
+//               <p className="text-green-600">Success</p>
+//             ) : (
+//               <p className="text-red-600">Error</p>
+//             )}
+//           </ModalHeader>
+//           <ModalBody>
+//             {loading ? (
+//               <div className="flex justify-center">
+//                 <Spinner size="lg" />
+//               </div>
+//             ) : modalMessage.success ? (
+//               <p className="text-green-600">{modalMessage.success}</p>
+//             ) : (
+//               <p className="text-red-600">{modalMessage.error}</p>
+//             )}
+//           </ModalBody>
+//           <ModalFooter>
+//             {!loading && (
+//               <Button color="primary" onPress={handleModalClose}>
+//                 Ok
+//               </Button>
+//             )}
+//           </ModalFooter>
+//         </ModalContent>
+//       </Modal>
+//     </>
+//   );
+// }
