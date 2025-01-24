@@ -154,8 +154,10 @@ export default function SignupWithPassword() {
         setIsOtpModalOpen(false);
         const { message, access_token } = response.data;
         if (access_token) {
-          localStorage.setItem("docPocAuth_token", access_token);
-          router.push("/");
+          // localStorage.setItem("docPocAuth_token", access_token);
+          // router.push("/");
+          setModalMessage({ success: "", error: "User Is Already Ragisterd Please Login" });
+          onOpen();
         } else if (message.includes("Please create a password")) {
           setIsPasswordModalOpen(true); // Open password modal
         }
