@@ -48,7 +48,7 @@ export default function SignupWithPassword() {
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
   const router = useRouter();
-  const timerCount = 10;
+  const timerCount = 30;
 
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
@@ -65,8 +65,6 @@ export default function SignupWithPassword() {
           return prev - 1;
         });
       }, 1000);
-    } else {
-      setButtonText("Sign Up");
     }
     return () => clearInterval(interval);
   }, [timer]);
@@ -74,46 +72,65 @@ export default function SignupWithPassword() {
   async function handleSignUp(event: { preventDefault: () => void }) {
     event.preventDefault();
     setError("");
-    if (data.signUpMethod === "phone" && !phone) {
-      setError("Please enter a valid phone number or email.");
-      return;
+    console.log("Sign-up function triggered");
+    // Check if userInput is empty
+    if (data.signUpMethod === "phone") {
+      if (!userInput) {
+        setError("Please enter a valid phone number or email.");
+        console.log("Validation failed: No user input");
+        return;
+      }
     }
-
-    if (data.signUpMethod === "email" && (!email || !password)) {
-      setError("Please fill in all required fields.");
-      return;
+  
+    // Validation for email/password sign-up method
+    if (data.signUpMethod === "email") {
+      if (!email) {
+        setError("Please enter a valid email address.");
+        console.log("Validation failed: No email");
+        return;
+      }
+      if (!password) {
+        setError("Please enter a valid password.");
+        console.log("Validation failed: No password");
+        return;
+      }
     }
-
+  
+    // Check if dropdownOption (clinic size) is selected
     if (!dropdownOption) {
       setError("Please select a valid clinic size.");
       return;
     }
-
-    if (data.signUpMethod === "phone") {
+     if(data.signUpMethod ==="phone"){
       try {
         setLoading(true);
-        const response = await axios.post(`${API_URL}/auth/otp/generate`, {
-          phone,
-        });
+        // Handle signUpMethod "phone" or "email"
+        const payload =
+          inputType === "email"
+            ? { email: userInput.trim() } // If user input is email
+            : { phone: userInput.trim() }; // If user input is phone
+    
+        // Call API for OTP generation
+        const response = await axios.post(`${API_URL}/auth/otp/generate`, payload);
+    
         if (response.status === 200) {
-          setIsOtpModalOpen(true); // Open OTP modal
+          // Open OTP modal and start the resend timer
+          setIsOtpModalOpen(true);
+          startTimer();
+        } else {
+          setError("Failed to generate OTP. Please try again later.");
         }
-      } catch (err) {
+      } catch (err:any) {
         console.error("Failed to generate OTP:", err);
-        // setModalMessage({ success: "", error: "Failed to send OTP." });
-        // onOpen();
-        setError(`Failed to generate OTP:, ${err}`)
-        setShowErrors(true)
+        setError(
+          err.response?.data?.message || "Failed to generate OTP. Please try again later."
+        );
+        setShowErrors(true);
       } finally {
         setLoading(false);
       }
-    } else {
-      // Handle email-based signup
-      await handleEmailSignUp();
     }
-  }
-
-  async function handleEmailSignUp() {
+   if(data.signUpMethod ==="email"){
     try {
       setLoading(true);
       const response = await axios.post(`${API_URL}/user`, {
@@ -135,27 +152,69 @@ export default function SignupWithPassword() {
           router.push("/");
         }
       }
-    } catch (err) {
-      console.error("Signup failed", err);
+    } catch (err: any) {
+      console.error("Signup failed", err.response.data.message[0].message ||"Signup failed");
       // setModalMessage({
       //   success: "",
       //   error: "Signup failed. Please check your details or try again later.",
       // });
-      setError("Signup failed. Please check your details or try again later.")
+      setError(`Signup failed. ${err.response.data.message[0].message}.`)
       setShowErrors(true)
       // onOpen();
     } finally {
       setLoading(false);
     }
-  }
+    }
+     }
+   
+  
+     async function handleResendOtp() {
+      try {
+        setLoading(true); // Start loading state
+        setError(""); // Clear any previous errors
+    
+        // Prepare payload for OTP resend API
+        const payload =
+          inputType === "email"
+            ? { email: userInput.trim() } // If user input is email
+            : { phone: userInput.trim() }; // If user input is phone
+    
+        console.log("Resending OTP with payload:", payload);
+    
+        // Call the OTP resend API
+        const response = await axios.post(`${API_URL}/auth/otp/generate`, payload);
+    
+        if (response.status === 200) {
+          console.log("OTP resent successfully");
+          setTimer(timerCount); // Restart the timer
+        } else {
+          console.log("Failed to resend OTP");
+          setError("Failed to resend OTP. Please try again later.");
+        }
+      } catch (err: any) {
+        console.error("Resend OTP failed:", err);
+        setError(
+          err.response?.data?.message || "Failed to resend OTP. Please try again later."
+        );
+      } finally {
+        setLoading(false); // End loading state
+      }
+    }
+    
 
+  
   async function handleOtpVerification() {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/auth/otp/verify`, {
-        phone,
-        otp,
-      });
+      const payload =
+       inputType === "email"
+          ? { email: userInput, otp } // Use email if detected as email
+          : { phone: userInput, otp };
+
+      const response = await axios.post(`${API_URL}/auth/otp/verify`,
+        payload
+      
+);
       if (response.status === 200) {
         setIsOtpModalOpen(false);
         const { message, access_token } = response.data;
@@ -180,11 +239,14 @@ export default function SignupWithPassword() {
   async function handlePasswordSetup() {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/auth/set-password`, {
-        phone,
-        otp,
-        password,
-      });
+      const payload =
+       inputType === "email"
+          ? { email: userInput, otp,
+            password } // Use email if detected as email
+          : { phone: userInput, otp,
+            password };
+          
+      const response = await axios.post(`${API_URL}/auth/set-password`, payload);
       if (response.status === 200) {
         const { access_token } = response.data;
         if (access_token) {
@@ -219,7 +281,7 @@ export default function SignupWithPassword() {
 
   const startTimer = () => {
     setTimer(timerCount);
-    setButtonText(`Resend OTP in ${timerCount}s`);
+    // setButtonText(`Resend OTP in ${timerCount}s`);
   };
 
   return (
@@ -433,7 +495,7 @@ export default function SignupWithPassword() {
         <div className="mb-4">
           <button
             type="submit"
-            disabled={timer > 0}
+            // disabled={timer > 0}
             className="w-full font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary rounded-lg bg-primary py-4 px-6 font-medium text-gray hover:bg-opacity-90"
           >
             {isSigningUp && data.signUpMethod === "email" ? (
@@ -450,7 +512,7 @@ export default function SignupWithPassword() {
       </form>
 
       {/* OTP Modal */}
-      <Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+      {/* <Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
         <ModalContent>
           <ModalHeader>
             <h4>Enter OTP</h4>
@@ -464,8 +526,8 @@ export default function SignupWithPassword() {
               fullWidth
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-            />
-          </ModalBody>
+            /> */}
+          {/* </ModalBody>
           <ModalFooter>
             <Button
               // auto
@@ -477,7 +539,55 @@ export default function SignupWithPassword() {
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
+      </Modal> */}
+
+<Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+  <ModalContent>
+    <ModalHeader>
+      <h4>Enter OTP</h4>
+    </ModalHeader>
+    <ModalBody>
+      <Input
+        label="Enter OTP"
+        placeholder="6-digit OTP"
+        fullWidth
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+      />
+      {error && (
+        <p className="text-red-500 mt-2 text-sm">
+          {error}
+        </p>
+      )}
+      {/* Resend OTP Button */}
+      <div className="mt-4 flex items-center gap-2">
+        <p className="text-gray-500 text-sm">
+          {timer > 0
+            ? `Resend OTP in ${timer}s`
+            : "Didn't receive the OTP?"}
+        </p>
+        <button
+          disabled={timer > 0 || loading}
+          onClick={handleResendOtp}
+        
+          className="text-blue underline"
+        >
+          Resend OTP
+        </button>
+      </div>
+    </ModalBody>
+    <ModalFooter>
+      <Button
+        disabled={loading}
+        onPress={handleOtpVerification}
+        color="primary"
+      >
+        {loading ? <Spinner size="lg" /> : "Verify OTP"}
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
+
 
       {/* Password Setup Modal */}
       <Modal
@@ -546,3 +656,41 @@ export default function SignupWithPassword() {
    
   );
 }
+
+
+
+// async function handleEmailSignUp() {
+//   try {
+//     setLoading(true);
+//     const response = await axios.post(`${API_URL}/user`, {
+//       name: email.split("@")[0],
+//       email,
+//       password,
+//       accessType: "defaultAccessType",
+//       json: JSON.stringify({ clinicSize: dropdownOption }),
+//       userName: email,
+//     });
+//     if (response.status === 201) {
+//       const signInResponse = await axios.post(`${API_URL}/auth/login`, {
+//         username: email,
+//         password,
+//       });
+//       const { access_token } = signInResponse.data;
+//       if (access_token) {
+//         localStorage.setItem("docPocAuth_token", access_token);
+//         router.push("/");
+//       }
+//     }
+//   } catch (err) {
+//     console.error("Signup failed", err);
+//     // setModalMessage({
+//     //   success: "",
+//     //   error: "Signup failed. Please check your details or try again later.",
+//     // });
+//     setError("Signup failed. Please check your details or try again later.")
+//     setShowErrors(true)
+//     // onOpen();
+//   } finally {
+//     setLoading(false);
+//   }
+// }

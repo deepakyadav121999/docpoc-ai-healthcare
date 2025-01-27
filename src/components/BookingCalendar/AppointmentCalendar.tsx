@@ -505,7 +505,7 @@ const renderDayView = () => {
             </button>
           </div>
           {currentView === "month" && (
-            <div className="navigation-buttons">
+            <div className="navigation-buttons ">
               <button className="nav-button" onClick={() => changeMonth("previous")}>
                 Previous
               </button>
@@ -854,7 +854,7 @@ const renderDayView = () => {
   }
 
   .calendar-header {
-    flex-direction: column; /* Stack header elements */
+    // flex-direction: column; /* Stack header elements */
     align-items: flex-start;
   }
 
@@ -904,6 +904,7 @@ const renderDayView = () => {
   .calendar-cell {
     font-size: 12px;
   }
+   
 }
 
 @media (max-width: 480px) {
@@ -913,18 +914,20 @@ const renderDayView = () => {
   }
 
   .calendar-header {
-    flex-direction: column;
+    // flex-direction: column;
     align-items: center;
+    justify-content:center;
+    gap: 5px;
   }
 
   .view-selector {
-    flex-direction: column; /* Stack view buttons vertically */
-    gap: 5px;
+    // flex-direction: column; /* Stack view buttons vertically */
+    gap: 3px;
   }
 
   .navigation-buttons {
-    flex-direction: column; /* Stack navigation buttons vertically */
-    gap: 5px;
+    flex-direction: flex; /* Stack navigation buttons vertically */
+    gap: 3px;
   }
 
   .calendar-grid {
