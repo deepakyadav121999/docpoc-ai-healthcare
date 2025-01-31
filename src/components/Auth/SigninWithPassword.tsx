@@ -6,6 +6,7 @@ import StyledButton from "@/components/common/Button/StyledButton";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const API_URL = process.env.API_URL;
 export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPage: () => void; onLogin: (token: string) => void }) {
   const router = useRouter();
 
@@ -52,7 +53,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
           ? { username: userInput, password }
           : { phone: userInput, password };
 
-      const response = await axios.post("http://127.0.0.1:3037/DocPOC/v1/auth/login", loginPayload);
+      const response = await axios.post(`${API_URL}/auth/login`, loginPayload);
 
       const { access_token } = response.data;
 
@@ -88,7 +89,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
           ? { email: userInput } // Use email if detected as email
           : { phone: userInput }; // Use phone if detected as phone
 
-      const response = await axios.post("http://127.0.0.1:3037/DocPOC/v1/auth/otp/generate", payload);
+      const response = await axios.post(`${API_URL}/auth/otp/generate`, payload);
 
       setTimer(timerCount);
       setIsOtpFieldVisible(true);
@@ -115,7 +116,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
           ? { email: userInput, otp } // Use email if detected as email
           : { phone: userInput, otp }; // Use phone if detected as phone
 
-      const response = await axios.post("http://127.0.0.1:3037/DocPOC/v1/auth/otp/verify", payload);
+      const response = await axios.post(`${API_URL}/auth/otp/verify`, payload);
 
       const { access_token } = response.data;
 

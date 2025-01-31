@@ -191,6 +191,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           success: "",
           error: `No branches found for the hospital."}`,
         });
+        onOpen();
         return;
       }
 
@@ -213,7 +214,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         }
       );
       setModalMessage({ success: "User added successfully!", error: "" });
-
+      onOpen();
       setFormData({
         name: "",
         phone: "",
@@ -248,12 +249,14 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           success: "",
           error: apiErrorMessage,
         });
+        onOpen();
       } else {
         // Handle network errors or unexpected errors
         setModalMessage({
           success: "",
           error: error.message || "An unexpected error occurred.",
         });
+        onOpen();
       }
 
     } finally {
@@ -495,7 +498,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
             <div className="flex justify-center mt-4">
-              <Button
+              {/* <Button
                 type="submit"
                 isDisabled={!edit || loading}
                 color={TOOL_TIP_COLORS.secondary}
@@ -504,7 +507,16 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 style={{ minWidth: 300, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </Button>
+              </Button> */}
+
+
+              <button
+                type="submit"
+                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                style={{ minWidth: 280, marginBottom: 20 }}
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </button>
 
               {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>

@@ -340,8 +340,9 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         </DropdownMenu>
       </Dropdown>
 
-      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{ maxHeight: 600, maxWidth: 800 }}
-
+      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{ maxWidth: 800 }}
+       className="max-h-[90vh] overflow-y-auto"
+      
       >
         <ModalContent >
           {(onClose) => (
@@ -366,29 +367,6 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
           )}
         </ModalContent>
       </Modal>
-
-
-      {/* <Modal backdrop={"blur"} isOpen={isNotificationOpen} onClose={() => setNotificationOpen(false)}>
-        <ModalContent>
-          <ModalHeader>{modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
-          <ModalBody>
-            {loading ? (
-              <div className="flex justify-center">
-                <Spinner size="lg" />
-              </div>
-            ) : modalMessage.success ? (
-              <p className="text-green-600">{modalMessage.success}</p>
-            ) : (
-              <p className="text-red-600">{modalMessage.error}</p>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onPress={() => setNotificationOpen(false)}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal> */}
       
          <EnhancedModal
                 isOpen={isNotificationOpen}

@@ -99,7 +99,8 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
 
 
   return (
-    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}>
+    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}
+    style={{ margin: 0, marginTop:"50%", marginBottom: "60%"}}>
       <ModalContent>
         <ModalHeader>
           {/* {loading ? (

@@ -50,9 +50,9 @@ const Clinic = () => {
   const [detectedLocation, setDetectedLocation] = useState<string>("");
   const [hospitalId, setHospitalId] = useState("")
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
-const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+  const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
-const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
+  const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
 
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
@@ -64,7 +64,7 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
     shiftStart: "",
     shiftEnd: "",
   });
-  
+
   const handleInputChange = (field: string, value: string) => {
     setClinicDetails({ ...clinicDetails, [field]: value });
   };
@@ -114,7 +114,7 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
       const data = response.data;
       console.log(data)
 
-      if (data.length>0) {
+      if (data.length > 0) {
         const hospital = data[0];
         const parsedJson = hospital.json ? JSON.parse(hospital.json) : {};
 
@@ -123,41 +123,41 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
           name: hospital.name,
           phone: hospital.phone,
           email: hospital.email,
-           state: parsedJson.state || "",
-        pincode: parsedJson.pincode || "",
-        address: parsedJson.address || "",
-        shiftStart: parsedJson.shiftStart || "",
-        shiftEnd: parsedJson.shiftEnd || "",
+          state: parsedJson.state || "",
+          pincode: parsedJson.pincode || "",
+          address: parsedJson.address || "",
+          shiftStart: parsedJson.shiftStart || "",
+          shiftEnd: parsedJson.shiftEnd || "",
         });
         setSelectedWorkingDays(parsedJson.workingDays || []);
-      setSelectedDepartments(parsedJson.departments || []);
-      setIsMultipleBranch(parsedJson.multipleBranch || false);
-      setDetectedLocation(parsedJson.googleLocation || "");
-      setShiftStartTime(parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null);
-      setShiftEndTime(parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null);
-   
-      setHospitalId(hospital.id)
-      const fetchedStateKey = IndianStatesList.find(
-        (item) => item.label === parsedJson.state
-      )?.value;
+        setSelectedDepartments(parsedJson.departments || []);
+        setIsMultipleBranch(parsedJson.multipleBranch || false);
+        setDetectedLocation(parsedJson.googleLocation || "");
+        setShiftStartTime(parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null);
+        setShiftEndTime(parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null);
 
-      setSelectedStateKey(fetchedStateKey || null);
+        setHospitalId(hospital.id)
+        const fetchedStateKey = IndianStatesList.find(
+          (item) => item.label === parsedJson.state
+        )?.value;
+
+        setSelectedStateKey(fetchedStateKey || null);
 
       }
     } catch (error) {
       console.error("Error fetching hospital details:", error);
     }
-  }; 
-  
+  };
+
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     const errors: Record<string, string> = {};
 
-    if (!clinicDetails.name.trim()){
+    if (!clinicDetails.name.trim()) {
 
-    errors.name = "Clinic/Hospital name is required.";
+      errors.name = "Clinic/Hospital name is required.";
     }
     if (!clinicDetails.phone.trim()) errors.phone = "Contact number is required.";
     if (!/^\d{10}$/.test(clinicDetails.phone.trim())) errors.phone = "Contact number must be a valid 10-digit number.";
@@ -171,25 +171,25 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
     if (!shiftEndTime) errors.shiftEnd = "Shift end time is required.";
     if (selectedWorkingDays.length === 0) errors.workingDays = "At least one working day must be selected.";
     if (selectedDepartments.length === 0) errors.departments = "At least one department must be selected.";
-  
+
     if (Object.keys(errors).length > 0) {
       setErrors(errors); // Set the errors in state for further use
       setLoading(false);
-  
+
       // Build the modal message for displaying required fields
       const errorMessage = Object.entries(errors)
         .map(([field, message]) => `- ${message}`)
         .join("\n");
-  
+
       setModalMessage({
         success: "",
         error: `Please address the following issues:\n${errorMessage}`,
       });
-  
+
       onOpen(); // Open the modal to show the errors
       return;
     }
-  
+
     setErrors({});
 
     try {
@@ -211,27 +211,28 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-   
+
       const requestData = {
         id: hospitalId,
         ...hospitalData,
       };
 
       if (hospitalId) {
-      await axios.patch(`${API_URL}/hospital`, requestData, {
+        await axios.patch(`${API_URL}/hospital`, requestData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-        
+
         setModalMessage({
           success: "Hospital details updated successfully",
           error: "",
         });
+        onOpen()
       }
 
-      else{
+      else {
         const response = await axios.post(`${API_URL}/hospital`, hospitalData,
           {
             headers: {
@@ -273,30 +274,32 @@ const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
           success: "Hospital created successfully",
           error: ``,
         });
+        onOpen()
       }
-      
-    } catch (error:any) {
+
+    } catch (error: any) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
       setModalMessage({
         success: "",
         error: `Error creating branch: ${error.message}`,
       });
+      onOpen()
     }
     setLoading(false)
   };
 
- useEffect(()=>{
-fetchHospitalDetails()
- },[])
+  useEffect(() => {
+    fetchHospitalDetails()
+  }, [])
 
 
   return (
-    <div className="grid grid-cols-1 gap-9 m-2">
+    <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
-          <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
+          <div className="border-b border-stroke px-3 py-2  sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-row gap-4 sm:gap-9">
             <h3 className="font-semibold text-dark dark:text-white">
               Clinic/Hospital Details
             </h3>
@@ -314,8 +317,8 @@ fetchHospitalDetails()
             </div>
           </div>
           <form onSubmit={handleSaveChanges}>
-            <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+            <div className=" p-3 sm:p-6.5">
+              <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2  sm:gap-4.5 xl:flex-row">
                 <Input
                   variant="bordered"
                   type="text"
@@ -325,7 +328,7 @@ fetchHospitalDetails()
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   isDisabled={!edit}
-                  // errorMessage={errors.name}
+                // errorMessage={errors.name}
                 />
                 <Input
                   key="inside"
@@ -368,7 +371,7 @@ fetchHospitalDetails()
                 </CheckboxGroup>
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-2.5 sm:mb-4.5 flex flex-col gap-2 sm:gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
                 <TimeInput
@@ -415,7 +418,7 @@ fetchHospitalDetails()
                 />
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-2 sm:mb-4.5 flex flex-col gap-2 sm:gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
                 <Autocomplete
@@ -423,7 +426,7 @@ fetchHospitalDetails()
                   labelPlacement="outside"
                   variant="bordered"
                   isDisabled={!edit}
-                selectedKey={selectedStateKey}
+                  selectedKey={selectedStateKey}
                   // defaultSelectedKey="karnataka"
                   defaultItems={IndianStatesList}
                   label="Select State"
@@ -431,7 +434,7 @@ fetchHospitalDetails()
                   onSelectionChange={(key) => {
                     const selectedState = IndianStatesList.find((item) => item.value === key);
                     handleInputChange("state", selectedState?.label || "");
-                    setSelectedStateKey(key ? key as string:null);
+                    setSelectedStateKey(key ? key as string : null);
                   }}
                 >
                   {(IndianStatesList) => (
@@ -458,7 +461,7 @@ fetchHospitalDetails()
                   isDisabled={!edit}
                 />
               </div>
-              <div className="flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div className="flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
                 <Input
                   key="location"
                   variant="bordered"
@@ -471,15 +474,16 @@ fetchHospitalDetails()
                   isDisabled={!edit}
                 />
 
-                <Button
+                <button
                   color="secondary"
                   onClick={locationDetact}
                   type="button"
                   style={{ marginTop: 20 }}
-                  isDisabled={!edit}
+                  disabled={!edit}
+                  className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
                 >
                   Detect Location
-                </Button>
+                </button>
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <CheckboxGroup
@@ -512,17 +516,18 @@ fetchHospitalDetails()
               </div>
             </div>
 
-            <div className="flex justify-center mt-4">
-              <Button
+            <div className="flex justify-center mt-2 sm:mt-4">
+              <button
                 type="submit"
-                isDisabled={!edit}
+                disabled={!edit}
+                // isDisabled={!edit}
                 color={TOOL_TIP_COLORS.secondary}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90"
-                style={{ minWidth: 300, marginBottom: 20 }}
-                onPress={onOpen}
+                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
+                style={{ minWidth: 290, marginBottom: 20 }}
+              // onPress={onOpen}
               >
                 Save Changes
-              </Button>
+              </button>
               <EnhancedModal
                 isOpen={isOpen}
                 loading={loading}
@@ -532,6 +537,7 @@ fetchHospitalDetails()
             </div>
           </form>
         </div>
+
       </div>
     </div>
   );

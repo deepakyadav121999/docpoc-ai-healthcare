@@ -464,10 +464,12 @@ export default function AppointmentTable() {
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col gap-4 w-full">
-          <div className="flex justify-between gap-3 items-end">
+          {/* <div className="flex justify-between gap-3 items-end"> */}
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 justify-between  sm:items-end w-full items-center">
             <Input
               isClearable
-              className="w-full sm:max-w-[44%]"
+              // className="w-full sm:max-w-[44%] "
+           className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
               placeholder="Search by name..."
               startContent={<SearchIcon />}
               value={filterValue}
@@ -477,7 +479,8 @@ export default function AppointmentTable() {
             <DatePicker 
               showMonthAndYearPickers
               label="Appointment date"
-              className="max-w-[284px]"
+              // className="max-w-[284px]"
+       className="w-full sm:w-[calc(50%-0.75rem)] h-[42px] sm:h-[46px] md:h-[51px]"
               // value={selectedDate ? parseDate(selectedDate) : undefined}
 
               value={selectedDateShow ? parseDate(selectedDateShow) : undefined}
@@ -606,6 +609,8 @@ export default function AppointmentTable() {
             </label>
           </div>
         </div>
+
+   
       </div>
     );
   }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);

@@ -657,6 +657,14 @@ function extractTimeDisplay(datetimeStr: string): string {
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     return (
+      <>
+        <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
       <Card
         isBlurred
         className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
@@ -686,13 +694,13 @@ function extractTimeDisplay(datetimeStr: string): string {
               <div className="space-y-3">
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
-                  <p className="text-medium ml-2">
+                  <p className="text-sm sm:text-medium ml-2">
                     <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
+                  <p className="text-sm sm:text-medium ml-2">
                     <strong>Date: </strong>{extractDate(appointmentDate)}
                   </p>
                 </div>
@@ -700,13 +708,13 @@ function extractTimeDisplay(datetimeStr: string): string {
                   <div style={{ marginLeft: -5 }}>
                     <SVGIconProvider iconName="doctor" />
                   </div>
-                  <p className="text-medium ml-2">
+                  <p className="text-sm sm:text-medium ml-2">
                     <strong>Appointed Doctor: </strong> {employeeName}
                   </p>
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="followup" />
-                  <p className="text-medium ml-2">
+                  <p className="text-sm sm:text-medium ml-2">
                     <strong>Follow-up: </strong> Yes
                   </p>
                 </div>
@@ -715,18 +723,27 @@ function extractTimeDisplay(datetimeStr: string): string {
           </div>
         </CardBody>
       </Card>
+      </>
     );
   }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
     return (
+      <>
+        <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
       <Card
         // isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto"
+        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto "
         shadow="sm"
       >
         <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+          <div className="grid grid-cols-6 md:grid-cols-12 gap-4 md:gap-8 items-center justify-center">
             <div className="relative col-span-6 md:col-span-4">
               <Image
                 alt="Patient photo"
@@ -740,17 +757,17 @@ function extractTimeDisplay(datetimeStr: string): string {
 
             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
+                <h3 className="font-semibold text-foreground/90 text-lg md:text-xl">
                   Edit Appointment Details
                 </h3>
-                <StyledButton label={"Follow-up"} />
+                <StyledButton label={"Follow-up"}/>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center">
                   <SVGIconProvider iconName="clock" />
                   {!editVisitTime && (
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-1">
                       <strong>Visiting Time: </strong>{" "}
                       {/* {extractTime(startDateTime)} */}
 
@@ -760,11 +777,11 @@ function extractTimeDisplay(datetimeStr: string): string {
 
                   {editVisitTime && (
                     <div
-                      className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
+                      className="  flex gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
                     >
                       <TimeInput
                         color={TOOL_TIP_COLORS.secondary}
-                        label="from"
+                        label="From"
                         labelPlacement="outside"
                         variant="bordered"
                         // defaultValue={new Time(7, 38)}
@@ -777,7 +794,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                       />
                       <TimeInput
                         color={TOOL_TIP_COLORS.secondary}
-                        label="to"
+                        label="To"
                         labelPlacement="outside"
                         variant="bordered"
                         // defaultValue={new Time(8, 45)}
@@ -808,7 +825,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="calendar" />
-                  <p className="text-medium ml-2">
+                  <p className=" text-sm sm:text-medium ml-2">
                     <strong>Date: </strong> 
                     {extractDate(appointmentDate)}
                   </p>
@@ -820,13 +837,13 @@ function extractTimeDisplay(datetimeStr: string): string {
                     <SVGIconProvider iconName="doctor" />
                   </div>
                   {!editSelectedDoctor && (
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Appointed Doctor: </strong> {employeeName}
                     </p>
                   )}
                   {editSelectedDoctor && (
                     <>
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Appointed Doctor: </strong>
                       </p>
                       <div
@@ -876,7 +893,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                 </div>
                 <div className="flex items-center">
                   <SVGIconProvider iconName="followup" />
-                  <p className="text-medium ml-2">
+                  <p className="text-sm sm:text-medium ml-2">
                     <strong>Follow-up: </strong> Yes
                   </p>
                 </div>
@@ -885,12 +902,21 @@ function extractTimeDisplay(datetimeStr: string): string {
           </div>
         </CardBody>
       </Card>
+      </>
     );
   }
+
 
   if (props.type === MODAL_TYPES.DELETE_APPOINTMENT) {
     return (
       <>
+        <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
           Are you sure you want to delete this appointment?
         </h2>
@@ -899,13 +925,13 @@ function extractTimeDisplay(datetimeStr: string): string {
           <div className="space-y-3">
             <div className="flex items-center">
               <SVGIconProvider iconName="clock" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>Visit Time: </strong> {extractTime(appointmentDateTime)}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>Date: </strong> {extractDate(appointmentDateTime)}
               </p>
             </div>
@@ -913,13 +939,13 @@ function extractTimeDisplay(datetimeStr: string): string {
               <div style={{ marginLeft: -5 }}>
                 <SVGIconProvider iconName="doctor" />
               </div>
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>Appointed Doctor: </strong> {employeeName}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="followup" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>Follow-up: </strong> Yes
               </p>
             </div>
@@ -967,19 +993,19 @@ function extractTimeDisplay(datetimeStr: string): string {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <SVGIconProvider iconName="clock" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Patient Name: </strong>{patientName}
                     </p>
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="clock" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Last Visit: </strong>{lastVisit}
                     </p>
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="calendar" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Status: </strong> {patientStatus}
                     </p>
                   </div>
@@ -987,7 +1013,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                     <div style={{ marginLeft: -5 }}>
                       <SVGIconProvider iconName="doctor" />
                     </div>
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Last Appointed Doctor: </strong>Dr. Jane Smith
                     </p>
                   </div>
@@ -1071,7 +1097,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <SVGIconProvider iconName="clock" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Name: </strong>
                       {!editSelectedPatient && patientName}
                     </p>
@@ -1111,7 +1137,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="calendar" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Status: </strong>{" "}
                       {!editSelectedPatientStatus && patientStatus}
                     </p>
@@ -1151,7 +1177,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="email" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Email: </strong>
                       {!editSelectedPatientEmail && patientEmail}
                     </p>
@@ -1191,7 +1217,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="blood-drop" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Blood Group: </strong>
                       {!editSelectedPatientBloodGroup && patientBloodGroup}
                     </p>
@@ -1253,7 +1279,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   </div>
                   <div className="flex items-center">
                     <SVGIconProvider iconName="phone" />
-                    <p className="text-medium ml-2">
+                    <p className="text-sm sm:text-medium ml-2">
                       <strong>Phone: </strong>
                       {!editSelectedPatientPhone && patientPhone}
                     </p>
@@ -1346,19 +1372,19 @@ function extractTimeDisplay(datetimeStr: string): string {
           <div className="space-y-3">
             <div className="flex items-center">
               <SVGIconProvider iconName="clock" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>Name: </strong> {patientName}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>email: </strong>{patientEmail}
               </p>
             </div>
             <div className="flex items-center">
               <SVGIconProvider iconName="phone" />
-              <p className="text-medium ml-2">
+              <p className="text-sm sm:text-medium ml-2">
                 <strong>phone: </strong> {patientPhone}
               </p>
             </div>
@@ -1404,37 +1430,37 @@ function extractTimeDisplay(datetimeStr: string): string {
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <SVGIconProvider iconName="user" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Name: </strong>{employeeName}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="email" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>email: </strong>{employeeEmail}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="phone" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Phone: </strong>+91- {employeePhone}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="icard" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Designation: </strong>{employeeDesignation}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="clock" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Working Hours: </strong>{employeeShiftTime}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="calendar" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Joined On: </strong> 27th Jan, 2021
                       </p>
                     </div>
@@ -1442,13 +1468,13 @@ function extractTimeDisplay(datetimeStr: string): string {
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="key" />
                       </div>
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Access Type: </strong>Super-Admin
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="birthday" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Date Of Birth: {employeeDOB}</strong>
                       </p>
                     </div>
@@ -1519,7 +1545,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <SVGIconProvider iconName="user" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Name: </strong>
                         {!editSelectedEmployee && employeeName}
                       </p>
@@ -1557,7 +1583,7 @@ function extractTimeDisplay(datetimeStr: string): string {
 
                     <div className="flex items-center">
                       <SVGIconProvider iconName="email" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Email: </strong>
                         {!editSelectedEmployeeEmail && employeeEmail}
                       </p>
@@ -1594,7 +1620,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="phone" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Phone: </strong>
                         {!editSelectedEmployeePhone && employeePhone}
                       </p>
@@ -1631,7 +1657,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="icard" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Designation: </strong>
                         {!editSelectedEmployeeDesignation && employeeDesignation}
                       </p>
@@ -1668,7 +1694,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="clock" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Working Hours: </strong>
                         {!editSelectedEmployeeShiftTime && employeeShiftTime}
                       </p>
@@ -1718,11 +1744,11 @@ function extractTimeDisplay(datetimeStr: string): string {
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="calendar" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Joined On: </strong>{" "}
                       </p>
                       {!editSelectedEmployeeJoiningDate && (
-                        <p className="text-medium ml-2">
+                        <p className="text-sm sm:text-medium ml-2">
                           {formatDateOne(employeeJoiningDate)}
                         </p>
                       )}
@@ -1762,18 +1788,18 @@ function extractTimeDisplay(datetimeStr: string): string {
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="key" />
                       </div>
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Access Type: </strong>Super-Admin
                       </p>
                     </div>
 
                     <div className="flex items-center">
                       <SVGIconProvider iconName="birthday" />
-                      <p className="text-medium ml-2">
+                      <p className="text-sm sm:text-medium ml-2">
                         <strong>Date Of Birth: </strong>{" "}
                       </p>
                       {!editSelectedEmployeeDOB && (
-                        <p className="text-medium ml-2">
+                        <p className="text-sm sm:text-medium ml-2">
                           {employeeDOB}
                         </p>
                       )}
@@ -1844,37 +1870,37 @@ function extractTimeDisplay(datetimeStr: string): string {
             <div className="space-y-3">
               <div className="flex items-center">
                 <SVGIconProvider iconName="user" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Name: </strong>{employeeName}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="email" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>email: </strong>{employeeEmail}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="phone" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Phone: </strong>+91- {employeePhone}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="icard" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Designation: </strong>{employeeDesignation}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="clock" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Working Hours: </strong>{employeeShiftTime}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="calendar" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
                 </p>
               </div>
@@ -1882,13 +1908,13 @@ function extractTimeDisplay(datetimeStr: string): string {
                 <div style={{ marginLeft: -5 }}>
                   <SVGIconProvider iconName="key" />
                 </div>
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Access Type: </strong>Super-Admin
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="birthday" />
-                <p className="text-medium ml-2">
+                <p className="text-sm sm:text-medium ml-2">
                   <strong>Date Of Birth: </strong> {employeeDOB}
                 </p>
               </div>

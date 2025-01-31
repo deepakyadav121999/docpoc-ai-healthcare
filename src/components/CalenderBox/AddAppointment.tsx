@@ -69,7 +69,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     json: "",
     status: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
 
   function extractTime(dateTime: string): string {
@@ -87,7 +87,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
 
-  const generateDateTime = (baseDate: string,time: Time) => {
+  const generateDateTime = (baseDate: string, time: Time) => {
     const currentDate = new Date(baseDate); // Use the current date
     return new Date(
       currentDate.getFullYear(),
@@ -105,7 +105,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       onOpen();
       return;
     }
-  
+
     const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
     setFormData({ ...formData, [field]: isoTime });
   };
@@ -210,7 +210,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       );
       console.log("Appointment Created:", response.data);
       setModalMessage({ success: "Appointment created successfully!", error: "" });
-
+      onOpen()
       onUsersAdded();
     } catch (error: any) {
       console.error("Error creating appointment:", error.response?.data || error.message);
@@ -219,10 +219,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       //   error: `Error creating appointment: ${error.response?.data?.message || "Unknown error"}`,
       // });
       let errorMessage = "An unknown error occurred.";
-  
+
       if (error.response?.data) {
         const errorData = error.response.data;
-    
+
         if (Array.isArray(errorData.message)) {
           // Extracting error messages from the array
           errorMessage = errorData.message
@@ -236,22 +236,33 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       } else {
         errorMessage = error.message || errorMessage;
       }
-    
+
       setModalMessage({
         success: "",
         error: `Error creating appointment: ${errorMessage}`,
       });
-    
-      // onOpen();
+
+      onOpen()
 
     }
     setLoading(false)
   };
-  const fetchPatients = async () => {
+
+
+  const handleTypeSelection = (typeId: string) => {
+    setFormData({ ...formData, type: typeId });
+  };
+  const handleStatusSelection = (statusId: string) => {
+    setFormData({ ...formData, status: statusId });
+  };
+
+
+  const fetchAppointmentTypes = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
+      // Step 1: Fetch Hospital
       const hospitalEndpoint = `${API_URL}/hospital`;
       const hospitalResponse = await axios.get(hospitalEndpoint, {
         headers: {
@@ -259,11 +270,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           "Content-Type": "application/json",
         },
       });
+
       if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
+        throw new Error("No hospital data found.");
       }
 
       const fetchedHospitalId = hospitalResponse.data[0].id;
+
+      // Step 2: Fetch Branch
       const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
       const branchResponse = await axios.get(branchEndpoint, {
         headers: {
@@ -273,82 +287,74 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
 
       if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
+        throw new Error("No branch data found.");
       }
 
-      const fetchedBranchId = branchResponse.data[0]?.id;
+      const fetchedBranchId = branchResponse.data[0].id;
 
-      const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
+      // Step 3: Fetch Appointment Types
+      const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
+      const response = await axios.get(appointmentTypeEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No appointment types found.");
+      }
+      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
+        label: type.name,
+        value: type.id,
+      }));
+      setAppointmentTypeList(transformedTypes);
 
 
+      // Step 4: Fetch Appointment Status
+      const appointmentStatusEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
+      const response2 = await axios.get(appointmentStatusEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const transformedStatus: AutocompleteItem[] = response2.data.map((type: any) => ({
+        label: type.status,
+        value: type.id,
+      }));
+      setAppointmentStatusList(transformedStatus);
+
+      // Step 5: Fetch Patients
+      const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
       const params: any = {};
-
       params.page = 1;
       params.pageSize = 50;
       params.from = '2024-12-04T03:32:25.812Z';
       params.to = '2024-12-11T03:32:25.815Z';
       params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
-
-
-      const response = await axios.get(endpoint, {
+      const response3 = await axios.get(patientsendpoint, {
         params,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      console.log(response.data.rows)
-      const transformedPatients: AutocompleteItem[] = response.data.rows.map((patient: any) => ({
+      // console.log(response3.data.rows)
+      const transformedPatients: AutocompleteItem[] = response3.data.rows.map((patient: any) => ({
         label: patient.name,
         value: patient.id,
         description: `${patient.phone} | ${patient.email}`,
         dob: patient.dob, // Include DOB
       }));
       setPatientList(transformedPatients);
-      // setTotalPatient(response.data.count || response.data.length);
-
-    } catch (err) {
-      // setError("Failed to fetch patients.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDoctors = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
-      }
-
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
-
-      const fetchedBranchId = branchResponse.data[0]?.id;
 
 
-      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+
+      // Step 6: Fetch  Doctors
+      const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
 
 
-      const params: any = {};
+      // const params: any = {};
 
       params.page = 1;
       params.pageSize = 50;
@@ -357,14 +363,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
 
-      const response = await axios.get(endpoint, {
+      const response4 = await axios.get(doctorsEndpoint, {
         params,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      const allUsers = response.data.rows;
+      const allUsers = response4.data.rows;
 
       // Filter and transform only doctors
       const doctors = allUsers.filter((user: any) => {
@@ -378,11 +384,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
 
 
-      // const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
-      //   label: doctor.name,
-      //   value: doctor.id,
-      //   description: `${doctor.phone} | ${doctor.email}`,
-      // }));
       const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
         label: doctor.name,
         value: doctor.id,
@@ -392,100 +393,21 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // setUsers(response.data.rows || response.data);
       // setTotalUsers(response.data.count || response.data.length);
 
-    } catch (err) {
-      // setError("Failed to fetch patients.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleTypeSelection = (typeId: string) => {
-    setFormData({ ...formData, type: typeId });
-  };
-  const handleStatusSelection = (statusId: string) => {
-    setFormData({ ...formData, status: statusId });
-  };
-  const fetchAppointmentTypes = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-  
-      // Step 1: Fetch Hospital
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        throw new Error("No hospital data found.");
-      }
-  
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-  
-      // Step 2: Fetch Branch
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        throw new Error("No branch data found.");
-      }
-  
-      const fetchedBranchId = branchResponse.data[0].id;
-  
-      // Step 3: Fetch Appointment Types
-      const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
-      const response = await axios.get(appointmentTypeEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const appointmentStatusEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
-      const response2 = await axios.get(appointmentStatusEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
 
-  
-      if (!response.data || response.data.length === 0) {
-        throw new Error("No appointment types found.");
-      }
-  
-      // Transform and Set Appointment Types
-      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
-        label: type.name,
-        value: type.id,
-      }));
-      setAppointmentTypeList(transformedTypes);
 
-      const transformedStatus: AutocompleteItem[] = response2.data.map((type: any) => ({
-        label: type.status,
-        value: type.id,
-      }));
-    
-      setAppointmentStatusList(transformedStatus);
     } catch (error) {
-      console.error("Error fetching appointment types:", error|| error);
+      console.error("Error fetching appointment types:", error || error);
     } finally {
       setLoading(false);
     }
   };
- 
-  
-  
+
+
+
 
   useEffect(() => {
-    fetchDoctors()
-    fetchPatients()
+    // fetchDoctors()
+    // fetchPatients()
     fetchAppointmentTypes();
   }, [])
 
@@ -500,7 +422,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       }));
     }
   }, [formData.dateTime]);
-  
+
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -542,7 +464,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
               <div className="flex flex-col w-full"></div>
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
-              <Input
+                <Input
                   label="Appointment Date"
                   labelPlacement="outside"
                   variant="bordered"
@@ -662,7 +584,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   )}
                 </Autocomplete>
               </div>
-              
+
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
                   Mark uncheck if no notification has to be sent for appointment.
@@ -677,17 +599,17 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               </div>
             </div>
             <div className="flex justify-center mt-4">
-              <Button
+              <button
                 type="submit"
-                onPress={onOpen}
-                isDisabled={!edit || loading}
-                color={TOOL_TIP_COLORS.secondary}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90"
-                style={{ minWidth: 300, marginBottom: 20 }}
+                // onPress={onOpen}
+                // isDisabled={!edit || loading}
+                // color={TOOL_TIP_COLORS.secondary}
+                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                style={{ minWidth: 290, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </Button>
-          
+              </button>
+
               <EnhancedModal
                 isOpen={isOpen}
                 loading={loading}
@@ -717,7 +639,7 @@ export default AddAppointment;
 
 
 
-    {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
+{/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                         
@@ -742,5 +664,152 @@ export default AddAppointment;
                   </ModalFooter>
                 </ModalContent>
               </Modal> */}
-              
+
+// const fetchPatients = async () => {
+//   setLoading(true);
+//   try {
+//     const token = localStorage.getItem("docPocAuth_token");
+
+//     const hospitalEndpoint = `${API_URL}/hospital`;
+//     const hospitalResponse = await axios.get(hospitalEndpoint, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+//       return;
+//     }
+
+//     const fetchedHospitalId = hospitalResponse.data[0].id;
+//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+//     const branchResponse = await axios.get(branchEndpoint, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!branchResponse.data || branchResponse.data.length === 0) {
+//       return;
+//     }
+
+//     const fetchedBranchId = branchResponse.data[0]?.id;
+
+//     const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
+
+
+//     const params: any = {};
+
+//     params.page = 1;
+//     params.pageSize = 50;
+//     params.from = '2024-12-04T03:32:25.812Z';
+//     params.to = '2024-12-11T03:32:25.815Z';
+//     params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+
+
+//     const response = await axios.get(endpoint, {
+//       params,
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     console.log(response.data.rows)
+//     const transformedPatients: AutocompleteItem[] = response.data.rows.map((patient: any) => ({
+//       label: patient.name,
+//       value: patient.id,
+//       description: `${patient.phone} | ${patient.email}`,
+//       dob: patient.dob, // Include DOB
+//     }));
+//     setPatientList(transformedPatients);
+//     // setTotalPatient(response.data.count || response.data.length);
+
+//   } catch (err) {
+//     // setError("Failed to fetch patients.");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// const fetchDoctors = async () => {
+//   setLoading(true);
+//   try {
+//     const token = localStorage.getItem("docPocAuth_token");
+//     const hospitalEndpoint = `${API_URL}/hospital`;
+//     const hospitalResponse = await axios.get(hospitalEndpoint, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+//       return;
+//     }
+
+//     const fetchedHospitalId = hospitalResponse.data[0].id;
+//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+//     const branchResponse = await axios.get(branchEndpoint, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!branchResponse.data || branchResponse.data.length === 0) {
+//       return;
+//     }
+
+//     const fetchedBranchId = branchResponse.data[0]?.id;
+
+
+//     const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+
+
+//     const params: any = {};
+
+//     params.page = 1;
+//     params.pageSize = 50;
+//     // params.from = '2024-12-04T03:32:25.812Z';
+//     // params.to = '2024-12-11T03:32:25.815Z';
+
+
+
+//     const response = await axios.get(endpoint, {
+//       params,
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     const allUsers = response.data.rows;
+
+//     // Filter and transform only doctors
+//     const doctors = allUsers.filter((user: any) => {
+//       try {
+//         const userJson = JSON.parse(user.json);
+//         return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+//       } catch (err) {
+//         console.error("Error parsing JSON for user:", user, err);
+//         return false;
+//       }
+//     });
+
+
+//     const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
+//       label: doctor.name,
+//       value: doctor.id,
+//       description: `${doctor.phone} | ${doctor.email}`,
+//     }));
+//     setDoctorList(transformedDoctors)
+//     // setUsers(response.data.rows || response.data);
+//     // setTotalUsers(response.data.count || response.data.length);
+
+//   } catch (err) {
+//     // setError("Failed to fetch patients.");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
 

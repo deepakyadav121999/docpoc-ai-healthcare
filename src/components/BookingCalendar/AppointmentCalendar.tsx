@@ -213,7 +213,7 @@ export const AppointmentCalendar: React.FC = () => {
             <div className="h-2/3 flex justify-center items-center" ><p>{i}</p></div>
             {appointmentsByDate[dateKey] && (
               <div className="flex justify-end items-end text-sm   h-1/3 ">
-                <p>{`${appointmentsByDate[dateKey]} appo...`}</p>
+                <p className="text-sm">{`${appointmentsByDate[dateKey]} appo...`}</p>
               </div>
             )}
           </div>
@@ -423,7 +423,7 @@ const renderDayView = () => {
 
           <div className="flex w-2/4 justify-center items-center gap-1">
             {booking && <p className="text-sm">{displayTime}</p>}
-            <p className="text-sm">{booking && booking.title}</p>
+            <p className="text-sm ">{booking && booking.title}</p>
           </div>
         </div>
       );
@@ -579,13 +579,22 @@ const renderDayView = () => {
         }
 
         .calendar-container {
-          background-color: var(--calendar-background-color);
-          border-radius: 20px;
-          padding: 30px;
-          max-width: 1200px;
-          width: 70%;
+          // background-color: var(--calendar-background-color);
+          // border-radius: 20px;
+          // padding: 30px;
+          // max-width: 1200px;
+          // width: 70%;
+           background-color: var(--calendar-background-color);
+  border-radius: 20px;
+  padding: 20px;
+  width: 68%; /* Full width by default */
+  max-width: 1200px; /* Maximum width for larger screens */
+  margin: 0 auto; /* Center the container */
+  overflow: hidden; /
         }
-
+.calendar-view {
+  overflow-x: auto; /* Allow horizontal scrolling if needed */
+}
         .calendar-header {
           display: flex;
           justify-content: space-between;
@@ -663,6 +672,7 @@ const renderDayView = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 10px;
+            min-width: 270px;
         }
 
         .calendar-cell {
@@ -671,23 +681,23 @@ const renderDayView = () => {
           justify-content: center;
           align-items: center;
           background-color: var(--calendar-cell-color);
-          font-size: 18px;
+          font-size: 14px;
           border-radius: 10px;
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 
-            5px 5px 10px var(--shadow-color),
-            -5px -5px 10px var(--light-shadow);
+            2px 2px 6px var(--shadow-color),
+            -2px -2px 6px var(--light-shadow);
         }
 
 
         .calendar-cell-disabled {
           aspect-ratio: 1;
           display: flex;
-          max-height: 130px;
+          // max-height: 130px;
           justify-content: center;
           align-items: center;
-          font-size: 18px;
+          font-size: 14px;
           border-radius: 10px;
           transition: all 0.3s ease;
           box-shadow: 
@@ -710,9 +720,13 @@ const renderDayView = () => {
         display:flex;
         flex-direction:column;
         padding:1px;
-        
         }
-
+       .calendar-cell.has-booking p {
+         white-space: nowrap; /* Prevent text wrapping */
+           overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Add ellipsis for overflow */
+            font-size: 12px; /* Smaller font size for appointment text */
+            }
         .calendar-cell.current-time {
           background-color: var(--highlight-color);
           color: white;
@@ -731,11 +745,11 @@ const renderDayView = () => {
           align-items: center;
           border-color: transparent;
           background-color: var(--calendar-cell-color);
-          font-size: 18px;
+          font-size: 14px;
           border-radius: 10px;
           cursor: pointer;
           transition: all 0.3s ease;
-          min-height: 50px;
+          min-height: 40px;
           box-shadow: 
             2px 2px 6px var(--shadow-color),
             -2px -2px 6px var(--light-shadow);
@@ -746,7 +760,11 @@ const renderDayView = () => {
                       inset -1px -1px 6px var(--shadow-color);
                      
         }
-
+        .time-slot p {
+          white-space: nowrap; /* Prevent text wrapping */
+          overflow: hidden; /* Hide overflow */
+          text-overflow: ellipsis; /* Add ellipsis for overflow */
+        }
         .time-slot.has-booking {
         background-color: var(--primary-color);
          color:white;
@@ -763,34 +781,34 @@ const renderDayView = () => {
           // color: white;
         }
 
-       .modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
+                .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+          }
 
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+            .modal-content {
+              background-color: white;
+              padding: 20px;
+              border-radius: 10px;
+              max-width: 400px;
+              width: 90%;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
 
-.close {
-  float: right;
-  font-size: 1.5em;
-  font-weight: bold;
-  cursor: pointer;
-}
+            .close {
+              float: right;
+              font-size: 1.5em;
+              font-weight: bold;
+              cursor: pointer;
+            }
 
         .close:hover,
         .close:focus {
@@ -847,6 +865,8 @@ const renderDayView = () => {
            border-image-source: linear-gradient(to right, var(--secondary-color) 50%, transparent 50%);
            border-image-slice: 0 0 1 0; /* Apply gradient only on the bottom */
 }
+
+
            @media (max-width: 1024px) {
   .calendar-container {
     width: 90%; /* Reduce width on smaller screens */
@@ -917,7 +937,7 @@ const renderDayView = () => {
     // flex-direction: column;
     align-items: center;
     justify-content:center;
-    gap: 5px;
+    gap: 1px;
   }
 
   .view-selector {
@@ -945,7 +965,63 @@ const renderDayView = () => {
     padding: 15px;
   }
 }
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 10px; /* Reduce padding */
+  }
 
+  .calendar-grid {
+    gap: 3px; /* Reduce gap between cells */
+  }
+
+  .calendar-cell {
+    font-size: 12px; /* Smaller font size */
+    padding: 3px; /* Reduce padding */
+  }
+
+  .calendar-cell.has-booking p {
+    font-size: 10px; /* Smaller font size for appointment text */
+  }
+     .time-slot {
+    padding: 3px; /* Reduce padding */
+    font-size: 12px; /* Smaller font size */
+    min-height: 30px; /* Reduce height */
+  }
+
+  .time-slot.has-booking p,
+  .time-slot.partially-booking p {
+    font-size: 10px; /* Smaller font size for appointment text */
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-container {
+    padding: 5px; /* Minimal padding */
+  }
+
+  .calendar-grid {
+    gap: 2px; /* Minimal gap */
+  }
+
+  .calendar-cell {
+    font-size: 10px; /* Smallest font size */
+    padding: 2px; /* Minimal padding */
+  }
+
+  .calendar-cell.has-booking p {
+    font-size: 8px; /* Smallest font size for appointment text */
+  }
+     .time-slot {
+    padding: 5px; /* Minimal padding */
+    font-size: 10px; /* Smallest font size */
+    min-height: 30px; /* Minimal height */
+  }
+
+  .time-slot.has-booking p,
+  .time-slot.partially-booking p {
+    font-size: 8px; /* Smallest font size for appointment text */
+  }
+}
 
       `}</style>
       </div>

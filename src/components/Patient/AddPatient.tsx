@@ -71,6 +71,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
+      onOpen()
       return;
     }
 
@@ -80,6 +81,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     if (!token) {
 
       setModalMessage({ success: "", error: "No access token found. Please log in again." });
+      onOpen()
       setLoading(false);
       return;
     }
@@ -130,6 +132,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
 
       setModalMessage({ success: "Patient added successfully!", error: "" });
+      onOpen()
       setFormData({
         name: "",
         phone: "",
@@ -159,12 +162,14 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
           success: "",
           error: apiErrorMessage,
         });
+        onOpen()
       } else {
         // Handle network errors or unexpected errors
         setModalMessage({
           success: "",
           error: error.message || "An unexpected error occurred.",
         });
+        onOpen()
       }
 
     } finally {
@@ -181,15 +186,16 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       }
     }, [isOpen]);
 
+    
 
   return (
-    <div className="grid grid-cols-1 gap-9">
+    <div className="grid grid-cols-1 gap-6 sm:gap-9">
       <div className="flex flex-col w-full">
-        <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+        <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
           <form onSubmit={handleSubmit}>
-            <div className="p-6.5">
+            <div className=" p-4.5 sm:p-6.5">
 
-              <div className="mb-4.5 flex flex-col gap-4.5">
+              <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5  sm:gap-4.5">
                 <Input
                   label="Patient Name"
                   labelPlacement="outside"
@@ -213,6 +219,8 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     }
                   }}
                   isDisabled={!edit}
+                  
+                
                 />
 
                 <Autocomplete
@@ -269,7 +277,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+              <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Autocomplete
                   label="Blood Group"
                   labelPlacement="outside"
@@ -302,7 +310,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 isDisabled={!edit}
               />
 
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-2 sm:mt-4">
                 <Checkbox
                   isSelected={formData.isActive}
                   onValueChange={(value) =>
@@ -325,46 +333,18 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
             </div>
 
 
-            <div className="flex justify-center mt-4">
-              <Button
+            <div className="flex justify-center mt-2 sm:mt-4 ">
+              <button
                 type="submit"
-                isDisabled={!edit || loading}
-                color={TOOL_TIP_COLORS.secondary}
-                onPress={onOpen}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90"
-                style={{ minWidth: 300, marginBottom: 20 }}
+                // isDisabled={!edit || loading}
+                // color={TOOL_TIP_COLORS.secondary}
+                // onPress={onOpen}
+                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                style={{ minWidth: 280, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </Button>
+              </button>
 
-              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
-                <ModalContent>
-                  <ModalHeader>{
-                    loading ? (
-                      <div className="flex justify-center">
-              
-                      </div>):
-                  modalMessage.success?<p className="text-green-600">Success</p>: <p className="text-red-600">Error</p>}</ModalHeader>
-                  <ModalBody>
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <Spinner size="lg" />
-                      </div>
-                    ) : modalMessage.success ? (
-                      <p className="text-green-600">{modalMessage.success}</p>
-                    ) : (
-                      <p className="text-red-600">{modalMessage.error}</p>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    {!loading && (
-                      <Button color="primary" onPress={handleModalClose}>
-                        Ok
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </ModalContent>
-              </Modal> */}
               <EnhancedModal
                 isOpen={isOpen}
                 loading={loading}
@@ -381,3 +361,5 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 };
 
 export default AddPatient;
+
+
