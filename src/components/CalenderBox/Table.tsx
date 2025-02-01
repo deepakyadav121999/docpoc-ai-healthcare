@@ -197,33 +197,6 @@ export default function AppointmentTable() {
     }
   };
 
-  const fetchStatusById = async (statusId: string): Promise<string> => {
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-  
-      // Make an API call to fetch the list of statuses
-      const response = await axios.get(`http://127.0.0.1:3037/DocPOC/v1/appointment/status/detail/${statusId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      console.log("Response from status API:", response.data); // Debugging: log the API response
-  
-      // Ensure the response data is an array and search for the matching status ID
-     
-  
-      // Return the status name if found, otherwise fallback to "Unknown"
-      return  response.data.status
-    } catch (error) {
-      console.error("Error fetching status:", error);
-      return "Unknown"; // Fallback in case of any error
-    }
-  };
-  
-
-
 
   useEffect(() => {
     fetchUsers();
@@ -458,6 +431,30 @@ export default function AppointmentTable() {
     // setSelectedDate(null);
     setPage(1);
   }, []);
+
+  const handleDateChange = (date: CalendarDate | null) => {
+    if (date) {
+      const jsDate = date.toDate(getLocalTimeZone());
+      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+      setSelectedDate(formattedDate);
+      setSelectedDateShow(formattedDate);
+    } else {
+      setSelectedDate(null);
+      setSelectedDateShow(null);
+    }
+  };
+  
+  const handleDateBlur = () => {
+    if (!selectedDateShow) {
+      setSelectedDate(null);
+      setSelectedDateShow(null);
+    } else {
+      setSelectedDate(selectedDateShow);
+      setPage(1);
+      fetchUsers();
+    }
+  };
+
   const datePickerValueRef = React.useRef<string | null>(null);
 
   const topContent = useMemo(() => {
@@ -485,55 +482,57 @@ export default function AppointmentTable() {
 
               value={selectedDateShow ? parseDate(selectedDateShow) : undefined}
       
-              onChange={(date) => {
-                if (date) {
-                  const jsDate = date.toDate(getLocalTimeZone());
+              // onChange={(date) => {
+              //   if (date) {
+              //     const jsDate = date.toDate(getLocalTimeZone());
             
-                  // Extract the local date in YYYY-MM-DD format
-                  const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+              //     // Extract the local date in YYYY-MM-DD format
+              //     const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
                   
-                  setTempDate(formattedDate); // Update `tempDate`
-                  console.log("onChange - Temp Date Updated:", formattedDate);
-                  setSelectedDateShow(formattedDate)
-                  // Store the immediate value in a local variable for `onBlur`
-                  datePickerValueRef.current = formattedDate;
-                } else {
-                  setTempDate(null); // Clear `tempDate`
-                  console.log("onChange - Temp Date Cleared");
+              //     setTempDate(formattedDate); // Update `tempDate`
+              //     console.log("onChange - Temp Date Updated:", formattedDate);
+              //     setSelectedDateShow(formattedDate)
+              //     // Store the immediate value in a local variable for `onBlur`
+              //     datePickerValueRef.current = formattedDate;
+              //   } else {
+              //     setTempDate(null); // Clear `tempDate`
+              //     console.log("onChange - Temp Date Cleared");
             
-                  // Clear the local variable
-                  datePickerValueRef.current = null;
-                  setSelectedDateShow(null);
-                  setSelectedDate(null);
-                }
-              }}
-              onBlur={() => {
-                const currentTempDate = datePickerValueRef.current; // Access the most recent value
-                console.log("onBlur - Current Temp Date:", currentTempDate);
-                if (!selectedDateShow) {
-                  setSelectedDate(null);
-                  setSelectedDateShow(null)
-                  setTempDate(null); 
-                }
-                if (currentTempDate) {
-                  // Fetch for the selected date
-                  setTempDate(currentTempDate); 
-                  setSelectedDate(currentTempDate);
-                  setSelectedDateShow(currentTempDate)
-                  setPage(1); // Reset to the first page
-                  // fetchUsers(); // Fetch appointments for the selected date
-                  console.log("onBlur - Fetch Triggered with Date:", currentTempDate);
-                } else {
-                  // Fetch all appointments if the date is cleared
-                  setSelectedDate(null);
-                  setSelectedDateShow(null)
-                  setTempDate(null); 
-                  setPage(1);
-                  // fetchUsers(); // Fetch all appointments
-                  console.log("onBlur - Fetch Triggered for All Appointments");
-                }
-              }}
+              //     // Clear the local variable
+              //     datePickerValueRef.current = null;
+              //     setSelectedDateShow(null);
+              //     setSelectedDate(null);
+              //   }
+              // }}
+              // onBlur={() => {
+              //   const currentTempDate = datePickerValueRef.current; // Access the most recent value
+              //   console.log("onBlur - Current Temp Date:", currentTempDate);
+              //   if (!selectedDateShow) {
+              //     setSelectedDate(null);
+              //     setSelectedDateShow(null)
+              //     setTempDate(null); 
+              //   }
+              //   if (currentTempDate) {
+              //     // Fetch for the selected date
+              //     setTempDate(currentTempDate); 
+              //     setSelectedDate(currentTempDate);
+              //     setSelectedDateShow(currentTempDate)
+              //     setPage(1); // Reset to the first page
+              //     // fetchUsers(); // Fetch appointments for the selected date
+              //     console.log("onBlur - Fetch Triggered with Date:", currentTempDate);
+              //   } else {
+              //     // Fetch all appointments if the date is cleared
+              //     setSelectedDate(null);
+              //     setSelectedDateShow(null)
+              //     setTempDate(null); 
+              //     setPage(1);
+              //     // fetchUsers(); // Fetch all appointments
+              //     console.log("onBlur - Fetch Triggered for All Appointments");
+              //   }
+              // }}
             
+              onChange={handleDateChange}
+              // onBlur={handleDateBlur}
            />
             <div className="flex gap-3">
               <Dropdown>

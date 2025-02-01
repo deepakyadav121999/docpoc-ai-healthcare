@@ -52,7 +52,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [appointmentStatusList, setAppointmentStatusList] = useState<AutocompleteItem[]>([]);
-
+  const [savingData, setSavingData] = useState(false);
 
   const inputDate = new Date(date);
   const correctedDate = new Date(inputDate.getTime() - inputDate.getTimezoneOffset() * 60000);
@@ -156,6 +156,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSavingData(true);
     const missingFields: string[] = [];
     for (const key in formData) {
       if (
@@ -184,6 +185,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
       setModalMessage({ success: "", error: "No access token found. Please log in again." });
       setLoading(false);
+      setSavingData(false);
       onOpen();
       return;
     }
@@ -248,6 +250,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
     }
     setLoading(false)
+    setSavingData(false);
   };
   
 

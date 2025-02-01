@@ -340,7 +340,8 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
         </DropdownMenu>
       </Dropdown>
 
-      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} style={{ maxWidth: 800 }}
+      <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} 
+      style={{ maxWidth: 800 }}
        className="max-h-[90vh] overflow-y-auto"
       
       >

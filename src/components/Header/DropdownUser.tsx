@@ -43,6 +43,7 @@ const DropdownUser = () => {
             "Content-Type": "application/json",
           },
         });
+        localStorage.setItem("userProfile", JSON.stringify(userResponse.data));
         setProfile(userResponse.data); 
         // Handle the user data response
         console.log("User data:", userResponse.data);
@@ -55,9 +56,23 @@ const DropdownUser = () => {
   };
 
 
-  useEffect(()=>{
-    fetchProfile()
-  },[])
+ 
+    useEffect(() => {
+      // Check if profile data exists in local storage
+      const storedProfile = localStorage.getItem("userProfile");
+      if (storedProfile) {
+        setProfile(JSON.parse(storedProfile)); // Set profile from local storage
+      } else {
+        fetchProfile(); // Fetch profile if not available in local storage
+      }
+    }, []);
+ 
+
+  const handleLogout = () => {
+    localStorage.removeItem("userProfile"); // Clear profile data
+    localStorage.removeItem("docPocAuth_token"); // Clear auth token
+    router.push("/auth/signout"); // Redirect to signout page
+  };
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -194,7 +209,9 @@ const DropdownUser = () => {
             </li>
           </ul>
           <div className="p-2.5">
-            <button onClick={() => router.push("/auth/signout")}className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base">
+            <button   
+            onClick={handleLogout} 
+            className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base">
               <svg
                 className="fill-current"
                 width="18"

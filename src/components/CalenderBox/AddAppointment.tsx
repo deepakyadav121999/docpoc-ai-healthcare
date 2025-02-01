@@ -43,7 +43,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [appointmentStatusList, setAppointmentStatusList] = useState<AutocompleteItem[]>([]);
-
+  const [savingData, setSavingData] = useState(false);
 
 
   const [formData, setFormData] = useState<{
@@ -131,6 +131,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSavingData(true);
     const missingFields: string[] = [];
     for (const key in formData) {
       if (
@@ -159,6 +160,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       setModalMessage({ success: "", error: "No access token found. Please log in again." });
       setLoading(false);
+      setSavingData(false);
       onOpen();
       return;
     }
@@ -246,6 +248,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     }
     setLoading(false)
+    setSavingData(false);
+
   };
 
 
@@ -607,7 +611,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 290, marginBottom: 20 }}
               >
-                {loading ? "Saving..." : "Save Changes"}
+                 {savingData ? "Saving..." : "Save Changes"}
               </button>
 
               <EnhancedModal
