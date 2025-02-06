@@ -3,7 +3,7 @@ import Link from "next/link";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
 import { Spinner } from "@nextui-org/spinner";
 
-const SidebarItem = ({ item, pageName, setPageName, isActive }: any) => {
+const SidebarItem = ({ item, pageName, setPageName, isActive, loadingitem, onClick }: any) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {

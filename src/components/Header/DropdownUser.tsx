@@ -5,6 +5,7 @@ import ClickOutside from "@/components/ClickOutside";
 import { useRouter } from "next/navigation";
 import React,{useEffect} from "react";
 import axios from "axios";
+import { Spinner } from "@nextui-org/spinner";
 
 const API_URL = process.env.API_URL;
 interface Profile {
@@ -17,9 +18,10 @@ interface Profile {
 const DropdownUser = () => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
   const [profile, setProfile] = useState<Profile | null>(null);
 
+  const [loadingOptions, setLoadingOptions] = useState<{ [key: string]: boolean }>({});
+  const defaultDelay = 1000;
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
@@ -67,12 +69,32 @@ const DropdownUser = () => {
       }
     }, []);
  
-
-  const handleLogout = () => {
-    localStorage.removeItem("userProfile"); // Clear profile data
-    localStorage.removeItem("docPocAuth_token"); // Clear auth token
-    router.push("/auth/signout"); // Redirect to signout page
+ const handleNavigation = async (path: string, optionKey: string) => {
+    try {
+      setLoadingOptions((prev) => ({ ...prev, [optionKey]: true }));
+      await new Promise((resolve) => setTimeout(resolve, defaultDelay)); // Simulated delay
+      router.push(path);
+    } catch (error) {
+      console.error("Error during navigation:", error);
+    } finally {
+      setLoadingOptions((prev) => ({ ...prev, [optionKey]: false }));
+    }
   };
+
+ const handleLogout = async () => {
+    try {
+      setLoadingOptions((prev) => ({ ...prev, logout: true }));
+      await new Promise((resolve) => setTimeout(resolve, defaultDelay)); // Simulated delay
+      localStorage.removeItem("userProfile");
+      localStorage.removeItem("docPocAuth_token");
+      router.push("/auth/signout");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    } finally {
+      setLoadingOptions((prev) => ({ ...prev, logout: false }));
+    }
+  };
+
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -149,10 +171,8 @@ const DropdownUser = () => {
           </div>
           <ul className="flex flex-col gap-1 border-y-[0.5px] border-stroke p-2.5 dark:border-dark-3">
             <li>
-              <Link
-                href="/profile"
-                className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base"
-              >
+            <button onClick={() => handleNavigation("/profile", "viewProfile")}
+                className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base">
                 <svg
                   className="fill-current"
                   width="18"
@@ -174,13 +194,14 @@ const DropdownUser = () => {
                     fill=""
                   />
                 </svg>
-                View profile
-              </Link>
+                <span>View Profile</span>
+                {loadingOptions.viewProfile && <Spinner size="sm" />}
+           </button>
             </li>
 
             <li>
-              <Link
-                href="/pages/settings"
+              <button
+                onClick={() => handleNavigation("/pages/settings", "settings")}
                 className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base"
               >
                 <svg
@@ -204,8 +225,9 @@ const DropdownUser = () => {
                     fill=""
                   />
                 </svg>
-                Account Settings
-              </Link>
+                <span>Account Settings</span>
+                {loadingOptions.settings && <Spinner size="sm" />}
+              </button>
             </li>
           </ul>
           <div className="p-2.5">
@@ -236,7 +258,8 @@ const DropdownUser = () => {
                   </clipPath>
                 </defs>
               </svg>
-              Logout
+              <span>Logout</span>
+              {loadingOptions.logout && <Spinner size="sm" />}
             </button>
           </div>
         </div>

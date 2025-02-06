@@ -96,5 +96,6 @@ export async function UserSignIn(
 
 export async function SignOut() {
   localStorage.removeItem("docPocAuth_token");
+  localStorage.removeItem("userProfile");
   window.location.reload();
 }
