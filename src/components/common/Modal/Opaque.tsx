@@ -20,6 +20,7 @@ import ModalForm from "@/components/ModalForms";
 import axios from "axios";
 import EnhancedModal from "./EnhancedModal";
 
+const API_URL = process.env.API_URL;
 export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edit: MODAL_TYPES, delete: MODAL_TYPES }, modalTitle: string, actionButtonName?: string, userId: string, onPatientDelete: () => void; }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [title, setTitle] = React.useState(props.modalTitle);
@@ -38,7 +39,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleDelete = async () => {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${props.userId}`;
+    const endpoint = `${API_URL}/patient/${props.userId}`;
 
     try {
       const response = await axios.delete(endpoint, {
@@ -73,7 +74,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const deleteEmployee = async () => {
     setLoading(true);
     try {
-      const response = await axios.delete(`http://127.0.0.1:3037/DocPOC/v1/user/${props.userId}`);
+      const response = await axios.delete(`${API_URL}/user/${props.userId}`);
       if (response.status === 200) {
         // setmessage('emplyee deleted')
         onClose()
@@ -102,7 +103,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
 
-       const endpoint =`http://127.0.0.1:3037/DocPOC/v1/appointment/${props.userId}`
+       const endpoint =`${API_URL}/appointment/${props.userId}`
     try {
       const response = await axios.delete(endpoint,{
         headers: {
@@ -176,7 +177,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleEdit = async () => {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = "http://127.0.0.1:3037/DocPOC/v1/patient";
+    const endpoint = `${API_URL}/patient`;
 
     const requestData = {
       id: props.userId,
@@ -213,7 +214,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleEmployeeEdit = async () => {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user`;
+    const endpoint = `${API_URL}/user`;
 
     const requestData = {
       id: props.userId,
@@ -250,7 +251,7 @@ export default function OpaqueModal(props: { modalType: { view: MODAL_TYPES, edi
   const handleAppointmentEdit = async () => {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment`;
+    const endpoint = `${API_URL}/appointment`;
 
     const requestData = {
       id: props.userId,

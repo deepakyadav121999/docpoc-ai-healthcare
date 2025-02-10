@@ -478,11 +478,13 @@ const Clinic = () => {
                   color="secondary"
                   onClick={locationDetact}
                   type="button"
-                  style={{ marginTop: 20 }}
+                  // style={{ marginTop: 20 }}
                   disabled={!edit}
                   className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
+                  style={{ minWidth: 200, marginBottom: 20, marginTop: 20 }}
                 >
                   Detect Location
+
                 </button>
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
@@ -523,7 +525,7 @@ const Clinic = () => {
                 // isDisabled={!edit}
                 color={TOOL_TIP_COLORS.secondary}
                 className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
-                style={{ minWidth: 290, marginBottom: 20 }}
+                style={{ minWidth: 280, marginBottom: 20 }}
               // onPress={onOpen}
               >
                 Save Changes

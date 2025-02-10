@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
+import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useDisclosure } from "@nextui-org/react";
 
 const API_URL = process.env.API_URL;
 
@@ -25,8 +27,12 @@ interface UserProfile {
 const SettingBoxes = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+ const { isOpen, onOpen, onClose } = useDisclosure();
+  const [loading, setLoading] = useState(false);
 
   const fetchProfile = async () => {
+    setLoading(true)
     const token = localStorage.getItem("docPocAuth_token");
     const profileEndpoint = `${API_URL}/auth/profile`;
   
@@ -56,6 +62,7 @@ const SettingBoxes = () => {
         console.log("User data:", userResponse.data);
         setUserProfile(userResponse.data)
         setFormData(userResponse.data);
+        setLoading(false)
         // You can now use the user data as needed
       }
     } catch (error) {
@@ -66,8 +73,13 @@ const SettingBoxes = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+  const handleModalClose = () => {
+    setModalMessage({ success: "", error: "" });
+    onClose();
+  };
 
   const handleSave = async (e: React.FormEvent) => {
+    setLoading(true)
     e.preventDefault();
 
     if (userProfile?.id) {
@@ -83,10 +95,18 @@ const SettingBoxes = () => {
         });
 
         console.log("Profile updated successfully:", response.data);
-        setUserProfile(response.data); // Update the state with the response
+        setModalMessage({ success: "Profile updated successfully", error: "" });
+
+        onOpen();
+
+        setUserProfile(response.data);
+        setLoading(false)
+         // Update the state with the response
       } catch (error) {
         console.error("Error updating profile:", error);
+        setModalMessage({ success: "", error: "Error updating profile" });
       }
+      onOpen()
     }
   };
 
@@ -320,6 +340,13 @@ const SettingBoxes = () => {
                   >
                     Save
                   </button>
+                  <EnhancedModal
+                isOpen={isOpen}
+                loading={loading}
+                modalMessage={modalMessage}
+                onClose={handleModalClose}
+              />
+
                 </div>
               </form>
             </div>

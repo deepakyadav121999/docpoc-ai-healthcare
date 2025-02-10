@@ -182,6 +182,7 @@ const ClinicBranch = () => {
         success: "Hospital created successfully",
         error: ``,
       });
+      onOpen(); 
       // alert("Branch created successfully!");
     } catch (error) {
       console.error("Error creating branch:", error);
@@ -190,6 +191,7 @@ const ClinicBranch = () => {
         success: "",
         error: `Error creating branch: ${error}`,
       });
+      onOpen(); 
     }
     setLoading(false)
   };
@@ -362,15 +364,15 @@ const ClinicBranch = () => {
                     isDisabled={!edit}
                 />
 
-                <Button
+                <button
                   color="secondary"
                   onClick={handleDetectLocation}
                   type="button"
-                  style={{ marginTop: 20 }}
-                    isDisabled={!edit}
+                  className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
+                  style={{ minWidth: 200, marginBottom: 20, marginTop: 20 }}
                 >
                   Detect Location
-                </Button>
+                </button>
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <CheckboxGroup
@@ -404,16 +406,17 @@ const ClinicBranch = () => {
             </div>
 
             <div className="flex justify-center mt-4">
-              <Button
+              <button
                 type="submit"
-                isDisabled={!edit}
+                // isDisabled={!edit}
+                disabled={!edit}
                 color={TOOL_TIP_COLORS.secondary}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90"
+                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
                 style={{ minWidth: 300, marginBottom: 20 }}
-                onPress={onOpen}
+                // onPress={onOpen}
               >
                 Save Changes
-              </Button>
+              </button>
 
                 {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>

@@ -78,7 +78,7 @@ interface AutocompleteItem {
   dob?: string;
 }
 
-
+const API_URL = process.env.API_URL;
 export default function ModalForm(props: { type: string, userId: string, onDataChange: (data: any) => void }) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
@@ -127,6 +127,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
   const [appointmentDateTime, setAppointmentDateTime] = useState("");
   const [appointmentPatientId, setAppointmentPatientId] = useState("");
+ 
   const [appointmentBranch, setAppointmentBranch] = useState("");
   const [appointmentName, setAppointmentName] = useState("")
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
@@ -261,7 +262,7 @@ function extractTimeDisplay(datetimeStr: string): string {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/patient/${userId}`;
+      const endpoint = `${API_URL}/patient/${userId}`;
 
       const response = await axios.get(endpoint, {
         headers: {
@@ -290,7 +291,7 @@ function extractTimeDisplay(datetimeStr: string): string {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/${userId}`;
+      const endpoint = `${API_URL}/user/${userId}`;
 
       const response = await axios.get(endpoint, {
         headers: {
@@ -345,15 +346,23 @@ function extractTimeDisplay(datetimeStr: string): string {
 
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
-  const extractDate = (dateTimeString: string): string => {
-    const date = dateTimeString;
-    return date.split("T")[0];
+  // const extractDate = (dateTimeString: string): string => {
+  //   const date = dateTimeString;
+  //   return date.split("T")[0];
+  // };
+  const extractDate = (dateTimeString: string | undefined): string => {
+    if (!dateTimeString) {
+      console.error("Invalid dateTimeString provided to extractDate:", dateTimeString);
+      return "N/A"; // Fallback value if dateTimeString is undefined or null
+    }
+    return dateTimeString.split("T")[0]; // Extract the date portion
   };
+  
   const fetchDoctors = async (branchId: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/user/list/${branchId}`;
+      const endpoint = `${API_URL}/user/list/${branchId}`;
       const params: any = {};
       params.page = 1;
       params.pageSize = 50;
@@ -383,7 +392,7 @@ function extractTimeDisplay(datetimeStr: string): string {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment/${userId}`;
+      const endpoint = `${API_URL}/appointment/${userId}`;
 
       const response = await axios.get(endpoint, {
         headers: {
@@ -647,6 +656,85 @@ function extractTimeDisplay(datetimeStr: string): string {
       label: "AB+",
     },
   ];
+  const [showLastVisit, setShowLastVisit] = useState(false);
+  const [lastVisitData, setLastVisitData] = useState<any[]>([]); // Store all visit data
+  const [isFetchingLastVisit, setIsFetchingLastVisit] = useState(false);
+  const [doctorsMap, setDoctorsMap] = useState<Record<string, string>>({});
+
+  const fetchDoctorsw = async (doctorIds: string[]) => {
+   const token = localStorage.getItem("docPocAuth_token");
+  const doctorMap: Record<string, string> = {}; // Initialize a map to store doctor names
+
+  try {
+    const doctorRequests = doctorIds.map((doctorId: string) => {
+      const endpoint = `${API_URL}/user/${doctorId}`;
+      return axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    });
+
+    const doctorResponses = await Promise.all(doctorRequests);
+
+    doctorResponses.forEach((response) => {
+      const doctor = response.data;
+      doctorMap[doctor.id] = doctor.name; // Map doctorId to doctor name
+    });
+
+    setDoctorsMap(doctorMap); // Save the map of doctor names in state
+  } catch (err) {
+    console.error("Failed to fetch doctors:", err);
+  }
+  };
+
+  const fetchLastVisit = async (patientId: string) => {
+    setIsFetchingLastVisit(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment/visits/patient/${patientId}`;
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setLastVisitData(response.data);
+      const visits = response.data.rows;
+ 
+       // Save all visit data
+    } catch (err) {
+      console.error("Failed to fetch last visit.", err);
+    } finally {
+      setIsFetchingLastVisit(false);
+    }
+  };
+
+  const handleViewLastVisit = () => {
+    fetchLastVisit(appointmentPatientId); // Fetch all visits for the patient
+    setTimeout(() => setShowLastVisit(true), 300);
+  };
+
+  const handleCloseLastVisit = () => {
+    setShowLastVisit(false);
+  };
+
+  // const extractDate = (dateTimeString: string): string => {
+  //   if (!dateTimeString) {
+  //     return "N/A"; // Fallback value
+  //   }
+  //   return dateTimeString.split("T")[0]; // Extract the date portion
+  // };
+
+  // const extractTime = (dateTimeString: string): string => {
+  //   if (!dateTimeString) {
+  //     return "N/A"; // Fallback value
+  //   }
+  //   return dateTimeString.split("T")[1]?.split(".")[0]; // Extract the time portion
+  // };
 
 
 
@@ -656,76 +744,401 @@ function extractTimeDisplay(datetimeStr: string): string {
 
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
-    return (
-      <>
-        <div>
-          {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
-              <Spinner />
-            </div>
-          )}
-        </div>
+  //   return (
+  //     <>
+  //       <div>
+  //         {loading && (
+  //           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+  //             <Spinner />
+  //           </div>
+  //         )}
+  //       </div>
+  //     <Card
+  //       isBlurred
+  //       className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
+  //       shadow="sm"
+  //     >
+  //       <CardBody>
+  //         <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+  //           <div className="relative col-span-6 md:col-span-4">
+  //             <Image
+  //               alt="Patient photo"
+  //               className="object-cover"
+  //               height={200}
+  //               shadow="md"
+  //               src={USER_ICONS.FEMALE_USER}
+  //               width="100%"
+  //             />
+  //           </div>
+
+  //           <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+  //             <div className="flex justify-between items-center">
+  //               <h3 className="font-semibold text-foreground/90">
+  //                 Appointment Details
+  //               </h3>
+  //               <StyledButton label={"Follow-up"} />
+  //             </div>
+
+  //             <div className="space-y-3">
+  //               <div className="flex items-center">
+  //                 <SVGIconProvider iconName="clock" />
+  //                 <p className="text-sm sm:text-medium ml-2">
+  //                   <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
+  //                 </p>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <SVGIconProvider iconName="calendar" />
+  //                 <p className="text-sm sm:text-medium ml-2">
+  //                   <strong>Date: </strong>{extractDate(appointmentDate)}
+  //                 </p>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <div style={{ marginLeft: -5 }}>
+  //                   <SVGIconProvider iconName="doctor" />
+  //                 </div>
+  //                 <p className="text-sm sm:text-medium ml-2">
+  //                   <strong>Appointed Doctor: </strong> {employeeName}
+  //                 </p>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <SVGIconProvider iconName="followup" />
+  //                 <p className="text-sm sm:text-medium ml-2">
+  //                   <strong>Follow-up: </strong> Yes
+  //                 </p>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </CardBody>
+  //     </Card>
+  //     </>
+  //   );
+  // }
+
+  // return (
+  //   <>
+  //     <div>
+  //       {loading && (
+  //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
+  //           <Spinner />
+  //         </div>
+  //       )}
+  //     </div>
+  //     <Card
+  //       isBlurred
+  //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
+  //       shadow="sm"
+  //     >
+  //       <CardBody>
+
+  //         {!showLastVisit ? (
+          
+  //           <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+  //             <div className="relative col-span-6 md:col-span-4">
+  //               <Image
+  //                 alt="Patient photo"
+  //                 className="object-cover"
+  //                 height={200}
+  //                 shadow="md"
+  //                 src={USER_ICONS.FEMALE_USER}
+  //                 width="100%"
+  //               />
+  //             </div>
+
+  //             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+  //               <div className="flex justify-between items-center">
+  //                 <h3 className="font-semibold text-foreground/90">
+  //                   Appointment Details
+  //                 </h3>
+  //                 <StyledButton
+  //                   label="Follow-Up"
+                  
+  //                 />
+  //               </div>
+
+  //               <div className="space-y-3">
+  //               <div className="flex items-center">
+  //                   <div style={{ marginLeft: -5 }}>
+  //                     <SVGIconProvider iconName="doctor" />
+  //                   </div>
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong>Patient Name: </strong> {appointmentName}
+  //                   </p>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <SVGIconProvider iconName="clock" />
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong>Visiting Time: </strong>{" "}
+  //                     {extractTime(startDateTime)}-{extractTime(endDateTime)}
+  //                   </p>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <SVGIconProvider iconName="calendar" />
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong>Date: </strong>
+  //                     {extractDate(appointmentDate)}
+  //                   </p>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <div style={{ marginLeft: -5 }}>
+  //                     <SVGIconProvider iconName="doctor" />
+  //                   </div>
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong>Appointed Doctor: </strong> {employeeName}
+  //                   </p>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <SVGIconProvider iconName="followup" />
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong>Follow-up: </strong> Yes
+  //                   </p>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   {/* <SVGIconProvider iconName="followup" /> */}
+  //                   <p className="text-sm sm:text-medium ml-2">
+  //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong> 
+  //                   </p>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+          
+  //         ) : (
+  //           // Patient Last Visit Details in Table
+         
+
+          
+  //           <div className="w-full animate-fade-in">
+  //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
+  //               Patient Last Visits
+  //             </h3>
+
+  //             {isFetchingLastVisit ? (
+  //               <div className="flex justify-center items-center">
+  //                 <Spinner />
+  //               </div>
+  //             ) : lastVisitData.length > 0 ? (
+  //               <div className="overflow-x-auto">
+  //                 <table className="w-full table-auto border-collapse border border-gray-300">
+  //                   <thead>
+  //                     <tr className="">
+  //                       <th className="px-4 py-2 border border-gray-300 text-left">
+  //                         Date
+  //                       </th>
+  //                       <th className="px-4 py-2 border border-gray-300 text-left">
+  //                         Start Time
+  //                       </th>
+  //                       <th className="px-4 py-2 border border-gray-300 text-left">
+  //                         End Time
+  //                       </th>
+  //                       <th className="px-4 py-2 border border-gray-300 text-left">
+  //                        Appointed Doctor
+  //                       </th>
+  //                     </tr>
+  //                   </thead>
+  //                   <tbody>
+  //                     {lastVisitData.map((visit) => (
+  //                       <tr key={visit.id}>
+  //                         <td className="px-4 py-2 border border-gray-300">
+  //                           {extractDate(visit.dateTime)}
+  //                         </td>
+  //                         <td className="px-4 py-2 border border-gray-300">
+  //                           {extractTime(visit.startDateTime)}
+  //                         </td>
+  //                         <td className="px-4 py-2 border border-gray-300">
+  //                           {extractTime(visit.endDateTime)}
+  //                         </td>
+  //                         <td className="px-4 py-2 border border-gray-300">
+  //                          {visit.doctorName}
+  //                         </td>
+  //                       </tr>
+  //                     ))}
+  //                   </tbody>
+  //                 </table>
+  //               </div>
+  //             ) : (
+  //               <p className="text-sm sm:text-medium text-red-500 text-center">
+  //                 No data available for the last visits.
+  //               </p>
+  //             )}
+
+  //             <div className="flex justify-end mt-6">
+  //               <StyledButton
+  //                 label="Close"
+  //                 clickEvent={handleCloseLastVisit}
+                
+  //               />
+  //             </div>
+  //           </div>
+      
+  //         )}
+  //       </CardBody>
+  //     </Card>
+  //   </>
+  // );
+  return (
+    <>
+      <div>
+        {loading && (
+          <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
+            <Spinner />
+          </div>
+        )}
+      </div>
       <Card
         isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
+        className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
         shadow="sm"
       >
         <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <Image
-                alt="Patient photo"
-                className="object-cover"
-                height={200}
-                shadow="md"
-                src={USER_ICONS.FEMALE_USER}
-                width="100%"
-              />
-            </div>
-
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90">
-                  Appointment Details
-                </h3>
-                <StyledButton label={"Follow-up"} />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  <p className="text-sm sm:text-medium ml-2">
-                    <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className="text-sm sm:text-medium ml-2">
-                    <strong>Date: </strong>{extractDate(appointmentDate)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <div style={{ marginLeft: -5 }}>
-                    <SVGIconProvider iconName="doctor" />
+          <div className="relative overflow-hidden">
+            {/* Container for Sliding Views */}
+            <div
+              className={`flex transition-transform duration-500 ease-in-out ${
+                showLastVisit ? '-translate-x-full' : 'translate-x-0'
+              }`}
+            >
+              {/* Appointment Details */}
+              <div className="flex-shrink-0 w-full">
+                <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                  <div className="relative col-span-6 md:col-span-4">
+                    <Image
+                      alt="Patient photo"
+                      className="object-cover"
+                      height={200}
+                      shadow="md"
+                      src={USER_ICONS.FEMALE_USER}
+                      width="100%"
+                    />
                   </div>
-                  <p className="text-sm sm:text-medium ml-2">
-                    <strong>Appointed Doctor: </strong> {employeeName}
-                  </p>
+  
+                  <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-semibold text-foreground/90">
+                        Appointment Details
+                      </h3>
+                      <StyledButton label="Follow-Up" />
+                    </div>
+  
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <div style={{ marginLeft: -5 }}>
+                          <SVGIconProvider iconName="doctor" />
+                        </div>
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Patient Name: </strong> {appointmentName}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <SVGIconProvider iconName="clock" />
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Visiting Time: </strong>
+                          {extractTime(startDateTime)}-{extractTime(endDateTime)}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <SVGIconProvider iconName="calendar" />
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Date: </strong>
+                          {extractDate(appointmentDate)}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <div style={{ marginLeft: -5 }}>
+                          <SVGIconProvider iconName="doctor" />
+                        </div>
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Appointed Doctor: </strong> {employeeName}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <SVGIconProvider iconName="followup" />
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Follow-up: </strong> Yes
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <p
+                          onClick={handleViewLastVisit}
+                          className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+                        >
+                          <strong>See last visit</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="followup" />
-                  <p className="text-sm sm:text-medium ml-2">
-                    <strong>Follow-up: </strong> Yes
-                  </p>
+              </div>
+  
+              {/* Patient Last Visit */}
+              <div className="flex-shrink-0 w-full">
+                <div className="w-full">
+                  <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                    Patient Last Visits
+                  </h3>
+  
+                  {isFetchingLastVisit ? (
+                    <div className="flex justify-center items-center">
+                      <Spinner />
+                    </div>
+                  ) : lastVisitData.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full table-auto border-collapse border border-gray-300">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-2 border border-gray-300 text-left">
+                              Date
+                            </th>
+                            <th className="px-4 py-2 border border-gray-300 text-left">
+                              Start Time
+                            </th>
+                            <th className="px-4 py-2 border border-gray-300 text-left">
+                              End Time
+                            </th>
+                            <th className="px-4 py-2 border border-gray-300 text-left">
+                              Appointed Doctor
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lastVisitData.map((visit) => (
+                            <tr key={visit.id}>
+                              <td className="px-4 py-2 border border-gray-300">
+                                {extractDate(visit.dateTime)}
+                              </td>
+                              <td className="px-4 py-2 border border-gray-300">
+                                {extractTime(visit.startDateTime)}
+                              </td>
+                              <td className="px-4 py-2 border border-gray-300">
+                                {extractTime(visit.endDateTime)}
+                              </td>
+                              <td className="px-4 py-2 border border-gray-300">
+                                {visit.doctorName}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm sm:text-medium text-red-500 text-center">
+                      No data available for the last visits.
+                    </p>
+                  )}
+  
+                  <div className="flex justify-end mt-6">
+                    <StyledButton label="Close" clickEvent={handleCloseLastVisit} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </CardBody>
       </Card>
-      </>
-    );
-  }
+    </>
+  );
+  
+}
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
     return (
