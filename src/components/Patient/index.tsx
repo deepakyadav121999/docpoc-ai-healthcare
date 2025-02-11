@@ -49,8 +49,9 @@ const INITIAL_VISIBLE_COLUMNS = [
   "email",
   "status",
   "actions",
-  "lastVisit"
+
 ];
+  // "lastVisit"
 
 
 interface Patient {
@@ -253,10 +254,10 @@ export default function App() {
       case "lastVisit":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{extractDate(cellValue as string)}</p>
+            {/* <p className="text-bold text-small capitalize">{extractDate(cellValue as string)}</p>
             <p className="text-bold text-tiny capitalize text-default-400">
               {extractTime(user.lastVisit)}
-            </p>
+            </p> */}
           </div>
         );
       case "status":

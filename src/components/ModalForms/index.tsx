@@ -44,7 +44,7 @@ import {
   getLocalTimeZone,
   now,
   parseTime,
-  
+
 } from "@internationalized/date";
 
 import ToolTip from "../Tooltip";
@@ -111,12 +111,16 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
   const [editSelectedPatient, setEditPatient] = useState(false);
   const [patientName, setPatientName] = useState("");
+  const [patientId, setPatientId] = useState("");
   const [patientBloodGroup, setPatientBloodGroup] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [patientStatus, setPatientStatus] = useState("");
   const [profilePhoto, setProfilePhoto] = useState("");
-  const [lastVisit, setLastvisit] = useState("");
+  // const [loading, setLoading] = useState<boolean>(true);
+  const [lastVisit, setLastVisit] = useState<string>("N/A");
+  const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
+  // const [lastVisit, setLastvisit] = useState("");
   const [notificationStatus, setNotificationStatus] = useState("")
   const [branchId, setBranchId] = useState("")
   const [patientDob, setPatientDob] = useState("")
@@ -127,7 +131,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
   const [appointmentDateTime, setAppointmentDateTime] = useState("");
   const [appointmentPatientId, setAppointmentPatientId] = useState("");
- 
+
   const [appointmentBranch, setAppointmentBranch] = useState("");
   const [appointmentName, setAppointmentName] = useState("")
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
@@ -138,86 +142,60 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
 
-//   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
-// const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));   
-   // Default time
-   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
-const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+  //   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
+  // const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));   
+  // Default time
+  const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
+  const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
-// function extractTimeDisplay(datetimeStr: string): string {
-//   // Parse the ISO 8601 string into a Date object
-//   const date = new Date(datetimeStr);
+  
+  const formatDateToDDMMYYYY = (dateTimeString: string): string => {
+    const dateObj = new Date(dateTimeString);
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
-//   // Adjust for offset (e.g., +6:30)
-//   const offsetHours = 6;
-//   const offsetMinutes = 30;
-//   date.setUTCHours(date.getUTCHours() + offsetHours);
-//   date.setUTCMinutes(date.getUTCMinutes() + offsetMinutes);
 
-//   // Format the time to HH:MM:SS
-//   const hours = String(date.getUTCHours()).padStart(2, '0');
-//   const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-//   const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  function extractTimeDisplay(datetimeStr: string): string {
+    // Parse the ISO 8601 string into a Date object
+    const date = new Date(datetimeStr);
 
-//   return `${hours}:${minutes}:${seconds}`;
-// }
-// function extractTimeDisplay(datetimeStr: string): string {
-//   // Parse the ISO 8601 string into a Date object
-//   const date = new Date(datetimeStr);
+    // Extract the UTC hours, minutes, and seconds
+    let hours = date.getUTCHours();
+    let minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
 
-//   // Adjust for the desired offset (e.g., +6:30)
-//   const offsetHours = 6;
-//   const offsetMinutes = 30;
-//   const adjustedTime = new Date(
-//     date.getTime() + offsetHours * 60 * 60 * 1000 + offsetMinutes * 60 * 1000
-//   );
+    // Apply the offset (e.g., +6:30)
+    const offsetHours = 6;
+    const offsetMinutes = 30;
+    hours -= 1;
+    // Apply offset to minutes
+    minutes += offsetMinutes;
+    if (minutes >= 60) {
+      minutes -= 60;
+      hours += 1;
+    }
 
-//   // Format the time to HH:MM:SS
-//   const hours = String(adjustedTime.getUTCHours()).padStart(2, '0');
-//   const minutes = String(adjustedTime.getUTCMinutes()).padStart(2, '0');
-//   const seconds = String(adjustedTime.getUTCSeconds()).padStart(2, '0');
+    // Apply offset to hours
+    hours += offsetHours;
+    if (hours >= 24) {
+      hours -= 24; // Handle overflow to the next day
+    }
 
-//   return `${hours}:${minutes}:${seconds}`;
-// }
+    // Format the time components to always display two digits
+    const formattedHours = String(hours).padStart(2, "0");
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    const formattedSeconds = String(seconds).padStart(2, "0");
 
-function extractTimeDisplay(datetimeStr: string): string {
-  // Parse the ISO 8601 string into a Date object
-  const date = new Date(datetimeStr);
-
-  // Extract the UTC hours, minutes, and seconds
-  let hours = date.getUTCHours();
-  let minutes = date.getUTCMinutes();
-  const seconds = date.getUTCSeconds();
-
-  // Apply the offset (e.g., +6:30)
-  const offsetHours = 6;
-  const offsetMinutes = 30;
-  hours -= 1;
-  // Apply offset to minutes
-  minutes += offsetMinutes;
-  if (minutes >= 60) {
-    minutes -= 60;
-    hours += 1;
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
 
-  // Apply offset to hours
-  hours += offsetHours;
-  if (hours >= 24) {
-    hours -= 24; // Handle overflow to the next day
-  }
-
-  // Format the time components to always display two digits
-  const formattedHours = String(hours).padStart(2, "0");
-  const formattedMinutes = String(minutes).padStart(2, "0");
-  const formattedSeconds = String(seconds).padStart(2, "0");
-
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-}
 
 
 
-
-  const[appointmentDate,setAppointmentDate] =useState("")
+  const [appointmentDate, setAppointmentDate] = useState("")
 
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
@@ -248,7 +226,7 @@ function extractTimeDisplay(datetimeStr: string): string {
   const handleTimeChangeAppointment = (time: Time, field: "startDateTime" | "endDateTime") => {
     if (field === "startDateTime") {
       const updatedStartDateTime = combineDateWithTime(startDateTime, time);
-      
+
       setStartDateTime(updatedStartDateTime);
     } else {
       const updatedEndDateTime = combineDateWithTime(endDateTime, time);
@@ -276,12 +254,45 @@ function extractTimeDisplay(datetimeStr: string): string {
       setPatientEmail(response.data.email)
       setPatientStatus(response.data.status)
       setProfilePhoto(response.data.displayPicture)
-      setLastvisit(response.data.lastVisit)
+      // setLastvisit(response.data.lastVisit)
       setNotificationStatus(response.data.notificationStatus)
       setBranchId(response.data.branchId)
       setPatientDob(response.data.dob)
       setGender(response.data.gender)
+      setPatientId(response.data.id)
     } catch (err) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLastVisitData = async (userId: string) => {
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `${API_URL}/appointment/visits/patient/${userId}`;
+
+    try {
+      setLoading(true);
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const visits = response.data;
+
+      if (visits.length > 1) {
+        // Get the second-to-last visit
+        const lastVisitData = visits[1];
+        setLastVisit(formatDateToDDMMYYYY(lastVisitData.dateTime)); // Format the date
+        setLastAppointedDoctor(lastVisitData.doctorName); // Extract doctorName
+      } else {
+        // If only one or no visit is available, show default values
+        setLastVisit("N/A");
+        setLastAppointedDoctor("N/A");
+      }
+    } catch (error) {
+      console.error("Error fetching last visit data:", error);
     } finally {
       setLoading(false);
     }
@@ -318,14 +329,14 @@ function extractTimeDisplay(datetimeStr: string): string {
       setLoading(false);
     }
   };
- 
+
   // interface Time {
   //   hour: number;
   //   minute: number;
   // }
   // function extractTimeAsObject(dateTime: string): Time {
   //   const date = new Date(dateTime);
-  
+
   //   return {
   //     hour: date.getHours(),
   //     minute: date.getMinutes(),
@@ -350,14 +361,24 @@ function extractTimeDisplay(datetimeStr: string): string {
   //   const date = dateTimeString;
   //   return date.split("T")[0];
   // };
+  // const extractDate = (dateTimeString: string | undefined): string => {
+  //   if (!dateTimeString) {
+  //     console.error("Invalid dateTimeString provided to extractDate:", dateTimeString);
+  //     return "N/A"; // Fallback value if dateTimeString is undefined or null
+  //   }
+  //   return dateTimeString.split("T")[0]; // Extract the date portion
+  // };
   const extractDate = (dateTimeString: string | undefined): string => {
     if (!dateTimeString) {
       console.error("Invalid dateTimeString provided to extractDate:", dateTimeString);
       return "N/A"; // Fallback value if dateTimeString is undefined or null
     }
-    return dateTimeString.split("T")[0]; // Extract the date portion
+  
+    const [year, month, day] = dateTimeString.split("T")[0].split("-"); // Extract year, month, and day
+    return `${day}/${month}/${year}`; // Rearrange into dd/mm/yyyy format
   };
   
+
   const fetchDoctors = async (branchId: string) => {
     setLoading(true);
     try {
@@ -414,31 +435,32 @@ function extractTimeDisplay(datetimeStr: string): string {
       setAppointmentDate(users.dateTime)
 
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
-      
+
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
       // setShiftStartTime(startTimeObject)
-     
+
       // setShiftEndTime(endTimeObject)
 
-        const startTimeObject = extractTimeDisplay(users.startDateTime);
-    
+      const startTimeObject = extractTimeDisplay(users.startDateTime);
+
       const endTimeObject = extractTimeDisplay(users.endDateTime);
 
-      setShiftStartTime(users.startDateTime? parseTime( startTimeObject):null) 
-     setStartDateTimeDisp(startTimeObject)
+      setShiftStartTime(users.startDateTime ? parseTime(startTimeObject) : null)
+      setStartDateTimeDisp(startTimeObject)
 
-      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject):null)
+      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject) : null)
     } catch (err) {
       console.error("Failed to fetch users.", err);
     } finally {
       setLoading(false);
     }
   };
-//  console.log(startDateTimeDisp)
+  //  console.log(startDateTimeDisp)
 
   useEffect(() => {
     if (props.type === MODAL_TYPES.VIEW_PATIENT || props.type === MODAL_TYPES.EDIT_PATIENT || props.type === MODAL_TYPES.DELETE_PATIENT) {
       fetchPatientById(props.userId);
+      fetchLastVisitData(props.userId)
     }
 
     else if (props.type === MODAL_TYPES.VIEW_EMPLOYEE || props.type === MODAL_TYPES.EDIT_EMPLOYEE || props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
@@ -656,71 +678,8 @@ function extractTimeDisplay(datetimeStr: string): string {
       label: "AB+",
     },
   ];
-  const [showLastVisit, setShowLastVisit] = useState(false);
-  const [lastVisitData, setLastVisitData] = useState<any[]>([]); // Store all visit data
-  const [isFetchingLastVisit, setIsFetchingLastVisit] = useState(false);
-  const [doctorsMap, setDoctorsMap] = useState<Record<string, string>>({});
+  
 
-  const fetchDoctorsw = async (doctorIds: string[]) => {
-   const token = localStorage.getItem("docPocAuth_token");
-  const doctorMap: Record<string, string> = {}; // Initialize a map to store doctor names
-
-  try {
-    const doctorRequests = doctorIds.map((doctorId: string) => {
-      const endpoint = `${API_URL}/user/${doctorId}`;
-      return axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-    });
-
-    const doctorResponses = await Promise.all(doctorRequests);
-
-    doctorResponses.forEach((response) => {
-      const doctor = response.data;
-      doctorMap[doctor.id] = doctor.name; // Map doctorId to doctor name
-    });
-
-    setDoctorsMap(doctorMap); // Save the map of doctor names in state
-  } catch (err) {
-    console.error("Failed to fetch doctors:", err);
-  }
-  };
-
-  const fetchLastVisit = async (patientId: string) => {
-    setIsFetchingLastVisit(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const endpoint = `http://127.0.0.1:3037/DocPOC/v1/appointment/visits/patient/${patientId}`;
-
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      setLastVisitData(response.data);
-      const visits = response.data.rows;
- 
-       // Save all visit data
-    } catch (err) {
-      console.error("Failed to fetch last visit.", err);
-    } finally {
-      setIsFetchingLastVisit(false);
-    }
-  };
-
-  const handleViewLastVisit = () => {
-    fetchLastVisit(appointmentPatientId); // Fetch all visits for the patient
-    setTimeout(() => setShowLastVisit(true), 300);
-  };
-
-  const handleCloseLastVisit = () => {
-    setShowLastVisit(false);
-  };
 
   // const extractDate = (dateTimeString: string): string => {
   //   if (!dateTimeString) {
@@ -744,401 +703,409 @@ function extractTimeDisplay(datetimeStr: string): string {
 
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
-  //   return (
-  //     <>
-  //       <div>
-  //         {loading && (
-  //           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
-  //             <Spinner />
-  //           </div>
-  //         )}
-  //       </div>
-  //     <Card
-  //       isBlurred
-  //       className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
-  //       shadow="sm"
-  //     >
-  //       <CardBody>
-  //         <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-  //           <div className="relative col-span-6 md:col-span-4">
-  //             <Image
-  //               alt="Patient photo"
-  //               className="object-cover"
-  //               height={200}
-  //               shadow="md"
-  //               src={USER_ICONS.FEMALE_USER}
-  //               width="100%"
-  //             />
-  //           </div>
-
-  //           <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-  //             <div className="flex justify-between items-center">
-  //               <h3 className="font-semibold text-foreground/90">
-  //                 Appointment Details
-  //               </h3>
-  //               <StyledButton label={"Follow-up"} />
-  //             </div>
-
-  //             <div className="space-y-3">
-  //               <div className="flex items-center">
-  //                 <SVGIconProvider iconName="clock" />
-  //                 <p className="text-sm sm:text-medium ml-2">
-  //                   <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
-  //                 </p>
-  //               </div>
-  //               <div className="flex items-center">
-  //                 <SVGIconProvider iconName="calendar" />
-  //                 <p className="text-sm sm:text-medium ml-2">
-  //                   <strong>Date: </strong>{extractDate(appointmentDate)}
-  //                 </p>
-  //               </div>
-  //               <div className="flex items-center">
-  //                 <div style={{ marginLeft: -5 }}>
-  //                   <SVGIconProvider iconName="doctor" />
-  //                 </div>
-  //                 <p className="text-sm sm:text-medium ml-2">
-  //                   <strong>Appointed Doctor: </strong> {employeeName}
-  //                 </p>
-  //               </div>
-  //               <div className="flex items-center">
-  //                 <SVGIconProvider iconName="followup" />
-  //                 <p className="text-sm sm:text-medium ml-2">
-  //                   <strong>Follow-up: </strong> Yes
-  //                 </p>
-  //               </div>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </CardBody>
-  //     </Card>
-  //     </>
-  //   );
-  // }
-
-  // return (
-  //   <>
-  //     <div>
-  //       {loading && (
-  //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-  //           <Spinner />
-  //         </div>
-  //       )}
-  //     </div>
-  //     <Card
-  //       isBlurred
-  //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-  //       shadow="sm"
-  //     >
-  //       <CardBody>
-
-  //         {!showLastVisit ? (
-          
-  //           <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-  //             <div className="relative col-span-6 md:col-span-4">
-  //               <Image
-  //                 alt="Patient photo"
-  //                 className="object-cover"
-  //                 height={200}
-  //                 shadow="md"
-  //                 src={USER_ICONS.FEMALE_USER}
-  //                 width="100%"
-  //               />
-  //             </div>
-
-  //             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-  //               <div className="flex justify-between items-center">
-  //                 <h3 className="font-semibold text-foreground/90">
-  //                   Appointment Details
-  //                 </h3>
-  //                 <StyledButton
-  //                   label="Follow-Up"
-                  
-  //                 />
-  //               </div>
-
-  //               <div className="space-y-3">
-  //               <div className="flex items-center">
-  //                   <div style={{ marginLeft: -5 }}>
-  //                     <SVGIconProvider iconName="doctor" />
-  //                   </div>
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong>Patient Name: </strong> {appointmentName}
-  //                   </p>
-  //                 </div>
-  //                 <div className="flex items-center">
-  //                   <SVGIconProvider iconName="clock" />
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong>Visiting Time: </strong>{" "}
-  //                     {extractTime(startDateTime)}-{extractTime(endDateTime)}
-  //                   </p>
-  //                 </div>
-  //                 <div className="flex items-center">
-  //                   <SVGIconProvider iconName="calendar" />
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong>Date: </strong>
-  //                     {extractDate(appointmentDate)}
-  //                   </p>
-  //                 </div>
-  //                 <div className="flex items-center">
-  //                   <div style={{ marginLeft: -5 }}>
-  //                     <SVGIconProvider iconName="doctor" />
-  //                   </div>
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong>Appointed Doctor: </strong> {employeeName}
-  //                   </p>
-  //                 </div>
-  //                 <div className="flex items-center">
-  //                   <SVGIconProvider iconName="followup" />
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong>Follow-up: </strong> Yes
-  //                   </p>
-  //                 </div>
-  //                 <div className="flex items-center">
-  //                   {/* <SVGIconProvider iconName="followup" /> */}
-  //                   <p className="text-sm sm:text-medium ml-2">
-  //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong> 
-  //                   </p>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           </div>
-          
-  //         ) : (
-  //           // Patient Last Visit Details in Table
-         
-
-          
-  //           <div className="w-full animate-fade-in">
-  //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
-  //               Patient Last Visits
-  //             </h3>
-
-  //             {isFetchingLastVisit ? (
-  //               <div className="flex justify-center items-center">
-  //                 <Spinner />
-  //               </div>
-  //             ) : lastVisitData.length > 0 ? (
-  //               <div className="overflow-x-auto">
-  //                 <table className="w-full table-auto border-collapse border border-gray-300">
-  //                   <thead>
-  //                     <tr className="">
-  //                       <th className="px-4 py-2 border border-gray-300 text-left">
-  //                         Date
-  //                       </th>
-  //                       <th className="px-4 py-2 border border-gray-300 text-left">
-  //                         Start Time
-  //                       </th>
-  //                       <th className="px-4 py-2 border border-gray-300 text-left">
-  //                         End Time
-  //                       </th>
-  //                       <th className="px-4 py-2 border border-gray-300 text-left">
-  //                        Appointed Doctor
-  //                       </th>
-  //                     </tr>
-  //                   </thead>
-  //                   <tbody>
-  //                     {lastVisitData.map((visit) => (
-  //                       <tr key={visit.id}>
-  //                         <td className="px-4 py-2 border border-gray-300">
-  //                           {extractDate(visit.dateTime)}
-  //                         </td>
-  //                         <td className="px-4 py-2 border border-gray-300">
-  //                           {extractTime(visit.startDateTime)}
-  //                         </td>
-  //                         <td className="px-4 py-2 border border-gray-300">
-  //                           {extractTime(visit.endDateTime)}
-  //                         </td>
-  //                         <td className="px-4 py-2 border border-gray-300">
-  //                          {visit.doctorName}
-  //                         </td>
-  //                       </tr>
-  //                     ))}
-  //                   </tbody>
-  //                 </table>
-  //               </div>
-  //             ) : (
-  //               <p className="text-sm sm:text-medium text-red-500 text-center">
-  //                 No data available for the last visits.
-  //               </p>
-  //             )}
-
-  //             <div className="flex justify-end mt-6">
-  //               <StyledButton
-  //                 label="Close"
-  //                 clickEvent={handleCloseLastVisit}
-                
-  //               />
-  //             </div>
-  //           </div>
-      
-  //         )}
-  //       </CardBody>
-  //     </Card>
-  //   </>
-  // );
-  return (
-    <>
-      <div>
-        {loading && (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-            <Spinner />
-          </div>
-        )}
-      </div>
-      <Card
-        isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="relative overflow-hidden">
-            {/* Container for Sliding Views */}
-            <div
-              className={`flex transition-transform duration-500 ease-in-out ${
-                showLastVisit ? '-translate-x-full' : 'translate-x-0'
-              }`}
-            >
-              {/* Appointment Details */}
-              <div className="flex-shrink-0 w-full">
-                <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-                  <div className="relative col-span-6 md:col-span-4">
-                    <Image
-                      alt="Patient photo"
-                      className="object-cover"
-                      height={200}
-                      shadow="md"
-                      src={USER_ICONS.FEMALE_USER}
-                      width="100%"
-                    />
-                  </div>
-  
-                  <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-foreground/90">
-                        Appointment Details
-                      </h3>
-                      <StyledButton label="Follow-Up" />
-                    </div>
-  
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <div style={{ marginLeft: -5 }}>
-                          <SVGIconProvider iconName="doctor" />
-                        </div>
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Patient Name: </strong> {appointmentName}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <SVGIconProvider iconName="clock" />
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Visiting Time: </strong>
-                          {extractTime(startDateTime)}-{extractTime(endDateTime)}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <SVGIconProvider iconName="calendar" />
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Date: </strong>
-                          {extractDate(appointmentDate)}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <div style={{ marginLeft: -5 }}>
-                          <SVGIconProvider iconName="doctor" />
-                        </div>
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Appointed Doctor: </strong> {employeeName}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <SVGIconProvider iconName="followup" />
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Follow-up: </strong> Yes
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <p
-                          onClick={handleViewLastVisit}
-                          className="text-sm sm:text-medium ml-2 underline cursor-pointer"
-                        >
-                          <strong>See last visit</strong>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    return (
+      <>
+        <div>
+          {loading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+              <Spinner />
+            </div>
+          )}
+        </div>
+        <Card
+          isBlurred
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
+          shadow="sm"
+        >
+          <CardBody>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <Image
+                  alt="Patient photo"
+                  className="object-cover"
+                  height={200}
+                  shadow="md"
+                  src={USER_ICONS.FEMALE_USER}
+                  width="100%"
+                />
               </div>
-  
-              {/* Patient Last Visit */}
-              <div className="flex-shrink-0 w-full">
-                <div className="w-full">
-                  <h3 className="font-semibold text-foreground/90 text-center mb-6">
-                    Patient Last Visits
+
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90">
+                    Appointment Details
                   </h3>
-  
-                  {isFetchingLastVisit ? (
-                    <div className="flex justify-center items-center">
-                      <Spinner />
+                  <StyledButton label={"Follow-up"} />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <div style={{ marginLeft: -5 }}>
+                      <SVGIconProvider iconName="doctor" />
                     </div>
-                  ) : lastVisitData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full table-auto border-collapse border border-gray-300">
-                        <thead>
-                          <tr>
-                            <th className="px-4 py-2 border border-gray-300 text-left">
-                              Date
-                            </th>
-                            <th className="px-4 py-2 border border-gray-300 text-left">
-                              Start Time
-                            </th>
-                            <th className="px-4 py-2 border border-gray-300 text-left">
-                              End Time
-                            </th>
-                            <th className="px-4 py-2 border border-gray-300 text-left">
-                              Appointed Doctor
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lastVisitData.map((visit) => (
-                            <tr key={visit.id}>
-                              <td className="px-4 py-2 border border-gray-300">
-                                {extractDate(visit.dateTime)}
-                              </td>
-                              <td className="px-4 py-2 border border-gray-300">
-                                {extractTime(visit.startDateTime)}
-                              </td>
-                              <td className="px-4 py-2 border border-gray-300">
-                                {extractTime(visit.endDateTime)}
-                              </td>
-                              <td className="px-4 py-2 border border-gray-300">
-                                {visit.doctorName}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-sm sm:text-medium text-red-500 text-center">
-                      No data available for the last visits.
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Patient Name: </strong> {appointmentName}
                     </p>
-                  )}
-  
-                  <div className="flex justify-end mt-6">
-                    <StyledButton label="Close" clickEvent={handleCloseLastVisit} />
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="clock" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="calendar" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Date: </strong>{extractDate(appointmentDate)}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <div style={{ marginLeft: -5 }}>
+                      <SVGIconProvider iconName="doctor" />
+                    </div>
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Appointed Doctor: </strong> {employeeName}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="followup" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Follow-up: </strong> Yes
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardBody>
-      </Card>
-    </>
-  );
-  
-}
+          </CardBody>
+        </Card>
+      </>
+    );
+
+
+    // return (
+    //   <>
+    //     <div>
+    //       {loading && (
+    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
+    //           <Spinner />
+    //         </div>
+    //       )}
+    //     </div>
+    //     <Card
+    //       isBlurred
+    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
+    //       shadow="sm"
+    //     >
+    //       <CardBody>
+
+    //         {!showLastVisit ? (
+
+    //           <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+    //             <div className="relative col-span-6 md:col-span-4">
+    //               <Image
+    //                 alt="Patient photo"
+    //                 className="object-cover"
+    //                 height={200}
+    //                 shadow="md"
+    //                 src={USER_ICONS.FEMALE_USER}
+    //                 width="100%"
+    //               />
+    //             </div>
+
+    //             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+    //               <div className="flex justify-between items-center">
+    //                 <h3 className="font-semibold text-foreground/90">
+    //                   Appointment Details
+    //                 </h3>
+    //                 <StyledButton
+    //                   label="Follow-Up"
+
+    //                 />
+    //               </div>
+
+    //               <div className="space-y-3">
+    //               <div className="flex items-center">
+    //                   <div style={{ marginLeft: -5 }}>
+    //                     <SVGIconProvider iconName="doctor" />
+    //                   </div>
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong>Patient Name: </strong> {appointmentName}
+    //                   </p>
+    //                 </div>
+    //                 <div className="flex items-center">
+    //                   <SVGIconProvider iconName="clock" />
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong>Visiting Time: </strong>{" "}
+    //                     {extractTime(startDateTime)}-{extractTime(endDateTime)}
+    //                   </p>
+    //                 </div>
+    //                 <div className="flex items-center">
+    //                   <SVGIconProvider iconName="calendar" />
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong>Date: </strong>
+    //                     {extractDate(appointmentDate)}
+    //                   </p>
+    //                 </div>
+    //                 <div className="flex items-center">
+    //                   <div style={{ marginLeft: -5 }}>
+    //                     <SVGIconProvider iconName="doctor" />
+    //                   </div>
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong>Appointed Doctor: </strong> {employeeName}
+    //                   </p>
+    //                 </div>
+    //                 <div className="flex items-center">
+    //                   <SVGIconProvider iconName="followup" />
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong>Follow-up: </strong> Yes
+    //                   </p>
+    //                 </div>
+    //                 <div className="flex items-center">
+    //                   {/* <SVGIconProvider iconName="followup" /> */}
+    //                   <p className="text-sm sm:text-medium ml-2">
+    //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong> 
+    //                   </p>
+    //                 </div>
+    //               </div>
+    //             </div>
+    //           </div>
+
+    //         ) : (
+    //           // Patient Last Visit Details in Table
+
+
+
+    //           <div className="w-full animate-fade-in">
+    //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
+    //               Patient Last Visits
+    //             </h3>
+
+    //             {isFetchingLastVisit ? (
+    //               <div className="flex justify-center items-center">
+    //                 <Spinner />
+    //               </div>
+    //             ) : lastVisitData.length > 0 ? (
+    //               <div className="overflow-x-auto">
+    //                 <table className="w-full table-auto border-collapse border border-gray-300">
+    //                   <thead>
+    //                     <tr className="">
+    //                       <th className="px-4 py-2 border border-gray-300 text-left">
+    //                         Date
+    //                       </th>
+    //                       <th className="px-4 py-2 border border-gray-300 text-left">
+    //                         Start Time
+    //                       </th>
+    //                       <th className="px-4 py-2 border border-gray-300 text-left">
+    //                         End Time
+    //                       </th>
+    //                       <th className="px-4 py-2 border border-gray-300 text-left">
+    //                        Appointed Doctor
+    //                       </th>
+    //                     </tr>
+    //                   </thead>
+    //                   <tbody>
+    //                     {lastVisitData.map((visit) => (
+    //                       <tr key={visit.id}>
+    //                         <td className="px-4 py-2 border border-gray-300">
+    //                           {extractDate(visit.dateTime)}
+    //                         </td>
+    //                         <td className="px-4 py-2 border border-gray-300">
+    //                           {extractTime(visit.startDateTime)}
+    //                         </td>
+    //                         <td className="px-4 py-2 border border-gray-300">
+    //                           {extractTime(visit.endDateTime)}
+    //                         </td>
+    //                         <td className="px-4 py-2 border border-gray-300">
+    //                          {visit.doctorName}
+    //                         </td>
+    //                       </tr>
+    //                     ))}
+    //                   </tbody>
+    //                 </table>
+    //               </div>
+    //             ) : (
+    //               <p className="text-sm sm:text-medium text-red-500 text-center">
+    //                 No data available for the last visits.
+    //               </p>
+    //             )}
+
+    //             <div className="flex justify-end mt-6">
+    //               <StyledButton
+    //                 label="Close"
+    //                 clickEvent={handleCloseLastVisit}
+
+    //               />
+    //             </div>
+    //           </div>
+
+    //         )}
+    //       </CardBody>
+    //     </Card>
+    //   </>
+    // );
+    // return (
+    //   <>
+    //     <div>
+    //       {loading && (
+    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
+    //           <Spinner />
+    //         </div>
+    //       )}
+    //     </div>
+    //     <Card
+    //       isBlurred
+    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
+    //       shadow="sm"
+    //     >
+    //       <CardBody>
+    //         <div className="relative overflow-hidden">
+    //           {/* Container for Sliding Views */}
+    //           <div
+    //             className={`flex transition-transform duration-500 ease-in-out ${
+    //               showLastVisit ? '-translate-x-full' : 'translate-x-0'
+    //             }`}
+    //           >
+    //             {/* Appointment Details */}
+    //             <div className="flex-shrink-0 w-full">
+    //               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+    //                 <div className="relative col-span-6 md:col-span-4">
+    //                   <Image
+    //                     alt="Patient photo"
+    //                     className="object-cover"
+    //                     height={200}
+    //                     shadow="md"
+    //                     src={USER_ICONS.FEMALE_USER}
+    //                     width="100%"
+    //                   />
+    //                 </div>
+
+    //                 <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+    //                   <div className="flex justify-between items-center">
+    //                     <h3 className="font-semibold text-foreground/90">
+    //                       Appointment Details
+    //                     </h3>
+    //                     <StyledButton label="Follow-Up" />
+    //                   </div>
+
+    //                   <div className="space-y-3">
+    //                     <div className="flex items-center">
+    //                       <div style={{ marginLeft: -5 }}>
+    //                         <SVGIconProvider iconName="doctor" />
+    //                       </div>
+    //                       <p className="text-sm sm:text-medium ml-2">
+    //                         <strong>Patient Name: </strong> {appointmentName}
+    //                       </p>
+    //                     </div>
+    //                     <div className="flex items-center">
+    //                       <SVGIconProvider iconName="clock" />
+    //                       <p className="text-sm sm:text-medium ml-2">
+    //                         <strong>Visiting Time: </strong>
+    //                         {extractTime(startDateTime)}-{extractTime(endDateTime)}
+    //                       </p>
+    //                     </div>
+    //                     <div className="flex items-center">
+    //                       <SVGIconProvider iconName="calendar" />
+    //                       <p className="text-sm sm:text-medium ml-2">
+    //                         <strong>Date: </strong>
+    //                         {extractDate(appointmentDate)}
+    //                       </p>
+    //                     </div>
+    //                     <div className="flex items-center">
+    //                       <div style={{ marginLeft: -5 }}>
+    //                         <SVGIconProvider iconName="doctor" />
+    //                       </div>
+    //                       <p className="text-sm sm:text-medium ml-2">
+    //                         <strong>Appointed Doctor: </strong> {employeeName}
+    //                       </p>
+    //                     </div>
+    //                     <div className="flex items-center">
+    //                       <SVGIconProvider iconName="followup" />
+    //                       <p className="text-sm sm:text-medium ml-2">
+    //                         <strong>Follow-up: </strong> Yes
+    //                       </p>
+    //                     </div>
+    //                     <div className="flex items-center">
+    //                       <p
+    //                         onClick={handleViewLastVisit}
+    //                         className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+    //                       >
+    //                         <strong>See last visit</strong>
+    //                       </p>
+    //                     </div>
+    //                   </div>
+    //                 </div>
+    //               </div>
+    //             </div>
+
+    //             {/* Patient Last Visit */}
+    //             <div className="flex-shrink-0 w-full">
+    //               <div className="w-full">
+    //                 <h3 className="font-semibold text-foreground/90 text-center mb-6">
+    //                   Patient Last Visits
+    //                 </h3>
+
+    //                 {isFetchingLastVisit ? (
+    //                   <div className="flex justify-center items-center">
+    //                     <Spinner />
+    //                   </div>
+    //                 ) : lastVisitData.length > 0 ? (
+    //                   <div className="overflow-x-auto">
+    //                     <table className="w-full table-auto border-collapse border border-gray-300">
+    //                       <thead>
+    //                         <tr>
+    //                           <th className="px-4 py-2 border border-gray-300 text-left">
+    //                             Date
+    //                           </th>
+    //                           <th className="px-4 py-2 border border-gray-300 text-left">
+    //                             Start Time
+    //                           </th>
+    //                           <th className="px-4 py-2 border border-gray-300 text-left">
+    //                             End Time
+    //                           </th>
+    //                           <th className="px-4 py-2 border border-gray-300 text-left">
+    //                             Appointed Doctor
+    //                           </th>
+    //                         </tr>
+    //                       </thead>
+    //                       <tbody>
+    //                         {lastVisitData.map((visit) => (
+    //                           <tr key={visit.id}>
+    //                             <td className="px-4 py-2 border border-gray-300">
+    //                               {extractDate(visit.dateTime)}
+    //                             </td>
+    //                             <td className="px-4 py-2 border border-gray-300">
+    //                               {extractTime(visit.startDateTime)}
+    //                             </td>
+    //                             <td className="px-4 py-2 border border-gray-300">
+    //                               {extractTime(visit.endDateTime)}
+    //                             </td>
+    //                             <td className="px-4 py-2 border border-gray-300">
+    //                               {visit.doctorName}
+    //                             </td>
+    //                           </tr>
+    //                         ))}
+    //                       </tbody>
+    //                     </table>
+    //                   </div>
+    //                 ) : (
+    //                   <p className="text-sm sm:text-medium text-red-500 text-center">
+    //                     No data available for the last visits.
+    //                   </p>
+    //                 )}
+
+    //                 <div className="flex justify-end mt-6">
+    //                   <StyledButton label="Close" clickEvent={handleCloseLastVisit} />
+    //                 </div>
+    //               </div>
+    //             </div>
+    //           </div>
+    //         </div>
+    //       </CardBody>
+    //     </Card>
+    //   </>
+    // );
+
+  }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
     return (
@@ -1150,171 +1117,171 @@ function extractTimeDisplay(datetimeStr: string): string {
             </div>
           )}
         </div>
-      <Card
-        // isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto "
-        shadow="sm"
-      >
-        <CardBody>
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-4 md:gap-8 items-center justify-center">
-            <div className="relative col-span-6 md:col-span-4">
-              <Image
-                alt="Patient photo"
-                className="object-cover"
-                height={200}
-                shadow="md"
-                src={USER_ICONS.MALE_USER}
-                width="100%"
-              />
-            </div>
-
-            <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground/90 text-lg md:text-xl">
-                  Edit Appointment Details
-                </h3>
-                <StyledButton label={"Follow-up"}/>
+        <Card
+          // isBlurred
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto "
+          shadow="sm"
+        >
+          <CardBody>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-4 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <Image
+                  alt="Patient photo"
+                  className="object-cover"
+                  height={200}
+                  shadow="md"
+                  src={USER_ICONS.MALE_USER}
+                  width="100%"
+                />
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="clock" />
-                  {!editVisitTime && (
-                    <p className="text-sm sm:text-medium ml-1">
-                      <strong>Visiting Time: </strong>{" "}
-                      {/* {extractTime(startDateTime)} */}
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90 text-lg md:text-xl">
+                    Edit Appointment Details
+                  </h3>
+                  <StyledButton label={"Follow-up"} />
+                </div>
 
-                    {extractTime(startDateTime)}-{extractTime(endDateTime)}
-                    </p>
-                  )}
-
-                  {editVisitTime && (
-                    <div
-                      className="  flex gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
-                    >
-                      <TimeInput
-                        color={TOOL_TIP_COLORS.secondary}
-                        label="From"
-                        labelPlacement="outside"
-                        variant="bordered"
-                        // defaultValue={new Time(7, 38)}
-                        value={shiftStartTime}
-                        onChange={(time) => {
-                          handleTimeChangeAppointment(time, "startDateTime");
-                          setShiftStartTime(time);
-                        }
-                        }
-                      />
-                      <TimeInput
-                        color={TOOL_TIP_COLORS.secondary}
-                        label="To"
-                        labelPlacement="outside"
-                        variant="bordered"
-                        // defaultValue={new Time(8, 45)}
-                        value={shiftEndTime}
-                        onChange={(time) =>{
-                          setShiftEndTime(time);
-                          handleTimeChangeAppointment(time, "endDateTime")
-                        } }
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="clock" />
                     {!editVisitTime && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editTime}
-                      />
-                    )}
-                    {editVisitTime && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editTime}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="calendar" />
-                  <p className=" text-sm sm:text-medium ml-2">
-                    <strong>Date: </strong> 
-                    {extractDate(appointmentDate)}
-                  </p>
-                </div>
+                      <p className="text-sm sm:text-medium ml-1">
+                        <strong>Visiting Time: </strong>{" "}
+                        {/* {extractTime(startDateTime)} */}
 
-
-                <div className="flex items-center">
-                  <div style={{ marginLeft: -5 }}>
-                    <SVGIconProvider iconName="doctor" />
-                  </div>
-                  {!editSelectedDoctor && (
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Appointed Doctor: </strong> {employeeName}
-                    </p>
-                  )}
-                  {editSelectedDoctor && (
-                    <>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Appointed Doctor: </strong>
+                        {extractTime(startDateTime)}-{extractTime(endDateTime)}
                       </p>
+                    )}
+
+                    {editVisitTime && (
                       <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
+                        className="  flex gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
                       >
-                        <Autocomplete
+                        <TimeInput
                           color={TOOL_TIP_COLORS.secondary}
+                          label="From"
                           labelPlacement="outside"
                           variant="bordered"
-                          isDisabled={!editSelectedDoctor}
-                          defaultItems={doctorList}
-                          label="Select Doctor"
-                          placeholder="Search a Doctor"
-                          onSelectionChange={(key) => {
-                            const selectedDoctor = doctorList.find((doc) => doc.value === key);
-                            setDoctorId(key as string);
-                            setEmployeeName(selectedDoctor?.label || "");
+                          // defaultValue={new Time(7, 38)}
+                          value={shiftStartTime}
+                          onChange={(time) => {
+                            handleTimeChangeAppointment(time, "startDateTime");
+                            setShiftStartTime(time);
+                          }
+                          }
+                        />
+                        <TimeInput
+                          color={TOOL_TIP_COLORS.secondary}
+                          label="To"
+                          labelPlacement="outside"
+                          variant="bordered"
+                          // defaultValue={new Time(8, 45)}
+                          value={shiftEndTime}
+                          onChange={(time) => {
+                            setShiftEndTime(time);
+                            handleTimeChangeAppointment(time, "endDateTime")
                           }}
-
-                        >
-                          {(item) => (
-                            <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
-                              {item.label}
-                            </AutocompleteItem>
-                          )}
-                        </Autocomplete>
+                        />
                       </div>
-                    </>
-                  )}
-                  <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editVisitTime && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editTime}
+                        />
+                      )}
+                      {editVisitTime && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editTime}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="calendar" />
+                    <p className=" text-sm sm:text-medium ml-2">
+                      <strong>Date: </strong>
+                      {extractDate(appointmentDate)}
+                    </p>
+                  </div>
+
+
+                  <div className="flex items-center">
+                    <div style={{ marginLeft: -5 }}>
+                      <SVGIconProvider iconName="doctor" />
+                    </div>
                     {!editSelectedDoctor && (
-                      <IconButton
-                        iconName="edit"
-                        color={GLOBAL_DANGER_COLOR}
-                        clickEvent={editDoctor}
-                      />
+                      <p className="text-sm sm:text-medium ml-2">
+                        <strong>Appointed Doctor: </strong> {employeeName}
+                      </p>
                     )}
                     {editSelectedDoctor && (
-                      <IconButton
-                        iconName="followup"
-                        color={GLOBAL_SUCCESS_COLOR}
-                        clickEvent={editDoctor}
-                      />
+                      <>
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Appointed Doctor: </strong>
+                        </p>
+                        <div
+                          className="flex items-center"
+                          style={{ marginLeft: 10 }}
+                        >
+                          <Autocomplete
+                            color={TOOL_TIP_COLORS.secondary}
+                            labelPlacement="outside"
+                            variant="bordered"
+                            isDisabled={!editSelectedDoctor}
+                            defaultItems={doctorList}
+                            label="Select Doctor"
+                            placeholder="Search a Doctor"
+                            onSelectionChange={(key) => {
+                              const selectedDoctor = doctorList.find((doc) => doc.value === key);
+                              setDoctorId(key as string);
+                              setEmployeeName(selectedDoctor?.label || "");
+                            }}
+
+                          >
+                            {(item) => (
+                              <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                                {item.label}
+                              </AutocompleteItem>
+                            )}
+                          </Autocomplete>
+                        </div>
+                      </>
                     )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedDoctor && (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={editDoctor}
+                        />
+                      )}
+                      {editSelectedDoctor && (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={editDoctor}
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <SVGIconProvider iconName="followup" />
-                  <p className="text-sm sm:text-medium ml-2">
-                    <strong>Follow-up: </strong> Yes
-                  </p>
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="followup" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Follow-up: </strong> Yes
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
       </>
     );
   }
@@ -1391,7 +1358,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   className="object-cover"
                   height={200}
                   shadow="md"
-                  src={profilePhoto}
+                  src={USER_ICONS.MALE_USER}
                   width="100%"
                 />
               </div>
@@ -1413,7 +1380,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                   <div className="flex items-center">
                     <SVGIconProvider iconName="clock" />
                     <p className="text-sm sm:text-medium ml-2">
-                      <strong>Last Visit: </strong>{lastVisit}
+                      <strong>Last Visit: </strong>{(lastVisit)}
                     </p>
                   </div>
                   <div className="flex items-center">
@@ -1427,7 +1394,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                       <SVGIconProvider iconName="doctor" />
                     </div>
                     <p className="text-sm sm:text-medium ml-2">
-                      <strong>Last Appointed Doctor: </strong>Dr. Jane Smith
+                      <strong>Last Appointed Doctor: </strong> {lastAppointedDoctor}
                     </p>
                   </div>
                   <div className="flex items-center">
@@ -1437,7 +1404,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                         aria-label="Previous visits"
                         title="Previous visits"
                       >
-                        <VisitHistoryTable />
+                        <VisitHistoryTable patientId={patientId}/>
                       </AccordionItem>
                     </Accordion>
                   </div>
@@ -1471,7 +1438,7 @@ function extractTimeDisplay(datetimeStr: string): string {
                 <div>
                   <div className="relative drop-shadow-2">
                     <Image
-                      src={profilePhoto}
+                        src={USER_ICONS.MALE_USER}
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
