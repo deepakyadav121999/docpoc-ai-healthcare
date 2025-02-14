@@ -107,8 +107,12 @@ export default function SignupWithPassword() {
         // Handle signUpMethod "phone" or "email"
         const payload =
           inputType === "email"
-            ? { email: userInput.trim() } // If user input is email
-            : { phone: userInput.trim() }; // If user input is phone
+            ? { email: userInput.trim(),
+                username:userInput.trim()
+             } // If user input is email
+            : { phone: userInput.trim(),
+              username:userInput.trim()
+             }; // If user input is phone
     
         // Call API for OTP generation
         const response = await axios.post(`${API_URL}/auth/otp/generate`, payload);
@@ -136,8 +140,9 @@ export default function SignupWithPassword() {
       const response = await axios.post(`${API_URL}/user`, {
         name: email.split("@")[0],
         email,
+        user_type: "SUPER_ADMIN",
         password,
-        accessType: "defaultAccessType",
+        accessType: "{\"setAppointments\":true,\"messagePatient\":true,\"editDoctor\":true}",
         json: JSON.stringify({ clinicSize: dropdownOption }),
         userName: email,
       });
@@ -176,8 +181,12 @@ export default function SignupWithPassword() {
         // Prepare payload for OTP resend API
         const payload =
           inputType === "email"
-            ? { email: userInput.trim() } // If user input is email
-            : { phone: userInput.trim() }; // If user input is phone
+            ? { email: userInput.trim(),
+              username:userInput.trim()
+             } // If user input is email
+            : { phone: userInput.trim(),
+              username:userInput.trim()
+             }; // If user input is phone
     
         console.log("Resending OTP with payload:", payload);
     
@@ -208,8 +217,10 @@ export default function SignupWithPassword() {
       setLoading(true);
       const payload =
        inputType === "email"
-          ? { email: userInput, otp } // Use email if detected as email
-          : { phone: userInput, otp };
+          ? { email: userInput, otp ,
+            username: userInput
+           } // Use email if detected as email
+          : { phone: userInput, otp ,     username: userInput };
 
       const response = await axios.post(`${API_URL}/auth/otp/verify`,
         payload
@@ -241,10 +252,24 @@ export default function SignupWithPassword() {
       setLoading(true);
       const payload =
        inputType === "email"
-          ? { email: userInput, otp,
-            password } // Use email if detected as email
-          : { phone: userInput, otp,
-            password };
+          ? { email: userInput, 
+            username:userInput,
+            otp,
+            password,
+            name: email.split("@")[0],
+            user_type: "SUPER_ADMIN",
+            accessType: "{\"setAppointments\":true,\"messagePatient\":true,\"editDoctor\":true}",
+            json: JSON.stringify({ clinicSize: dropdownOption }),
+          
+          } // Use email if detected as email
+          : { phone: userInput,username:userInput, otp,
+            password,
+            name:"public user",
+            user_type: "SUPER_ADMIN",
+            accessType: "{\"setAppointments\":true,\"messagePatient\":true,\"editDoctor\":true}",
+            json: JSON.stringify({ clinicSize: dropdownOption }),
+
+           };
           
       const response = await axios.post(`${API_URL}/auth/set-password`, payload);
       if (response.status === 200) {

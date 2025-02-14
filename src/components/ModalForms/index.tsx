@@ -148,7 +148,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
-  
+
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
     const day = String(dateObj.getDate()).padStart(2, "0");
@@ -373,11 +373,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       console.error("Invalid dateTimeString provided to extractDate:", dateTimeString);
       return "N/A"; // Fallback value if dateTimeString is undefined or null
     }
-  
+
     const [year, month, day] = dateTimeString.split("T")[0].split("-"); // Extract year, month, and day
     return `${day}/${month}/${year}`; // Rearrange into dd/mm/yyyy format
   };
-  
+
 
   const fetchDoctors = async (branchId: string) => {
     setLoading(true);
@@ -433,7 +433,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setStartDateTime(users.startDateTime);
       setEndDateTime(users.endDateTime);
       setAppointmentDate(users.dateTime)
-
+      setPatientId(users.patientId)
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
 
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
@@ -678,7 +678,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       label: "AB+",
     },
   ];
-  
+
 
 
   // const extractDate = (dateTimeString: string): string => {
@@ -703,6 +703,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
+    const [showLastVisit, setShowLastVisit] = useState(false);
     return (
       <>
         <div>
@@ -714,11 +715,18 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         </div>
         <Card
           isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px] mx-auto"
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%] sm:max-w-[610px] mx-auto"
           shadow="sm"
         >
           <CardBody>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+          <div className="relative overflow-hidden" >
+          <div
+              className={`flex transition-transform duration-500 ease-in-out ${
+                showLastVisit ? "-translate-x-full" : "translate-x-0"
+              }`}
+            >
+               <div className="flex-shrink-0 w-full">
+               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
                 <Image
                   alt="Patient photo"
@@ -735,7 +743,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                   <h3 className="font-semibold text-foreground/90">
                     Appointment Details
                   </h3>
-                  <StyledButton label={"Follow-up"} />
+                  <StyledButton label={"Follow-up"}  clickEvent={() => setShowLastVisit(true)}/>
                 </div>
 
                 <div className="space-y-3">
@@ -776,6 +784,31 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 </div>
               </div>
             </div>
+
+               </div>
+               <div className="flex-shrink-0 w-full">
+                <div className="w-full">
+                  <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                    Previous Visits
+                  </h3>
+
+                  <div className="flex flex-col center">
+                    <VisitHistoryTable patientId={patientId} />
+                  </div>
+
+                  <div className="flex justify-end mt-6">
+                    <StyledButton
+                      label="Close"
+                      clickEvent={() => setShowLastVisit(false)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+           
           </CardBody>
         </Card>
       </>
@@ -1336,6 +1369,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   }
 
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
+    const [showLastVisit, setShowLastVisit] = useState(false);
     return (
       <>
         <div>
@@ -1347,70 +1381,127 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         </div>
         <Card
           // isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%]  sm:max-w-[800px] mx-auto"
           shadow="sm"
         >
           <CardBody>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-              <div className="relative col-span-6 md:col-span-4">
-                <Image
-                  alt="Patient photo"
-                  className="object-cover"
-                  height={200}
-                  shadow="md"
-                  src={USER_ICONS.MALE_USER}
-                  width="100%"
-                />
-              </div>
+            <div className="relative overflow-hidden">
+              <div
+                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? '-translate-x-full' : 'translate-x-0'
+                  }`}
+              >
+                <div className="flex-shrink-0 w-full">
 
-              <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-foreground/90">
-                    Patient Details
-                  </h3>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Patient Name: </strong>{patientName}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Last Visit: </strong>{(lastVisit)}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Status: </strong> {patientStatus}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="doctor" />
+                  {/* patient details */}
+                  <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                    <div className="relative col-span-6 md:col-span-4">
+                      <Image
+                        alt="Patient photo"
+                        className="object-cover"
+                        height={200}
+                        shadow="md"
+                        src={USER_ICONS.MALE_USER}
+                        width="100%"
+                      />
                     </div>
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Last Appointed Doctor: </strong> {lastAppointedDoctor}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <Accordion variant="splitted">
+
+                    <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-foreground/90">
+                          Patient Details
+                        </h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <SVGIconProvider iconName="clock" />
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Patient Name: </strong>{patientName}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <SVGIconProvider iconName="clock" />
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Last Visit: </strong>{(lastVisit)}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <SVGIconProvider iconName="calendar" />
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Status: </strong> {patientStatus}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <div style={{ marginLeft: -5 }}>
+                            <SVGIconProvider iconName="doctor" />
+                          </div>
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Last Appointed Doctor: </strong> {lastAppointedDoctor}
+                          </p>
+                        </div>
+
+                        {/* <div className="flex items-center"> 
+                        <Accordion variant="splitted">
                       <AccordionItem
                         key="1"
                         aria-label="Previous visits"
                         title="Previous visits"
                       >
-                        <VisitHistoryTable patientId={patientId}/>
+                        <VisitHistoryTable patientId={patientId} />
                       </AccordionItem>
                     </Accordion>
+                        <p
+                            onClick={setShowLastVisit(true)}
+                            className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+                          >
+                            <strong>See last visit</strong>
+                          </p>
+                         
+                        </div> */}
+
+                        <div className="flex items-center">
+                          <p
+                            onClick={() => setShowLastVisit(true)}
+                            className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+                          >
+                            <strong>See Previous Visits</strong>
+                          </p>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="flex-shrink-0 w-full">
+                  <div className="w-full">
+                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                      Previous Visits
+                    </h3>
+
+                    {/* Show VisitHistoryTable */}
+                    <div className="flex flex-col center">
+                      <VisitHistoryTable patientId={patientId} />
+                    </div>
+
+                    <div className="flex justify-end mt-6">
+                      <StyledButton
+                        label="Close"
+                        clickEvent={() => setShowLastVisit(false)}
+                      />
+                    </div>
                   </div>
                 </div>
+
+
+
               </div>
+
             </div>
+
+
+
           </CardBody>
         </Card>
       </>
@@ -1438,7 +1529,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                 <div>
                   <div className="relative drop-shadow-2">
                     <Image
-                        src={USER_ICONS.MALE_USER}
+                      src={USER_ICONS.MALE_USER}
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"

@@ -8,6 +8,8 @@ import Loader from "@/components/common/Loader";
 import SignUp from "./auth/signup/page";
 import SignIn from "./auth/signin/page";
 import { usePathname, useRouter } from 'next/navigation'; 
+
+const API_URL = process.env.API_URL;
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,25 +21,77 @@ export default function RootLayout({
   const pathname = usePathname();  // Get the current pathname
   const router = useRouter();  // Get the router to perform redirection
 
-  useEffect(() => {
-    const token = localStorage.getItem("docPocAuth_token");
-    if (token) {
-      setIsAuthenticated(true);
-    }
+  // useEffect(() => {
+  //   const token = localStorage.getItem("docPocAuth_token");
+  //   if (token) {
+  //     setIsAuthenticated(true);
+  //   }
    
-    setIsLoading(false);
+  //   setIsLoading(false);
+  // }, [pathname, router]);
+
+  // useEffect(() => {
+  //   if (isLoading) return;
+  //   // Redirect to sign-in if not authenticated and trying to access non-auth routes
+  //   if (!isAuthenticated) {
+  //     // Redirect unauthenticated users trying to access protected routes
+  //     if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+  //       router.push("/auth/signin");
+  //     }
+  //   } else {
+  //     // Prevent redirecting authenticated users to '/' on page refresh
+  //     if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+  //       router.push("/");
+  //     }
+  //   }
+  // }, [isAuthenticated, isLoading, pathname, router]);
+
+
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem("docPocAuth_token");
+
+      if (token) {
+        try {
+          // Call a backend endpoint to validate the token
+          const response = await fetch(`${API_URL}/auth/profile`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            // If the token is valid, set the authenticated state to true
+            setIsAuthenticated(true);
+          } else {
+            // If the token is invalid, clear it from local storage
+            localStorage.removeItem("docPocAuth_token");
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          localStorage.removeItem("docPocAuth_token");
+          setIsAuthenticated(false);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    validateToken();
   }, [pathname, router]);
 
   useEffect(() => {
     if (isLoading) return;
+
     // Redirect to sign-in if not authenticated and trying to access non-auth routes
     if (!isAuthenticated) {
-      // Redirect unauthenticated users trying to access protected routes
       if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
         router.push("/auth/signin");
       }
     } else {
-      // Prevent redirecting authenticated users to '/' on page refresh
+      // Prevent redirecting authenticated users to '/auth' routes
       if (pathname === "/auth/signin" || pathname === "/auth/signup") {
         router.push("/");
       }

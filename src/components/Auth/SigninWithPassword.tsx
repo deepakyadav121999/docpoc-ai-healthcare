@@ -86,8 +86,12 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
     try {
       const payload =
         inputType === "email"
-          ? { email: userInput } // Use email if detected as email
-          : { phone: userInput }; // Use phone if detected as phone
+          ? { email: userInput,
+            username:userInput
+           } // Use email if detected as email
+          : { phone: userInput,
+            username:userInput
+           }; // Use phone if detected as phone
 
       const response = await axios.post(`${API_URL}/auth/otp/generate`, payload);
 
@@ -111,10 +115,18 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
     setError("");
 
     try {
+      // const payload =
+      //   inputType === "email"
+      //     ? { email: userInput, otp } // Use email if detected as email
+      //     : { phone: userInput, otp }; // Use phone if detected as phone
       const payload =
-        inputType === "email"
-          ? { email: userInput, otp } // Use email if detected as email
-          : { phone: userInput, otp }; // Use phone if detected as phone
+      inputType === "email"
+        ? { email: userInput,
+          username:userInput
+         } // Use email if detected as email
+        : { phone: userInput,
+          username:userInput
+         };
 
       const response = await axios.post(`${API_URL}/auth/otp/verify`, payload);
 

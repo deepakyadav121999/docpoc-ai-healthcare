@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import React,{useEffect} from "react";
 import axios from "axios";
 import { Spinner } from "@nextui-org/spinner";
+import LogoutModal from "../common/Modal/LogoutModal";
+import { useDisclosure } from "@nextui-org/react";
+
 
 const API_URL = process.env.API_URL;
 interface Profile {
@@ -19,9 +22,11 @@ const DropdownUser = () => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [loadingOptions, setLoadingOptions] = useState<{ [key: string]: boolean }>({});
   const defaultDelay = 1000;
+
+ 
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
@@ -81,22 +86,31 @@ const DropdownUser = () => {
     }
   };
 
- const handleLogout = async () => {
-    try {
-      setLoadingOptions((prev) => ({ ...prev, logout: true }));
-      await new Promise((resolve) => setTimeout(resolve, defaultDelay)); // Simulated delay
-      localStorage.removeItem("userProfile");
-      localStorage.removeItem("docPocAuth_token");
-      router.push("/auth/signout");
-    } catch (error) {
-      console.error("Error during logout:", error);
-    } finally {
-      setLoadingOptions((prev) => ({ ...prev, logout: false }));
-    }
+  const handleSignOutClick = () => {
+    onOpen(); // Open the modal when "Sign Out" is clicked
   };
+//  const handleLogout = async () => {
+//   // onOpen();
+//     try {
+//       setLoadingOptions((prev) => ({ ...prev, logout: true }));
+//       await new Promise((resolve) => setTimeout(resolve, defaultDelay)); // Simulated delay
+//       localStorage.removeItem("userProfile");
+//       localStorage.removeItem("docPocAuth_token");
+//       router.push("/auth/signout");
+//     } catch (error) {
+//       console.error("Error during logout:", error);
+//     } finally {
+//       setLoadingOptions((prev) => ({ ...prev, logout: false }));
+//     }
+//   };
 
+const handleLogout = () => {
+  // Perform logout logic and redirect to the signout route
+  window.location.href = "/auth/signout";
+};
 
   return (
+    <>
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
       <Link
         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -232,7 +246,7 @@ const DropdownUser = () => {
           </ul>
           <div className="p-2.5">
             <button   
-            onClick={handleLogout} 
+            onClick={handleSignOutClick} 
             className="flex w-full items-center gap-2.5 rounded-[7px] p-2.5 text-sm font-medium text-dark-4 duration-300 ease-in-out hover:bg-gray-2 hover:text-dark dark:text-dark-6 dark:hover:bg-dark-3 dark:hover:text-white lg:text-base">
               <svg
                 className="fill-current"
@@ -266,6 +280,13 @@ const DropdownUser = () => {
       )}
       {/* <!-- Dropdown End --> */}
     </ClickOutside>
+    <LogoutModal
+        isOpen={isOpen}
+        onClose={onClose}
+        loading={false}
+        onLogout={handleLogout}
+      />
+    </>
   );
 };
 
