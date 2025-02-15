@@ -45,4 +45,4 @@ export const GLOBAL_SUCCESS_COLOR = "#3e9667"
 
 export const GLOBAL_ACTION_ICON_COLOR= '#5750F1'
 
-export const GLOBAL_TAB_NAVIGATOR_ACTIVE= 'rgb(87 80 241 / var(--tw-bg-opacity))';
+export const GLOBAL_TAB_NAVIGATOR_ACTIVE= 'rgb(180 156 251 / var(--tw-bg-opacity))';
