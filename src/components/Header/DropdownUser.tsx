@@ -30,6 +30,7 @@ const DropdownUser = () => {
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
+  
     const profileEndpoint = `${API_URL}/auth/profile`;
 
     try {
@@ -40,8 +41,8 @@ const DropdownUser = () => {
         },
       });
       const profileData = response.data;
+
      
-      
       if (profileData.id) {
         const userEndpoint = `${API_URL}/user/${profileData.id}`;
         const userResponse = await axios.get(userEndpoint, {

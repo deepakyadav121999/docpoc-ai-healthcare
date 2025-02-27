@@ -29,6 +29,7 @@ interface AutocompleteItem {
   label: string;
   description?: string;
   dob?: string;
+  workingHours: string;
 }
 interface AddUsersProps {
   onUsersAdded: () => void;
@@ -125,13 +126,82 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
     }
   };
+
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
+
+  function isWithinWorkingHours(startTime: Date, endTime: Date, workingHours: string): boolean {
+    try {
+      const [startStr, endStr] = workingHours.split(" - "); // Split into start and end times
+  
+      if (!startStr || !endStr) {
+        throw new Error("Invalid workingHours format");
+      }
+  
+      const startOfWork = parseTimeStringToDate(startStr, startTime);
+      const endOfWork = parseTimeStringToDate(endStr, endTime);
+  
+      // Check if the appointment time is within working hours
+      return startTime >= startOfWork && endTime <= endOfWork;
+    } catch (error) {
+      console.error("Error parsing or validating working hours:", error);
+      return false; // Return false on error
+    }
+  }
+  
+  // Helper function to parse time strings like "9:00 AM" into Date objects
+  function parseTimeStringToDate(timeStr: string, baseDate: Date): Date {
+    const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i; // Match time format (HH:MM AM/PM)
+    const match = timeStr.match(timeRegex);
+  
+    if (!match) {
+      throw new Error(`Invalid time string: ${timeStr}`);
+    }
+  
+    const [, hourStr, minuteStr, period] = match; // Destructure regex match groups
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+  
+    // Convert to 24-hour format
+    const adjustedHour =
+      period.toUpperCase() === "PM" && hour !== 12
+        ? hour + 12
+        : period.toUpperCase() === "AM" && hour === 12
+        ? 0
+        : hour;
+  
+    const date = new Date(baseDate);
+    date.setHours(adjustedHour, minute, 0, 0); // Set hours, minutes, and seconds
+    return date;
+  }
+  
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingData(true);
+    const { startDateTime, endDateTime, doctorId } = formData;
+
+    // Find the selected doctor from the doctorList
+    const selectedDoctor = doctorList.find((doctor) => doctor.value === doctorId);
+  
+    if (selectedDoctor) {
+      const workingHours = selectedDoctor.workingHours;
+  
+      // Validate the working hours
+      if (workingHours && !isWithinWorkingHours(new Date(startDateTime), new Date(endDateTime), workingHours)) {
+        setModalMessage({
+          success: "",
+          error: "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
+        });
+        onOpen();
+        setSavingData(false);
+        return;
+      }
+    }
+
+
     const missingFields: string[] = [];
     for (const key in formData) {
       if (
@@ -388,16 +458,40 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
 
 
-      const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
-        label: doctor.name,
-        value: doctor.id,
-        description: `${doctor.phone} | ${doctor.email}`,
-      }));
-      setDoctorList(transformedDoctors)
+      // const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
+      //   label: doctor.name,
+      //   value: doctor.id,
+      //   description: `${doctor.phone} | ${doctor.email}`,
+      // }));
+      // setDoctorList(transformedDoctors)
+
+
       // setUsers(response.data.rows || response.data);
       // setTotalUsers(response.data.count || response.data.length);
 
+      const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => {
+        try {
+          const doctorJson = JSON.parse(doctor.json || "{}"); // Parse the `json` string into an object
+          return {
+            label: doctor.name,
+            value: doctor.id,
+            description: `${doctor.phone} | ${doctor.email}`,
+            workingHours: doctorJson.workingHours || "Not Available", // Extract `workingHours` or fallback
+          };
+        } catch (err) {
+          console.error("Error parsing doctor JSON for working hours:", err);
+          return {
+            label: doctor.name,
+            value: doctor.id,
+            description: `${doctor.phone} | ${doctor.email}`,
+            workingHours: "Not Available", // Fallback if JSON parsing fails
+          };
+        }
+      });
+      setDoctorList(transformedDoctors);
+      
 
+  //  console.log(transformedDoctors)
 
     } catch (error) {
       console.error("Error fetching appointment types:", error || error);
@@ -583,7 +677,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 >
                   {(item) => (
                     <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
-                      {item.label}
+                      {/* {item.label}-{item.workingHours} */}
+                      {`${item.label} - ${item.workingHours}`}
                     </AutocompleteItem>
                   )}
                 </Autocomplete>

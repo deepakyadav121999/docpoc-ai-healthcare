@@ -19,7 +19,12 @@ import { Spinner, Button, Input } from "@nextui-org/react";
 const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
 const API_URL = process.env.API_URL;
 
-export default function SignupWithPassword() {
+interface SignUpProps {
+  setAuthPage: () => void; // Function to switch to the sign-in page
+  onLogin: (token: string) => void; // Function to handle login after sign-up
+}
+
+const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
   const [data, setData] = useState({
     remember: false,
     signUpMethod: "email",
@@ -152,9 +157,36 @@ export default function SignupWithPassword() {
           password,
         });
         const { access_token } = signInResponse.data;
-        if (access_token) {
-          localStorage.setItem("docPocAuth_token", access_token);
+
+
+        const profileResponse = await fetch(`${API_URL}/auth/profile`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access_token}`,
+          },
+        });
+
+
+        // if (access_token) {
+        //   onLogin(access_token)
+        //   localStorage.setItem("docPocAuth_token", access_token);
+        
+        //   router.push("/");
+        //   // window.location.reload();
+        // }
+        const profileData = await profileResponse.json();
+      
+        if (profileData.branchId) {
+          // If branchId exists, redirect to dashboard
+          onLogin(access_token);
+          localStorage.setItem("docPocAuth_token", access_token)
           router.push("/");
+        } else {
+          // If no branchId, redirect to settings
+          onLogin(access_token);
+          localStorage.setItem("docPocAuth_token", access_token)
+          router.push("/settings");
         }
       }
     } catch (err: any) {
@@ -274,9 +306,16 @@ export default function SignupWithPassword() {
       const response = await axios.post(`${API_URL}/auth/set-password`, payload);
       if (response.status === 200) {
         const { access_token } = response.data;
+
+        
+    
         if (access_token) {
+          onLogin(access_token)
           localStorage.setItem("docPocAuth_token", access_token);
+         
           router.push("/");
+          // window.location.reload();
+         
         }
       }
     } catch (err) {
@@ -521,7 +560,7 @@ export default function SignupWithPassword() {
           <button
             type="submit"
             // disabled={timer > 0}
-            className="w-full font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary rounded-lg bg-primary py-4 px-6 font-medium text-gray hover:bg-opacity-90"
+            className="w-full font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary rounded-lg bg-primary py-4 px-6  text-gray hover:bg-opacity-90"
           >
             {isSigningUp && data.signUpMethod === "email" ? (
               <div className="flex justify-center items-center">
@@ -681,6 +720,7 @@ export default function SignupWithPassword() {
    
   );
 }
+export default SignUp;
 
 
 

@@ -9,14 +9,14 @@ import SignUp from "@/components/Auth/Signup";
 //   description: "This is Next.js Login Page NextAdmin Dashboard Kit",
 // };
 
-const Signup = ({ setAuthPage }: { setAuthPage: any}) => {
+const Signup = ({ setAuthPage, onLogin }: { setAuthPage: () => void; onLogin: (token: string) => void }) => {
   return (
     <>
       <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
         <div className="flex flex-wrap items-center">
           <div className="w-full xl:w-1/2">
             <div className="w-full p-4 sm:p-12.5 xl:p-15">
-              <SignUp setAuthPage={setAuthPage} />
+              <SignUp setAuthPage={setAuthPage} onLogin={onLogin} />
             </div>
           </div>
 

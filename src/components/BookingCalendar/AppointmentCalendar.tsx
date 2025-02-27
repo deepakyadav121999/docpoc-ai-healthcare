@@ -5,6 +5,7 @@ import axios from "axios";
 import AddAppointment from "../CalenderBox/AddAppointment";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import NewAppointment from "./NewAppointment";
+import AppointmentList from "../common/Modal/AppointmentListModal";
 import {
   Modal,
   ModalContent,
@@ -23,42 +24,72 @@ export const AppointmentCalendar: React.FC = () => {
   const [totalAppointments, setTotalAppointments] = useState(0)
   const [appointmentsByDate, setAppointmentsByDate] = useState<{ [key: string]: number }>({});
    
+  const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] = useState(false);
+const [selectedAppointments, setSelectedAppointments] = useState<
+  Array<{ title: string; startDateTime: string; endDateTime: string; description?: string }>
+>([]);
+
   const [appointments, setAppointments] = useState<
     Array<{ date: Date; title: string; description?: string; startDateTime: Date; endDateTime: Date; }>
   >([
   ]);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedStartTime, setSelectedStartTime] = useState<string>("");
+  const [selectedEndTime, setSelectedEndTime] = useState<string>("");
+
+  const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
   const [resulst, setResults] = useState([])
+
+  const handleModalClose = () => {
+
+    setIsAppointmentDetailsModalOpen(false)
+    // onClose();
+
+  };
   const fetchAppointments = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
     
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
-      }
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   return;
+      // }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
 
-      const fetchedBranchId = branchResponse.data[0]?.id;
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
+
+      // const fetchedBranchId = profileResponse.data?.branchId;
+      const userProfile = localStorage.getItem("userProfile");
+
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+  
+      // Extract the branchId from the user profile
+      const fetchedBranchId = parsedUserProfile?.branchId;
 
       const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
@@ -66,7 +97,8 @@ export const AppointmentCalendar: React.FC = () => {
         page,
         pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
-        to: "2024-12-31T23:59:59.999Z", // End of the month
+        to: "2025-12-31T23:59:59.999Z", // End of the month
+        status:["visiting","declind"]
       };
 
       const response = await axios.get(endpoint, {
@@ -107,22 +139,26 @@ export const AppointmentCalendar: React.FC = () => {
     }
   };
 
+    useEffect(() => {
+        const header = document.querySelector("header");
+        if (isOpen || isAppointmentDetailsModalOpen ) {
+          header?.classList.remove("z-999");
+          header?.classList.add("z-0");
+        } 
+        // else if(isNotificationOpen) {
+        //     header?.classList.remove("z-999");
+        //   header?.classList.add("z-0");
+        // }
+        else{
+          header?.classList.remove("z-0");
+          header?.classList.add("z-999");
+        }
+      }, [isOpen,isAppointmentDetailsModalOpen]);
+
   useEffect(() => {
     fetchAppointments()
   }, [])
-   useEffect(() => {
-      const header = document.querySelector("header");
-      if (header) {
-        // Only modify z-index when modal is open
-        if (isOpen) {
-          header.classList.remove("z-999");
-          header.classList.add("z-0");
-        } else {
-          header.classList.remove("z-0");
-          header.classList.add("z-999");
-        }
-      }
-    }, [isOpen]);
+ 
 
   //  if(loading===false){
   //   console.log(totalAppointments)
@@ -139,12 +175,15 @@ export const AppointmentCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [AppointmentListModal, setAppointmentListModal] = useState<boolean>(false);
   const [modalData, setModalData] = useState<{
     date: Date;
     startTime: string; // Store the clicked start time
     endTime: string; 
     hasBooking: boolean;
   }>({ date: new Date(), startTime: "", endTime: "", hasBooking: false });
+
+
 
   useEffect(() => {
     renderCalendar();
@@ -392,7 +431,8 @@ const renderDayView = () => {
           key={`${hour}-${minute}`}
           className={`time-slot ${
             isCurrentTime ? "current-time" : ""
-          } ${fullyBooked ? "has-booking" : ""} ${
+          } ${fullyBooked ? "has-booking" : ""} 
+           ${
             partiallyBooked ? "partially-booking" : ""
           } flex justify-between p-1 gap-1`}
           style={{
@@ -403,10 +443,10 @@ const renderDayView = () => {
             borderImageSlice: "0 0 1 0",
           }}
           onClick={() =>
-            !fullyBooked &&
+            // !fullyBooked &&
             openModal(
               selectedDate.getTime(),
-              partiallyBooked,
+              fullyBooked || partiallyBooked,
               timeSlotStart,
               timeSlotEnd
             )
@@ -450,7 +490,36 @@ const renderDayView = () => {
       });
       onOpen()
     }
+
+    else {
+      // Find appointments for the selected time slot
+      setIsAppointmentDetailsModalOpen(true);
+      const overlappingAppointments = appointments.filter(
+        (appt) =>
+          new Date(appt.startDateTime) < endTime &&
+          new Date(appt.endDateTime) > startTime
+      );
+  
+      // Set the selected appointments and open the details modal
+      // setSelectedAppointments(
+      //   overlappingAppointments.map((appt) => ({
+      //     title: appt.title,
+      //     startDateTime: appt.startDateTime.toString(),
+      //     endDateTime: appt.endDateTime.toString(),
+      //     description: appt.description,
+      //   }))
+      // );
+
+      // setIsAppointmentDetailsModalOpen(true);
+      setSelectedAppointments([]); // Clear previous appointments
+      // Pass the startTime and endTime to the modal
+      setSelectedStartTime(startTime.toISOString());
+      setSelectedEndTime(endTime.toISOString());
+   
+    }
+    
   };
+
 
   const closeModal = () => {
     setModalVisible(false);
@@ -478,6 +547,7 @@ const renderDayView = () => {
     const options = { year: "numeric", month: "long" } as const;
     return selectedDate.toLocaleDateString(undefined, options);
   };
+
 
   return (
     <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
@@ -517,10 +587,12 @@ const renderDayView = () => {
         </div>
         <div id="calendar-view">{renderCalendar()}</div>
 
+        <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+        <div className="calendar-container">
         {modalVisible && (
          
              <Modal
-        backdrop="opaque"
+        backdrop="blur"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "10%" }}
@@ -535,11 +607,14 @@ const renderDayView = () => {
                <p>Add New Appointment</p>
               </ModalHeader>
               <ModalBody>
-               <NewAppointment onUsersAdded={fetchAppointments}
-                startDateTime={modalData.startTime} 
-                endDateTime={modalData.endTime} 
-                date={modalData.date} 
-                />
+              
+                    <NewAppointment onUsersAdded={fetchAppointments}
+                    startDateTime={modalData.startTime} 
+                    endDateTime={modalData.endTime} 
+                    date={modalData.date} 
+                    />
+                
+               
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -554,6 +629,21 @@ const renderDayView = () => {
         
         )}
 
+         {/* <AppointmentList
+        isOpen={isAppointmentDetailsModalOpen}
+        onClose={handleModalClose}
+        appointments={selectedAppointments}
+
+
+      /> */}
+        <AppointmentList
+      isOpen={isAppointmentDetailsModalOpen}
+      onClose={handleModalClose}
+      startTime={selectedStartTime} // Pass startTime
+      endTime={selectedEndTime} // Pass endTime
+    />
+       </div>
+       </div>
         <style>{`
         :root {
           --primary-color: #015e75;
@@ -853,8 +943,8 @@ const renderDayView = () => {
 }
 
 .time-slot.has-booking {
-  cursor: not-allowed;
-  pointer-events: none;
+  // cursor: not-allowed;
+  // pointer-events: none;
     background-color: var(--primary-color);
          color:white;
            padding-bottom: 5px;

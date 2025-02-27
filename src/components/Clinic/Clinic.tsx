@@ -27,6 +27,7 @@ import { medicalDepartments } from "@/constants/MedicalDepartments";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
 import { parseTime } from "@internationalized/date";
+import { json } from "stream/consumers";
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const [edit, setEdit] = useState(false);
@@ -64,6 +65,8 @@ const Clinic = () => {
     shiftStart: "",
     shiftEnd: "",
   });
+  const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
+     const[userId, setUserId] = useState("")
 
   const handleInputChange = (field: string, value: string) => {
     setClinicDetails({ ...clinicDetails, [field]: value });
@@ -103,19 +106,53 @@ const Clinic = () => {
     setEdit(!edit);
   };
   const fetchHospitalDetails = async () => {
+    
     try {
+    
       const token = localStorage.getItem("docPocAuth_token");
-      const response = await axios.get(`${API_URL}/hospital`, {
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
+      //  const branch = profileResponse.data?.branchId
+
+      const userProfile = localStorage.getItem("userProfile");
+
+    // Parse the JSON string if it exists
+    const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+    // Extract the branchId from the user profile
+    const branch = parsedUserProfile?.branchId;
+      
+
+        
+
+       if (!branch) {
+        setIsHospitalAvailable(false);
+        setEdit(true); // Enable editing if no hospital/branch exists
+        setIsMultipleBranch(true)
+        return;
+      }
+        
+
+
+      const response = await axios.get(`${API_URL}/hospital/find/${branch}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       const data = response.data;
       console.log(data)
 
-      if (data.length > 0) {
-        const hospital = data[0];
+
+      
+      if (data) {
+        setIsHospitalAvailable(true);
+       
+        const hospital = data;
         const parsedJson = hospital.json ? JSON.parse(hospital.json) : {};
 
         setHospitalId(hospital.id);
@@ -142,6 +179,8 @@ const Clinic = () => {
         )?.value;
 
         setSelectedStateKey(fetchedStateKey || null);
+        setEdit(false);
+        setIsMultipleBranch(false)
 
       }
     } catch (error) {
@@ -262,7 +301,9 @@ const Clinic = () => {
             googleLocation: detectedLocation
           }),
         };
-        await axios.post(`${API_URL}/hospital/branch`, branchData,
+
+
+     const branchdetails = await axios.post(`${API_URL}/hospital/branch`, branchData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -270,12 +311,39 @@ const Clinic = () => {
             },
           }
         );
+            
+        setIsHospitalAvailable(true);
         setModalMessage({
           success: "Hospital created successfully",
           error: ``,
         });
         onOpen()
+
+        const fetchedBranchId = branchdetails.data?.id;
+  const userEndpoint = `${API_URL}/user`;
+  
+         await axios.patch(userEndpoint, {
+            id: userId,
+            branchId: fetchedBranchId
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+  
+          console.log("Profile updated successfully:", response.data);
+        
+           // Update the state with the response
+       
+
+
+
+      
+
       }
+
+
 
     } catch (error: any) {
       console.error("Error creating branch:", error);
@@ -298,14 +366,27 @@ const Clinic = () => {
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
+       
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <div className="border-b border-stroke px-3 py-2  sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-row gap-4 sm:gap-9">
+{
+  loading? <div></div> : <div> {!isHospitalAvailable&& (
+    <p className="text-red-500 font-semibold">
+      Please create a clinic/hospital first.
+    </p>
+  )}</div>
+ 
+}
+       
+    
             <h3 className="font-semibold text-dark dark:text-white">
               Clinic/Hospital Details
             </h3>
             <div>
               <Switch
-                checked={isMultipleBranch}
+                isSelected={isMultipleBranch}
+              
+
                 onChange={() => setIsMultipleBranch(!isMultipleBranch)}
                 size="lg"
                 color="secondary"

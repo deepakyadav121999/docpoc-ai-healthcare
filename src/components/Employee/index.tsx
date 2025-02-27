@@ -54,57 +54,77 @@ export default function App() {
 
       const token = localStorage.getItem("docPocAuth_token");
 
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        setDataStatsList([
-          {
-            icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
-            color: "#4b9c78",
-            title: "new doctors (since last month)",
-            value: "Total Doctors: 0",
-            growthRate: 0,
-          },
-          {
-            icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
-            color: "#FF9C55",
-            title: "new employees (since last month)",
-            value: "Total Staff: 0",
-            growthRate: 0,
-          },
-          {
-            icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
-            color: "#8155FF",
-            title: "new nurses (since last month)",
-            value: "Total Nurses: 0",
-            growthRate: 0,
-          },
-        ]);
-        setLoading(false)
-        return;
-      }
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   setDataStatsList([
+      //     {
+      //       icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#4b9c78",
+      //       title: "new doctors (since last month)",
+      //       value: "Total Doctors: 0",
+      //       growthRate: 0,
+      //     },
+      //     {
+      //       icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#FF9C55",
+      //       title: "new employees (since last month)",
+      //       value: "Total Staff: 0",
+      //       growthRate: 0,
+      //     },
+      //     {
+      //       icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#8155FF",
+      //       title: "new nurses (since last month)",
+      //       value: "Total Nurses: 0",
+      //       growthRate: 0,
+      //     },
+      //   ]);
+      //   setLoading(false)
+      //   return;
+      // }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      console.log(fetchedHospitalId)
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
 
-      const fetchedBranchId = branchResponse.data[0]?.id;
-      console.log(fetchedBranchId)
+      // const fetchedBranchId = profileResponse.data?.branchId;
+
+      const userProfile = localStorage.getItem("userProfile");
+
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+  
+      // Extract the branchId from the user profile
+      const fetchedBranchId = parsedUserProfile?.branchId;
+
+      // console.log(fetchedHospitalId)
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
+
+      // const fetchedBranchId = branchResponse.data[0]?.id;
+
+     
       setBranchId(fetchedBranchId)
 
       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;

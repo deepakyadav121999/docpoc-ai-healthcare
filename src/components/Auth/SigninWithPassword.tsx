@@ -5,10 +5,13 @@ import axios from "axios";
 import StyledButton from "@/components/common/Button/StyledButton";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ResetPasswordModal from "../common/Modal/ResetPasswordModal";
+import { useDisclosure } from "@nextui-org/react";
 
 const API_URL = process.env.API_URL;
 export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPage: () => void; onLogin: (token: string) => void }) {
   const router = useRouter();
+  const{isOpen, onClose,onOpen} = useDisclosure()
 
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
   const [userInput, setUserInput] = useState(""); // Shared input field for email/mobile
@@ -55,16 +58,22 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
 
       const response = await axios.post(`${API_URL}/auth/login`, loginPayload);
 
+     
+
       const { access_token } = response.data;
+
+    
 
       if (access_token) {
         onLogin(access_token);
         localStorage.setItem("docPocAuth_token", access_token);
+
         router.push("/");
-        window.location.reload();
+        // window.location.reload();
       } else {
         throw new Error("Invalid token received");
       }
+    
     } catch (err) {
       setError("Invalid email, phone, or password!");
       setTimeout(() => setError(""), 8000);
@@ -122,10 +131,10 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
       const payload =
       inputType === "email"
         ? { email: userInput,
-          username:userInput
+          username:userInput,otp
          } // Use email if detected as email
         : { phone: userInput,
-          username:userInput
+          username:userInput,otp
          };
 
       const response = await axios.post(`${API_URL}/auth/otp/verify`, payload);
@@ -136,7 +145,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
         onLogin(access_token);
         localStorage.setItem("docPocAuth_token", access_token);
         router.push("/");
-        window.location.reload();
+        // window.location.reload();
       } else {
         setError("Invalid or expired OTP.");
       }
@@ -346,10 +355,17 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
 
       <p className="text-center text-lg text-black dark:text-white">
         Forgot your password?{" "}
-        <Link href="/auth/forgotpassword" className="ml-1 text-primary">
+        {/* <Link href="/auth/forgotpassword" className="ml-1 text-primary">
         Click to reset
-        </Link>
+        </Link> */}
+     <button onClick={() => onOpen()}> Click to reset</button>
       </p>
+
+
+      <ResetPasswordModal
+        isOpen={isOpen}
+        onClose={() => onClose()}
+      />
     </div>
   );
 }
