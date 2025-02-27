@@ -45,7 +45,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
   unsure: "warning",
-  
+
 };
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -72,7 +72,7 @@ interface appointments {
   startDateTime: string;
   endDateTime: string;
   dateTime: string;
-  statusName:string;
+  statusName: string;
 }
 
 // type User = (typeof Appointments)[0];
@@ -85,7 +85,7 @@ export default function AppointmentTable() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
-  
+
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
@@ -118,7 +118,7 @@ export default function AppointmentTable() {
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
   const [statusCache, setStatusCache] = React.useState<Record<string, string>>({});
   const [assignedToMe, setAssignedToMe] = useState(false); // Toggle for "Assigned to Me"
-  const [createdByMe, setCreatedByMe] = useState(false); 
+  const [createdByMe, setCreatedByMe] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("page", String(page));
@@ -133,17 +133,17 @@ export default function AppointmentTable() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-       const profileEndpoint = `${API_URL}/auth/profile`;
-       const profileResponse = await axios.get(profileEndpoint,{
-        headers:{
+      const profileEndpoint = `${API_URL}/auth/profile`;
+      const profileResponse = await axios.get(profileEndpoint, {
+        headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-       })
+      })
 
- 
+
       const userProfile = localStorage.getItem("userProfile");
-     
+
 
       // Parse the JSON string if it exists
       const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
@@ -156,13 +156,13 @@ export default function AppointmentTable() {
 
       const params: any = {
         page: page,  // Use currentPage here
-        pageSize: rowsPerPage, 
+        pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
         to: "2025-12-31T23:59:59.999Z", // End of the month
-        status:["visiting","declind"]
-         // Use currentRowsPerPage here
+        status: ["visiting", "declind"]
+        // Use currentRowsPerPage here
       };
-    
+
       if (selectedDate) {
         params.from = selectedDate;
         params.to = selectedDate;
@@ -186,7 +186,7 @@ export default function AppointmentTable() {
           "Content-Type": "application/json",
         },
       });
-   console.log(response)
+      console.log(response)
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
       setTotalappointments(total);
@@ -201,10 +201,23 @@ export default function AppointmentTable() {
   };
 
 
+  const handleAssignedToMeToggle = useCallback(() => {
+    setAssignedToMe((prev) => !prev);
+    setPage(1); // Reset to the first page
+    fetchUsers(); // Fetch users with the new filter
+  }, []);
+
+  const handleCreatedByMeToggle = useCallback(() => {
+    setCreatedByMe((prev) => !prev);
+    setPage(1); // Reset to the first page
+    fetchUsers(); // Fetch users with the new filter
+  }, []);
+
+
   useEffect(() => {
     fetchUsers();
 
-  }, [page, rowsPerPage, filterValue, selectedDate,assignedToMe,createdByMe]);
+  }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe]);
   console.log(totalappointments)
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
@@ -330,7 +343,7 @@ export default function AppointmentTable() {
         // console.error("Error parsing JSON:", error);
       }
     }
-  
+
     switch (columnKey) {
       case "name":
         return (
@@ -342,7 +355,7 @@ export default function AppointmentTable() {
         );
 
 
-        
+
       case "name":
         return (
           <User
@@ -362,7 +375,7 @@ export default function AppointmentTable() {
         );
       case "status":
         // const status = user.startDateTime ? "visiting" : "declined";
-        const status =  user.statusName
+        const status = user.statusName
         return (
           <Chip
             className="capitalize"
@@ -412,7 +425,7 @@ export default function AppointmentTable() {
   //      () => debounce((value: string) => searchAppointments(), 500),
   //      [fetchUsers]
   //    );
-  
+
   const debouncedFetchUsers = useCallback(
     debounce((searchValue: string) => {
       setFilterValue(searchValue);
@@ -446,7 +459,7 @@ export default function AppointmentTable() {
       setSelectedDateShow(null);
     }
   };
-  
+
   const handleDateBlur = () => {
     if (!selectedDateShow) {
       setSelectedDate(null);
@@ -469,53 +482,45 @@ export default function AppointmentTable() {
             <Input
               isClearable
               // className="w-full sm:max-w-[44%] "
-           className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
+              className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
               placeholder="Search by name..."
               startContent={<SearchIcon />}
               value={filterValue}
               onClear={() => onClear()}
               onValueChange={onSearchChange}
             />
-            <DatePicker 
+            <DatePicker
               showMonthAndYearPickers
               label="Appointment date"
               // className="max-w-[284px]"
-       className="w-full sm:w-[calc(50%-0.75rem)] h-[42px] sm:h-[46px] md:h-[51px]"
+              className="w-full sm:w-[calc(50%-0.75rem)] h-[42px] sm:h-[46px] md:h-[51px]"
               // value={selectedDate ? parseDate(selectedDate) : undefined}
 
               value={selectedDateShow ? parseDate(selectedDateShow) : undefined}
-      
-            
-              onChange={handleDateChange}
-              // onBlur={handleDateBlur}
-           />
 
-<div className="flex flex-wrap gap-4">
-            <Switch
-              // isSelected={assignedToMe}
-              onChange={()=> 
-                {
-                  setAssignedToMe(!assignedToMe)
-                  setPage(1);
-                  fetchUsers();
-                }
-                }
-           
-            >
-              Assigned to Me
-            </Switch>
-            {/* <Switch
-              isSelected={createdByMe}
-              onValueChange={(value) => {
-                setCreatedByMe(value);
-                setPage(1); // Reset pagination when toggling
-                fetchUsers(); // Fetch users with the new filter
-              }}
-            >
-              Created by Me
-            </Switch> */}
-          </div>
-       
+
+              onChange={handleDateChange}
+            // onBlur={handleDateBlur}
+            />
+
+            <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
+                <Switch
+                  // isSelected={assignedToMe}
+                  onChange={handleAssignedToMeToggle}
+                >
+                  Assigned to Me
+                </Switch>
+                <Switch
+                  // isSelected={createdByMe}
+                  onChange={handleCreatedByMeToggle}
+                >
+                  Created by Me
+                </Switch>
+              </div>
+
+            </div>
+
 
             <div className="flex gap-3">
               <Dropdown>
@@ -592,7 +597,7 @@ export default function AppointmentTable() {
           </div>
         </div>
 
-   
+
       </div>
     );
   }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);
@@ -662,61 +667,61 @@ export default function AppointmentTable() {
 
 
 
-              // onChange={(date) => {
-              //   if (date) {
-              //     const jsDate = date.toDate(getLocalTimeZone());
-            
-              //     // Extract the local date in YYYY-MM-DD format
-              //     const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
-                  
-              //     setTempDate(formattedDate); // Update `tempDate`
-              //     console.log("onChange - Temp Date Updated:", formattedDate);
-              //     setSelectedDateShow(formattedDate)
-              //     // Store the immediate value in a local variable for `onBlur`
-              //     datePickerValueRef.current = formattedDate;
-              //   } else {
-              //     setTempDate(null); // Clear `tempDate`
-              //     console.log("onChange - Temp Date Cleared");
-            
-              //     // Clear the local variable
-              //     datePickerValueRef.current = null;
-              //     setSelectedDateShow(null);
-              //     setSelectedDate(null);
-              //   }
-              // }}
-              // onBlur={() => {
-              //   const currentTempDate = datePickerValueRef.current; // Access the most recent value
-              //   console.log("onBlur - Current Temp Date:", currentTempDate);
-              //   if (!selectedDateShow) {
-              //     setSelectedDate(null);
-              //     setSelectedDateShow(null)
-              //     setTempDate(null); 
-              //   }
-              //   if (currentTempDate) {
-              //     // Fetch for the selected date
-              //     setTempDate(currentTempDate); 
-              //     setSelectedDate(currentTempDate);
-              //     setSelectedDateShow(currentTempDate)
-              //     setPage(1); // Reset to the first page
-              //     // fetchUsers(); // Fetch appointments for the selected date
-              //     console.log("onBlur - Fetch Triggered with Date:", currentTempDate);
-              //   } else {
-              //     // Fetch all appointments if the date is cleared
-              //     setSelectedDate(null);
-              //     setSelectedDateShow(null)
-              //     setTempDate(null); 
-              //     setPage(1);
-              //     // fetchUsers(); // Fetch all appointments
-              //     console.log("onBlur - Fetch Triggered for All Appointments");
-              //   }
-              // }}
+// onChange={(date) => {
+//   if (date) {
+//     const jsDate = date.toDate(getLocalTimeZone());
+
+//     // Extract the local date in YYYY-MM-DD format
+//     const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+
+//     setTempDate(formattedDate); // Update `tempDate`
+//     console.log("onChange - Temp Date Updated:", formattedDate);
+//     setSelectedDateShow(formattedDate)
+//     // Store the immediate value in a local variable for `onBlur`
+//     datePickerValueRef.current = formattedDate;
+//   } else {
+//     setTempDate(null); // Clear `tempDate`
+//     console.log("onChange - Temp Date Cleared");
+
+//     // Clear the local variable
+//     datePickerValueRef.current = null;
+//     setSelectedDateShow(null);
+//     setSelectedDate(null);
+//   }
+// }}
+// onBlur={() => {
+//   const currentTempDate = datePickerValueRef.current; // Access the most recent value
+//   console.log("onBlur - Current Temp Date:", currentTempDate);
+//   if (!selectedDateShow) {
+//     setSelectedDate(null);
+//     setSelectedDateShow(null)
+//     setTempDate(null); 
+//   }
+//   if (currentTempDate) {
+//     // Fetch for the selected date
+//     setTempDate(currentTempDate); 
+//     setSelectedDate(currentTempDate);
+//     setSelectedDateShow(currentTempDate)
+//     setPage(1); // Reset to the first page
+//     // fetchUsers(); // Fetch appointments for the selected date
+//     console.log("onBlur - Fetch Triggered with Date:", currentTempDate);
+//   } else {
+//     // Fetch all appointments if the date is cleared
+//     setSelectedDate(null);
+//     setSelectedDateShow(null)
+//     setTempDate(null); 
+//     setPage(1);
+//     // fetchUsers(); // Fetch all appointments
+//     console.log("onBlur - Fetch Triggered for All Appointments");
+//   }
+// }}
 
 
 
 
 
 
- {/*{addAppointmentModelToggle && (
+{/*{addAppointmentModelToggle && (
         <OpaqueModal
         modalType={{
           view: MODAL_TYPES.VIEW_APPOINTMENT,
