@@ -63,15 +63,19 @@ export default function RootLayout({
             },
           });
 
+          // localStorage.setItem("profile", JSON.stringify(response.data));\
+         
+
           if (response.ok) {
             // If the token is valid, set the authenticated state to true
             // setIsAuthenticated(true);
             
-
-            const data = await response.json();
+            const data = await response.json()
+            console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
 
         
             setIsAuthenticated(true);
+            localStorage.setItem("profile", JSON.stringify(data));
           } else {
             // If the token is invalid, clear it from local storage
             localStorage.removeItem("docPocAuth_token");

@@ -34,13 +34,19 @@ const DropdownUser = () => {
     const profileEndpoint = `${API_URL}/auth/profile`;
 
     try {
-      const response = await axios.get(profileEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const profileData = response.data;
+      // const response = await axios.get(profileEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // const profileData = response.data;
+
+      const userProfile = localStorage.getItem("profile");
+
+      // Parse the JSON string if it exists
+      const profileData = userProfile ? JSON.parse(userProfile) : null;
+
 
      
       if (profileData.id) {
