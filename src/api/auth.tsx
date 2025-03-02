@@ -97,9 +97,17 @@ export async function UserSignIn(
 
 
 export async function SignOut() {
+  // localStorage.removeItem("profile");
+  // localStorage.removeItem("docPocAuth_token");
+  // localStorage.removeItem("userProfile");
+  
+  console.log("SignOut called");
   localStorage.removeItem("docPocAuth_token");
+  console.log("Token removed");
   localStorage.removeItem("userProfile");
+  console.log("userProfile removed");
   localStorage.removeItem("profile");
+  console.log("Profile removed");
 
   window.location.reload();
 }

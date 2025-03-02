@@ -134,12 +134,12 @@ export default function AppointmentTable() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
       const profileEndpoint = `${API_URL}/auth/profile`;
-      const profileResponse = await axios.get(profileEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      // const profileResponse = await axios.get(profileEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // })
 
 
       const userProfile = localStorage.getItem("userProfile");
@@ -203,13 +203,13 @@ export default function AppointmentTable() {
 
   const handleAssignedToMeToggle = useCallback(() => {
     setAssignedToMe((prev) => !prev);
-    setPage(1); // Reset to the first page
+    // setPage(1); // Reset to the first page
     fetchUsers(); // Fetch users with the new filter
   }, []);
 
   const handleCreatedByMeToggle = useCallback(() => {
     setCreatedByMe((prev) => !prev);
-    setPage(1); // Reset to the first page
+    // setPage(1); // Reset to the first page
     fetchUsers(); // Fetch users with the new filter
   }, []);
 
@@ -503,79 +503,103 @@ export default function AppointmentTable() {
             // onBlur={handleDateBlur}
             />
 
-            <div className="flex flex-wrap gap-4">
-              <div className="flex flex-wrap gap-4">
-                <Switch
-                  // isSelected={assignedToMe}
-                  onChange={handleAssignedToMeToggle}
-                >
-                  Assigned to Me
-                </Switch>
-                <Switch
-                  // isSelected={createdByMe}
-                  onChange={handleCreatedByMeToggle}
-                >
-                  Created by Me
-                </Switch>
+            <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 justify-center items-center sm:items-center sm:justify-between w-full mt-2">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    // isSelected={assignedToMe}
+                    onChange={handleAssignedToMeToggle}
+                    className="text-sm"
+                    size="lg"
+                    color="secondary"
+                  >
+                    <p className=" text-xs sm:text-sm">Assigned to Me</p>
+                  </Switch>
+                  {/* <span className="text-sm text-gray-500">
+                Show appointments assigned to me.
+              </span> */}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    // isSelected={createdByMe}
+                    onChange={handleCreatedByMeToggle}
+                    className="text-sm"
+                    size="lg"
+                    color="secondary"
+                  >
+                    <p className=" text-xs sm:text-sm">Created by Me</p>
+                  </Switch>
+                  {/* <span className="text-sm text-gray-500">
+                Show appointments I have created.
+              </span> */}
+                </div>
               </div>
-
             </div>
 
+            <div
+              className="flex flex-col md:flex-row gap-4 md:gap-8 w-full md:justify-between"
+              style={{
+                flexDirection: "column", // Stack dropdowns and buttons for smaller screens (640-898px)
+              }}
+            >
+              <div className="flex gap-3">
 
-            <div className="flex gap-3">
-              <Dropdown>
-                <DropdownTrigger className="hidden sm:flex">
-                  <Button
-                    endContent={<ChevronDownIcon className="text-small" />}
-                    variant="flat"
-                    style={{ minHeight: 55 }}
+                <Dropdown>
+                  <DropdownTrigger className="hidden sm:flex">
+                    <Button
+                      endContent={<ChevronDownIcon className="text-small" />}
+                      variant="flat"
+                      style={{ minHeight: 55 }}
+                    >
+                      Status
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    disallowEmptySelection
+                    aria-label="Table Columns"
+                    closeOnSelect={false}
+                    selectedKeys={statusFilter}
+                    selectionMode="multiple"
+                    onSelectionChange={setStatusFilter}
                   >
-                    Status
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  disallowEmptySelection
-                  aria-label="Table Columns"
-                  closeOnSelect={false}
-                  selectedKeys={statusFilter}
-                  selectionMode="multiple"
-                  onSelectionChange={setStatusFilter}
-                >
-                  {statusOptions.map((status) => (
-                    <DropdownItem key={status.uid} className="capitalize">
-                      {capitalize(status.name)}
-                    </DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
-              <Dropdown>
-                <DropdownTrigger className="hidden sm:flex">
-                  <Button
-                    endContent={<ChevronDownIcon className="text-small" />}
-                    variant="flat"
-                    style={{ minHeight: 55 }}
+                    {statusOptions.map((status) => (
+                      <DropdownItem key={status.uid} className="capitalize">
+                        {capitalize(status.name)}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </Dropdown>
+
+
+                <Dropdown>
+                  <DropdownTrigger className="hidden sm:flex">
+                    <Button
+                      endContent={<ChevronDownIcon className="text-small" />}
+                      variant="flat"
+                      style={{ minHeight: 55 }}
+                    >
+                      Columns
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    disallowEmptySelection
+                    aria-label="Table Columns"
+                    closeOnSelect={false}
+                    selectedKeys={visibleColumns}
+                    selectionMode="multiple"
+                    onSelectionChange={setVisibleColumns}
                   >
-                    Columns
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  disallowEmptySelection
-                  aria-label="Table Columns"
-                  closeOnSelect={false}
-                  selectedKeys={visibleColumns}
-                  selectionMode="multiple"
-                  onSelectionChange={setVisibleColumns}
-                >
-                  {columns.map((column) => (
-                    <DropdownItem key={column.uid} className="capitalize">
-                      {capitalize(column.name)}
-                    </DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
-              <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={
-                fetchUsers}
-              />} />
+                    {columns.map((column) => (
+                      <DropdownItem key={column.uid} className="capitalize">
+                        {capitalize(column.name)}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </Dropdown>
+                <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={
+                  fetchUsers}
+                />} />
+              </div>
             </div>
           </div>
           <div className="flex justify-between items-center">

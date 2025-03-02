@@ -267,31 +267,43 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
       const token = localStorage.getItem("docPocAuth_token");
 
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
-      }
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   return;
+      // }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
 
-      const fetchedBranchId = branchResponse.data[0]?.id;
+      // const fetchedBranchId = branchResponse.data[0]?.id;
+
+
+      
+      const userProfile = localStorage.getItem("userProfile");
+
+
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      const userId = parsedUserProfile?.id;
+      // Extract the branchId from the user profile
+      const fetchedBranchId = parsedUserProfile?.branchId;
+
       const payload = {
         ...formData,
         branchId: fetchedBranchId
@@ -338,34 +350,44 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       const token = localStorage.getItem("docPocAuth_token");
 
       // Step 1: Fetch Hospital
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        throw new Error("No hospital data found.");
-      }
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   throw new Error("No hospital data found.");
+      // }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
 
-      // Step 2: Fetch Branch
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // // Step 2: Fetch Branch
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        throw new Error("No branch data found.");
-      }
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   throw new Error("No branch data found.");
+      // }
 
-      const fetchedBranchId = branchResponse.data[0].id;
+      // const fetchedBranchId = branchResponse.data[0].id;
+
+      
+      const userProfile = localStorage.getItem("userProfile");
+
+
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      const userId = parsedUserProfile?.id;
+      // Extract the branchId from the user profile
+      const fetchedBranchId = parsedUserProfile?.branchId;
 
       // Step 3: Fetch Appointment Types
       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;

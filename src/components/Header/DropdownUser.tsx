@@ -21,7 +21,7 @@ interface Profile {
 const DropdownUser = () => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profiles, setProfiles] = useState<Profile | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loadingOptions, setLoadingOptions] = useState<{ [key: string]: boolean }>({});
   const defaultDelay = 1000;
@@ -31,25 +31,26 @@ const DropdownUser = () => {
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
   
-    const profileEndpoint = `${API_URL}/auth/profile`;
+    // const profileEndpoint = `${API_URL}/auth/profile`;
 
     try {
-      // const response = await axios.get(profileEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // const profileData = response.data;
+    //   const response = await axios.get(profileEndpoint, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
+         
 
       const userProfile = localStorage.getItem("profile");
 
       // Parse the JSON string if it exists
       const profileData = userProfile ? JSON.parse(userProfile) : null;
+      // const profileData =  profile  ;
 
 
      
-      if (profileData.id) {
+      if  ( profileData && profileData.id) {
         const userEndpoint = `${API_URL}/user/${profileData.id}`;
         const userResponse = await axios.get(userEndpoint, {
           headers: {
@@ -58,7 +59,7 @@ const DropdownUser = () => {
           },
         });
         localStorage.setItem("userProfile", JSON.stringify(userResponse.data));
-        setProfile(userResponse.data); 
+        setProfiles(userResponse.data); 
         // Handle the user data response
         console.log("User data:", userResponse.data);
         // You can now use the user data as needed
@@ -75,7 +76,7 @@ const DropdownUser = () => {
       // Check if profile data exists in local storage
       const storedProfile = localStorage.getItem("userProfile");
       if (storedProfile) {
-        setProfile(JSON.parse(storedProfile)); // Set profile from local storage
+        setProfiles(JSON.parse(storedProfile)); // Set profile from local storage
       } else {
         fetchProfile(); // Fetch profile if not available in local storage
       }
@@ -96,20 +97,7 @@ const DropdownUser = () => {
   const handleSignOutClick = () => {
     onOpen(); // Open the modal when "Sign Out" is clicked
   };
-//  const handleLogout = async () => {
-//   // onOpen();
-//     try {
-//       setLoadingOptions((prev) => ({ ...prev, logout: true }));
-//       await new Promise((resolve) => setTimeout(resolve, defaultDelay)); // Simulated delay
-//       localStorage.removeItem("userProfile");
-//       localStorage.removeItem("docPocAuth_token");
-//       router.push("/auth/signout");
-//     } catch (error) {
-//       console.error("Error during logout:", error);
-//     } finally {
-//       setLoadingOptions((prev) => ({ ...prev, logout: false }));
-//     }
-//   };
+
 
 const handleLogout = () => {
   // Perform logout logic and redirect to the signout route
@@ -139,7 +127,7 @@ const handleLogout = () => {
         </span>
 
         <span className="flex items-center gap-2 font-medium text-dark dark:text-dark-6">
-          <span className="hidden lg:block">  {profile?.name || "Loading..."}</span>
+          <span className="hidden lg:block">  {profiles?.name || "Loading..."}</span>
 
           <svg
             className={`fill-current duration-200 ease-in ${dropdownOpen && "rotate-180"}`}
@@ -183,10 +171,10 @@ const handleLogout = () => {
 
             <span className="block">
               <span className="block font-medium text-dark dark:text-white">
-               {profile?.name || "Loading..."}
+               {profiles?.name || "Loading..."}
               </span>
               <span className="block font-medium text-dark-5 dark:text-dark-6">
-              {profile?.email || "Loading..."}
+              {profiles?.email || "Loading..."}
               </span>
             </span>
           </div>

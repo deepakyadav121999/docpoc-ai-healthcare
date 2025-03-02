@@ -28,7 +28,7 @@ import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
 import { columns, statusOptions } from "./data";
 import { capitalize } from "./utils";
-import OpaqueModal from "../common/Modal/Opaque";
+import OpaqueModal from "../common/Modal/OpaqueList";
 import { MODAL_TYPES } from "@/constants";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddAppointment from "./AddAppointment";
@@ -51,7 +51,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "age",
-  "date",
+  // "date",
   "time",
   "email",
   "status",
@@ -178,32 +178,39 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       const token = localStorage.getItem("docPocAuth_token");
 
 
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        return;
-      }
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   return;
+      // }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
+      // const fetchedBranchId = branchResponse.data[0]?.id;
+      const userProfile = localStorage.getItem("userProfile");
 
-      const fetchedBranchId = branchResponse.data[0]?.id;
-      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+  
+      // Extract the branchId from the user profile
+      const fetchedBranchId = parsedUserProfile?.branchId;
+      
+      const endpoint = `${API_URL}/appointment/timeslot/${fetchedBranchId}`;
 
       const utcStartTime = convertLocalToUTC(startTime);
     const utcEndTime = convertLocalToUTC(endTime);
@@ -211,9 +218,11 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     const params: any = {
       page: page,
       pageSize: rowsPerPage,
-      from : startTime,
-      to: startTime,
-     status:["visiting"]
+      startDateTime : startTime,
+      endDateTime: endTime,
+     status:["visiting"],
+     from:startTime,
+     end:startTime
     };
     
    
@@ -332,29 +341,31 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
         // console.error("Error parsing JSON:", error);
       }
 
-      return <p className="capitalize">{age}</p>;
+      return <p className="text-xs sm:text-sm ">{age}</p>;
     }
     if (columnKey === "time") {
       const startTime = extractTime(user.startDateTime);
       // console.log(startTime);
 
       const endTime = user.endDateTime;
-      return <p className="capitalize">{startTime}-{extractTime(endTime)}</p>;
+      return <p className="text-xs sm:text-sm ">{startTime}-{extractTime(endTime)}</p>;
 
     }
-    if (columnKey === "date") {
-      const startDate = extractDate(user.dateTime);
+    // if (columnKey === "date") {
+    //   const startDate = extractDate(user.dateTime);
 
-      const endDate = extractDate(user.endDateTime)
+    //   const endDate = extractDate(user.endDateTime)
 
-      return <p>{startDate}</p>;
-    }
+    //   return   <p className="text-xs sm:text-sm ">
+    //   {startDate}
+    // </p>
+    // }
 
     if (columnKey === "email") {
       try {
         const userJson = JSON.parse(user.json || "{}");
         const email = userJson.email || "N/A"; // Fallback to "N/A" if email is missing
-        return <p>{email}</p>;
+        return <p className="text-xs sm:text-sm ">{email}</p>;
       } catch (error) {
         // console.error("Error parsing JSON:", error);
       }

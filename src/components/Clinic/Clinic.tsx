@@ -66,7 +66,7 @@ const Clinic = () => {
     shiftEnd: "",
   });
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
-     const[userId, setUserId] = useState("")
+  const [userId, setUserId] = useState("")
 
   const handleInputChange = (field: string, value: string) => {
     setClinicDetails({ ...clinicDetails, [field]: value });
@@ -106,9 +106,9 @@ const Clinic = () => {
     setEdit(!edit);
   };
   const fetchHospitalDetails = async () => {
-    
+ setLoading(true)
     try {
-    
+
       const token = localStorage.getItem("docPocAuth_token");
       // const profileEndpoint = `${API_URL}/auth/profile`;
       // const profileResponse = await axios.get(profileEndpoint,{
@@ -121,22 +121,23 @@ const Clinic = () => {
 
       const userProfile = localStorage.getItem("userProfile");
 
-    // Parse the JSON string if it exists
-    const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
 
-    // Extract the branchId from the user profile
-    const branch = parsedUserProfile?.branchId;
-      
+      // Extract the branchId from the user profile
+      const branch = parsedUserProfile?.branchId;
 
-        
 
-       if (!branch) {
+
+
+      if (!branch) {
         setIsHospitalAvailable(false);
         setEdit(true); // Enable editing if no hospital/branch exists
         setIsMultipleBranch(true)
+        setLoading(false)
         return;
       }
-        
+
 
 
       const response = await axios.get(`${API_URL}/hospital/find/${branch}`, {
@@ -148,10 +149,10 @@ const Clinic = () => {
       console.log(data)
 
 
-      
+
       if (data) {
         setIsHospitalAvailable(true);
-       
+         setLoading(false)
         const hospital = data;
         const parsedJson = hospital.json ? JSON.parse(hospital.json) : {};
 
@@ -185,7 +186,10 @@ const Clinic = () => {
       }
     } catch (error) {
       console.error("Error fetching hospital details:", error);
+      setLoading(false)
     }
+
+    setLoading(false)
   };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
@@ -303,7 +307,7 @@ const Clinic = () => {
         };
 
 
-     const branchdetails = await axios.post(`${API_URL}/hospital/branch`, branchData,
+        const branchdetails = await axios.post(`${API_URL}/hospital/branch`, branchData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -311,7 +315,7 @@ const Clinic = () => {
             },
           }
         );
-            
+
         setIsHospitalAvailable(true);
         setModalMessage({
           success: "Hospital created successfully",
@@ -320,26 +324,26 @@ const Clinic = () => {
         onOpen()
 
         const fetchedBranchId = branchdetails.data?.id;
-  const userEndpoint = `${API_URL}/user`;
-  
-         await axios.patch(userEndpoint, {
-            id: userId,
-            branchId: fetchedBranchId
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
-  
-          console.log("Profile updated successfully:", response.data);
-        
-           // Update the state with the response
-       
+        const userEndpoint = `${API_URL}/user`;
+
+        await axios.patch(userEndpoint, {
+          id: userId,
+          branchId: fetchedBranchId
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("Profile updated successfully:", response.data);
+
+        // Update the state with the response
 
 
 
-      
+
+
 
       }
 
@@ -366,23 +370,23 @@ const Clinic = () => {
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
-       
+
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <div className="border-b border-stroke px-3 py-2  sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-row gap-4 sm:gap-9">
-{
+            {/* {
   loading? <div></div> : <div> {!isHospitalAvailable&& (
     <p className="text-red-500 font-semibold">
       Please create a clinic/hospital first.
     </p>
   )}</div>
  
-}
-       
-    
+} */}
+
+
             <h3 className="font-semibold text-dark dark:text-white">
               Clinic/Hospital Details
             </h3>
-            <div>
+            {/* <div>
               <Switch
                 isSelected={isMultipleBranch}
               
@@ -395,6 +399,30 @@ const Clinic = () => {
               >
                 Edit
               </Switch>
+            </div> */}
+
+            <div className="border-b border-stroke px-3 py-2 sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-col sm:flex-row gap-2 sm:gap-9 items-center justify-between">
+            <div className="flex items-center">
+                <Switch
+                  isSelected={isMultipleBranch}
+                  onChange={() => setIsMultipleBranch(!isMultipleBranch)}
+                  size="lg"
+                  color="secondary"
+                  onClick={flipEdit}
+                >
+                  Edit
+                </Switch>
+              </div>
+
+
+              <div className="flex items-center">
+                {!isHospitalAvailable && !loading && (
+                  <p className="text-red-500 font-semibold text-sm sm:text-base text-center sm:text-left">
+                    Please create a clinic/hospital first.
+                  </p>
+                )}
+              </div>
+            
             </div>
           </div>
           <form onSubmit={handleSaveChanges}>
@@ -412,7 +440,7 @@ const Clinic = () => {
                 // errorMessage={errors.name}
                 />
                 <Input
-                  key="inside"
+                  key="clinic-phone"
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"
@@ -424,7 +452,7 @@ const Clinic = () => {
                   isDisabled={!edit}
                 />
                 <Input
-                  key="inside"
+                  key="clinic-email"
                   variant="bordered"
                   type="email"
                   labelPlacement="outside"
@@ -530,7 +558,7 @@ const Clinic = () => {
                 </Autocomplete>
 
                 <Input
-                  key="inside"
+                  key="clinic-pincode"
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"

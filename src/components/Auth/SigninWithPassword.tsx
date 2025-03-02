@@ -43,6 +43,27 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
     }
   }
 
+
+  const fetchProfile = async (token: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const profile = response.data;
+      localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+      console.log("Fetched profile:", profile);
+      return profile;
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      throw new Error("Profile fetch failed");
+    }
+  };
+
+
   async function handleSignInWithPassword(event: React.FormEvent) {
     event.preventDefault();
     if (!userInput || !password) return;
@@ -67,7 +88,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
       if (access_token) {
         onLogin(access_token);
         localStorage.setItem("docPocAuth_token", access_token);
-
+        const profile = await fetchProfile(access_token); 
         router.push("/");
         // window.location.reload();
       } else {
@@ -143,6 +164,7 @@ export default function SigninWithPassword({ onLogin,setAuthPage }: { setAuthPag
 
       if (access_token) {
         onLogin(access_token);
+        const profile = await fetchProfile(access_token); 
         localStorage.setItem("docPocAuth_token", access_token);
         router.push("/");
         // window.location.reload();
