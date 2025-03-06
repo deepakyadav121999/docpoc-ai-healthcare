@@ -59,6 +59,24 @@ const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
+  const fetchProfile = async (token: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const profile = response.data;
+      localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+      console.log("Fetched profile:", profile);
+      return profile;
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      throw new Error("Profile fetch failed");
+    }
+  };
 
 
   useEffect(() => {
@@ -159,13 +177,32 @@ const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
         const { access_token } = signInResponse.data;
 
 
-        const profileResponse = await fetch(`${API_URL}/auth/profile`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${access_token}`,
-          },
-        });
+        // const profileResponse = await fetch(`${API_URL}/auth/profile`, {
+        //   method: "GET",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Authorization: `Bearer ${access_token}`,
+        //   },
+        // });
+
+        const fetchProfile = async (token: string) => {
+          try {
+            const response = await axios.get(`${API_URL}/auth/profile`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+      
+            const profile = response.data;
+            localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+            console.log("Fetched profile:", profile);
+            return profile;
+          } catch (err) {
+            console.error("Error fetching profile:", err);
+            throw new Error("Profile fetch failed");
+          }
+        };
 
 
         // if (access_token) {
@@ -175,12 +212,15 @@ const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
         //   router.push("/");
         //   // window.location.reload();
         // }
-        const profileData = await profileResponse.json();
+        // const profileData = await profileResponse.json();
+
+        const profileData = await fetchProfile(access_token);
       
         if (profileData.branchId) {
           // If branchId exists, redirect to dashboard
           onLogin(access_token);
           localStorage.setItem("docPocAuth_token", access_token)
+          
           router.push("/");
         } else {
           // If no branchId, redirect to settings
@@ -311,6 +351,7 @@ const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
     
         if (access_token) {
           onLogin(access_token)
+           await fetchProfile(access_token)
           localStorage.setItem("docPocAuth_token", access_token);
          
           router.push("/");

@@ -8,7 +8,7 @@
 // import SignUp from "./auth/signup/page";
 // import SignIn from "./auth/signin/page";
 // import { usePathname, useRouter } from 'next/navigation'; 
-
+// import axios from "axios";
 // const API_URL = process.env.API_URL;
 // export default function RootLayout({
 //   children,
@@ -56,28 +56,27 @@
 //       if (token) {
 //         try {
 //           // Call a backend endpoint to validate the token
-//           const response = await fetch(`${API_URL}/auth/profile`, {
-//             method: "GET",
+//           const response = await axios.get(`${API_URL}/auth/profile`, {
 //             headers: {
-//               "Content-Type": "application/json",
 //               Authorization: `Bearer ${token}`,
+//               "Content-Type": "application/json",
 //             },
 //           });
 
-//           // localStorage.setItem("profile", JSON.stringify(response.data));\
+//           // localStorage.setItem("profile", JSON.stringify(response.data))
          
 
-//           if (response.ok) {
+//           if (response) {
 //             // If the token is valid, set the authenticated state to true
 //             // setIsAuthenticated(true);
           
-//             const data = await response.json()
+//             const data = await response.data
 //             setUserProfile(data);
 //             console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
 
         
 //             setIsAuthenticated(true);
-//             // localStorage.setItem("profile", JSON.stringify(data));
+//             localStorage.setItem("profile", JSON.stringify(data));
 //           } else {
 //             // If the token is invalid, clear it from local storage
 //             localStorage.removeItem("docPocAuth_token");
@@ -260,6 +259,7 @@
 
 
 
+
 "use client";
 
 import "flatpickr/dist/flatpickr.min.css";
@@ -270,7 +270,8 @@ import Loader from "@/components/common/Loader";
 import SignUp from "./auth/signup/page";
 import SignIn from "./auth/signin/page";
 import { usePathname, useRouter } from "next/navigation";
-
+import axios from "axios";
+const API_URL = process.env.API_URL;
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -285,23 +286,72 @@ export default function RootLayout({
 
   // Check authentication and load profile from localStorage
   useEffect(() => {
-    const token = localStorage.getItem("docPocAuth_token");
-    const storedProfile = localStorage.getItem("profile");
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const storedProfile = localStorage.getItem("profile");
 
-    if (token) {
-      setIsAuthenticated(true);
+    // if (token) {
+    //   setIsAuthenticated(true);
 
-      // Parse profile from localStorage
-      if (storedProfile) {
-        const parsedProfile = JSON.parse(storedProfile);
-        setUserProfile(parsedProfile);
+    //   // Parse profile from localStorage
+    //   if (storedProfile) {
+    //     const parsedProfile = JSON.parse(storedProfile);
+    //     setUserProfile(parsedProfile);
+    //   }
+    // } else {
+    //   setIsAuthenticated(false);
+    // }
+
+    // setIsLoading(false);
+
+
+
+        const validateToken = async () => {
+      const token = localStorage.getItem("docPocAuth_token");
+
+      if (token) {
+        try {
+          // Call a backend endpoint to validate the token
+          const response = await axios.get(`${API_URL}/auth/profile`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          localStorage.setItem("profile", JSON.stringify(response.data))
+         
+
+          if (response) {
+            // If the token is valid, set the authenticated state to true
+            // setIsAuthenticated(true);
+          
+            const data = await response.data
+            setUserProfile(data);
+            console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
+
+        
+            setIsAuthenticated(true);
+            localStorage.setItem("profile", JSON.stringify(data));
+          } else {
+            // If the token is invalid, clear it from local storage
+            localStorage.removeItem("docPocAuth_token");
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          localStorage.removeItem("docPocAuth_token");
+          setIsAuthenticated(false);
+        }
       }
-    } else {
-      setIsAuthenticated(false);
-    }
+      // setIsProfileLoading(false);
+      setIsLoading(false);
+    };
 
-    setIsLoading(false);
+    validateToken();
   }, [pathname]);
+
+
+  
 
   // Redirection based on authentication and profile data
   useEffect(() => {

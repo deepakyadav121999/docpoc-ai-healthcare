@@ -54,7 +54,7 @@ const Clinic = () => {
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
   const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
-
+//  const [userupdated, setuserupdated] = useState("abc")
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
     phone: "",
@@ -98,6 +98,8 @@ const Clinic = () => {
       // alert("An error occurred while detecting location.");
     }
   }
+
+  
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
@@ -110,23 +112,32 @@ const Clinic = () => {
     try {
 
       const token = localStorage.getItem("docPocAuth_token");
-      // const profileEndpoint = `${API_URL}/auth/profile`;
-      // const profileResponse = await axios.get(profileEndpoint,{
-      //  headers:{
-      //    Authorization: `Bearer ${token}`,
-      //    "Content-Type": "application/json",
-      //  },
-      // })
-      //  const branch = profileResponse.data?.branchId
 
-      const userProfile = localStorage.getItem("userProfile");
+      const profileEndpoint = `${API_URL}/auth/profile`;
+      const profileResponse = await axios.get(profileEndpoint,{
+       headers:{
+         Authorization: `Bearer ${token}`,
+         "Content-Type": "application/json",
+       },
+      })
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+       const branch = profileResponse.data?.branchId
+      const  userd = profileResponse.data?.id;
 
-      // Extract the branchId from the user profile
-      const branch = parsedUserProfile?.branchId;
+      setUserId(userd)
 
+      //  localStorage.removeItem('profile', JSON.stringify(profileResponse.data))
+
+
+       localStorage.setItem("profile", JSON.stringify(profileResponse.data))
+      // const userProfile = localStorage.getItem("profile");
+
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+      // // Extract the branchId from the user profile
+      // const branch = parsedUserProfile?.branchId;
+      // setUserId(parsedUserProfile?.id)
 
 
 
@@ -336,13 +347,25 @@ const Clinic = () => {
           },
         });
 
-        console.log("Profile updated successfully:", response.data);
+        // setuserupdated("hello")
+            // const response1 = await axios.get(`${API_URL}/auth/profile`, {
+            //   headers: {
+            //     Authorization: `Bearer ${token}`,
+            //     "Content-Type": "application/json",
+            //   },
+            // });
+      
+            // const profile = response1.data;
+            // localStorage.removeItem("profile"), JSON.stringify(profile)
+            // localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+            // console.log("Fetched profile:", profile);
+       
+         
+            console.log("Profile updated successfully:", response.data);
 
-        // Update the state with the response
+        
 
-
-
-
+      
 
 
       }

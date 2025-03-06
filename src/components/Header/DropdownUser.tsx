@@ -33,7 +33,7 @@ const DropdownUser = () => {
   
     // const profileEndpoint = `${API_URL}/auth/profile`;
 
-    try {
+    // try {
     //   const response = await axios.get(profileEndpoint, {
     //     headers: {
     //       Authorization: `Bearer ${token}`,
@@ -41,8 +41,11 @@ const DropdownUser = () => {
     //     },
     //   });
          
+  
+      // const profile = response.data;
 
       const userProfile = localStorage.getItem("profile");
+    
 
       // Parse the JSON string if it exists
       const profileData = userProfile ? JSON.parse(userProfile) : null;
@@ -65,9 +68,9 @@ const DropdownUser = () => {
         // You can now use the user data as needed
       }
       // Set the profile data after fetching
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
+    // } catch (error) {
+    //   console.error("Error fetching profile:", error);
+    // }
   };
 
 

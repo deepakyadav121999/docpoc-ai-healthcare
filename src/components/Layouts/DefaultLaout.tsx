@@ -13,41 +13,41 @@ export default function DefaultLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [profile, setProfile] = useState<any>(null); // State to store profile data
-  const [isLoading, setIsLoading] = useState(true);
+  // const [profile, setProfile] = useState<any>(null); // State to store profile data
+  // const [isLoading, setIsLoading] = useState(true);
 
-  console.log("default layout is comming")
-  // Fetch profile from API
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      if (!token) {
-        throw new Error("User not authenticated");
-      }
+  // console.log("default layout is comming")
+  // // Fetch profile from API
+  // const fetchProfile = async () => {
+  //   try {
+  //     const token = localStorage.getItem("docPocAuth_token");
+  //     if (!token) {
+  //       throw new Error("User not authenticated");
+  //     }
 
-      const response = await axios.get(`${API_URL}/auth/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  //     const response = await axios.get(`${API_URL}/auth/profile`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
 
      
-        const data = await response.data;
-        const res = JSON.stringify(data, null, 2)
-        setProfile( data?JSON.parse(res)  :null); // Store the profile in state
+  //       const data = await response.data;
+  //       const res = JSON.stringify(data, null, 2)
+  //       setProfile( data?JSON.parse(res)  :null); // Store the profile in state
        
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setIsLoading(false); // Stop loading
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error fetching profile:", error);
+  //   } finally {
+  //     setIsLoading(false); // Stop loading
+  //   }
+  // };
 
-  // Fetch profile when the component mounts
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  // // Fetch profile when the component mounts
+  // useEffect(() => {
+  //   fetchProfile();
+  // }, []);
 
 
 
