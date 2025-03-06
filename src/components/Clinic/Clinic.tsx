@@ -99,7 +99,7 @@ const Clinic = () => {
     }
   }
 
-  
+
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
@@ -113,31 +113,32 @@ const Clinic = () => {
 
       const token = localStorage.getItem("docPocAuth_token");
 
-      const profileEndpoint = `${API_URL}/auth/profile`;
-      const profileResponse = await axios.get(profileEndpoint,{
-       headers:{
-         Authorization: `Bearer ${token}`,
-         "Content-Type": "application/json",
-       },
-      })
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
 
-       const branch = profileResponse.data?.branchId
-      const  userd = profileResponse.data?.id;
+      //  const branch = profileResponse.data?.branchId
+      // const  userd = profileResponse.data?.id;
 
-      setUserId(userd)
+      // setUserId(userd)
 
-      //  localStorage.removeItem('profile', JSON.stringify(profileResponse.data))
+      // //  localStorage.removeItem('profile', JSON.stringify(profileResponse.data))
 
 
-       localStorage.setItem("profile", JSON.stringify(profileResponse.data))
-      // const userProfile = localStorage.getItem("profile");
+      //  localStorage.setItem("profile", JSON.stringify(profileResponse.data))
+      
+      const userProfile = localStorage.getItem("profile");
 
-      // // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // Parse the JSON string if it exists
+      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
 
-      // // Extract the branchId from the user profile
-      // const branch = parsedUserProfile?.branchId;
-      // setUserId(parsedUserProfile?.id)
+      // Extract the branchId from the user profile
+      const branch = parsedUserProfile?.branchId;
+      setUserId(parsedUserProfile?.id)
 
 
 
