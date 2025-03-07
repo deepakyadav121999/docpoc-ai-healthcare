@@ -51,9 +51,11 @@ const profileSlice = createSlice({
   reducers: {
     setProfile: (state, action) => {
       state.data = action.payload;
+      state.loading = false;
     },
     clearProfile: (state) => {
       state.data = null;
+      state.loading = false;
     },
   },
   // In your profileSlice.js
