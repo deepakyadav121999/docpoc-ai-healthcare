@@ -114,7 +114,10 @@ const Clinic = () => {
 
   const handleModalClose = () => {
     // dispatch(fetchProfile());
-    dispatch(updateAccessToken(accessToken));
+    if(modalMessage.success =="Hospital created successfully"){
+      dispatch(updateAccessToken(accessToken));
+    }
+   
     setModalMessage({ success: "", error: "" });
     onClose();
   };
