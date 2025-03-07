@@ -1,3 +1,174 @@
+"use client";
+
+import "flatpickr/dist/flatpickr.min.css";
+import "@/css/satoshi.css";
+import "@/css/style.css";
+import React, { useEffect, useState } from "react";
+import Loader from "@/components/common/Loader";
+import SignUp from "./auth/signup/page";
+import SignIn from "./auth/signin/page";
+import { usePathname, useRouter } from "next/navigation";
+import axios from "axios";
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store } from '../store';
+import { fetchProfile, clearProfile } from '../store/slices/profileSlice';
+import { RootState } from '../store';
+import { AppDispatch } from '../store';
+
+const API_URL = process.env.API_URL;
+function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+      const profile = useSelector((state: RootState) => state.profile.data);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const [isSignUpPage, setIsSignUpPage] = useState(false);
+  const pathname = usePathname(); // Get the current pathname
+  const router = useRouter(); // Get the router to perform redirection
+  // const [userProfile, setUserProfile] = useState<any>(null); // To store profile data
+  const isAuthenticated = !!profile;
+ const isLoading = useSelector((state: RootState) => state.profile.loading);
+
+
+  // Check authentication and load profile from localStorage
+  useEffect(() => {
+    
+
+        const validateToken = async () => {
+      const token = localStorage.getItem("docPocAuth_token");
+
+      if (token) {
+         const token = localStorage.getItem("docPocAuth_token");
+            if (token) {
+              dispatch(fetchProfile());
+            } else {
+              dispatch(clearProfile());
+            }
+      }
+    };
+
+    validateToken();
+  }, [pathname]);
+
+
+  
+
+  // Redirection based on authentication and profile data
+  useEffect(() => {
+    if (isLoading) return;
+
+    // If not authenticated, redirect to the sign-in page unless already on an auth route
+    if (!isAuthenticated) {
+      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+        router.push("/auth/signin");
+      }
+    } else {
+      // If authenticated, check profile and redirect accordingly
+      if (profile) {
+        if (!profile.branchId) {
+          // Redirect to settings if branchId is missing
+          if (pathname !== "/settings") {
+            router.push("/settings");
+          }
+        } else {
+          // Redirect to home if branchId is available and currently on an auth page
+          if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+            router.push("/");
+          }
+        }
+      }
+    }
+  }, [isAuthenticated, isLoading, pathname, router, profile]);
+
+  const toggleAuthPage = () => {
+    setIsSignUpPage((prev) => !prev);
+  };
+
+  const handleLogin = (token: string) => {
+    localStorage.setItem("docPocAuth_token", token);
+     dispatch(fetchProfile());
+    // setIsAuthenticated(true); // Set authentication state to true after login
+
+    // Optionally fetch and store profile after login
+    // const storedProfile = localStorage.getItem("profile");
+    // if (storedProfile) {
+    //   setUserProfile(JSON.parse(storedProfile));
+    // }
+  };
+
+  const handleSignupComplete = (token: string) => {
+    localStorage.setItem("docPocAuth_token", token);
+    // setIsAuthenticated(true);
+
+    const storedProfile = localStorage.getItem("profile");
+  
+  };
+
+  if (isLoading) {
+    return (
+      <html lang="en">
+        <body suppressHydrationWarning={true}>
+          <Loader />
+        </body>
+      </html>
+    );
+  }
+
+  if (!isAuthenticated) {
+    // Render the appropriate auth page based on the current route
+    if (pathname === "/auth/signup") {
+      return (
+        <html lang="en">
+          <body suppressHydrationWarning={true}>
+            <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
+          </body>
+        </html>
+      );
+    }
+    return (
+      <html lang="en">
+        <body suppressHydrationWarning={true}>
+          <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
+        </body>
+      </html>
+    );
+  }
+
+  return (
+    <html lang="en">
+      <body suppressHydrationWarning={true}>{children}</body>
+    </html>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <RootLayout>{children}</RootLayout>
+    </Provider>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // "use client";
 
 // import "flatpickr/dist/flatpickr.min.css";
@@ -33,7 +204,7 @@
 //     } else {
 //       dispatch(clearProfile());
 //     }
-//   }, [dispatch, pathname]);
+//   }, [dispatch]);
 
 //   useEffect(() => {
 //     if (isLoading) return;
@@ -103,113 +274,6 @@
 //     </Provider>
 //   );
 // }
-
-
-"use client";
-
-import "flatpickr/dist/flatpickr.min.css";
-import "@/css/satoshi.css";
-import "@/css/style.css";
-import React, { useEffect } from "react";
-import Loader from "@/components/common/Loader";
-import SignUp from "./auth/signup/page";
-import SignIn from "./auth/signin/page";
-import { usePathname, useRouter } from "next/navigation";
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store } from '../store';
-import { fetchProfile, clearProfile } from '../store/slices/profileSlice';
-import { RootState } from '../store';
-import { AppDispatch } from '../store';
-
-function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const dispatch = useDispatch<AppDispatch>();
-  const pathname = usePathname();
-  const router = useRouter();
-  const profile = useSelector((state: RootState) => state.profile.data);
-  const isLoading = useSelector((state: RootState) => state.profile.loading);
-  const isAuthenticated = !!profile;
-
-  useEffect(() => {
-    const token = localStorage.getItem("docPocAuth_token");
-    if (token) {
-      dispatch(fetchProfile());
-    } else {
-      dispatch(clearProfile());
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (!isAuthenticated) {
-      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
-        router.push("/auth/signin");
-      }
-    } else {
-      if (profile && !profile.branchId) {
-        if (pathname !== "/settings") {
-          router.push("/settings");
-        }
-      } else {
-        if (pathname === "/auth/signin" || pathname === "/auth/signup") {
-          router.push("/");
-        }
-      }
-    }
-  }, [isAuthenticated, isLoading, pathname, router, profile]);
-
-  const handleLogin = (token: string) => {
-    localStorage.setItem("docPocAuth_token", token);
-    dispatch(fetchProfile());
-  };
-
-  if (isLoading) {
-    return (
-      <html lang="en">
-        <body suppressHydrationWarning={true}>
-          <Loader />
-        </body>
-      </html>
-    );
-  }
-
-  if (!isAuthenticated) {
-    if (pathname === "/auth/signup") {
-      return (
-        <html lang="en">
-          <body suppressHydrationWarning={true}>
-            <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
-          </body>
-        </html>
-      );
-    }
-    return (
-      <html lang="en">
-        <body suppressHydrationWarning={true}>
-          <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
-        </body>
-      </html>
-    );
-  }
-
-  return (
-    <html lang="en">
-      <body suppressHydrationWarning={true}>{children}</body>
-    </html>
-  );
-}
-
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <Provider store={store}>
-      <RootLayout>{children}</RootLayout>
-    </Provider>
-  );
-}
 
 
 
@@ -659,3 +723,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //     </html>
 //   );
 // }
+
+
+
