@@ -1,4 +1,221 @@
 // "use client";
+
+// import "flatpickr/dist/flatpickr.min.css";
+// import "@/css/satoshi.css";
+// import "@/css/style.css";
+// import React, { useEffect } from "react";
+// import Loader from "@/components/common/Loader";
+// import SignUp from "./auth/signup/page";
+// import SignIn from "./auth/signin/page";
+// import { usePathname, useRouter } from "next/navigation";
+// import { Provider, useDispatch, useSelector } from 'react-redux';
+// import { store } from '../store';
+// import { fetchProfile, clearProfile } from '../store/slices/profileSlice';
+// import { RootState } from '../store';
+// import { AppDispatch } from '../store';
+
+// function RootLayout({
+//   children,
+// }: Readonly<{
+//   children: React.ReactNode;
+// }>) {
+//   const dispatch = useDispatch<AppDispatch>();
+//   const pathname = usePathname();
+//   const router = useRouter();
+//   const profile = useSelector((state: RootState) => state.profile.data);
+//   const isLoading = useSelector((state: RootState) => state.profile.loading);
+//   const isAuthenticated = !!profile;
+
+//   useEffect(() => {
+//     const token = localStorage.getItem("docPocAuth_token");
+//     if (token) {
+//       dispatch(fetchProfile());
+//     } else {
+//       dispatch(clearProfile());
+//     }
+//   }, [dispatch, pathname]);
+
+//   useEffect(() => {
+//     if (isLoading) return;
+
+//     if (!isAuthenticated) {
+//       if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+//         router.push("/auth/signin");
+//       }
+//     } else {
+//       if (profile && !profile.branchId) {
+//         if (pathname !== "/settings") {
+//           router.push("/settings");
+//         }
+//       } else {
+//         if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+//           router.push("/");
+//         }
+//       }
+//     }
+//   }, [isAuthenticated, isLoading, pathname, router, profile]);
+
+//   const handleLogin = (token: string) => {
+//     localStorage.setItem("docPocAuth_token", token);
+//     dispatch(fetchProfile());
+//   };
+
+//   if (isLoading) {
+//     return (
+//       <html lang="en">
+//         <body suppressHydrationWarning={true}>
+//           <Loader />
+//         </body>
+//       </html>
+//     );
+//   }
+
+//   if (!isAuthenticated) {
+//     if (pathname === "/auth/signup") {
+//       return (
+//         <html lang="en">
+//           <body suppressHydrationWarning={true}>
+//             <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
+//           </body>
+//         </html>
+//       );
+//     }
+//     return (
+//       <html lang="en">
+//         <body suppressHydrationWarning={true}>
+//           <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
+//         </body>
+//       </html>
+//     );
+//   }
+
+//   return (
+//     <html lang="en">
+//       <body suppressHydrationWarning={true}>{children}</body>
+//     </html>
+//   );
+// }
+
+// export default function AppLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <Provider store={store}>
+//       <RootLayout>{children}</RootLayout>
+//     </Provider>
+//   );
+// }
+
+
+"use client";
+
+import "flatpickr/dist/flatpickr.min.css";
+import "@/css/satoshi.css";
+import "@/css/style.css";
+import React, { useEffect } from "react";
+import Loader from "@/components/common/Loader";
+import SignUp from "./auth/signup/page";
+import SignIn from "./auth/signin/page";
+import { usePathname, useRouter } from "next/navigation";
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store } from '../store';
+import { fetchProfile, clearProfile } from '../store/slices/profileSlice';
+import { RootState } from '../store';
+import { AppDispatch } from '../store';
+
+function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const dispatch = useDispatch<AppDispatch>();
+  const pathname = usePathname();
+  const router = useRouter();
+  const profile = useSelector((state: RootState) => state.profile.data);
+  const isLoading = useSelector((state: RootState) => state.profile.loading);
+  const isAuthenticated = !!profile;
+
+  useEffect(() => {
+    const token = localStorage.getItem("docPocAuth_token");
+    if (token) {
+      dispatch(fetchProfile());
+    } else {
+      dispatch(clearProfile());
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+        router.push("/auth/signin");
+      }
+    } else {
+      if (profile && !profile.branchId) {
+        if (pathname !== "/settings") {
+          router.push("/settings");
+        }
+      } else {
+        if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+          router.push("/");
+        }
+      }
+    }
+  }, [isAuthenticated, isLoading, pathname, router, profile]);
+
+  const handleLogin = (token: string) => {
+    localStorage.setItem("docPocAuth_token", token);
+    dispatch(fetchProfile());
+  };
+
+  if (isLoading) {
+    return (
+      <html lang="en">
+        <body suppressHydrationWarning={true}>
+          <Loader />
+        </body>
+      </html>
+    );
+  }
+
+  if (!isAuthenticated) {
+    if (pathname === "/auth/signup") {
+      return (
+        <html lang="en">
+          <body suppressHydrationWarning={true}>
+            <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
+          </body>
+        </html>
+      );
+    }
+    return (
+      <html lang="en">
+        <body suppressHydrationWarning={true}>
+          <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
+        </body>
+      </html>
+    );
+  }
+
+  return (
+    <html lang="en">
+      <body suppressHydrationWarning={true}>{children}</body>
+    </html>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <RootLayout>{children}</RootLayout>
+    </Provider>
+  );
+}
+
+
+
+
+
+// "use client";
 // // import "jsvectormap/dist/css/jsvectormap.css";
 // import "flatpickr/dist/flatpickr.min.css";
 // import "@/css/satoshi.css";
@@ -260,184 +477,185 @@
 
 
 
-"use client";
+// "use client";
 
-import "flatpickr/dist/flatpickr.min.css";
-import "@/css/satoshi.css";
-import "@/css/style.css";
-import React, { useEffect, useState } from "react";
-import Loader from "@/components/common/Loader";
-import SignUp from "./auth/signup/page";
-import SignIn from "./auth/signin/page";
-import { usePathname, useRouter } from "next/navigation";
-import axios from "axios";
-const API_URL = process.env.API_URL;
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isSignUpPage, setIsSignUpPage] = useState(false);
-  const pathname = usePathname(); // Get the current pathname
-  const router = useRouter(); // Get the router to perform redirection
-  const [userProfile, setUserProfile] = useState<any>(null); // To store profile data
+// import "flatpickr/dist/flatpickr.min.css";
+// import "@/css/satoshi.css";
+// import "@/css/style.css";
+// import React, { useEffect, useState } from "react";
+// import Loader from "@/components/common/Loader";
+// import SignUp from "./auth/signup/page";
+// import SignIn from "./auth/signin/page";
+// import { usePathname, useRouter } from "next/navigation";
+// import axios from "axios";
 
-  // Check authentication and load profile from localStorage
-  useEffect(() => {
-    // const token = localStorage.getItem("docPocAuth_token");
-    // const storedProfile = localStorage.getItem("profile");
+// const API_URL = process.env.API_URL;
+// export default function RootLayout({
+//   children,
+// }: Readonly<{
+//   children: React.ReactNode;
+// }>) {
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+//   const [isSignUpPage, setIsSignUpPage] = useState(false);
+//   const pathname = usePathname(); // Get the current pathname
+//   const router = useRouter(); // Get the router to perform redirection
+//   const [userProfile, setUserProfile] = useState<any>(null); // To store profile data
 
-    // if (token) {
-    //   setIsAuthenticated(true);
+//   // Check authentication and load profile from localStorage
+//   useEffect(() => {
+//     // const token = localStorage.getItem("docPocAuth_token");
+//     // const storedProfile = localStorage.getItem("profile");
 
-    //   // Parse profile from localStorage
-    //   if (storedProfile) {
-    //     const parsedProfile = JSON.parse(storedProfile);
-    //     setUserProfile(parsedProfile);
-    //   }
-    // } else {
-    //   setIsAuthenticated(false);
-    // }
+//     // if (token) {
+//     //   setIsAuthenticated(true);
 
-    // setIsLoading(false);
+//     //   // Parse profile from localStorage
+//     //   if (storedProfile) {
+//     //     const parsedProfile = JSON.parse(storedProfile);
+//     //     setUserProfile(parsedProfile);
+//     //   }
+//     // } else {
+//     //   setIsAuthenticated(false);
+//     // }
+
+//     // setIsLoading(false);
 
 
 
-        const validateToken = async () => {
-      const token = localStorage.getItem("docPocAuth_token");
+//         const validateToken = async () => {
+//       const token = localStorage.getItem("docPocAuth_token");
 
-      if (token) {
-        try {
-          // Call a backend endpoint to validate the token
-          const response = await axios.get(`${API_URL}/auth/profile`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
+//       if (token) {
+//         try {
+//           // Call a backend endpoint to validate the token
+//           const response = await axios.get(`${API_URL}/auth/profile`, {
+//             headers: {
+//               Authorization: `Bearer ${token}`,
+//               "Content-Type": "application/json",
+//             },
+//           });
 
-          localStorage.setItem("profile", JSON.stringify(response.data))
+//           localStorage.setItem("profile", JSON.stringify(response.data))
          
 
-          if (response) {
-            // If the token is valid, set the authenticated state to true
-            // setIsAuthenticated(true);
+//           if (response) {
+//             // If the token is valid, set the authenticated state to true
+//             // setIsAuthenticated(true);
           
-            const data = await response.data
-            setUserProfile(data);
-            console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
+//             const data = await response.data
+//             setUserProfile(data);
+//             console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
 
         
-            setIsAuthenticated(true);
-            localStorage.setItem("profile", JSON.stringify(data));
-          } else {
-            // If the token is invalid, clear it from local storage
-            localStorage.removeItem("docPocAuth_token");
-            setIsAuthenticated(false);
-          }
-        } catch (error) {
-          console.error("Token validation failed:", error);
-          localStorage.removeItem("docPocAuth_token");
-          setIsAuthenticated(false);
-        }
-      }
-      // setIsProfileLoading(false);
-      setIsLoading(false);
-    };
+//             setIsAuthenticated(true);
+//             localStorage.setItem("profile", JSON.stringify(data));
+//           } else {
+//             // If the token is invalid, clear it from local storage
+//             localStorage.removeItem("docPocAuth_token");
+//             setIsAuthenticated(false);
+//           }
+//         } catch (error) {
+//           console.error("Token validation failed:", error);
+//           localStorage.removeItem("docPocAuth_token");
+//           setIsAuthenticated(false);
+//         }
+//       }
+//       // setIsProfileLoading(false);
+//       setIsLoading(false);
+//     };
 
-    validateToken();
-  }, [pathname]);
+//     validateToken();
+//   }, [pathname]);
 
 
   
 
-  // Redirection based on authentication and profile data
-  useEffect(() => {
-    if (isLoading) return;
+//   // Redirection based on authentication and profile data
+//   useEffect(() => {
+//     if (isLoading) return;
 
-    // If not authenticated, redirect to the sign-in page unless already on an auth route
-    if (!isAuthenticated) {
-      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
-        router.push("/auth/signin");
-      }
-    } else {
-      // If authenticated, check profile and redirect accordingly
-      if (userProfile) {
-        if (!userProfile.branchId) {
-          // Redirect to settings if branchId is missing
-          if (pathname !== "/settings") {
-            router.push("/settings");
-          }
-        } else {
-          // Redirect to home if branchId is available and currently on an auth page
-          if (pathname === "/auth/signin" || pathname === "/auth/signup") {
-            router.push("/");
-          }
-        }
-      }
-    }
-  }, [isAuthenticated, isLoading, pathname, router, userProfile]);
+//     // If not authenticated, redirect to the sign-in page unless already on an auth route
+//     if (!isAuthenticated) {
+//       if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+//         router.push("/auth/signin");
+//       }
+//     } else {
+//       // If authenticated, check profile and redirect accordingly
+//       if (userProfile) {
+//         if (!userProfile.branchId) {
+//           // Redirect to settings if branchId is missing
+//           if (pathname !== "/settings") {
+//             router.push("/settings");
+//           }
+//         } else {
+//           // Redirect to home if branchId is available and currently on an auth page
+//           if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+//             router.push("/");
+//           }
+//         }
+//       }
+//     }
+//   }, [isAuthenticated, isLoading, pathname, router, userProfile]);
 
-  const toggleAuthPage = () => {
-    setIsSignUpPage((prev) => !prev);
-  };
+//   const toggleAuthPage = () => {
+//     setIsSignUpPage((prev) => !prev);
+//   };
 
-  const handleLogin = (token: string) => {
-    localStorage.setItem("docPocAuth_token", token);
-    setIsAuthenticated(true); // Set authentication state to true after login
+//   const handleLogin = (token: string) => {
+//     localStorage.setItem("docPocAuth_token", token);
+//     setIsAuthenticated(true); // Set authentication state to true after login
 
-    // Optionally fetch and store profile after login
-    const storedProfile = localStorage.getItem("profile");
-    if (storedProfile) {
-      setUserProfile(JSON.parse(storedProfile));
-    }
-  };
+//     // Optionally fetch and store profile after login
+//     const storedProfile = localStorage.getItem("profile");
+//     if (storedProfile) {
+//       setUserProfile(JSON.parse(storedProfile));
+//     }
+//   };
 
-  const handleSignupComplete = (token: string) => {
-    localStorage.setItem("docPocAuth_token", token);
-    setIsAuthenticated(true);
+//   const handleSignupComplete = (token: string) => {
+//     localStorage.setItem("docPocAuth_token", token);
+//     setIsAuthenticated(true);
 
-    const storedProfile = localStorage.getItem("profile");
-    if (storedProfile) {
-      setUserProfile(JSON.parse(storedProfile));
-    }
-  };
+//     const storedProfile = localStorage.getItem("profile");
+//     if (storedProfile) {
+//       setUserProfile(JSON.parse(storedProfile));
+//     }
+//   };
 
-  if (isLoading) {
-    return (
-      <html lang="en">
-        <body suppressHydrationWarning={true}>
-          <Loader />
-        </body>
-      </html>
-    );
-  }
+//   if (isLoading) {
+//     return (
+//       <html lang="en">
+//         <body suppressHydrationWarning={true}>
+//           <Loader />
+//         </body>
+//       </html>
+//     );
+//   }
 
-  if (!isAuthenticated) {
-    // Render the appropriate auth page based on the current route
-    if (pathname === "/auth/signup") {
-      return (
-        <html lang="en">
-          <body suppressHydrationWarning={true}>
-            <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
-          </body>
-        </html>
-      );
-    }
-    return (
-      <html lang="en">
-        <body suppressHydrationWarning={true}>
-          <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
-        </body>
-      </html>
-    );
-  }
+//   if (!isAuthenticated) {
+//     // Render the appropriate auth page based on the current route
+//     if (pathname === "/auth/signup") {
+//       return (
+//         <html lang="en">
+//           <body suppressHydrationWarning={true}>
+//             <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
+//           </body>
+//         </html>
+//       );
+//     }
+//     return (
+//       <html lang="en">
+//         <body suppressHydrationWarning={true}>
+//           <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
+//         </body>
+//       </html>
+//     );
+//   }
 
-  return (
-    <html lang="en">
-      <body suppressHydrationWarning={true}>{children}</body>
-    </html>
-  );
-}
+//   return (
+//     <html lang="en">
+//       <body suppressHydrationWarning={true}>{children}</body>
+//     </html>
+//   );
+// }

@@ -25,6 +25,7 @@ import {
 } from "@nextui-org/react";
 import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
+
 import { SearchIcon } from "./SearchIcon";
 import { columns, statusOptions } from "./data";
 import { capitalize } from "./utils";
@@ -41,6 +42,8 @@ import { now, getLocalTimeZone } from "@internationalized/date";
 import { color } from "framer-motion";
 import { Switch } from "@nextui-org/react";
 
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
@@ -119,7 +122,7 @@ export default function AppointmentTable() {
   const [statusCache, setStatusCache] = React.useState<Record<string, string>>({});
   const [assignedToMe, setAssignedToMe] = useState(false); // Toggle for "Assigned to Me"
   const [createdByMe, setCreatedByMe] = useState(false);
-
+  const profile = useSelector((state: RootState) => state.profile.data);
   useEffect(() => {
     localStorage.setItem("page", String(page));
   }, [page]);
@@ -142,14 +145,16 @@ export default function AppointmentTable() {
       // })
 
 
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = parsedUserProfile?.id;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      
+
+      const userId = profile?.id;
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
 
       const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
@@ -213,9 +218,14 @@ export default function AppointmentTable() {
     fetchUsers(); // Fetch users with the new filter
   }, []);
 
-
+  
+  
   useEffect(() => {
-    fetchUsers();
+    if(profile){
+      fetchUsers();
+    }
+ 
+
 
   }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe]);
   console.log(totalappointments)

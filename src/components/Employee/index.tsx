@@ -11,8 +11,13 @@ import { ApexOptions } from "apexcharts";
 import axios from "axios";
 import CustomCard from "./CustomCard";
 import { Spinner } from "@nextui-org/spinner";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 const API_URL = process.env.API_URL;
+
 export default function App() {
+
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
   const [loading, setLoading] = useState(true);
   const [brancId, setBranchId] = useState()
@@ -101,13 +106,14 @@ export default function App() {
 
       // const fetchedBranchId = profileResponse.data?.branchId;
 
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
   
+     
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       // console.log(fetchedHospitalId)
       // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;

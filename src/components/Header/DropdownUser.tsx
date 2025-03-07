@@ -9,6 +9,9 @@ import { Spinner } from "@nextui-org/spinner";
 import LogoutModal from "../common/Modal/LogoutModal";
 import { useDisclosure } from "@nextui-org/react";
 
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+
 
 const API_URL = process.env.API_URL;
 interface Profile {
@@ -19,6 +22,8 @@ interface Profile {
 
 }
 const DropdownUser = () => {
+
+      const profile = useSelector((state: RootState) => state.profile.data);
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profiles, setProfiles] = useState<Profile | null>(null);
@@ -30,31 +35,31 @@ const DropdownUser = () => {
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("docPocAuth_token");
-  
-    // const profileEndpoint = `${API_URL}/auth/profile`;
 
-    // try {
-    //   const response = await axios.get(profileEndpoint, {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
+    const profileEndpoint = `${API_URL}/auth/profile`;
+
+    try {
+      // const response = await axios.get(profileEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
          
   
       // const profile = response.data;
 
-      const userProfile = localStorage.getItem("profile");
+      // const userProfile = localStorage.getItem("profile");
     
 
       // Parse the JSON string if it exists
-      const profileData = userProfile ? JSON.parse(userProfile) : null;
+      // const profileData = userProfile ? JSON.parse(userProfile) : null;
       // const profileData =  profile  ;
-
+   
 
      
-      if  ( profileData && profileData.id) {
-        const userEndpoint = `${API_URL}/user/${profileData.id}`;
+      if  ( profile && profile.id) {
+        const userEndpoint = `${API_URL}/user/${profile.id}`;
         const userResponse = await axios.get(userEndpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,10 +73,12 @@ const DropdownUser = () => {
         // You can now use the user data as needed
       }
       // Set the profile data after fetching
-    // } catch (error) {
-    //   console.error("Error fetching profile:", error);
-    // }
-  };
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  }
+
+
 
 
  

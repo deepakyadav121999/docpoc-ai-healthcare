@@ -195,7 +195,7 @@ const SignUp: React.FC<SignUpProps> = ({ setAuthPage, onLogin }) => {
             });
       
             const profile = response.data;
-            localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+            // localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
             console.log("Fetched profile:", profile);
             return profile;
           } catch (err) {

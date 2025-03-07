@@ -1,7 +1,6 @@
 
 require("dotenv").config();
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
 const domain = process.env.DEVELOPMENT;
 const endPoint = process.env.API_URL;
@@ -101,6 +100,8 @@ export async function SignOut() {
   // localStorage.removeItem("docPocAuth_token");
   // localStorage.removeItem("userProfile");
   
+
+
   console.log("SignOut called");
   localStorage.removeItem("docPocAuth_token");
   console.log("Token removed");

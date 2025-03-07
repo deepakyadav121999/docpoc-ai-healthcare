@@ -6,6 +6,8 @@ import AddAppointment from "../CalenderBox/AddAppointment";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import NewAppointment from "./NewAppointment";
 import AppointmentList from "../common/Modal/AppointmentListModal";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import {
   Modal,
   ModalContent,
@@ -18,6 +20,8 @@ import {
 
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
+
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [loading, setLoading] = useState(false)
@@ -83,13 +87,16 @@ const [selectedAppointments, setSelectedAppointments] = useState<
       // })
 
       // const fetchedBranchId = profileResponse.data?.branchId;
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
   
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+    
+
+
+      const fetchedBranchId = profile?.branchId;
 
       const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
@@ -156,7 +163,12 @@ const [selectedAppointments, setSelectedAppointments] = useState<
       }, [isOpen,isAppointmentDetailsModalOpen]);
 
   useEffect(() => {
+   if(profile){
     fetchAppointments()
+   }
+      
+    
+    
   }, [])
  
 

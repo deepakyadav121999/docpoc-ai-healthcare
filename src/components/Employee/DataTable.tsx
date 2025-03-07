@@ -33,7 +33,8 @@ import { Spinner } from "@nextui-org/react";
 import AddEmployee from "./AddEmployee";
 import debounce from 'lodash.debounce';
 import axios from "axios";
-
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   inactive: "warning",
@@ -71,6 +72,7 @@ interface Employee {
 type User = (typeof users)[0];
 const API_URL = process.env.API_URL;
 export default function DataTable() {
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
     new Set([])  
@@ -132,13 +134,14 @@ export default function DataTable() {
       // })
 
       // const fetchedBranchId = profileResponse.data?.branchId;
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
   
+      
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
 
       setBranchId(fetchedBranchId)

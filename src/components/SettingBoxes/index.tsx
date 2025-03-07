@@ -4,7 +4,8 @@ import Image from "next/image";
 import axios from "axios";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useDisclosure } from "@nextui-org/react";
-
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 const API_URL = process.env.API_URL;
 
 
@@ -34,23 +35,28 @@ const SettingBoxes = () => {
   const fetchProfile = async () => {
     setLoading(true)
     const token = localStorage.getItem("docPocAuth_token");
-    const profileEndpoint = `${API_URL}/auth/profile`;
+    // const profileEndpoint = `${API_URL}/auth/profile`;
   
     try {
-      // First API call to fetch profile data
-      const response = await axios.get(profileEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+    //   // First API call to fetch profile data
+    //   const response = await axios.get(profileEndpoint, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
   
-      const profileData = response.data;
+    //   const profileData = response.data;
+
+
       // setProfile(profileData); // Set the profile data after fetching
   
       // Once profile data is fetched, get the user details using the profile's id
-      if (profileData.id) {
-        const userEndpoint = `${API_URL}/user/${profileData.id}`;
+
+      const profile = useSelector((state: RootState) => state.profile.data);
+
+      if (profile.id) {
+        const userEndpoint = `${API_URL}/user/${profile.id}`;
         const userResponse = await axios.get(userEndpoint, {
           headers: {
             Authorization: `Bearer ${token}`,

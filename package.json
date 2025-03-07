@@ -23,6 +23,7 @@
     "@nextui-org/theme": "^2.2.5",
     "@nextui-org/tooltip": "^2.0.35",
     "@react-aria/i18n": "^3.11.1",
+    "@reduxjs/toolkit": "^2.6.0",
     "apexcharts": "^3.45.2",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
@@ -43,6 +44,7 @@
     "react-modal": "^3.16.1",
     "react-phone-input-2": "^2.15.1",
     "react-quill": "^2.0.0",
+    "react-redux": "^9.2.0",
     "react-select": "^5.8.0",
     "react-table": "^7.8.0",
     "redux": "^5.0.1"
@@ -52,6 +54,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-modal": "^3.16.3",
+    "@types/react-redux": "^7.1.34",
     "@types/react-table": "^7.7.19",
     "autoprefixer": "^10.0.1",
     "eslint-config-next": "^15.0.3",

@@ -6,7 +6,8 @@ import { Accordion, AccordionItem, Avatar,Spinner,
 import UserAccessTypes from "./AccessTypes";
 import axios from "axios";
 import EnhancedModal from "../common/Modal/EnhancedModal";
-
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 interface Employee {
   id: string;
   branchId: string;
@@ -19,6 +20,7 @@ interface Employee {
 }
 const API_URL = process.env.API_URL;
 export default function UserAccess() {
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setUsers] = React.useState<Employee[]>([]);
   const [error, setError] = React.useState<string | null>(null);
@@ -63,13 +65,13 @@ export default function UserAccess() {
       //    "Content-Type": "application/json",
       //  },
       // })
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-  
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+     
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       // const fetchedBranchId = profileResponse.data?.branchId;
 

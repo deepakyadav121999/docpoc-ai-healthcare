@@ -33,6 +33,8 @@ import { Spinner } from "@nextui-org/react";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddPatient from "./AddPatient";
 import { useEffect } from "react";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 const statusColorMap: Record<string, ChipProps["color"]> = {
   Active: "success",
   Inactive: "warning",
@@ -68,7 +70,7 @@ interface Patient {
 }
 const API_URL = process.env.API_URL;
 export default function App() {
-
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [users, setUsers] = React.useState<Patient[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -122,13 +124,14 @@ export default function App() {
       // })
 
       // const fetchedBranchId = profileResponse.data?.branchId;
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+     
   
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
       
   const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
       const initialRowsPerPage = parseInt(localStorage.getItem("rowsPerPage") || "5", 10);
