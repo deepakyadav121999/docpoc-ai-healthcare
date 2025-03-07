@@ -114,6 +114,21 @@ const handleLogout = () => {
   window.location.href = "/auth/signout";
 };
 
+ useEffect(() => {
+    const header = document.querySelector("header");
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+  }, [isOpen]);
+
+
   return (
     <>
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">

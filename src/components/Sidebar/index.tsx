@@ -241,7 +241,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import LogoutModal from "../common/Modal/LogoutModal";
 import { useDisclosure } from "@nextui-org/react";
-
+import { useEffect } from "react";
 const menuGroups = [
   {
     name: "MAIN MENU",
@@ -336,6 +336,32 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     await router.push(route); // Navigate to the new route
     setLoadingItem(null); // Reset the loading state after navigation
   };
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    const sidebar = document.querySelector("aside"); // Select the sidebar
+  
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+    
+    if (sidebar) { // Check if the sidebar element exists
+      if (isOpen) {
+        sidebar.classList.remove("z-9999");
+        sidebar.classList.add("z-0");
+      } else {
+        sidebar.classList.remove("z-0");
+        sidebar.classList.add("z-9999");
+      }
+    }
+  }, [isOpen]);
 
   return (
     <>
