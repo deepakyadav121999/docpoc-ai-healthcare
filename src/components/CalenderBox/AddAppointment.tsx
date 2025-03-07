@@ -23,6 +23,9 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useSelector } from 'react-redux';
+import { RootState } from "@/store";
+
 
 interface AutocompleteItem {
   value: string;
@@ -37,6 +40,8 @@ interface AddUsersProps {
 }
 const API_URL = process.env.API_URL;
 const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+    const profile = useSelector((state: RootState) => state.profile.data);
+
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
@@ -269,14 +274,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
       
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
 
-      // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = parsedUserProfile?.id;
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+
+      const userId = profile?.id;
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       const payload = {
         ...formData,
@@ -383,10 +390,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
 
       // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = parsedUserProfile?.id;
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+      const userId = profile?.id;
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       // Step 3: Fetch Appointment Types
       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;

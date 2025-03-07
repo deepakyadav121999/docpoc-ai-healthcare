@@ -23,6 +23,9 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useSelector } from 'react-redux';
+import { RootState } from "@/store";
+
 
 interface AutocompleteItem {
   value: string;
@@ -59,6 +62,9 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   const correctedDate = new Date(inputDate.getTime() - inputDate.getTimezoneOffset() * 60000);
   // Format as ISO
   const dateTime = correctedDate.toISOString().split("T")[0];
+ const profile = useSelector((state: RootState) => state.profile.data);
+
+
   // console.log(startDateTime)
 
 
@@ -299,10 +305,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
 
       // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = parsedUserProfile?.id;
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      const userId = profile?.id;
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       const payload = {
         ...formData,
@@ -385,9 +391,9 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
       // Parse the JSON string if it exists
       const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = parsedUserProfile?.id;
+      const userId = profile?.id;
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
 
       // Step 3: Fetch Appointment Types
       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;

@@ -39,7 +39,8 @@ import debounce from 'lodash.debounce';
 import { DateInput } from "@nextui-org/react";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { color } from "framer-motion";
-
+import { useSelector } from 'react-redux';
+import { RootState } from "@/store";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
@@ -85,7 +86,7 @@ interface AppointmentListTableProps {
 export default function AppointmentListTable({ startTime, endTime }: AppointmentListTableProps) {
   // const { isOpen, onOpen, onOpenChange } = useDisclosure();
  
-
+  const profile = useSelector((state: RootState) => state.profile.data);
 
 
   const [filterValue, setFilterValue] = useState("");
@@ -208,7 +209,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
   
       // Extract the branchId from the user profile
-      const fetchedBranchId = parsedUserProfile?.branchId;
+      const fetchedBranchId = profile?.branchId;
       
       const endpoint = `${API_URL}/appointment/timeslot/${fetchedBranchId}`;
 

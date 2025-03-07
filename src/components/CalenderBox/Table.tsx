@@ -44,6 +44,8 @@ import { Switch } from "@nextui-org/react";
 
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+
+
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
@@ -123,6 +125,7 @@ export default function AppointmentTable() {
   const [assignedToMe, setAssignedToMe] = useState(false); // Toggle for "Assigned to Me"
   const [createdByMe, setCreatedByMe] = useState(false);
   const profile = useSelector((state: RootState) => state.profile.data);
+
   useEffect(() => {
     localStorage.setItem("page", String(page));
   }, [page]);
