@@ -12,7 +12,6 @@ import {
 import axios from "axios";
 import EnhancedModal from "./EnhancedModal";
 
-
 const API_URL = process.env.API_URL;
 interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -34,8 +33,6 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   const [loading, setLoading] = useState(false); // Loading state for API calls
   const [errorMessage, setErrorMessage] = useState(""); // To show error messages
   const [passwordMismatchError, setPasswordMismatchError] = useState(""); // For mismatched passwords
-
-
 
   useEffect(() => {
     if (isOpen) {
@@ -75,7 +72,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
       await axios.post(`${API_URL}/password/otp/generate`, payload);
       setStep(2); // Move to the next step
     } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Failed to generate OTP.");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to generate OTP.",
+      );
     } finally {
       setLoading(false);
     }
@@ -88,8 +87,16 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
 
     try {
       const payload = isEmail(formData.emailOrPhone)
-        ? { email: formData.emailOrPhone, username: formData.emailOrPhone, otp: formData.otp }
-        : { phone: formData.emailOrPhone, username: formData.emailOrPhone, otp: formData.otp };
+        ? {
+            email: formData.emailOrPhone,
+            username: formData.emailOrPhone,
+            otp: formData.otp,
+          }
+        : {
+            phone: formData.emailOrPhone,
+            username: formData.emailOrPhone,
+            otp: formData.otp,
+          };
 
       await axios.post(`${API_URL}/password/otp/verify`, payload);
       setStep(3); // Move to the next step
@@ -131,7 +138,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
       await axios.post(`${API_URL}/password/reset`, payload);
       onClose(); // Close the modal after resetting the password
     } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Failed to reset password.");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to reset password.",
+      );
     } finally {
       setLoading(false);
     }
@@ -234,7 +243,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
           <Button
             onPress={handleResetPassword}
             color="primary"
-            isDisabled={loading || !formData.newPassword || !formData.confirmNewPassword}
+            isDisabled={
+              loading || !formData.newPassword || !formData.confirmNewPassword
+            }
           >
             {loading ? "Resetting Password..." : "Reset Password"}
           </Button>
@@ -247,41 +258,38 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
 
   return (
     <>
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      backdrop={"blur"}
-      isDismissable={false}
-      isKeyboardDismissDisabled={true}
-
-      style={{
-        maxWidth: 500,
-        overflowY: "scroll",
-        marginTop: "8%",
-      }}
-      classNames={{
-        backdrop:
-          "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
-      }}
-    >
-      <ModalContent>
-        <ModalHeader>Reset Password</ModalHeader>
-        <ModalBody>{renderContent()}</ModalBody>
-        <ModalFooter>
-          {renderFooterButtons()}
-          <Button
-            color="danger"
-            variant="light"
-            onPress={onClose}
-            isDisabled={loading}
-          >
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-
-
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        backdrop={"blur"}
+        isDismissable={false}
+        isKeyboardDismissDisabled={true}
+        style={{
+          maxWidth: 500,
+          overflowY: "scroll",
+          marginTop: "8%",
+        }}
+        classNames={{
+          backdrop:
+            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader>Reset Password</ModalHeader>
+          <ModalBody>{renderContent()}</ModalBody>
+          <ModalFooter>
+            {renderFooterButtons()}
+            <Button
+              color="danger"
+              variant="light"
+              onPress={onClose}
+              isDisabled={loading}
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

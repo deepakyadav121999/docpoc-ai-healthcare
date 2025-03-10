@@ -88,14 +88,13 @@
 // }
 
 // const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
-  
+
 //   const pathname = usePathname();
 //   const router = useRouter()
 //   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
 
 //   const { isOpen, onOpen, onClose } = useDisclosure();
-//   const [loadingItem, setLoadingItem] = useState<string | null>(null); 
-
+//   const [loadingItem, setLoadingItem] = useState<string | null>(null);
 
 //   const handleSignOutClick = () => {
 //     onOpen(); // Open the modal when "Sign Out" is clicked
@@ -208,7 +207,7 @@
 //                         />
 //                       );
 //                     })}
-                  
+
 //                   </ul>
 //                 </div>
 //               ))}
@@ -340,7 +339,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   useEffect(() => {
     const header = document.querySelector("header");
     const sidebar = document.querySelector("aside"); // Select the sidebar
-  
+
     if (header) {
       // Only modify z-index when modal is open
       if (isOpen) {
@@ -351,8 +350,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         header.classList.add("z-999");
       }
     }
-    
-    if (sidebar) { // Check if the sidebar element exists
+
+    if (sidebar) {
+      // Check if the sidebar element exists
       if (isOpen) {
         sidebar.classList.remove("z-9999");
         sidebar.classList.add("z-0");
@@ -368,7 +368,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       <ClickOutside onClick={() => setSidebarOpen(false)}>
         <aside
           className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden border-r border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark lg:static lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0 duration-300 ease-linear" : "-translate-x-full"
+            sidebarOpen
+              ? "translate-x-0 duration-300 ease-linear"
+              : "-translate-x-full"
           }`}
         >
           {/* <!-- SIDEBAR HEADER --> */}
@@ -429,7 +431,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       const isActive =
                         pathname === menuItem.route ||
                         (menuItem.children &&
-                          menuItem.children.some((child) => pathname === child.route));
+                          menuItem.children.some(
+                            (child) => pathname === child.route,
+                          ));
 
                       return menuItem.label === "Sign Out" ? (
                         <li key={menuIndex}>
@@ -442,7 +446,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             }`}
                           >
                             {menuItem.icon}
-                            <span className="text-md font-medium">{menuItem.label}</span>
+                            <span className="text-md font-medium">
+                              {menuItem.label}
+                            </span>
                           </button>
                         </li>
                       ) : (
@@ -453,7 +459,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           pageName={pageName}
                           setPageName={setPageName}
                           loading={loadingItem === menuItem.label} // Pass loading state to SidebarItem
-                          onClick={() => handleMenuItemClick(menuItem.route, menuItem.label)} // Handle click
+                          onClick={() =>
+                            handleMenuItemClick(menuItem.route, menuItem.label)
+                          } // Handle click
                         />
                       );
                     })}

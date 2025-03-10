@@ -6,8 +6,8 @@ import AddAppointment from "../CalenderBox/AddAppointment";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import NewAppointment from "./NewAppointment";
 import AppointmentList from "../common/Modal/AppointmentListModal";
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 import {
   Modal,
   ModalContent,
@@ -20,40 +20,50 @@ import {
 
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
-
   const profile = useSelector((state: RootState) => state.profile.data);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
-  const [loading, setLoading] = useState(false)
-  const [totalAppointments, setTotalAppointments] = useState(0)
-  const [appointmentsByDate, setAppointmentsByDate] = useState<{ [key: string]: number }>({});
-   
-  const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] = useState(false);
-const [selectedAppointments, setSelectedAppointments] = useState<
-  Array<{ title: string; startDateTime: string; endDateTime: string; description?: string }>
->([]);
+  const [loading, setLoading] = useState(false);
+  const [totalAppointments, setTotalAppointments] = useState(0);
+  const [appointmentsByDate, setAppointmentsByDate] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] =
+    useState(false);
+  const [selectedAppointments, setSelectedAppointments] = useState<
+    Array<{
+      title: string;
+      startDateTime: string;
+      endDateTime: string;
+      description?: string;
+    }>
+  >([]);
 
   const [appointments, setAppointments] = useState<
-    Array<{ date: Date; title: string; description?: string; startDateTime: Date; endDateTime: Date; }>
-  >([
-  ]);
+    Array<{
+      date: Date;
+      title: string;
+      description?: string;
+      startDateTime: Date;
+      endDateTime: Date;
+    }>
+  >([]);
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedEndTime, setSelectedEndTime] = useState<string>("");
 
   const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
-  const [resulst, setResults] = useState([])
+  const [resulst, setResults] = useState([]);
 
   const handleModalClose = () => {
-
-    setIsAppointmentDetailsModalOpen(false)
+    setIsAppointmentDetailsModalOpen(false);
     // onClose();
-
   };
   const fetchAppointments = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-    
+
       // const hospitalEndpoint = `${API_URL}/hospital`;
       // const hospitalResponse = await axios.get(hospitalEndpoint, {
       //   headers: {
@@ -91,10 +101,8 @@ const [selectedAppointments, setSelectedAppointments] = useState<
 
       // // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-  
-      // Extract the branchId from the user profile
-    
 
+      // Extract the branchId from the user profile
 
       const fetchedBranchId = profile?.branchId;
 
@@ -105,7 +113,7 @@ const [selectedAppointments, setSelectedAppointments] = useState<
         pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
         to: "2025-12-31T23:59:59.999Z", // End of the month
-        status:["visiting","declind"]
+        status: ["visiting", "declind"],
       };
 
       const response = await axios.get(endpoint, {
@@ -116,19 +124,15 @@ const [selectedAppointments, setSelectedAppointments] = useState<
         },
       });
 
-
       const grouped: { [key: string]: number } = {};
       const appointmentList = response.data.rows.map((appointment: any) => {
-
-        const startDateTime = (appointment.startDateTime);
-        const endDateTime = (appointment.endDateTime);
+        const startDateTime = appointment.startDateTime;
+        const endDateTime = appointment.endDateTime;
         console.log(startDateTime);
-
-
 
         const date = startDateTime.split("T")[0]; // Extract UTC date
         grouped[date] = (grouped[date] || 0) + 1;
-        console.log(date)
+        console.log(date);
         return {
           startDateTime,
           endDateTime,
@@ -146,35 +150,31 @@ const [selectedAppointments, setSelectedAppointments] = useState<
     }
   };
 
-    useEffect(() => {
-        const header = document.querySelector("header");
-        if (isOpen || isAppointmentDetailsModalOpen ) {
-          header?.classList.remove("z-999");
-          header?.classList.add("z-0");
-        } 
-        // else if(isNotificationOpen) {
-        //     header?.classList.remove("z-999");
-        //   header?.classList.add("z-0");
-        // }
-        else{
-          header?.classList.remove("z-0");
-          header?.classList.add("z-999");
-        }
-      }, [isOpen,isAppointmentDetailsModalOpen]);
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (isOpen || isAppointmentDetailsModalOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0");
+    }
+    // else if(isNotificationOpen) {
+    //     header?.classList.remove("z-999");
+    //   header?.classList.add("z-0");
+    // }
+    else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999");
+    }
+  }, [isOpen, isAppointmentDetailsModalOpen]);
 
   useEffect(() => {
-   if(profile){
-    fetchAppointments()
-   }
-      
-    
-    
-  }, [])
- 
+    if (profile) {
+      fetchAppointments();
+    }
+  }, []);
 
   //  if(loading===false){
   //   console.log(totalAppointments)
-  //  } 
+  //  }
   // console.log(appointments);
   // let abc = resulst && resulst.map((item: any) => { return (item.startDateTime) })
   // console.log(abc)
@@ -182,20 +182,19 @@ const [selectedAppointments, setSelectedAppointments] = useState<
 
   const router = useRouter();
   const [currentView, setCurrentView] = useState<"month" | "week" | "day">(
-    "month"
+    "month",
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [AppointmentListModal, setAppointmentListModal] = useState<boolean>(false);
+  const [AppointmentListModal, setAppointmentListModal] =
+    useState<boolean>(false);
   const [modalData, setModalData] = useState<{
     date: Date;
     startTime: string; // Store the clicked start time
-    endTime: string; 
+    endTime: string;
     hasBooking: boolean;
   }>({ date: new Date(), startTime: "", endTime: "", hasBooking: false });
-
-
 
   useEffect(() => {
     renderCalendar();
@@ -226,7 +225,6 @@ const [selectedAppointments, setSelectedAppointments] = useState<
     }
   };
 
-
   const renderMonthView = () => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
@@ -250,8 +248,7 @@ const [selectedAppointments, setSelectedAppointments] = useState<
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(Date.UTC(year, month, i));
       const dateKey = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const isToday =
-        new Date().toISOString().split("T")[0] === dateKey; // Compare in UTC
+      const isToday = new Date().toISOString().split("T")[0] === dateKey; // Compare in UTC
       const hasBooking = appointmentsByDate[dateKey] > 0;
 
       daysCells.push(
@@ -261,15 +258,16 @@ const [selectedAppointments, setSelectedAppointments] = useState<
             className={`calendar-cell ${isToday ? "today" : ""} ${hasBooking ? "has-booking" : ""}`}
             onClick={() => selectDate(year, month, i)}
           >
-            <div className="h-2/3 flex justify-center items-center" ><p>{i}</p></div>
+            <div className="h-2/3 flex justify-center items-center">
+              <p>{i}</p>
+            </div>
             {appointmentsByDate[dateKey] && (
               <div className="flex justify-end items-end text-sm   h-1/3 ">
                 <p className="text-sm">{`${appointmentsByDate[dateKey]} appo...`}</p>
               </div>
             )}
           </div>
-
-        </>
+        </>,
       );
     }
 
@@ -283,15 +281,17 @@ const [selectedAppointments, setSelectedAppointments] = useState<
   };
 
   const renderWeekView = () => {
-    const startOfWeek = new Date(Date.UTC(
-      selectedDate.getUTCFullYear(),
-      selectedDate.getUTCMonth(),
-      selectedDate.getUTCDate() - selectedDate.getUTCDay()
-    ))
+    const startOfWeek = new Date(
+      Date.UTC(
+        selectedDate.getUTCFullYear(),
+        selectedDate.getUTCMonth(),
+        selectedDate.getUTCDate() - selectedDate.getUTCDay(),
+      ),
+    );
 
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayHeaders = days.map((day) => (
-      <div key={day} className="calendar-cell-disabled" >
+      <div key={day} className="calendar-cell-disabled">
         {day}
       </div>
     ));
@@ -321,7 +321,7 @@ const [selectedAppointments, setSelectedAppointments] = useState<
               <p>{`${appointmentsByDate[dateKey]} appo...`}</p>
             </div>
           )}
-        </div>
+        </div>,
       );
     }
 
@@ -333,165 +333,166 @@ const [selectedAppointments, setSelectedAppointments] = useState<
     );
   };
 
- 
-const renderDayView = () => {
-  const dayCells = [];
-  const currentTime = new Date();
+  const renderDayView = () => {
+    const dayCells = [];
+    const currentTime = new Date();
 
-  for (let hour = 8; hour < 21; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeSlotStart = new Date(selectedDate);
-      timeSlotStart.setHours(hour, minute, 0, 0);
-      const timeSlotEnd = new Date(timeSlotStart);
-      timeSlotEnd.setMinutes(timeSlotStart.getMinutes() + 30);
+    for (let hour = 8; hour < 21; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeSlotStart = new Date(selectedDate);
+        timeSlotStart.setHours(hour, minute, 0, 0);
+        const timeSlotEnd = new Date(timeSlotStart);
+        timeSlotEnd.setMinutes(timeSlotStart.getMinutes() + 30);
 
-      const isCurrentTime =
-        timeSlotStart <= currentTime &&
-        timeSlotEnd > currentTime &&
-        timeSlotStart.toDateString() === currentTime.toDateString();
+        const isCurrentTime =
+          timeSlotStart <= currentTime &&
+          timeSlotEnd > currentTime &&
+          timeSlotStart.toDateString() === currentTime.toDateString();
 
-      // Determine if the time slot is fully or partially booked
-      const fullyBooked = appointments.some(
-        (appt) =>
-          new Date(appt.startDateTime) <= timeSlotStart &&
-          new Date(appt.endDateTime) >= timeSlotEnd
-      );
+        // Determine if the time slot is fully or partially booked
+        const fullyBooked = appointments.some(
+          (appt) =>
+            new Date(appt.startDateTime) <= timeSlotStart &&
+            new Date(appt.endDateTime) >= timeSlotEnd,
+        );
 
-      const partiallyBooked = appointments.some(
-        (appt) =>
-          new Date(appt.startDateTime) < timeSlotEnd &&
-          new Date(appt.endDateTime) > timeSlotStart
-      );
+        const partiallyBooked = appointments.some(
+          (appt) =>
+            new Date(appt.startDateTime) < timeSlotEnd &&
+            new Date(appt.endDateTime) > timeSlotStart,
+        );
 
-      const booking = appointments.find(
-        (appt) =>
-          new Date(appt.startDateTime) < timeSlotEnd &&
-          new Date(appt.endDateTime) > timeSlotStart
-      );
+        const booking = appointments.find(
+          (appt) =>
+            new Date(appt.startDateTime) < timeSlotEnd &&
+            new Date(appt.endDateTime) > timeSlotStart,
+        );
 
-      const overlappingAppointments = appointments.filter(
-        (appt) =>
-          new Date(appt.startDateTime) < timeSlotEnd &&
-          new Date(appt.endDateTime) > timeSlotStart
-      );
+        const overlappingAppointments = appointments.filter(
+          (appt) =>
+            new Date(appt.startDateTime) < timeSlotEnd &&
+            new Date(appt.endDateTime) > timeSlotStart,
+        );
 
-      const slotDuration = timeSlotEnd.getTime() - timeSlotStart.getTime();
-      let gradientStartPercentage = 0;
-      let gradientEndPercentage = 0;
+        const slotDuration = timeSlotEnd.getTime() - timeSlotStart.getTime();
+        let gradientStartPercentage = 0;
+        let gradientEndPercentage = 0;
 
-      overlappingAppointments.forEach((appt) => {
-        const apptStart = new Date(appt.startDateTime).getTime();
-        const apptEnd = new Date(appt.endDateTime).getTime();
+        overlappingAppointments.forEach((appt) => {
+          const apptStart = new Date(appt.startDateTime).getTime();
+          const apptEnd = new Date(appt.endDateTime).getTime();
 
-        const overlapStart = Math.max(apptStart, timeSlotStart.getTime());
-        const overlapEnd = Math.min(apptEnd, timeSlotEnd.getTime());
-        const overlapDuration = overlapEnd - overlapStart;
+          const overlapStart = Math.max(apptStart, timeSlotStart.getTime());
+          const overlapEnd = Math.min(apptEnd, timeSlotEnd.getTime());
+          const overlapDuration = overlapEnd - overlapStart;
 
-        if (overlapDuration > 0) {
-          const startOffset =
-            ((overlapStart - timeSlotStart.getTime()) / slotDuration) * 100;
-          const endOffset =
-            ((overlapEnd - timeSlotStart.getTime()) / slotDuration) * 100;
+          if (overlapDuration > 0) {
+            const startOffset =
+              ((overlapStart - timeSlotStart.getTime()) / slotDuration) * 100;
+            const endOffset =
+              ((overlapEnd - timeSlotStart.getTime()) / slotDuration) * 100;
 
-          gradientStartPercentage = Math.min(
-            gradientStartPercentage || startOffset,
-            startOffset
-          );
-          gradientEndPercentage = Math.max(
-            gradientEndPercentage || endOffset,
-            endOffset
-          );
-        }
-      });
-
-      const gradientBorder = `linear-gradient(to right, transparent ${gradientStartPercentage}%, var(--secondary-color) ${gradientStartPercentage}%, var(--secondary-color) ${gradientEndPercentage}%, transparent ${gradientEndPercentage}%)`;
-
-      let displayTime = "";
-      if (booking) {
-        const bookingStart = new Date(booking.startDateTime);
-        const bookingEnd = new Date(booking.endDateTime);
-
-        if (timeSlotStart <= bookingStart && timeSlotEnd >= bookingEnd) {
-          displayTime = `${bookingStart.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })} - ${bookingEnd.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`;
-        } else if (timeSlotStart <= bookingStart) {
-          displayTime = `${bookingStart.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })} - ${timeSlotEnd.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`;
-        } else if (timeSlotEnd >= bookingEnd) {
-          displayTime = `${timeSlotStart.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })} - ${bookingEnd.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`;
-        }
-      }
-
-      dayCells.push(
-        <div
-          key={`${hour}-${minute}`}
-          className={`time-slot ${
-            isCurrentTime ? "current-time" : ""
-          } ${fullyBooked ? "has-booking" : ""} 
-           ${
-            partiallyBooked ? "partially-booking" : ""
-          } flex justify-between p-1 gap-1`}
-          style={{
-            borderBottom: partiallyBooked
-              ? "3px solid transparent"
-              : "none",
-            borderImageSource: partiallyBooked ? gradientBorder : "none",
-            borderImageSlice: "0 0 1 0",
-          }}
-          onClick={() =>
-            // !fullyBooked &&
-            openModal(
-              selectedDate.getTime(),
-              fullyBooked || partiallyBooked,
-              timeSlotStart,
-              timeSlotEnd
-            )
+            gradientStartPercentage = Math.min(
+              gradientStartPercentage || startOffset,
+              startOffset,
+            );
+            gradientEndPercentage = Math.max(
+              gradientEndPercentage || endOffset,
+              endOffset,
+            );
           }
-        >
-          <div className="flex w-2/4 items-center text-center justify-end ">
-            <p>
-              {timeSlotStart.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-          </div>
+        });
 
-          <div className="flex w-2/4 justify-center items-center gap-1">
-            {booking && <p className="text-sm">{displayTime}</p>}
-            <p className="text-sm ">{booking && booking.title}</p>
-          </div>
-        </div>
-      );
+        const gradientBorder = `linear-gradient(to right, transparent ${gradientStartPercentage}%, var(--secondary-color) ${gradientStartPercentage}%, var(--secondary-color) ${gradientEndPercentage}%, transparent ${gradientEndPercentage}%)`;
+
+        let displayTime = "";
+        if (booking) {
+          const bookingStart = new Date(booking.startDateTime);
+          const bookingEnd = new Date(booking.endDateTime);
+
+          if (timeSlotStart <= bookingStart && timeSlotEnd >= bookingEnd) {
+            displayTime = `${bookingStart.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} - ${bookingEnd.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`;
+          } else if (timeSlotStart <= bookingStart) {
+            displayTime = `${bookingStart.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} - ${timeSlotEnd.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`;
+          } else if (timeSlotEnd >= bookingEnd) {
+            displayTime = `${timeSlotStart.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} - ${bookingEnd.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`;
+          }
+        }
+
+        dayCells.push(
+          <div
+            key={`${hour}-${minute}`}
+            className={`time-slot ${
+              isCurrentTime ? "current-time" : ""
+            } ${fullyBooked ? "has-booking" : ""} 
+           ${
+             partiallyBooked ? "partially-booking" : ""
+           } flex justify-between p-1 gap-1`}
+            style={{
+              borderBottom: partiallyBooked ? "3px solid transparent" : "none",
+              borderImageSource: partiallyBooked ? gradientBorder : "none",
+              borderImageSlice: "0 0 1 0",
+            }}
+            onClick={() =>
+              // !fullyBooked &&
+              openModal(
+                selectedDate.getTime(),
+                fullyBooked || partiallyBooked,
+                timeSlotStart,
+                timeSlotEnd,
+              )
+            }
+          >
+            <div className="flex w-2/4 items-center text-center justify-end ">
+              <p>
+                {timeSlotStart.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+
+            <div className="flex w-2/4 justify-center items-center gap-1">
+              {booking && <p className="text-sm">{displayTime}</p>}
+              <p className="text-sm ">{booking && booking.title}</p>
+            </div>
+          </div>,
+        );
+      }
     }
-  }
 
-  return <div className="day-view">{dayCells}</div>;
-};
-
+    return <div className="day-view">{dayCells}</div>;
+  };
 
   const selectDate = (year: number, month: number, day: number) => {
     setSelectedDate(new Date(year, month, day));
     changeView("day");
   };
 
-  const openModal = (timestamp: number, hasBooking: boolean, startTime: Date, endTime: Date) => {
+  const openModal = (
+    timestamp: number,
+    hasBooking: boolean,
+    startTime: Date,
+    endTime: Date,
+  ) => {
     if (!hasBooking) {
       setModalVisible(true);
       setModalData({
@@ -500,18 +501,16 @@ const renderDayView = () => {
         endTime: endTime.toISOString(),
         hasBooking,
       });
-      onOpen()
-    }
-
-    else {
+      onOpen();
+    } else {
       // Find appointments for the selected time slot
       setIsAppointmentDetailsModalOpen(true);
       const overlappingAppointments = appointments.filter(
         (appt) =>
           new Date(appt.startDateTime) < endTime &&
-          new Date(appt.endDateTime) > startTime
+          new Date(appt.endDateTime) > startTime,
       );
-  
+
       // Set the selected appointments and open the details modal
       // setSelectedAppointments(
       //   overlappingAppointments.map((appt) => ({
@@ -527,11 +526,8 @@ const renderDayView = () => {
       // Pass the startTime and endTime to the modal
       setSelectedStartTime(startTime.toISOString());
       setSelectedEndTime(endTime.toISOString());
-   
     }
-    
   };
-
 
   const closeModal = () => {
     setModalVisible(false);
@@ -544,7 +540,9 @@ const renderDayView = () => {
       form.elements.namedItem("appointmentTitle") as HTMLInputElement
     ).value;
     const dateTime = new Date(
-      (form.elements.namedItem("appointmentDateTime") as HTMLInputElement).value
+      (
+        form.elements.namedItem("appointmentDateTime") as HTMLInputElement
+      ).value,
     );
     const description = (
       form.elements.namedItem("appointmentDescription") as HTMLTextAreaElement
@@ -554,12 +552,10 @@ const renderDayView = () => {
     renderCalendar();
   };
 
-
   const getMonthYearString = () => {
     const options = { year: "numeric", month: "long" } as const;
     return selectedDate.toLocaleDateString(undefined, options);
   };
-
 
   return (
     <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
@@ -588,10 +584,16 @@ const renderDayView = () => {
           </div>
           {currentView === "month" && (
             <div className="navigation-buttons ">
-              <button className="nav-button" onClick={() => changeMonth("previous")}>
+              <button
+                className="nav-button"
+                onClick={() => changeMonth("previous")}
+              >
                 Previous
               </button>
-              <button className="nav-button" onClick={() => changeMonth("next")}>
+              <button
+                className="nav-button"
+                onClick={() => changeMonth("next")}
+              >
                 Next
               </button>
             </div>
@@ -600,62 +602,67 @@ const renderDayView = () => {
         <div id="calendar-view">{renderCalendar()}</div>
 
         <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-        <div className="calendar-container">
-        {modalVisible && (
-         
-             <Modal
-        backdrop="blur"
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "10%" }}
-        classNames={{
-          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-               <p>Add New Appointment</p>
-              </ModalHeader>
-              <ModalBody>
-              
-                    <NewAppointment onUsersAdded={fetchAppointments}
-                    startDateTime={modalData.startTime} 
-                    endDateTime={modalData.endTime} 
-                    date={modalData.date} 
-                    />
-                
-               
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-            
-        
-        )}
+          <div className="calendar-container">
+            {modalVisible && (
+              <Modal
+                backdrop="blur"
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+                style={{
+                  maxWidth: 800,
+                  maxHeight: 600,
+                  overflowY: "scroll",
+                  marginTop: "10%",
+                }}
+                classNames={{
+                  backdrop:
+                    "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+                }}
+              >
+                <ModalContent>
+                  {(onClose) => (
+                    <>
+                      <ModalHeader className="flex flex-col gap-1">
+                        <p>Add New Appointment</p>
+                      </ModalHeader>
+                      <ModalBody>
+                        <NewAppointment
+                          onUsersAdded={fetchAppointments}
+                          startDateTime={modalData.startTime}
+                          endDateTime={modalData.endTime}
+                          date={modalData.date}
+                        />
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button
+                          color="danger"
+                          variant="light"
+                          onPress={onClose}
+                        >
+                          Close
+                        </Button>
+                      </ModalFooter>
+                    </>
+                  )}
+                </ModalContent>
+              </Modal>
+            )}
 
-         {/* <AppointmentList
+            {/* <AppointmentList
         isOpen={isAppointmentDetailsModalOpen}
         onClose={handleModalClose}
         appointments={selectedAppointments}
 
 
       /> */}
-        <AppointmentList
-      isOpen={isAppointmentDetailsModalOpen}
-      onClose={handleModalClose}
-      startTime={selectedStartTime} // Pass startTime
-      endTime={selectedEndTime} // Pass endTime
-    />
-       </div>
-       </div>
+            <AppointmentList
+              isOpen={isAppointmentDetailsModalOpen}
+              onClose={handleModalClose}
+              startTime={selectedStartTime} // Pass startTime
+              endTime={selectedEndTime} // Pass endTime
+            />
+          </div>
+        </div>
         <style>{`
         :root {
           --primary-color: #015e75;

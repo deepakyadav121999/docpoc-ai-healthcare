@@ -1,5 +1,4 @@
-
-require("dotenv").config();
+// require("dotenv").config();
 import axios from "axios";
 
 const domain = process.env.DEVELOPMENT;
@@ -28,7 +27,7 @@ export async function UserSignUp(
     password: string;
     clinicSize: string;
   },
-  authData: any
+  authData: any,
 ) {
   const url = `${authData.baseUrl}/user`;
   console.log(`Base URL new: ${url}`);
@@ -66,7 +65,7 @@ export async function UserSignIn(
     email?: string;
     password: string;
   },
-  authData: any
+  authData: any,
 ) {
   const url = `${authData.baseUrl}/auth/login`;
   console.log(`Base URL new: ${url}`, body);
@@ -94,16 +93,11 @@ export async function UserSignIn(
   }
 }
 
-
-
 export async function SignOut() {
   // localStorage.removeItem("profile");
   // localStorage.removeItem("docPocAuth_token");
   // localStorage.removeItem("userProfile");
 
-
-
- 
   console.log("SignOut called");
   localStorage.removeItem("docPocAuth_token");
   console.log("Token removed");
@@ -114,8 +108,3 @@ export async function SignOut() {
 
   window.location.reload();
 }
-
-
-
-
-

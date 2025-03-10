@@ -8,14 +8,13 @@ import { ApexOptions } from "apexcharts";
 
 export default function App() {
   const OverView = () => {
-
     const series = [
       {
         name: "Received Amount",
         data: [75, 60, 75, 90, 110, 180, 200],
-      }
+      },
     ];
-    
+
     const options: ApexOptions = {
       legend: {
         show: false,
@@ -58,7 +57,7 @@ export default function App() {
       stroke: {
         curve: "smooth",
       },
-    
+
       markers: {
         size: 0,
       },
@@ -98,15 +97,7 @@ export default function App() {
       },
       xaxis: {
         type: "category",
-        categories: [
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sept",
-          "Oct",
-          "Nov",
-          "Dec"
-        ],
+        categories: ["Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"],
         axisBorder: {
           show: false,
         },
@@ -123,29 +114,30 @@ export default function App() {
       },
     };
 
-    const footer = {start:{title: 'Revenue (since last 3 months)', data:'₹ 560,000'}, end:{title: 'Revenue (between Jan - Mar 2024)', data:'₹ 420,200'}};
+    const footer = {
+      start: { title: "Revenue (since last 3 months)", data: "₹ 560,000" },
+      end: { title: "Revenue (between Jan - Mar 2024)", data: "₹ 420,200" },
+    };
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col w-full">
           <DataStatsOne />
         </div>
-        <div className="flex flex-col w-full " style={{marginTop:45}}>
-          <ChartLine options={options} series={series} label="Payments Overview" footer={footer}/>
+        <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
+          <ChartLine
+            options={options}
+            series={series}
+            label="Payments Overview"
+            footer={footer}
+          />
         </div>
       </div>
     );
   };
 
- 
-
-  
-
-
-
   return (
     <div className="flex justify-center w-full px-4">
-      
-      <OverView/>
+      <OverView />
     </div>
   );
 }

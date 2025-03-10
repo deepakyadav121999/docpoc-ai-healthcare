@@ -20,7 +20,6 @@
 //   const [visitData, setVisitData] = React.useState([]);
 //   const [loading, setLoading] = React.useState(true);
 
-
 //   React.useEffect(() => {
 //     const fetchVisitData = async () => {
 //       try {
@@ -199,7 +198,6 @@
 //     return `${day}/${month}/${year}`;
 //   };
 
-
 //   // Fetch visit data from the API
 //   useEffect(() => {
 //     const fetchVisitData = async () => {
@@ -207,7 +205,6 @@
 //       const token = localStorage.getItem("docPocAuth_token");
 //       const endpoint = `${API_URL}/appointment/visits/patient/${patientId}`;
 
-    
 //       try {
 //         setLoading(true);
 //         const response = await axios.get(endpoint, {
@@ -269,8 +266,6 @@
 //     setFilterValue("");
 //     setPage(1);
 //   }, []);
-
-
 
 //   return (
 //     <>
@@ -348,7 +343,6 @@
 //   );
 // };
 
-
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Input,
@@ -376,7 +370,9 @@ interface VisitHistoryTableProps {
   patientId: string; // patientId must be a string
 }
 const API_URL = process.env.API_URL;
-export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({ patientId }) => {
+export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
+  patientId,
+}) => {
   const [page, setPage] = useState<number>(1);
   const [filterValue, setFilterValue] = useState<string>("");
   const [rowsPerPage, setRowsPerPage] = useState<number>(3);
@@ -461,12 +457,11 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({ patientId 
 
   return (
     <>
-      <div>
-        {loading && (
-          <Spinner />
-        )}
-      </div>
-      <div className="flex w-full justify-center px-2 sm:px-4" style={{ marginBottom: 5 }}>
+      <div>{loading && <Spinner />}</div>
+      <div
+        className="flex w-full justify-center px-2 sm:px-4"
+        style={{ marginBottom: 5 }}
+      >
         <Input
           isClearable
           className="w-full max-w-[97%] sm:max-w-md"

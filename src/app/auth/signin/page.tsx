@@ -9,7 +9,12 @@ import Signin from "@/components/Auth/Signin";
 //   description: "This is Next.js Login Page NextAdmin Dashboard Kit",
 // };
 
-const SignIn = ({ setAuthPage, onLogin }: { setAuthPage: () => void; onLogin: (token: string) => void }) => {
+interface SignInProps {
+  setAuthPage: () => void;
+  onLogin: (token: string) => void;
+}
+
+const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
   return (
     <>
       <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">

@@ -3,10 +3,16 @@ import { Button } from "@nextui-org/react";
 
 type ButtonType = "button" | "submit" | "reset";
 
-export default function StyledButton(props: { label: string; clickEvent?: any; loading?: boolean; type?: ButtonType; style?: any }) {
+export default function StyledButton(props: {
+  label: string;
+  clickEvent?: any;
+  loading?: boolean;
+  type?: ButtonType;
+  style?: any;
+}) {
   return (
     <Button
-      style={{width: props.style?.width}}
+      style={{ width: props.style?.width }}
       type={props.type}
       onClick={props.clickEvent}
       radius="full"

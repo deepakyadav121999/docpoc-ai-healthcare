@@ -1,6 +1,6 @@
 import { ROUTES } from "@/constants/routes";
 
-export const EMPLOYEE_TAB_KEYS = { 
+export const EMPLOYEE_TAB_KEYS = {
   Overview: {
     name: "Overview",
     screen: ROUTES.EMPLOYEE_OVERVIEW,

@@ -20,7 +20,6 @@ import {
   ChipProps,
   SortDescriptor,
   Button,
-
 } from "@nextui-org/react";
 
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -33,28 +32,25 @@ import { Spinner } from "@nextui-org/react";
 import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddPatient from "./AddPatient";
 import { useEffect } from "react";
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 const statusColorMap: Record<string, ChipProps["color"]> = {
   Active: "success",
   Inactive: "warning",
   Blacklisted: "danger",
 };
-import debounce from 'lodash.debounce';
-
+import debounce from "lodash.debounce";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "age",
-  'bloodGroup',
+  "bloodGroup",
   "phone",
   "email",
   "status",
   "actions",
-
 ];
-  // "lastVisit"
-
+// "lastVisit"
 
 interface Patient {
   id: string;
@@ -66,7 +62,6 @@ interface Patient {
   status: string;
   lastVisit: string;
   displayPicture: string;
-
 }
 const API_URL = process.env.API_URL;
 export default function App() {
@@ -76,17 +71,20 @@ export default function App() {
   const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [totalPatient, setTotalPatient] = useState(0)
+  const [totalPatient, setTotalPatient] = useState(0);
 
-   useEffect(() => {
-      localStorage.setItem("page", String(page));
-    }, [page]);
-  
-    useEffect(() => {
-      localStorage.setItem("rowsPerPage", String(rowsPerPage));
-    }, [rowsPerPage]);
+  useEffect(() => {
+    localStorage.setItem("page", String(page));
+  }, [page]);
 
-  const fetchPatients = async (searchName = "", selectedStatuses: string[] = []) => {
+  useEffect(() => {
+    localStorage.setItem("rowsPerPage", String(rowsPerPage));
+  }, [rowsPerPage]);
+
+  const fetchPatients = async (
+    searchName = "",
+    selectedStatuses: string[] = [],
+  ) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
@@ -128,14 +126,15 @@ export default function App() {
 
       // // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-     
-  
+
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
-      
-  const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
-      const initialRowsPerPage = parseInt(localStorage.getItem("rowsPerPage") || "5", 10);
 
+      const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
+      const initialRowsPerPage = parseInt(
+        localStorage.getItem("rowsPerPage") || "5",
+        10,
+      );
 
       const endpoint = searchName
         ? `${API_URL}/patient/name/${searchName}`
@@ -146,9 +145,12 @@ export default function App() {
       } else {
         params.page = initialPage;
         params.pageSize = initialRowsPerPage;
-        params.from = '2024-12-04T03:32:25.812Z';
-        params.to = '2024-12-11T03:32:25.815Z';
-        params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+        params.from = "2024-12-04T03:32:25.812Z";
+        params.to = "2024-12-11T03:32:25.815Z";
+        params.notificationStatus = [
+          "Whatsapp notifications paused",
+          "SMS notifications paused",
+        ];
       }
 
       const response = await axios.get(endpoint, {
@@ -161,7 +163,6 @@ export default function App() {
 
       setUsers(response.data.rows || response.data);
       setTotalPatient(response.data.count || response.data.length);
-
     } catch (err) {
       setError("Failed to fetch patients.");
     } finally {
@@ -173,35 +174,32 @@ export default function App() {
     const date = new Date(timestamp);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12 || 12; // Convert to 12-hour format and handle midnight as 12
-    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, "0");
     return `${hours}:${formattedMinutes} ${ampm}`;
   };
   const extractDate = (timestamp: string): string => {
     const date = new Date(timestamp);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-based
     const year = date.getFullYear();
     return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
   };
-  
+
   // http://127.0.0.1:3037/DocPOC/v1/patient/?status[]=Inactive
 
-
   useEffect(() => {
-
     fetchPatients();
-
   }, [page, rowsPerPage]);
 
   type User = (typeof users)[0];
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
+    new Set([]),
   );
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
 
@@ -210,17 +208,13 @@ export default function App() {
     direction: "ascending",
   });
 
-
   const hasSearchFilter = Boolean(filterValue);
-
-
-
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -229,7 +223,7 @@ export default function App() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -237,7 +231,7 @@ export default function App() {
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
@@ -246,7 +240,7 @@ export default function App() {
 
   const pages = totalPatient > 0 ? Math.ceil(totalPatient / rowsPerPage) : 1;
 
-  const items = filteredItems
+  const items = filteredItems;
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: User, b: User) => {
@@ -328,22 +322,22 @@ export default function App() {
       setRowsPerPage(Number(e.target.value));
       setPage(1);
     },
-    []
+    [],
   );
-
-
 
   const debouncedFetchPatients = React.useMemo(
     () => debounce((value: string) => fetchPatients(value), 500),
-    [fetchPatients]
+    [fetchPatients],
   );
 
-  const onSearchChange = React.useCallback((value?: string) => {
-    setFilterValue(value || "");
-    setPage(1);
-    debouncedFetchPatients(value || "");
-  }, [debouncedFetchPatients]);
-
+  const onSearchChange = React.useCallback(
+    (value?: string) => {
+      setFilterValue(value || "");
+      setPage(1);
+      debouncedFetchPatients(value || "");
+    },
+    [debouncedFetchPatients],
+  );
 
   const onClear = React.useCallback(() => {
     setFilterValue("");
@@ -351,16 +345,14 @@ export default function App() {
   }, []);
   const onStatusFilterChange = (selected: Selection) => {
     const selectedStatuses = Array.from(selected) as string[];
-    setStatusFilter(selected);  // Update the filter state
-    setPage(1);                  // Reset pagination to the first page
+    setStatusFilter(selected); // Update the filter state
+    setPage(1); // Reset pagination to the first page
     fetchPatients(filterValue, selectedStatuses);
   };
-
 
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
-
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
@@ -424,8 +416,10 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <OpaqueDefaultModal headingName="Add New Patient" child={<AddPatient onPatientAdded={fetchPatients} />} />
-
+            <OpaqueDefaultModal
+              headingName="Add New Patient"
+              child={<AddPatient onPatientAdded={fetchPatients} />}
+            />
           </div>
         </div>
         <div className="flex justify-between items-center">
@@ -472,7 +466,6 @@ export default function App() {
           page={page}
           total={pages}
           onChange={setPage}
-
         />
         <div className="hidden sm:flex w-[30%] justify-end gap-2">
           <Button
@@ -498,7 +491,6 @@ export default function App() {
 
   return (
     <div className="relative">
-    
       <Table
         aria-label="Appointment Details"
         isHeaderSticky
@@ -514,7 +506,6 @@ export default function App() {
         onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
       >
-        
         <TableHeader columns={headerColumns}>
           {(column) => (
             <TableColumn
@@ -526,27 +517,24 @@ export default function App() {
             </TableColumn>
           )}
         </TableHeader>
-        
+
         <TableBody emptyContent={"No Patient Available"} items={sortedItems}>
           {(item) => (
-
             <TableRow key={item.id}>
-
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}
             </TableRow>
           )}
-
         </TableBody>
       </Table>
       <div>
-          {loading && (
-            <div className="absolute inset-0 flex justify-center items-center  z-50">
-              <Spinner />
-            </div>
-          )}
-        </div>
+        {loading && (
+          <div className="absolute inset-0 flex justify-center items-center  z-50">
+            <Spinner />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

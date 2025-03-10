@@ -1,6 +1,5 @@
 "use client";
 import {
-
   Checkbox,
   Input,
   Textarea,
@@ -8,13 +7,19 @@ import {
   AutocompleteItem,
   Spinner,
   TimeInput,
-
 } from "@nextui-org/react";
 import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@nextui-org/react";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import { useEffect } from "react";
@@ -24,13 +29,12 @@ interface AddUsersProps {
 }
 const API_URL = process.env.API_URL;
 const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
-
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     email: "",
-   
+
     json: JSON.stringify({
       dob: "",
       designation: "",
@@ -53,11 +57,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
-
-
-
-
-
   const handleJsonUpdate = (key: string, value: string) => {
     const updatedJson = JSON.parse(formData.json);
     updatedJson[key] = value;
@@ -67,7 +66,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }));
   };
 
-  const handleAccessChange = (key: keyof typeof accessTypes, value: boolean) => {
+  const handleAccessChange = (
+    key: keyof typeof accessTypes,
+    value: boolean,
+  ) => {
     setAccessTypes((prev) => ({
       ...prev,
       [key]: value,
@@ -103,26 +105,24 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     let newWorkingHours = "";
     if (key === "start") {
-      newWorkingHours = `${formattedTime} - ${updatedWorkingHours.split(" - ")[1] || ""
-        }`;
+      newWorkingHours = `${formattedTime} - ${
+        updatedWorkingHours.split(" - ")[1] || ""
+      }`;
     } else {
-      newWorkingHours = `${updatedWorkingHours.split(" - ")[0] || ""
-        } - ${formattedTime}`;
+      newWorkingHours = `${
+        updatedWorkingHours.split(" - ")[0] || ""
+      } - ${formattedTime}`;
     }
 
     handleJsonUpdate("workingHours", newWorkingHours);
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missingFields: string[] = [];
     for (const key in formData) {
-      if (
-        !formData[key as keyof typeof formData] &&
-        key !== "branchId"
-      ) {
+      if (!formData[key as keyof typeof formData] && key !== "branchId") {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
@@ -136,25 +136,24 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     if (!jsonFields.workingHours || jsonFields.workingHours.trim() === " - ") {
       missingFields.push("Working Hours");
     }
-    
 
     if (missingFields.length > 0) {
-
       setModalMessage({
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
       onOpen();
       return;
-
     }
 
     setLoading(true);
 
     const token = localStorage.getItem("docPocAuth_token");
     if (!token) {
-
-      setModalMessage({ success: "", error: "No access token found. Please log in again." });
+      setModalMessage({
+        success: "",
+        error: "No access token found. Please log in again.",
+      });
       setLoading(false);
       onOpen();
       return;
@@ -170,7 +169,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         },
       });
       if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-
         console.error("No hospitals found.");
         return;
       }
@@ -185,7 +183,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
 
       if (!branchResponse.data || branchResponse.data.length === 0) {
-
         console.warn("No branches found for the hospital.");
         setModalMessage({
           success: "",
@@ -197,29 +194,24 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
-
       const payload = {
         ...formData,
         branchId: fetchedBranchId,
         accessType: JSON.stringify(accessTypes),
       };
 
-      const response = await axios.post(
-        `${API_URL}/user`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/user`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       setModalMessage({ success: "User added successfully!", error: "" });
       onOpen();
       setFormData({
         name: "",
         phone: "",
         email: "",
-       
+
         json: JSON.stringify({
           dob: "",
           designation: "",
@@ -241,10 +233,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       if (error.response) {
         // Extract and display the error message from the response
         const apiErrorMessage =
-          error.response.data.message && Array.isArray(error.response.data.message)
+          error.response.data.message &&
+          Array.isArray(error.response.data.message)
             ? error.response.data.message[0].message
             : error.response.data.message || "Unknown error occurred";
-  
+
         setModalMessage({
           success: "",
           error: apiErrorMessage,
@@ -258,7 +251,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         });
         onOpen();
       }
-
     } finally {
       setLoading(false);
       onOpen();
@@ -271,10 +263,8 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // Only modify z-index when modal is open
       header.classList.remove("z-999");
       header.classList.add("z-0");
-
     }
   }, [isOpen]);
-
 
   return (
     <div className="grid grid-cols-1 gap-9">
@@ -282,7 +272,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <form onSubmit={handleSubmit}>
             <div className="p-6.5">
-
               <div className="mb-4.5 flex flex-col gap-4.5">
                 <Input
                   label="Name"
@@ -326,15 +315,25 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   placeholder="Select Designation"
-                  defaultItems={[{ label: "Admin" }, { label: "Doctor" }, { label: "Staff" }, { label: "Nurse" }]}
-                  onSelectionChange={(key) => handleJsonUpdate("designation", key as string)}
+                  defaultItems={[
+                    { label: "Admin" },
+                    { label: "Doctor" },
+                    { label: "Staff" },
+                    { label: "Nurse" },
+                  ]}
+                  onSelectionChange={(key) =>
+                    handleJsonUpdate("designation", key as string)
+                  }
                   isDisabled={!edit}
                   color={TOOL_TIP_COLORS.secondary}
                 >
-                  {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
+                  {(item) => (
+                    <AutocompleteItem key={item.label}>
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
                 </Autocomplete>
                 <div className="flex gap-2 flex-wrap">
-
                   <TimeInput
                     color={TOOL_TIP_COLORS.secondary}
                     label="From (Working Hours)"
@@ -350,12 +349,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     label="To (Working Hours)"
                     labelPlacement="outside"
                     variant="bordered"
-                    // defaultValue={new Time(6, 45)} 
+                    // defaultValue={new Time(6, 45)}
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("end", e.toString())}
                     isDisabled={!edit}
                   />
-
                 </div>
 
                 <Input
@@ -390,13 +388,12 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  onBlur={(e) => {
-                  }}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  onBlur={(e) => {}}
                   isDisabled={!edit}
                 />
-
-
               </div>
 
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
@@ -410,8 +407,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onChange={(e) => handleDobChange(e.target.value)}
                   isDisabled={!edit}
                 />
-
-
               </div>
               <div className="mb-4.5 flex flex-col gap-4.5">
                 {/* username */}
@@ -421,10 +416,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.userName}
-                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-                  onBlur={(e) => {
-
-                  }}
+                  onChange={(e) =>
+                    setFormData({ ...formData, userName: e.target.value })
+                  }
+                  onBlur={(e) => {}}
                   isDisabled={!edit}
                 />
               </div>
@@ -438,53 +433,64 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   isDisabled={!edit}
                 />
               </div>
-
 
               <div className="mb-4.5 flex ">
                 <p className="text-sm font-medium mb-2">Access Types:</p>
                 <div className="flex  gap-2 flex-wrap">
                   <Checkbox
                     isSelected={accessTypes.setAppointments}
-                    onValueChange={(value) => handleAccessChange("setAppointments", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("setAppointments", value)
+                    }
                   >
                     Set Appointments
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editDoctor}
-                    onValueChange={(value) => handleAccessChange("editDoctor", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("editDoctor", value)
+                    }
                   >
                     Edit Doctor
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreatePatients}
-                    onValueChange={(value) => handleAccessChange("editCreatePatients", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("editCreatePatients", value)
+                    }
                   >
                     Edit/Create Patients
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreateStaffs}
-                    onValueChange={(value) => handleAccessChange("editCreateStaffs", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("editCreateStaffs", value)
+                    }
                   >
                     Edit/Create Staffs
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreateReminders}
-                    onValueChange={(value) => handleAccessChange("editCreateReminders", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("editCreateReminders", value)
+                    }
                   >
                     Edit/Create Reminders
                   </Checkbox>
                   <Checkbox
                     isSelected={accessTypes.editCreatePayments}
-                    onValueChange={(value) => handleAccessChange("editCreatePayments", value)}
+                    onValueChange={(value) =>
+                      handleAccessChange("editCreatePayments", value)
+                    }
                   >
                     Edit/Create Payments
                   </Checkbox>
-
-
                 </div>
               </div>
               {errors.length > 0 && (
@@ -495,7 +501,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 </div>
               )}
             </div>
-
 
             <div className="flex justify-center mt-4">
               {/* <Button
@@ -508,7 +513,6 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button> */}
-
 
               <button
                 type="submit"
@@ -549,13 +553,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 modalMessage={modalMessage}
                 onClose={handleModalClose}
               />
-
             </div>
           </form>
         </div>
       </div>
-
-
     </div>
   );
 };

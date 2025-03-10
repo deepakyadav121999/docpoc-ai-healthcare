@@ -1,11 +1,11 @@
-import React from 'react'
+import React from "react";
 
 const PaymentEntry = () => {
   return (
     <div>
-        <p>Add Entry</p>
+      <p>Add Entry</p>
     </div>
-  )
-}
+  );
+};
 
-export default PaymentEntry
+export default PaymentEntry;

@@ -18,7 +18,6 @@ interface ParentComponentProps {
 const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -34,12 +33,13 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   }, [isOpen]);
 
   return (
-    <div >
-      <Button color="primary"
+    <div>
+      <Button
+        color="primary"
         endContent={<PlusIcon />}
         onPress={onOpen}
         className="responsive-button"
-      // style={{ minHeight: 55 }}
+        // style={{ minHeight: 55 }}
       >
         Add New
       </Button>
@@ -48,10 +48,16 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{ maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: "10%" }}
+        style={{
+          maxWidth: 800,
+          maxHeight: 600,
+          overflowY: "scroll",
+          marginTop: "10%",
+        }}
         className="max-w-[95%] sm:max-w-[800px] mx-auto debug-border"
         classNames={{
-          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+          backdrop:
+            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
       >
         <ModalContent className="modal-content">
@@ -60,9 +66,7 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
               <ModalHeader className="flex flex-col gap-0.5">
                 {headingName}
               </ModalHeader>
-              <ModalBody className="modal-body">
-                {child}
-              </ModalBody>
+              <ModalBody className="modal-body">{child}</ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
@@ -73,7 +77,9 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
         </ModalContent>
       </Modal>
 
-      <style> {`
+      <style>
+        {" "}
+        {`
         /* Base styling for the button */
         .responsive-button {
           min-height: 55px;
@@ -120,8 +126,8 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
 
 
 
-      `}</style>
-
+      `}
+      </style>
     </div>
   );
 };

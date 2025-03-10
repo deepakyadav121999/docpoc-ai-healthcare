@@ -9,7 +9,13 @@ import SignUp from "@/components/Auth/Signup";
 //   description: "This is Next.js Login Page NextAdmin Dashboard Kit",
 // };
 
-const Signup = ({ setAuthPage, onLogin }: { setAuthPage: () => void; onLogin: (token: string) => void }) => {
+const Signup = ({
+  setAuthPage,
+  onLogin,
+}: {
+  setAuthPage: () => void;
+  onLogin: (token: string) => void;
+}) => {
   return (
     <>
       <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">

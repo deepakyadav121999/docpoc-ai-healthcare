@@ -1,5 +1,11 @@
 // context/UserContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import axios from "axios";
 
 interface UserProfile {
@@ -29,12 +35,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     if (token) {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         const data = response.data;
         localStorage.setItem("profile", JSON.stringify(data));

@@ -15,7 +15,7 @@ import {
   ModalBody,
   Spinner,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import { TOOL_TIP_COLORS } from "@/constants";
@@ -28,19 +28,21 @@ import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
 import { parseTime } from "@internationalized/date";
 import { json } from "stream/consumers";
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from '../../store';
-import { fetchProfile, updateAccessToken } from '../../store/slices/profileSlice';
+import { AppDispatch } from "../../store";
+import {
+  fetchProfile,
+  updateAccessToken,
+} from "../../store/slices/profileSlice";
 
 const API_URL = process.env.API_URL;
 const Clinic = () => {
-
   const profile = useSelector((state: RootState) => state.profile.data);
   const dispatch = useDispatch<AppDispatch>();
 
-  console.log("redux" , profile)
+  console.log("redux", profile);
   const [edit, setEdit] = useState(false);
   const [isMultipleBranch, setIsMultipleBranch] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -53,20 +55,20 @@ const Clinic = () => {
     "thursday",
     "friday",
     "saturday",
-    "sunday"
+    "sunday",
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");
-  const [hospitalId, setHospitalId] = useState("")
+  const [hospitalId, setHospitalId] = useState("");
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
   const [selectedStateKey, setSelectedStateKey] = useState<string | null>(null);
-  const[accessToken, setAccessToken] = useState("")
-//  const [userupdated, setuserupdated] = useState("abc")
+  const [accessToken, setAccessToken] = useState("");
+  //  const [userupdated, setuserupdated] = useState("abc")
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
     phone: "",
@@ -78,7 +80,7 @@ const Clinic = () => {
     shiftEnd: "",
   });
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
-  const [userId, setUserId] = useState("")
+  const [userId, setUserId] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
     setClinicDetails({ ...clinicDetails, [field]: value });
@@ -91,7 +93,6 @@ const Clinic = () => {
     setSelectedDepartments(values);
   };
 
-
   const locationDetact = () => {
     try {
       navigator.geolocation.getCurrentPosition(
@@ -103,21 +104,20 @@ const Clinic = () => {
           console.error("Error obtaining geolocation:", error);
           // alert("Failed to detect location. Please enable location services.");
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true },
       );
     } catch (error) {
       console.error("Error detecting location or creating hospital:", error);
       // alert("An error occurred while detecting location.");
     }
-  }
-
+  };
 
   const handleModalClose = () => {
     // dispatch(fetchProfile());
-    if(modalMessage.success =="Hospital created successfully"){
+    if (modalMessage.success == "Hospital created successfully") {
       dispatch(updateAccessToken(accessToken));
     }
-   
+
     setModalMessage({ success: "", error: "" });
     onClose();
   };
@@ -125,25 +125,20 @@ const Clinic = () => {
     setEdit(!edit);
   };
   const fetchHospitalDetails = async () => {
- setLoading(true)
+    setLoading(true);
     try {
-
       const token = localStorage.getItem("docPocAuth_token");
 
-     
-  const branch = profile.branchId;
-     setUserId(profile.id)
-
+      const branch = profile.branchId;
+      setUserId(profile.id);
 
       if (!branch) {
         setIsHospitalAvailable(false);
         setEdit(true); // Enable editing if no hospital/branch exists
-        setIsMultipleBranch(true)
-        setLoading(false)
+        setIsMultipleBranch(true);
+        setLoading(false);
         return;
       }
-
-
 
       const response = await axios.get(`${API_URL}/hospital/find/${branch}`, {
         headers: {
@@ -151,13 +146,11 @@ const Clinic = () => {
         },
       });
       const data = response.data;
-      console.log(data)
-
-
+      console.log(data);
 
       if (data) {
         setIsHospitalAvailable(true);
-         setLoading(false)
+        setLoading(false);
         const hospital = data;
         const parsedJson = hospital.json ? JSON.parse(hospital.json) : {};
 
@@ -176,49 +169,58 @@ const Clinic = () => {
         setSelectedDepartments(parsedJson.departments || []);
         setIsMultipleBranch(parsedJson.multipleBranch || false);
         setDetectedLocation(parsedJson.googleLocation || "");
-        setShiftStartTime(parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null);
-        setShiftEndTime(parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null);
+        setShiftStartTime(
+          parsedJson.shiftStart ? parseTime(parsedJson.shiftStart) : null,
+        );
+        setShiftEndTime(
+          parsedJson.shiftEnd ? parseTime(parsedJson.shiftEnd) : null,
+        );
 
-        setHospitalId(hospital.id)
+        setHospitalId(hospital.id);
         const fetchedStateKey = IndianStatesList.find(
-          (item) => item.label === parsedJson.state
+          (item) => item.label === parsedJson.state,
         )?.value;
 
         setSelectedStateKey(fetchedStateKey || null);
         setEdit(false);
-        setIsMultipleBranch(false)
-
+        setIsMultipleBranch(false);
       }
     } catch (error) {
       console.error("Error fetching hospital details:", error);
-      setLoading(false)
+      setLoading(false);
     }
 
-    setLoading(false)
+    setLoading(false);
   };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     const errors: Record<string, string> = {};
 
     if (!clinicDetails.name.trim()) {
-
       errors.name = "Clinic/Hospital name is required.";
     }
-    if (!clinicDetails.phone.trim()) errors.phone = "Contact number is required.";
-    if (!/^\d{10}$/.test(clinicDetails.phone.trim())) errors.phone = "Contact number must be a valid 10-digit number.";
+    if (!clinicDetails.phone.trim())
+      errors.phone = "Contact number is required.";
+    if (!/^\d{10}$/.test(clinicDetails.phone.trim()))
+      errors.phone = "Contact number must be a valid 10-digit number.";
     if (!clinicDetails.email.trim()) errors.email = "Email is required.";
-    if (!/^\S+@\S+\.\S+$/.test(clinicDetails.email.trim())) errors.email = "Email is not valid.";
+    if (!/^\S+@\S+\.\S+$/.test(clinicDetails.email.trim()))
+      errors.email = "Email is not valid.";
     if (!clinicDetails.state.trim()) errors.state = "State is required.";
     if (!clinicDetails.pincode.trim()) errors.pincode = "Pincode is required.";
-    if (!/^\d{6}$/.test(clinicDetails.pincode.trim())) errors.pincode = "Pincode must be a valid 6-digit number.";
-    if (!clinicDetails.address.trim()) errors.address = "Visiting address is required.";
+    if (!/^\d{6}$/.test(clinicDetails.pincode.trim()))
+      errors.pincode = "Pincode must be a valid 6-digit number.";
+    if (!clinicDetails.address.trim())
+      errors.address = "Visiting address is required.";
     if (!shiftStartTime) errors.shiftStart = "Shift start time is required.";
     if (!shiftEndTime) errors.shiftEnd = "Shift end time is required.";
-    if (selectedWorkingDays.length === 0) errors.workingDays = "At least one working day must be selected.";
-    if (selectedDepartments.length === 0) errors.departments = "At least one department must be selected.";
+    if (selectedWorkingDays.length === 0)
+      errors.workingDays = "At least one working day must be selected.";
+    if (selectedDepartments.length === 0)
+      errors.departments = "At least one department must be selected.";
 
     if (Object.keys(errors).length > 0) {
       setErrors(errors); // Set the errors in state for further use
@@ -277,18 +279,14 @@ const Clinic = () => {
           success: "Hospital details updated successfully",
           error: "",
         });
-        onOpen()
-      }
-
-      else {
-        const response = await axios.post(`${API_URL}/hospital`, hospitalData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        onOpen();
+      } else {
+        const response = await axios.post(`${API_URL}/hospital`, hospitalData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
         const { id } = response.data;
         setHospitalId(id);
 
@@ -307,18 +305,19 @@ const Clinic = () => {
             workingDays: selectedWorkingDays,
             departments: selectedDepartments,
             multipleBranch: isMultipleBranch,
-            googleLocation: detectedLocation
+            googleLocation: detectedLocation,
           }),
         };
 
-
-        const branchdetails = await axios.post(`${API_URL}/hospital/branch`, branchData,
+        const branchdetails = await axios.post(
+          `${API_URL}/hospital/branch`,
+          branchData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         setIsHospitalAvailable(true);
@@ -326,44 +325,35 @@ const Clinic = () => {
           success: "Hospital created successfully",
           error: ``,
         });
-        onOpen()
+        onOpen();
 
         const fetchedBranchId = branchdetails.data?.id;
         const userEndpoint = `${API_URL}/user`;
 
-     const userres =    await axios.patch(userEndpoint, {
-          id: userId,
-          branchId: fetchedBranchId
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        const userres = await axios.patch(
+          userEndpoint,
+          {
+            id: userId,
+            branchId: fetchedBranchId,
           },
-        });
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
 
         const newAccessToken = userres.data.access_token;
-
 
         if (newAccessToken) {
           // Dispatch the updateAccessToken thunk
 
-          setAccessToken(newAccessToken)
-        
+          setAccessToken(newAccessToken);
         }
 
-            console.log("Profile updated successfully:", response.data);
-
-
-         
-      
-      
-       
-          
+        console.log("Profile updated successfully:", response.data);
       }
-
-     
-
-
     } catch (error: any) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
@@ -371,16 +361,29 @@ const Clinic = () => {
         success: "",
         error: `Error creating branch: ${error.message}`,
       });
-      onOpen()
+      onOpen();
     }
-    setLoading(false)
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchHospitalDetails()
-  }, [])
+    fetchHospitalDetails();
+  }, []);
 
+  useEffect(() => {
+    const header = document.querySelector("header");
 
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+  }, [isOpen]);
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
@@ -396,7 +399,6 @@ const Clinic = () => {
   )}</div>
  
 } */}
-
 
             <h3 className="font-semibold text-dark dark:text-white">
               Clinic/Hospital Details
@@ -417,7 +419,7 @@ const Clinic = () => {
             </div> */}
 
             <div className="border-b border-stroke px-3 py-2 sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-col sm:flex-row gap-2 sm:gap-9 items-center justify-between">
-            <div className="flex items-center">
+              <div className="flex items-center">
                 <Switch
                   isSelected={isMultipleBranch}
                   onChange={() => setIsMultipleBranch(!isMultipleBranch)}
@@ -429,7 +431,6 @@ const Clinic = () => {
                 </Switch>
               </div>
 
-
               <div className="flex items-center">
                 {!isHospitalAvailable && !loading && (
                   <p className="text-red-500 font-semibold text-sm sm:text-base text-center sm:text-left">
@@ -437,7 +438,6 @@ const Clinic = () => {
                   </p>
                 )}
               </div>
-            
             </div>
           </div>
           <form onSubmit={handleSaveChanges}>
@@ -452,7 +452,7 @@ const Clinic = () => {
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   isDisabled={!edit}
-                // errorMessage={errors.name}
+                  // errorMessage={errors.name}
                 />
                 <Input
                   key="clinic-phone"
@@ -556,9 +556,11 @@ const Clinic = () => {
                   label="Select State"
                   placeholder="Search a state"
                   onSelectionChange={(key) => {
-                    const selectedState = IndianStatesList.find((item) => item.value === key);
+                    const selectedState = IndianStatesList.find(
+                      (item) => item.value === key,
+                    );
                     handleInputChange("state", selectedState?.label || "");
-                    setSelectedStateKey(key ? key as string : null);
+                    setSelectedStateKey(key ? (key as string) : null);
                   }}
                 >
                   {(IndianStatesList) => (
@@ -585,7 +587,10 @@ const Clinic = () => {
                   isDisabled={!edit}
                 />
               </div>
-              <div className="flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Input
                   key="location"
                   variant="bordered"
@@ -608,7 +613,6 @@ const Clinic = () => {
                   style={{ minWidth: 200, marginBottom: 20, marginTop: 20 }}
                 >
                   Detect Location
-
                 </button>
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
@@ -630,13 +634,10 @@ const Clinic = () => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Leave unchecked if appointments from your website needs admin(s)
-                  action to confirm booking.
+                  Leave unchecked if appointments from your website needs
+                  admin(s) action to confirm booking.
                 </label>
-                <Checkbox color={TOOL_TIP_COLORS.secondary}
-                  isDisabled={!edit}
-                >
-
+                <Checkbox color={TOOL_TIP_COLORS.secondary} isDisabled={!edit}>
                   All appointments gets confirmed by default.
                 </Checkbox>
               </div>
@@ -650,7 +651,7 @@ const Clinic = () => {
                 color={TOOL_TIP_COLORS.secondary}
                 className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
                 style={{ minWidth: 280, marginBottom: 20 }}
-              // onPress={onOpen}
+                // onPress={onOpen}
               >
                 Save Changes
               </button>
@@ -663,7 +664,6 @@ const Clinic = () => {
             </div>
           </form>
         </div>
-
       </div>
     </div>
   );
@@ -671,48 +671,41 @@ const Clinic = () => {
 
 export default Clinic;
 
+// const profileEndpoint = `${API_URL}/auth/profile`;
+// const profileResponse = await axios.get(profileEndpoint,{
+//  headers:{
+//    Authorization: `Bearer ${token}`,
+//    "Content-Type": "application/json",
+//  },
+// })
 
- // const profileEndpoint = `${API_URL}/auth/profile`;
-      // const profileResponse = await axios.get(profileEndpoint,{
-      //  headers:{
-      //    Authorization: `Bearer ${token}`,
-      //    "Content-Type": "application/json",
-      //  },
-      // })
+//  const branch = profileResponse.data?.branchId
+// const  userd = profileResponse.data?.id;
 
-      //  const branch = profileResponse.data?.branchId
-      // const  userd = profileResponse.data?.id;
+// setUserId(userd)
 
-      // setUserId(userd)
+// //  localStorage.removeItem('profile', JSON.stringify(profileResponse.data))
 
-      // //  localStorage.removeItem('profile', JSON.stringify(profileResponse.data))
+//  localStorage.setItem("profile", JSON.stringify(profileResponse.data))
 
+// const userProfile = localStorage.getItem("profile");
 
-      //  localStorage.setItem("profile", JSON.stringify(profileResponse.data))
+// // Parse the JSON string if it exists
+// const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
 
-      // const userProfile = localStorage.getItem("profile");
+// // Extract the branchId from the user profile
+// const branch = parsedUserProfile?.branchId;
+// setUserId(parsedUserProfile?.id)
 
-      // // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+// setuserupdated("hello")
+// const response1 = await axios.get(`${API_URL}/auth/profile`, {
+//   headers: {
+//     Authorization: `Bearer ${token}`,
+//     "Content-Type": "application/json",
+//   },
+// });
 
-      // // Extract the branchId from the user profile
-      // const branch = parsedUserProfile?.branchId;
-      // setUserId(parsedUserProfile?.id)
-
-
-
-
-
-  // setuserupdated("hello")
-            // const response1 = await axios.get(`${API_URL}/auth/profile`, {
-            //   headers: {
-            //     Authorization: `Bearer ${token}`,
-            //     "Content-Type": "application/json",
-            //   },
-            // });
-      
-            // const profile = response1.data;
-            // localStorage.removeItem("profile"), JSON.stringify(profile)
-            // localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
-            // console.log("Fetched profile:", profile);
-       
+// const profile = response1.data;
+// localStorage.removeItem("profile"), JSON.stringify(profile)
+// localStorage.setItem("profile", JSON.stringify(profile)); // Store profile in localStorage
+// console.log("Fetched profile:", profile);

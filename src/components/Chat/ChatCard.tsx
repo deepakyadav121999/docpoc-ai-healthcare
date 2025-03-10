@@ -67,7 +67,7 @@ const ChatCard = () => {
         Upcoming Appointments
       </h4>
 
-      <div style={{overflowY:"scroll", maxHeight:450}}>
+      <div style={{ overflowY: "scroll", maxHeight: 450 }}>
         {chatData.map((chat, key) => (
           <Link
             href="/"

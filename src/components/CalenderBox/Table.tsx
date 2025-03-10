@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
@@ -36,21 +36,19 @@ import AddAppointment from "./AddAppointment";
 import axios from "axios";
 import Appointments from "@/app/appointment/page";
 import { CalendarDate, parseDate } from "@internationalized/date";
-import debounce from 'lodash.debounce';
+import debounce from "lodash.debounce";
 import { DateInput } from "@nextui-org/react";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { color } from "framer-motion";
 import { Switch } from "@nextui-org/react";
 
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
   unsure: "warning",
-
 };
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -83,16 +81,13 @@ interface appointments {
 // type User = (typeof Appointments)[0];
 const API_URL = process.env.API_URL;
 
-
-
-
 export default function AppointmentTable() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
 
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -121,7 +116,9 @@ export default function AppointmentTable() {
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
-  const [statusCache, setStatusCache] = React.useState<Record<string, string>>({});
+  const [statusCache, setStatusCache] = React.useState<Record<string, string>>(
+    {},
+  );
   const [assignedToMe, setAssignedToMe] = useState(false); // Toggle for "Assigned to Me"
   const [createdByMe, setCreatedByMe] = useState(false);
   const profile = useSelector((state: RootState) => state.profile.data);
@@ -135,7 +132,6 @@ export default function AppointmentTable() {
   }, [rowsPerPage]);
 
   const fetchUsers = async () => {
-
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
@@ -147,27 +143,23 @@ export default function AppointmentTable() {
       //   },
       // })
 
-
       // const userProfile = localStorage.getItem("userProfile");
-
 
       // // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      
 
       const userId = profile?.id;
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
-
       const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
       const params: any = {
-        page: page,  // Use currentPage here
+        page: page, // Use currentPage here
         pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
         to: "2025-12-31T23:59:59.999Z", // End of the month
-        status: ["visiting", "declind"]
+        status: ["visiting", "declind"],
         // Use currentRowsPerPage here
       };
 
@@ -194,20 +186,18 @@ export default function AppointmentTable() {
           "Content-Type": "application/json",
         },
       });
-      console.log(response)
+      console.log(response);
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
       setTotalappointments(total);
       setTotalUsers(total);
       // console.log(total)
-
     } catch (err) {
       setError("Failed to fetch patients.");
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleAssignedToMeToggle = useCallback(() => {
     setAssignedToMe((prev) => !prev);
@@ -221,17 +211,12 @@ export default function AppointmentTable() {
     fetchUsers(); // Fetch users with the new filter
   }, []);
 
-  
-  
   useEffect(() => {
-    if(profile){
+    if (profile) {
       fetchUsers();
     }
- 
-
-
   }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe]);
-  console.log(totalappointments)
+  console.log(totalappointments);
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
     const currentDate = new Date();
@@ -240,7 +225,10 @@ export default function AppointmentTable() {
     const monthDifference = currentDate.getMonth() - birthDate.getMonth();
 
     // Adjust age if the birthday hasn't occurred yet this year
-    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
 
@@ -251,7 +239,7 @@ export default function AppointmentTable() {
     const date = new Date(dateTime);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
+    const amPm = hours >= 12 ? "PM" : "AM";
 
     // Convert to 12-hour format
     hours = hours % 12 || 12;
@@ -262,7 +250,7 @@ export default function AppointmentTable() {
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
   const extractDate = (dateTimeString: string): string => {
-    const date = (dateTimeString);
+    const date = dateTimeString;
     return date && date.split("T")[0];
   };
 
@@ -272,7 +260,7 @@ export default function AppointmentTable() {
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -281,7 +269,7 @@ export default function AppointmentTable() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -289,15 +277,15 @@ export default function AppointmentTable() {
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
     return filteredUsers;
   }, [filterValue, statusFilter]);
 
-  const pages = totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
-
+  const pages =
+    totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
 
   const sortedItems = useMemo(() => {
     return [...appointments].sort((a: User, b: User) => {
@@ -317,7 +305,6 @@ export default function AppointmentTable() {
     const cellValue = user[columnKey as keyof User];
 
     if (columnKey === "age") {
-
       let age = "";
       try {
         const userJson = JSON.parse(user.json);
@@ -336,13 +323,16 @@ export default function AppointmentTable() {
       // console.log(startTime);
 
       const endTime = user.endDateTime;
-      return <p className="capitalize">{startTime}-{extractTime(endTime)}</p>;
-
+      return (
+        <p className="capitalize">
+          {startTime}-{extractTime(endTime)}
+        </p>
+      );
     }
     if (columnKey === "date") {
       const startDate = extractDate(user.dateTime);
 
-      const endDate = extractDate(user.endDateTime)
+      const endDate = extractDate(user.endDateTime);
 
       return <p>{startDate}</p>;
     }
@@ -367,8 +357,6 @@ export default function AppointmentTable() {
           />
         );
 
-
-
       case "name":
         return (
           <User
@@ -383,12 +371,12 @@ export default function AppointmentTable() {
         return (
           <div className="flex flex-col">
             <p className="font-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-xs capitalize text-gray-400">{ }</p>
+            <p className="text-xs capitalize text-gray-400">{}</p>
           </div>
         );
       case "status":
         // const status = user.startDateTime ? "visiting" : "declined";
-        const status = user.statusName
+        const status = user.statusName;
         return (
           <Chip
             className="capitalize"
@@ -420,19 +408,19 @@ export default function AppointmentTable() {
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-
   }, []);
 
-
-  const onRowsPerPageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
+  const onRowsPerPageChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setRowsPerPage(Number(e.target.value));
+      setPage(1);
+    },
+    [],
+  );
 
   const toggleAddAppointment = useCallback(() => {
     setAddAppointmentModelToggle((prev) => !prev);
   }, []);
-
 
   //  const debouncedFetchUser = React.useMemo(
   //      () => debounce((value: string) => searchAppointments(), 500),
@@ -444,7 +432,7 @@ export default function AppointmentTable() {
       setFilterValue(searchValue);
       fetchUsers();
     }, 500), // Adjust debounce time as needed
-    []
+    [],
   );
 
   const onSearchChange = React.useCallback((value?: string) => {
@@ -453,7 +441,6 @@ export default function AppointmentTable() {
     // fetchUsers();
     //  debouncedFetchUser(value || "");
   }, []);
-
 
   const onClear = useCallback(() => {
     setFilterValue("");
@@ -464,7 +451,7 @@ export default function AppointmentTable() {
   const handleDateChange = (date: CalendarDate | null) => {
     if (date) {
       const jsDate = date.toDate(getLocalTimeZone());
-      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
       setSelectedDate(formattedDate);
       setSelectedDateShow(formattedDate);
     } else {
@@ -510,10 +497,8 @@ export default function AppointmentTable() {
               // value={selectedDate ? parseDate(selectedDate) : undefined}
 
               value={selectedDateShow ? parseDate(selectedDateShow) : undefined}
-
-
               onChange={handleDateChange}
-            // onBlur={handleDateBlur}
+              // onBlur={handleDateBlur}
             />
 
             <div className="flex flex-wrap gap-2">
@@ -556,7 +541,6 @@ export default function AppointmentTable() {
               }}
             >
               <div className="flex gap-3">
-
                 <Dropdown>
                   <DropdownTrigger className="hidden sm:flex">
                     <Button
@@ -583,7 +567,6 @@ export default function AppointmentTable() {
                   </DropdownMenu>
                 </Dropdown>
 
-
                 <Dropdown>
                   <DropdownTrigger className="hidden sm:flex">
                     <Button
@@ -609,9 +592,10 @@ export default function AppointmentTable() {
                     ))}
                   </DropdownMenu>
                 </Dropdown>
-                <OpaqueDefaultModal headingName="Add New Appointment" child={<AddAppointment onUsersAdded={
-                  fetchUsers}
-                />} />
+                <OpaqueDefaultModal
+                  headingName="Add New Appointment"
+                  child={<AddAppointment onUsersAdded={fetchUsers} />}
+                />
               </div>
             </div>
           </div>
@@ -633,12 +617,16 @@ export default function AppointmentTable() {
             </label>
           </div>
         </div>
-
-
       </div>
     );
-  }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);
-
+  }, [
+    onClear,
+    onSearchChange,
+    visibleColumns,
+    statusFilter,
+    filterValue,
+    onRowsPerPageChange,
+  ]);
 
   const paginationContent = (
     <div className="flex justify-end items-center w-full py-4">
@@ -679,15 +667,15 @@ export default function AppointmentTable() {
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
-            <TableColumn
-              key={column.uid}
-              allowsSorting={column.uid === "age"}
-            >
+            <TableColumn key={column.uid} allowsSorting={column.uid === "age"}>
               {column.name}
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No Appointment Available"} items={sortedItems}>
+        <TableBody
+          emptyContent={"No Appointment Available"}
+          items={sortedItems}
+        >
           {(item: User) => (
             <TableRow key={item.id}>
               {(columnKey) => (
@@ -701,8 +689,6 @@ export default function AppointmentTable() {
     </>
   );
 }
-
-
 
 // onChange={(date) => {
 //   if (date) {
@@ -732,11 +718,11 @@ export default function AppointmentTable() {
 //   if (!selectedDateShow) {
 //     setSelectedDate(null);
 //     setSelectedDateShow(null)
-//     setTempDate(null); 
+//     setTempDate(null);
 //   }
 //   if (currentTempDate) {
 //     // Fetch for the selected date
-//     setTempDate(currentTempDate); 
+//     setTempDate(currentTempDate);
 //     setSelectedDate(currentTempDate);
 //     setSelectedDateShow(currentTempDate)
 //     setPage(1); // Reset to the first page
@@ -746,19 +732,15 @@ export default function AppointmentTable() {
 //     // Fetch all appointments if the date is cleared
 //     setSelectedDate(null);
 //     setSelectedDateShow(null)
-//     setTempDate(null); 
+//     setTempDate(null);
 //     setPage(1);
 //     // fetchUsers(); // Fetch all appointments
 //     console.log("onBlur - Fetch Triggered for All Appointments");
 //   }
 // }}
 
-
-
-
-
-
-{/*{addAppointmentModelToggle && (
+{
+  /*{addAppointmentModelToggle && (
         <OpaqueModal
         modalType={{
           view: MODAL_TYPES.VIEW_APPOINTMENT,
@@ -770,4 +752,5 @@ export default function AppointmentTable() {
         userId="123"  
         onPatientDelete={refreshUsers}
       />
-      )} */}
+      )} */
+}

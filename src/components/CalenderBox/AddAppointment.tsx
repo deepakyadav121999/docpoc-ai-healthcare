@@ -14,7 +14,7 @@ import {
   Spinner,
   ModalFooter,
   useDisclosure,
-  DateInput
+  DateInput,
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -23,9 +23,8 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-
 
 interface AutocompleteItem {
   value: string;
@@ -36,21 +35,23 @@ interface AutocompleteItem {
 }
 interface AddUsersProps {
   onUsersAdded: () => void;
-
 }
 const API_URL = process.env.API_URL;
 const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
-    const profile = useSelector((state: RootState) => state.profile.data);
+  const profile = useSelector((state: RootState) => state.profile.data);
 
   const [edit, setEdit] = useState(true);
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
-  const [appointmentTypeList, setAppointmentTypeList] = useState<AutocompleteItem[]>([]);
+  const [appointmentTypeList, setAppointmentTypeList] = useState<
+    AutocompleteItem[]
+  >([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-  const [appointmentStatusList, setAppointmentStatusList] = useState<AutocompleteItem[]>([]);
+  const [appointmentStatusList, setAppointmentStatusList] = useState<
+    AutocompleteItem[]
+  >([]);
   const [savingData, setSavingData] = useState(false);
-
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -82,7 +83,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     const date = new Date(dateTime);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
+    const amPm = hours >= 12 ? "PM" : "AM";
 
     // Convert to 12-hour format
     hours = hours % 12 || 12;
@@ -101,13 +102,19 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       currentDate.getDate(),
       time && time.hour,
       time && time.minute,
-      0
-    )// Convert to ISO format
+      0,
+    ); // Convert to ISO format
   };
 
-  const handleTimeChange = (time: Time, field: "startDateTime" | "endDateTime") => {
+  const handleTimeChange = (
+    time: Time,
+    field: "startDateTime" | "endDateTime",
+  ) => {
     if (!formData.dateTime) {
-      setModalMessage({ success: "", error: "Please select a date before setting the time." });
+      setModalMessage({
+        success: "",
+        error: "Please select a date before setting the time.",
+      });
       onOpen();
       return;
     }
@@ -116,9 +123,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     setFormData({ ...formData, [field]: isoTime });
   };
 
-
   const handlePatientSelection = (patientId: string) => {
-    const selectedPatient = patientList.find((patient) => patient.value === patientId);
+    const selectedPatient = patientList.find(
+      (patient) => patient.value === patientId,
+    );
     if (selectedPatient) {
       setFormData({
         ...formData,
@@ -126,7 +134,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         name: selectedPatient.label,
         json: JSON.stringify({
           dob: selectedPatient.dob,
-          email: selectedPatient.description?.split(" | ")[1] || ""
+          email: selectedPatient.description?.split(" | ")[1] || "",
         }),
       });
     }
@@ -137,17 +145,21 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     onClose();
   };
 
-  function isWithinWorkingHours(startTime: Date, endTime: Date, workingHours: string): boolean {
+  function isWithinWorkingHours(
+    startTime: Date,
+    endTime: Date,
+    workingHours: string,
+  ): boolean {
     try {
       const [startStr, endStr] = workingHours.split(" - "); // Split into start and end times
-  
+
       if (!startStr || !endStr) {
         throw new Error("Invalid workingHours format");
       }
-  
+
       const startOfWork = parseTimeStringToDate(startStr, startTime);
       const endOfWork = parseTimeStringToDate(endStr, endTime);
-  
+
       // Check if the appointment time is within working hours
       return startTime >= startOfWork && endTime <= endOfWork;
     } catch (error) {
@@ -155,50 +167,59 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       return false; // Return false on error
     }
   }
-  
+
   // Helper function to parse time strings like "9:00 AM" into Date objects
   function parseTimeStringToDate(timeStr: string, baseDate: Date): Date {
     const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i; // Match time format (HH:MM AM/PM)
     const match = timeStr.match(timeRegex);
-  
+
     if (!match) {
       throw new Error(`Invalid time string: ${timeStr}`);
     }
-  
+
     const [, hourStr, minuteStr, period] = match; // Destructure regex match groups
     const hour = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
-  
+
     // Convert to 24-hour format
     const adjustedHour =
       period.toUpperCase() === "PM" && hour !== 12
         ? hour + 12
         : period.toUpperCase() === "AM" && hour === 12
-        ? 0
-        : hour;
-  
+          ? 0
+          : hour;
+
     const date = new Date(baseDate);
     date.setHours(adjustedHour, minute, 0, 0); // Set hours, minutes, and seconds
     return date;
   }
-  
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingData(true);
     const { startDateTime, endDateTime, doctorId } = formData;
 
     // Find the selected doctor from the doctorList
-    const selectedDoctor = doctorList.find((doctor) => doctor.value === doctorId);
-  
+    const selectedDoctor = doctorList.find(
+      (doctor) => doctor.value === doctorId,
+    );
+
     if (selectedDoctor) {
       const workingHours = selectedDoctor.workingHours;
-  
+
       // Validate the working hours
-      if (workingHours && !isWithinWorkingHours(new Date(startDateTime), new Date(endDateTime), workingHours)) {
+      if (
+        workingHours &&
+        !isWithinWorkingHours(
+          new Date(startDateTime),
+          new Date(endDateTime),
+          workingHours,
+        )
+      ) {
         setModalMessage({
           success: "",
-          error: "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
+          error:
+            "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
         });
         onOpen();
         setSavingData(false);
@@ -206,34 +227,29 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       }
     }
 
-
     const missingFields: string[] = [];
     for (const key in formData) {
-      if (
-        !formData[key as keyof typeof formData] &&
-        key !== "branchId"
-      ) {
+      if (!formData[key as keyof typeof formData] && key !== "branchId") {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
 
-
     if (missingFields.length > 0) {
-
       setModalMessage({
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
       onOpen();
       return;
-
     }
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
 
     if (!token) {
-
-      setModalMessage({ success: "", error: "No access token found. Please log in again." });
+      setModalMessage({
+        success: "",
+        error: "No access token found. Please log in again.",
+      });
       setLoading(false);
       setSavingData(false);
       onOpen();
@@ -243,7 +259,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     console.log("Token:", token);
 
     try {
-
       const token = localStorage.getItem("docPocAuth_token");
 
       // const hospitalEndpoint = `${API_URL}/hospital`;
@@ -272,14 +287,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       // const fetchedBranchId = branchResponse.data[0]?.id;
 
-
-      
       // const userProfile = localStorage.getItem("userProfile");
-
 
       // // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-
 
       const userId = profile?.id;
       // Extract the branchId from the user profile
@@ -288,23 +299,25 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const payload = {
         ...formData,
         branchId: fetchedBranchId,
-      }
-      const response = await axios.post(
-        `${API_URL}/appointment`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      };
+      const response = await axios.post(`${API_URL}/appointment`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       console.log("Appointment Created:", response.data);
-      setModalMessage({ success: "Appointment created successfully!", error: "" });
-      onOpen()
+      setModalMessage({
+        success: "Appointment created successfully!",
+        error: "",
+      });
+      onOpen();
       onUsersAdded();
     } catch (error: any) {
-      console.error("Error creating appointment:", error.response?.data || error.message);
+      console.error(
+        "Error creating appointment:",
+        error.response?.data || error.message,
+      );
       // setModalMessage({
       //   success: "",
       //   error: `Error creating appointment: ${error.response?.data?.message || "Unknown error"}`,
@@ -333,14 +346,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         error: `Error creating appointment: ${errorMessage}`,
       });
 
-      onOpen()
-
+      onOpen();
     }
-    setLoading(false)
+    setLoading(false);
     setSavingData(false);
-
   };
-
 
   const handleTypeSelection = (typeId: string) => {
     setFormData({ ...formData, type: typeId });
@@ -348,7 +358,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const handleStatusSelection = (statusId: string) => {
     setFormData({ ...formData, status: statusId });
   };
-
 
   const fetchAppointmentTypes = async () => {
     setLoading(true);
@@ -385,9 +394,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       // const fetchedBranchId = branchResponse.data[0].id;
 
-      
       const userProfile = localStorage.getItem("userProfile");
-
 
       // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
@@ -407,12 +414,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       if (!response.data || response.data.length === 0) {
         throw new Error("No appointment types found.");
       }
-      const transformedTypes: AutocompleteItem[] = response.data.map((type: any) => ({
-        label: type.name,
-        value: type.id,
-      }));
+      const transformedTypes: AutocompleteItem[] = response.data.map(
+        (type: any) => ({
+          label: type.name,
+          value: type.id,
+        }),
+      );
       setAppointmentTypeList(transformedTypes);
-
 
       // Step 4: Fetch Appointment Status
       const appointmentStatusEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
@@ -422,10 +430,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           "Content-Type": "application/json",
         },
       });
-      const transformedStatus: AutocompleteItem[] = response2.data.map((type: any) => ({
-        label: type.status,
-        value: type.id,
-      }));
+      const transformedStatus: AutocompleteItem[] = response2.data.map(
+        (type: any) => ({
+          label: type.status,
+          value: type.id,
+        }),
+      );
       setAppointmentStatusList(transformedStatus);
 
       // Step 5: Fetch Patients
@@ -433,9 +443,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const params: any = {};
       params.page = 1;
       params.pageSize = 50;
-      params.from = '2024-12-04T03:32:25.812Z';
-      params.to = '2024-12-11T03:32:25.815Z';
-      params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
+      params.from = "2024-12-04T03:32:25.812Z";
+      params.to = "2024-12-11T03:32:25.815Z";
+      params.notificationStatus = [
+        "Whatsapp notifications paused",
+        "SMS notifications paused",
+      ];
       const response3 = await axios.get(patientsendpoint, {
         params,
         headers: {
@@ -444,19 +457,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         },
       });
       // console.log(response3.data.rows)
-      const transformedPatients: AutocompleteItem[] = response3.data.rows.map((patient: any) => ({
-        label: patient.name,
-        value: patient.id,
-        description: `${patient.phone} | ${patient.email}`,
-        dob: patient.dob, // Include DOB
-      }));
+      const transformedPatients: AutocompleteItem[] = response3.data.rows.map(
+        (patient: any) => ({
+          label: patient.name,
+          value: patient.id,
+          description: `${patient.phone} | ${patient.email}`,
+          dob: patient.dob, // Include DOB
+        }),
+      );
       setPatientList(transformedPatients);
-
-
 
       // Step 6: Fetch  Doctors
       const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-
 
       // const params: any = {};
 
@@ -464,8 +476,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       params.pageSize = 50;
       // params.from = '2024-12-04T03:32:25.812Z';
       // params.to = '2024-12-11T03:32:25.815Z';
-
-
 
       const response4 = await axios.get(doctorsEndpoint, {
         params,
@@ -487,7 +497,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         }
       });
 
-
       // const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
       //   label: doctor.name,
       //   value: doctor.id,
@@ -495,34 +504,33 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // }));
       // setDoctorList(transformedDoctors)
 
-
       // setUsers(response.data.rows || response.data);
       // setTotalUsers(response.data.count || response.data.length);
 
-      const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => {
-        try {
-          const doctorJson = JSON.parse(doctor.json || "{}"); // Parse the `json` string into an object
-          return {
-            label: doctor.name,
-            value: doctor.id,
-            description: `${doctor.phone} | ${doctor.email}`,
-            workingHours: doctorJson.workingHours || "Not Available", // Extract `workingHours` or fallback
-          };
-        } catch (err) {
-          console.error("Error parsing doctor JSON for working hours:", err);
-          return {
-            label: doctor.name,
-            value: doctor.id,
-            description: `${doctor.phone} | ${doctor.email}`,
-            workingHours: "Not Available", // Fallback if JSON parsing fails
-          };
-        }
-      });
+      const transformedDoctors: AutocompleteItem[] = doctors.map(
+        (doctor: any) => {
+          try {
+            const doctorJson = JSON.parse(doctor.json || "{}"); // Parse the `json` string into an object
+            return {
+              label: doctor.name,
+              value: doctor.id,
+              description: `${doctor.phone} | ${doctor.email}`,
+              workingHours: doctorJson.workingHours || "Not Available", // Extract `workingHours` or fallback
+            };
+          } catch (err) {
+            console.error("Error parsing doctor JSON for working hours:", err);
+            return {
+              label: doctor.name,
+              value: doctor.id,
+              description: `${doctor.phone} | ${doctor.email}`,
+              workingHours: "Not Available", // Fallback if JSON parsing fails
+            };
+          }
+        },
+      );
       setDoctorList(transformedDoctors);
-      
 
-  //  console.log(transformedDoctors)
-
+      //  console.log(transformedDoctors)
     } catch (error) {
       console.error("Error fetching appointment types:", error || error);
     } finally {
@@ -530,18 +538,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
   };
 
-
-
-
   useEffect(() => {
     // fetchDoctors()
     // fetchPatients()
     fetchAppointmentTypes();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (formData.dateTime) {
-      const defaultStartTime = generateDateTime(formData.dateTime, new Time(8, 30));
+      const defaultStartTime = generateDateTime(
+        formData.dateTime,
+        new Time(8, 30),
+      );
       const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -551,7 +559,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
   }, [formData.dateTime]);
 
-
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -559,7 +566,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       header.classList.remove("z-999");
       header.classList.add("z-0");
-
     }
   }, [isOpen]);
 
@@ -591,7 +597,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
             <div className="p-6.5">
               <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
               <div className="flex flex-col w-full"></div>
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Input
                   label="Appointment Date"
                   labelPlacement="outside"
@@ -602,11 +611,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   value={formData.dateTime || ""}
                   onChange={(e) => handleDateChange(e.target.value)}
                 />
-
-
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment Start Time"
@@ -638,10 +648,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   defaultValue="Patient is having chronic neck pain."
                   errorMessage="The address should be at max 255 characters long."
                   isDisabled={!edit}
-                  onChange={(e) => setFormData({ ...formData, json: `{"remarks":"${e.target.value}"}` })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      json: `{"remarks":"${e.target.value}"}`,
+                    })
+                  }
                 />
               </div>
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -650,17 +668,26 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   defaultItems={appointmentTypeList}
                   label="Select Appointment Type"
                   placeholder="Search Appointment Type"
-                  onSelectionChange={(key) => handleTypeSelection(key as string)}
+                  onSelectionChange={(key) =>
+                    handleTypeSelection(key as string)
+                  }
                 >
                   {(item) => (
-                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={TOOL_TIP_COLORS.secondary}
+                    >
                       {item.label}
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -669,16 +696,25 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   defaultItems={appointmentStatusList}
                   label="Select Appointment Status"
                   placeholder="Search Appointment Status"
-                  onSelectionChange={(key) => handleStatusSelection(key as string)}
+                  onSelectionChange={(key) =>
+                    handleStatusSelection(key as string)
+                  }
                 >
                   {(item) => (
-                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={TOOL_TIP_COLORS.secondary}
+                    >
                       {item.label}
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
               </div>
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -687,10 +723,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   defaultItems={patientList}
                   label="Select Patient"
                   placeholder="Search a Patient"
-                  onSelectionChange={(key) => handlePatientSelection(key as string)}
+                  onSelectionChange={(key) =>
+                    handlePatientSelection(key as string)
+                  }
                 >
                   {(item) => (
-                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={TOOL_TIP_COLORS.secondary}
+                    >
                       {item.label}
                     </AutocompleteItem>
                   )}
@@ -703,10 +745,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   defaultItems={doctorList}
                   label="Select Doctor"
                   placeholder="Search a Doctor"
-                  onSelectionChange={(key) => setFormData({ ...formData, doctorId: key as string })}
+                  onSelectionChange={(key) =>
+                    setFormData({ ...formData, doctorId: key as string })
+                  }
                 >
                   {(item) => (
-                    <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={TOOL_TIP_COLORS.secondary}
+                    >
                       {/* {item.label}-{item.workingHours} */}
                       {`${item.label} - ${item.workingHours}`}
                     </AutocompleteItem>
@@ -716,7 +764,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Mark uncheck if no notification has to be sent for appointment.
+                  Mark uncheck if no notification has to be sent for
+                  appointment.
                 </label>
                 <Checkbox
                   color={TOOL_TIP_COLORS.secondary}
@@ -736,7 +785,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 290, marginBottom: 20 }}
               >
-                 {savingData ? "Saving..." : "Save Changes"}
+                {savingData ? "Saving..." : "Save Changes"}
               </button>
 
               <EnhancedModal
@@ -745,7 +794,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 modalMessage={modalMessage}
                 onClose={handleModalClose}
               />
-
             </div>
           </form>
         </div>
@@ -755,20 +803,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 };
 export default AddAppointment;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-{/* <Modal isOpen={isOpen} onClose={handleModalClose}>
+{
+  /* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                         
@@ -792,7 +828,8 @@ export default AddAppointment;
                     )}
                   </ModalFooter>
                 </ModalContent>
-              </Modal> */}
+              </Modal> */
+}
 
 // const fetchPatients = async () => {
 //   setLoading(true);
@@ -827,7 +864,6 @@ export default AddAppointment;
 
 //     const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
 
-
 //     const params: any = {};
 
 //     params.page = 1;
@@ -835,7 +871,6 @@ export default AddAppointment;
 //     params.from = '2024-12-04T03:32:25.812Z';
 //     params.to = '2024-12-11T03:32:25.815Z';
 //     params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
-
 
 //     const response = await axios.get(endpoint, {
 //       params,
@@ -891,9 +926,7 @@ export default AddAppointment;
 
 //     const fetchedBranchId = branchResponse.data[0]?.id;
 
-
 //     const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-
 
 //     const params: any = {};
 
@@ -901,8 +934,6 @@ export default AddAppointment;
 //     params.pageSize = 50;
 //     // params.from = '2024-12-04T03:32:25.812Z';
 //     // params.to = '2024-12-11T03:32:25.815Z';
-
-
 
 //     const response = await axios.get(endpoint, {
 //       params,
@@ -924,7 +955,6 @@ export default AddAppointment;
 //       }
 //     });
 
-
 //     const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
 //       label: doctor.name,
 //       value: doctor.id,
@@ -940,5 +970,3 @@ export default AddAppointment;
 //     setLoading(false);
 //   }
 // };
-
-

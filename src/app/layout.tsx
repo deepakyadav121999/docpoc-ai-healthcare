@@ -33,10 +33,8 @@
 //   const isAuthenticated = !!profile;
 //  const isLoading = useSelector((state: RootState) => state.profile.loading);
 
-
 //   // Check authentication and load profile from localStorage
 //   useEffect(() => {
-    
 
 //         const validateToken = async () => {
 //       const token = localStorage.getItem("docPocAuth_token");
@@ -53,9 +51,6 @@
 
 //     validateToken();
 //   }, [pathname]);
-
-
-  
 
 //   // Redirection based on authentication and profile data
 //   useEffect(() => {
@@ -105,7 +100,7 @@
 //     // setIsAuthenticated(true);
 
 //     const storedProfile = localStorage.getItem("profile");
-  
+
 //   };
 
 //   if (isLoading) {
@@ -153,22 +148,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 "use client";
 
 import "flatpickr/dist/flatpickr.min.css";
@@ -179,11 +158,11 @@ import Loader from "@/components/common/Loader";
 import SignUp from "./auth/signup/page";
 import SignIn from "./auth/signin/page";
 import { usePathname, useRouter } from "next/navigation";
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store } from '../store';
-import { fetchProfile, clearProfile } from '../store/slices/profileSlice';
-import { RootState } from '../store';
-import { AppDispatch } from '../store';
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { store } from "../store";
+import { fetchProfile, clearProfile } from "../store/slices/profileSlice";
+import { RootState } from "../store";
+import { AppDispatch } from "../store";
 
 function RootLayout({
   children,
@@ -246,7 +225,10 @@ function RootLayout({
       return (
         <html lang="en">
           <body suppressHydrationWarning={true}>
-            <SignUp onLogin={handleLogin} setAuthPage={() => router.push("/auth/signin")} />
+            <SignUp
+              onLogin={handleLogin}
+              setAuthPage={() => router.push("/auth/signin")}
+            />
           </body>
         </html>
       );
@@ -254,7 +236,10 @@ function RootLayout({
     return (
       <html lang="en">
         <body suppressHydrationWarning={true}>
-          <SignIn onLogin={handleLogin} setAuthPage={() => router.push("/auth/signup")} />
+          <SignIn
+            onLogin={handleLogin}
+            setAuthPage={() => router.push("/auth/signup")}
+          />
         </body>
       </html>
     );
@@ -275,10 +260,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-
-
-
 // "use client";
 // // import "jsvectormap/dist/css/jsvectormap.css";
 // import "flatpickr/dist/flatpickr.min.css";
@@ -288,7 +269,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 // import Loader from "@/components/common/Loader";
 // import SignUp from "./auth/signup/page";
 // import SignIn from "./auth/signin/page";
-// import { usePathname, useRouter } from 'next/navigation'; 
+// import { usePathname, useRouter } from 'next/navigation';
 // import axios from "axios";
 // const API_URL = process.env.API_URL;
 // export default function RootLayout({
@@ -308,7 +289,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //     if (token) {
 //       setIsAuthenticated(true);
 //     }
-   
+
 //     setIsLoading(false);
 //   }, [pathname, router]);
 
@@ -328,8 +309,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //     }
 //   }, [isAuthenticated, isLoading, pathname, router]);
 
-
-
 //   useEffect(() => {
 //     const validateToken = async () => {
 //       const token = localStorage.getItem("docPocAuth_token");
@@ -345,17 +324,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //           });
 
 //           // localStorage.setItem("profile", JSON.stringify(response.data))
-         
 
 //           if (response) {
 //             // If the token is valid, set the authenticated state to true
 //             // setIsAuthenticated(true);
-          
+
 //             const data = await response.data
 //             setUserProfile(data);
 //             console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
 
-        
 //             setIsAuthenticated(true);
 //             localStorage.setItem("profile", JSON.stringify(data));
 //           } else {
@@ -398,7 +375,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //     }
 //   , [isAuthenticated, isLoading, pathname, router,userProfile,isProfileLoading]);
 
-
 //   // const retryFetch = async (
 //   //   url: string,
 //   //   options: RequestInit,
@@ -407,14 +383,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   // ): Promise<Response> => {
 //   //   try {
 //   //     const response = await fetch(url, options);
-  
+
 //   //     // Check if the response indicates rate-limiting (status 429)
 //   //     if (response.status === 429 && retries > 0) {
 //   //       console.warn("Rate-limited. Retrying...");
 //   //       await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
 //   //       return retryFetch(url, options, retries - 1, delay * 2); // Exponential backoff
 //   //     }
-  
+
 //   //     return response; // Return the response if successful
 //   //   } catch (error) {
 //   //     if (retries > 0) {
@@ -422,12 +398,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   //       await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
 //   //       return retryFetch(url, options, retries - 1, delay * 2); // Retry on network failure
 //   //     }
-  
+
 //   //     console.error("Failed after retries:", error);
 //   //     throw error; // Rethrow the error if retries are exhausted
 //   //   }
 //   // };
-  
 
 //   // useEffect(() => {
 //   //   const validateToken = async () => {
@@ -437,7 +412,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   //       setIsLoading(false);
 //   //       return;
 //   //     }
-  
+
 //   //     try {
 //   //       const response = await retryFetch(`${API_URL}/auth/profile`, {
 //   //         method: "GET",
@@ -446,7 +421,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   //           Authorization: `Bearer ${token}`,
 //   //         },
 //   //       });
-  
+
 //   //       if (response.ok) {
 //   //         const data = await response.json();
 //   //         if (!data.branchId) {
@@ -465,13 +440,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   //       setIsLoading(false);
 //   //     }
 //   //   };
-  
+
 //   //   if (isLoading) validateToken();
 //   // }, [isLoading, router]);
-  
+
 //   // useEffect(() => {
 //   //   if (isLoading) return;
-  
+
 //   //   if (!isAuthenticated) {
 //   //     if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
 //   //       router.push("/auth/signin");
@@ -482,8 +457,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   //     }
 //   //   }
 //   // }, [isAuthenticated, isLoading, pathname, router]);
-  
-
 
 //   const toggleAuthPage = () => {
 //     setIsSignUpPage((prev) => !prev);
@@ -537,10 +510,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //   );
 // }
 
-
-
-
-
 // "use client";
 
 // import "flatpickr/dist/flatpickr.min.css";
@@ -585,8 +554,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
 //     // setIsLoading(false);
 
-
-
 //         const validateToken = async () => {
 //       const token = localStorage.getItem("docPocAuth_token");
 
@@ -601,17 +568,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //           });
 
 //           localStorage.setItem("profile", JSON.stringify(response.data))
-         
 
 //           if (response) {
 //             // If the token is valid, set the authenticated state to true
 //             // setIsAuthenticated(true);
-          
+
 //             const data = await response.data
 //             setUserProfile(data);
 //             console.log(`Login response is coming: ${JSON.stringify(data, null, 2)}`)
 
-        
 //             setIsAuthenticated(true);
 //             localStorage.setItem("profile", JSON.stringify(data));
 //           } else {
@@ -631,9 +596,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
 //     validateToken();
 //   }, [pathname]);
-
-
-  
 
 //   // Redirection based on authentication and profile data
 //   useEffect(() => {
@@ -723,6 +685,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 //     </html>
 //   );
 // }
-
-
-

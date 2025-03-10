@@ -26,7 +26,7 @@ import {
   TimeInput,
   DateValue,
   AutocompleteItem,
-  Autocomplete
+  Autocomplete,
 } from "@nextui-org/react";
 import {
   GLOBAL_ACTION_ICON_COLOR,
@@ -44,7 +44,6 @@ import {
   getLocalTimeZone,
   now,
   parseTime,
-
 } from "@internationalized/date";
 
 import ToolTip from "../Tooltip";
@@ -79,7 +78,11 @@ interface AutocompleteItem {
 }
 
 const API_URL = process.env.API_URL;
-export default function ModalForm(props: { type: string, userId: string, onDataChange: (data: any) => void }) {
+export default function ModalForm(props: {
+  type: string;
+  userId: string;
+  onDataChange: (data: any) => void;
+}) {
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
 
@@ -88,8 +91,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [editSelectedPatientStatus, setEditPatientStatus] = useState(false);
   const [editSelectedPatientEmail, setEditPatientEmail] = useState(false);
   const [editSelectedPatientPhone, setEditPatientPhone] = useState(false);
-
-
 
   const [employeeName, setEmployeeName] = useState("");
   const [editSelectedEmployee, setEditEmployee] = useState(false);
@@ -106,8 +107,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
   const [employeeEmail, setEmployeeEmail] = useState("");
   const [employeeDesignation, setEmployeeDesignation] = useState("");
-  const [employeeShiftStartTime, setEmployeeShiftStartTime] = useState<Time | null>(null);
-  const [employeeShiftEndTime, setEmployeeShiftEndTime] = useState<Time | null>(null);
+  const [employeeShiftStartTime, setEmployeeShiftStartTime] =
+    useState<Time | null>(null);
+  const [employeeShiftEndTime, setEmployeeShiftEndTime] = useState<Time | null>(
+    null,
+  );
 
   const designations = [
     { label: "Doctor", value: "doctor" },
@@ -116,13 +120,13 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   ];
 
   // State to track selected designation and employee name
-  const [selectedDesignation, setSelectedDesignation] = useState<string>(employeeDesignation);
+  const [selectedDesignation, setSelectedDesignation] =
+    useState<string>(employeeDesignation);
 
   const [tempDesignation, setTempDesignation] = useState(employeeDesignation);
 
-
   const [employeePhone, setEmployeePhone] = useState("");
-  const [emloyeeBranch, setEmployeeBranch] = useState("")
+  const [emloyeeBranch, setEmployeeBranch] = useState("");
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
@@ -138,33 +142,32 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   const [lastVisit, setLastVisit] = useState<string>("N/A");
   const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
   // const [lastVisit, setLastvisit] = useState("");
-  const [notificationStatus, setNotificationStatus] = useState("")
-  const [branchId, setBranchId] = useState("")
-  const [patientDob, setPatientDob] = useState("")
-  const [gender, setGender] = useState("")
+  const [notificationStatus, setNotificationStatus] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [patientDob, setPatientDob] = useState("");
+  const [gender, setGender] = useState("");
   const [selectedDate, setSelectedDate] = useState(now(getLocalTimeZone()));
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Salunkey");
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const [appointmentDateTime, setAppointmentDateTime] = useState("");
   const [appointmentPatientId, setAppointmentPatientId] = useState("");
 
   const [appointmentBranch, setAppointmentBranch] = useState("");
-  const [appointmentName, setAppointmentName] = useState("")
+  const [appointmentName, setAppointmentName] = useState("");
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
-  const [doctorId, setDoctorId] = useState('')
+  const [doctorId, setDoctorId] = useState("");
   const [startDateTimeDisp, setStartDateTimeDisp] = useState<string>("");
   // const [endDateTime, setEndDateTime] = useState<string>("");
 
-  const [startDateTime, setStartDateTime] = useState('');
-  const [endDateTime, setEndDateTime] = useState('');
+  const [startDateTime, setStartDateTime] = useState("");
+  const [endDateTime, setEndDateTime] = useState("");
 
   //   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
-  // const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));   
+  // const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));
   // Default time
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
-
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -173,7 +176,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
-
 
   function extractTimeDisplay(datetimeStr: string): string {
     // Parse the ISO 8601 string into a Date object
@@ -209,10 +211,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
 
-
-
-
-  const [appointmentDate, setAppointmentDate] = useState("")
+  const [appointmentDate, setAppointmentDate] = useState("");
 
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
@@ -232,15 +231,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     setEmployeeShiftTime(newShiftTime); // Update the state variable
   };
 
-
-  const combineDateWithTime = (existingDateTime: string, newTime: Time): string => {
+  const combineDateWithTime = (
+    existingDateTime: string,
+    newTime: Time,
+  ): string => {
     const date = new Date(existingDateTime); // Get the existing date
     date.setHours(newTime.hour, newTime.minute, 0, 0); // Set new time, keep milliseconds as zero
     return date.toISOString(); // Convert to ISO string
   };
 
-
-  const handleTimeChangeAppointment = (time: Time, field: "startDateTime" | "endDateTime") => {
+  const handleTimeChangeAppointment = (
+    time: Time,
+    field: "startDateTime" | "endDateTime",
+  ) => {
     if (field === "startDateTime") {
       const updatedStartDateTime = combineDateWithTime(startDateTime, time);
 
@@ -250,8 +253,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setEndDateTime(updatedEndDateTime);
     }
   };
-
-
 
   const fetchPatientById = async (userId: string) => {
     setLoading(true);
@@ -265,18 +266,18 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           "Content-Type": "application/json",
         },
       });
-      setPatientName(response.data.name)
-      setPatientPhone(response.data.phone)
-      setPatientBloodGroup(response.data.bloodGroup)
-      setPatientEmail(response.data.email)
-      setPatientStatus(response.data.status)
-      setProfilePhoto(response.data.displayPicture)
+      setPatientName(response.data.name);
+      setPatientPhone(response.data.phone);
+      setPatientBloodGroup(response.data.bloodGroup);
+      setPatientEmail(response.data.email);
+      setPatientStatus(response.data.status);
+      setProfilePhoto(response.data.displayPicture);
       // setLastvisit(response.data.lastVisit)
-      setNotificationStatus(response.data.notificationStatus)
-      setBranchId(response.data.branchId)
-      setPatientDob(response.data.dob)
-      setGender(response.data.gender)
-      setPatientId(response.data.id)
+      setNotificationStatus(response.data.notificationStatus);
+      setBranchId(response.data.branchId);
+      setPatientDob(response.data.dob);
+      setGender(response.data.gender);
+      setPatientId(response.data.id);
     } catch (err) {
     } finally {
       setLoading(false);
@@ -315,7 +316,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     }
   };
 
-
   const convertTo24HourFormat = (time: string): string => {
     const [hoursMinutes, modifier] = time.split(" "); // Split "9:00 AM" into ["9:00", "AM"]
     let [hours, minutes] = hoursMinutes.split(":").map(Number); // Split "9:00" into [9, 00]
@@ -353,25 +353,24 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       setEmployeeDOB(parsedJson.dob);
       setEmployeeDesignation(parsedJson.designation);
       setEmployeeShiftTime(parsedJson.workingHours);
-      setEmployeeJoiningDate(users.createdAt)
-      setEmployeeBranch(users.branchId)
+      setEmployeeJoiningDate(users.createdAt);
+      setEmployeeBranch(users.branchId);
       console.log(users);
 
       const workingHours = parsedJson.workingHours; // e.g., "9:00 AM - 9:00 PM"
 
       if (workingHours) {
         const [startTime, endTime] = workingHours.split(" - "); // Split into start and end times
-  
+
         const formattedStartTime = convertTo24HourFormat(startTime);
         const formattedEndTime = convertTo24HourFormat(endTime);
-       
+
         // Update the state variables with the extracted values
         setEmployeeShiftStartTime(parseTime(formattedStartTime)); // Trim any extra whitespace
         setEmployeeShiftEndTime(parseTime(formattedEndTime));
 
         // console.log(`time is   ${parseTime(formattedStartTime)}`)
       }
-
     } catch (err) {
       console.error("Failed to fetch users.", err);
     } finally {
@@ -396,7 +395,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     const date = new Date(dateTime);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
+    const amPm = hours >= 12 ? "PM" : "AM";
 
     // Convert to 12-hour format
     hours = hours % 12 || 12;
@@ -419,14 +418,16 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   // };
   const extractDate = (dateTimeString: string | undefined): string => {
     if (!dateTimeString) {
-      console.error("Invalid dateTimeString provided to extractDate:", dateTimeString);
+      console.error(
+        "Invalid dateTimeString provided to extractDate:",
+        dateTimeString,
+      );
       return "N/A"; // Fallback value if dateTimeString is undefined or null
     }
 
     const [year, month, day] = dateTimeString.split("T")[0].split("-"); // Extract year, month, and day
     return `${day}/${month}/${year}`; // Rearrange into dd/mm/yyyy format
   };
-
 
   const fetchDoctors = async (branchId: string) => {
     setLoading(true);
@@ -443,14 +444,14 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           "Content-Type": "application/json",
         },
       });
-      const transformedDoctors: AutocompleteItem[] = response.data.rows.map((doctor: any) => ({
-        label: doctor.name,
-        value: doctor.id,
-        description: `${doctor.phone} | ${doctor.email}`,
-      }));
-      setDoctorList(transformedDoctors)
-
-
+      const transformedDoctors: AutocompleteItem[] = response.data.rows.map(
+        (doctor: any) => ({
+          label: doctor.name,
+          value: doctor.id,
+          description: `${doctor.phone} | ${doctor.email}`,
+        }),
+      );
+      setDoctorList(transformedDoctors);
     } catch (err) {
       // setError("Failed to fetch patients.");
     } finally {
@@ -472,17 +473,17 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       });
 
       const users = response.data;
-      setAppointmentDateTime(users.startDateTime)
-      setAppointmentPatientId(users.patientId)
-      setAppointmentBranch(users.branchId)
-      fetchUsers(users.doctorId)
-      setDoctorId(users.doctorId)
-      fetchDoctors(users.branchId)
-      setAppointmentName(users.name)
+      setAppointmentDateTime(users.startDateTime);
+      setAppointmentPatientId(users.patientId);
+      setAppointmentBranch(users.branchId);
+      fetchUsers(users.doctorId);
+      setDoctorId(users.doctorId);
+      fetchDoctors(users.branchId);
+      setAppointmentName(users.name);
       setStartDateTime(users.startDateTime);
       setEndDateTime(users.endDateTime);
-      setAppointmentDate(users.dateTime)
-      setPatientId(users.patientId)
+      setAppointmentDate(users.dateTime);
+      setPatientId(users.patientId);
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
 
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
@@ -491,44 +492,50 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       // setShiftEndTime(endTimeObject)
 
       const startTimeObject = extractTimeDisplay(users.startDateTime);
-      console.log(parseTime(startTimeObject))
+      console.log(parseTime(startTimeObject));
       const endTimeObject = extractTimeDisplay(users.endDateTime);
 
-      setShiftStartTime(users.startDateTime ? parseTime(startTimeObject) : null)
-      setStartDateTimeDisp(startTimeObject)
+      setShiftStartTime(
+        users.startDateTime ? parseTime(startTimeObject) : null,
+      );
+      setStartDateTimeDisp(startTimeObject);
 
-      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject) : null)
-      console.log(`time is ${parseTime(startTimeObject)}`)
+      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject) : null);
+      console.log(`time is ${parseTime(startTimeObject)}`);
     } catch (err) {
       console.error("Failed to fetch users.", err);
     } finally {
       setLoading(false);
     }
   };
-   
 
   useEffect(() => {
-    if (props.type === MODAL_TYPES.VIEW_PATIENT || props.type === MODAL_TYPES.EDIT_PATIENT || props.type === MODAL_TYPES.DELETE_PATIENT) {
+    if (
+      props.type === MODAL_TYPES.VIEW_PATIENT ||
+      props.type === MODAL_TYPES.EDIT_PATIENT ||
+      props.type === MODAL_TYPES.DELETE_PATIENT
+    ) {
       fetchPatientById(props.userId);
-      fetchLastVisitData(props.userId)
-    }
-
-    else if (props.type === MODAL_TYPES.VIEW_EMPLOYEE || props.type === MODAL_TYPES.EDIT_EMPLOYEE || props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
+      fetchLastVisitData(props.userId);
+    } else if (
+      props.type === MODAL_TYPES.VIEW_EMPLOYEE ||
+      props.type === MODAL_TYPES.EDIT_EMPLOYEE ||
+      props.type === MODAL_TYPES.DELETE_EMPLOYEE
+    ) {
       fetchUsers(props.userId);
-    }
-    else if (props.type === MODAL_TYPES.VIEW_APPOINTMENT || props.type === MODAL_TYPES.EDIT_APPOINTMENT || props.type === MODAL_TYPES.DELETE_APPOINTMENT) {
+    } else if (
+      props.type === MODAL_TYPES.VIEW_APPOINTMENT ||
+      props.type === MODAL_TYPES.EDIT_APPOINTMENT ||
+      props.type === MODAL_TYPES.DELETE_APPOINTMENT
+    ) {
       fetchAppointments(props.userId);
     }
-
-  }, [props.type, props.userId])
-
+  }, [props.type, props.userId]);
 
   const editTime = () => {
     setEditVisitTime(!editVisitTime);
   };
   const editDoctor = () => {
-
-
     setEditDoctor(!editSelectedDoctor);
   };
 
@@ -561,12 +568,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         status: patientStatus,
         notificationStatus: notificationStatus,
         dob: patientDob,
-        gender: gender
+        gender: gender,
       };
 
       props.onDataChange(updatedData);
-    }
-    else if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
+    } else if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
       const updatedData = {
         branchId: emloyeeBranch,
         name: employeeName,
@@ -575,12 +581,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         json: JSON.stringify({
           dob: employeeDOB,
           designation: employeeDesignation,
-          workingHours: employeeShiftTime
-        })
-      }
+          workingHours: employeeShiftTime,
+        }),
+      };
       props.onDataChange(updatedData);
-    }
-    else if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
+    } else if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
       const updatedData = {
         name: appointmentName,
         branchId: appointmentBranch,
@@ -588,11 +593,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         patientId: appointmentPatientId,
         startDateTime: startDateTime,
         endDateTime: endDateTime,
-        type: "0151308b-6419-437b-9b41-53c7de566724"
-      }
+        type: "0151308b-6419-437b-9b41-53c7de566724",
+      };
       props.onDataChange(updatedData);
     }
-
   }, [
     branchId,
     patientName,
@@ -615,18 +619,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     doctorId,
     appointmentPatientId,
     startDateTime,
-    endDateTime
-
+    endDateTime,
   ]);
 
   const editBloodGroup = () => {
     setEditPatientBloodGroup(!editSelectedPatientBloodGroup);
   };
 
-
   const handleDateChange = (newDate: ZonedDateTime) => {
     setSelectedDate(newDate);
-
   };
 
   const editEmployeeName = () => {
@@ -671,7 +672,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   };
 
   const handleProfilePhotoChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -742,10 +743,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       key: "3",
       label: "Blaclisted",
     },
-   
   ];
-
-
 
   // const extractDate = (dateTimeString: string): string => {
   //   if (!dateTimeString) {
@@ -760,13 +758,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   //   }
   //   return dateTimeString.split("T")[1]?.split(".")[0]; // Extract the time portion
   // };
-
-
-
-
-
-
-
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
@@ -785,10 +776,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           shadow="sm"
         >
           <CardBody>
-            <div className="relative overflow-hidden" >
+            <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
-                  }`}
+                className={`flex transition-transform duration-500 ease-in-out ${
+                  showLastVisit ? "-translate-x-full" : "translate-x-0"
+                }`}
               >
                 <div className="flex-shrink-0 w-full">
                   <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
@@ -808,7 +800,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         <h3 className="font-semibold text-foreground/90">
                           Appointment Details
                         </h3>
-                        <StyledButton label={"Follow-up"} clickEvent={() => setShowLastVisit(true)} />
+                        <StyledButton
+                          label={"Follow-up"}
+                          clickEvent={() => setShowLastVisit(true)}
+                        />
                       </div>
 
                       <div className="space-y-3">
@@ -823,13 +818,16 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         <div className="flex items-center">
                           <SVGIconProvider iconName="clock" />
                           <p className="text-sm sm:text-medium ml-2">
-                            <strong>Visiting Time: </strong>  {extractTime(startDateTime)}-{extractTime(endDateTime)}
+                            <strong>Visiting Time: </strong>{" "}
+                            {extractTime(startDateTime)}-
+                            {extractTime(endDateTime)}
                           </p>
                         </div>
                         <div className="flex items-center">
                           <SVGIconProvider iconName="calendar" />
                           <p className="text-sm sm:text-medium ml-2">
-                            <strong>Date: </strong>{extractDate(appointmentDate)}
+                            <strong>Date: </strong>
+                            {extractDate(appointmentDate)}
                           </p>
                         </div>
                         <div className="flex items-center">
@@ -849,7 +847,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       </div>
                     </div>
                   </div>
-
                 </div>
                 <div className="flex-shrink-0 w-full">
                   <div className="w-full">
@@ -869,16 +866,12 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
-
-
           </CardBody>
         </Card>
       </>
     );
-
 
     // return (
     //   <>
@@ -961,7 +954,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     //                 <div className="flex items-center">
     //                   {/* <SVGIconProvider iconName="followup" /> */}
     //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong> 
+    //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong>
     //                   </p>
     //                 </div>
     //               </div>
@@ -970,8 +963,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
 
     //         ) : (
     //           // Patient Last Visit Details in Table
-
-
 
     //           <div className="w-full animate-fade-in">
     //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
@@ -1202,7 +1193,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     //     </Card>
     //   </>
     // );
-
   }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
@@ -1248,14 +1238,14 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       <p className="text-sm sm:text-medium ml-1">
                         <strong>Visiting Time: </strong>{" "}
                         {/* {extractTime(startDateTime)} */}
-
                         {extractTime(startDateTime)}-{extractTime(endDateTime)}
                       </p>
                     )}
 
                     {editVisitTime && (
                       <div
-                        className="  flex gap-4.5 xl:flex-row" style={{ marginTop: 20 }}
+                        className="  flex gap-4.5 xl:flex-row"
+                        style={{ marginTop: 20 }}
                       >
                         <TimeInput
                           color={TOOL_TIP_COLORS.secondary}
@@ -1267,8 +1257,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           onChange={(time) => {
                             handleTimeChangeAppointment(time, "startDateTime");
                             setShiftStartTime(time);
-                          }
-                          }
+                          }}
                         />
                         <TimeInput
                           color={TOOL_TIP_COLORS.secondary}
@@ -1279,12 +1268,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           value={shiftEndTime}
                           onChange={(time) => {
                             setShiftEndTime(time);
-                            handleTimeChangeAppointment(time, "endDateTime")
+                            handleTimeChangeAppointment(time, "endDateTime");
                           }}
                         />
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editVisitTime && (
                         <IconButton
                           iconName="edit"
@@ -1308,7 +1300,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       {extractDate(appointmentDate)}
                     </p>
                   </div>
-
 
                   <div className="flex items-center">
                     <div style={{ marginLeft: -5 }}>
@@ -1337,14 +1328,19 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             label="Select Doctor"
                             placeholder="Search a Doctor"
                             onSelectionChange={(key) => {
-                              const selectedDoctor = doctorList.find((doc) => doc.value === key);
+                              const selectedDoctor = doctorList.find(
+                                (doc) => doc.value === key,
+                              );
                               setDoctorId(key as string);
                               setEmployeeName(selectedDoctor?.label || "");
                             }}
-
                           >
                             {(item) => (
-                              <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
+                              <AutocompleteItem
+                                key={item.value}
+                                variant="shadow"
+                                color={TOOL_TIP_COLORS.secondary}
+                              >
                                 {item.label}
                               </AutocompleteItem>
                             )}
@@ -1352,7 +1348,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         </div>
                       </>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedDoctor && (
                         <IconButton
                           iconName="edit"
@@ -1383,7 +1382,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
       </>
     );
   }
-
 
   if (props.type === MODAL_TYPES.DELETE_APPOINTMENT) {
     return (
@@ -1452,11 +1450,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
           <CardBody>
             <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? '-translate-x-full' : 'translate-x-0'
-                  }`}
+                className={`flex transition-transform duration-500 ease-in-out ${
+                  showLastVisit ? "-translate-x-full" : "translate-x-0"
+                }`}
               >
                 <div className="flex-shrink-0 w-full">
-
                   {/* patient details */}
                   <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
                     <div className="relative col-span-6 md:col-span-4">
@@ -1481,13 +1479,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         <div className="flex items-center">
                           <SVGIconProvider iconName="clock" />
                           <p className="text-sm sm:text-medium ml-2">
-                            <strong>Patient Name: </strong>{patientName}
+                            <strong>Patient Name: </strong>
+                            {patientName}
                           </p>
                         </div>
                         <div className="flex items-center">
                           <SVGIconProvider iconName="clock" />
                           <p className="text-sm sm:text-medium ml-2">
-                            <strong>Last Visit: </strong>{(lastVisit)}
+                            <strong>Last Visit: </strong>
+                            {lastVisit}
                           </p>
                         </div>
                         <div className="flex items-center">
@@ -1501,7 +1501,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             <SVGIconProvider iconName="doctor" />
                           </div>
                           <p className="text-sm sm:text-medium ml-2">
-                            <strong>Last Appointed Doctor: </strong> {lastAppointedDoctor}
+                            <strong>Last Appointed Doctor: </strong>{" "}
+                            {lastAppointedDoctor}
                           </p>
                         </div>
 
@@ -1532,11 +1533,9 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             <strong>See Previous Visits</strong>
                           </p>
                         </div>
-
                       </div>
                     </div>
                   </div>
-
                 </div>
 
                 <div className="flex-shrink-0 w-full">
@@ -1558,15 +1557,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                     </div>
                   </div>
                 </div>
-
-
-
               </div>
-
             </div>
-
-
-
           </CardBody>
         </Card>
       </>
@@ -1648,13 +1640,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           labelPlacement="outside"
                           value={patientName}
                           onChange={(e) => {
-                            setPatientName(e.target.value)
-
+                            setPatientName(e.target.value);
                           }}
                         />
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedPatient && (
                         <IconButton
                           iconName="edit"
@@ -1726,9 +1720,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       >
                         <Dropdown>
                           <DropdownTrigger>
-                            <Button variant="bordered">
-                              {patientStatus}
-                            </Button>
+                            <Button variant="bordered">{patientStatus}</Button>
                           </DropdownTrigger>
                           <DropdownMenu
                             aria-label="Dynamic Actions"
@@ -1736,9 +1728,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             onAction={(key) => {
                               setPatientStatus(
                                 statusGroupList.find((item) => item.key === key)
-                                  ?.label ?? patientStatus
-                              )
-
+                                  ?.label ?? patientStatus,
+                              );
                             }}
                           >
                             {(item) => (
@@ -1758,7 +1749,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         </Dropdown>
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedPatientStatus && (
                         <IconButton
                           iconName="edit"
@@ -1793,13 +1787,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           labelPlacement="outside"
                           value={patientEmail}
                           onChange={(e) => {
-                            setPatientEmail(e.target.value)
-
+                            setPatientEmail(e.target.value);
                           }}
                         />
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedPatientEmail && (
                         <IconButton
                           iconName="edit"
@@ -1839,9 +1835,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             onAction={(key) => {
                               setPatientBloodGroup(
                                 bloodGroupList.find((item) => item.key === key)
-                                  ?.label ?? patientBloodGroup
-                              )
-
+                                  ?.label ?? patientBloodGroup,
+                              );
                             }}
                           >
                             {(item) => (
@@ -1861,7 +1856,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                         </Dropdown>
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedPatientBloodGroup && (
                         <IconButton
                           iconName="edit"
@@ -1895,13 +1893,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           labelPlacement="outside"
                           value={patientPhone}
                           onChange={(e) => {
-                            setPatientPhone(e.target.value)
-
+                            setPatientPhone(e.target.value);
                           }}
                         />
                       </div>
                     )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                    <div
+                      className="flex items-center"
+                      style={{ marginLeft: 10 }}
+                    >
                       {!editSelectedPatientPhone && (
                         <IconButton
                           iconName="edit"
@@ -1954,7 +1954,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
     );
   }
 
-
   if (props.type === MODAL_TYPES.DELETE_PATIENT) {
     return (
       <>
@@ -1980,7 +1979,8 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
             <div className="flex items-center">
               <SVGIconProvider iconName="calendar" />
               <p className="text-sm sm:text-medium ml-2">
-                <strong>email: </strong>{patientEmail}
+                <strong>email: </strong>
+                {patientEmail}
               </p>
             </div>
             <div className="flex items-center">
@@ -1998,11 +1998,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   if (props.type === MODAL_TYPES.VIEW_EMPLOYEE) {
     return (
       <>
-        {loading ? <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
-          <Spinner size="lg" />
-        </div> :
-
-
+        {loading ? (
+          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <Spinner size="lg" />
+          </div>
+        ) : (
           <Card
             // isBlurred
             className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
@@ -2032,13 +2032,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                     <div className="flex items-center">
                       <SVGIconProvider iconName="user" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>Name: </strong>{employeeName}
+                        <strong>Name: </strong>
+                        {employeeName}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="email" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>email: </strong>{employeeEmail}
+                        <strong>email: </strong>
+                        {employeeEmail}
                       </p>
                     </div>
                     <div className="flex items-center">
@@ -2050,13 +2052,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                     <div className="flex items-center">
                       <SVGIconProvider iconName="icard" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>Designation: </strong>{employeeDesignation}
+                        <strong>Designation: </strong>
+                        {employeeDesignation}
                       </p>
                     </div>
                     <div className="flex items-center">
                       <SVGIconProvider iconName="clock" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>Working Hours: </strong>{employeeShiftTime}
+                        <strong>Working Hours: </strong>
+                        {employeeShiftTime}
                       </p>
                     </div>
                     <div className="flex items-center">
@@ -2084,8 +2088,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
               </div>
             </CardBody>
           </Card>
-        }
-
+        )}
       </>
     );
   }
@@ -2093,10 +2096,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
   if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
     return (
       <>
-        {loading ?
+        {loading ? (
           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
             <Spinner size="lg" />
-          </div> :
+          </div>
+        ) : (
           <Card
             // isBlurred
             className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
@@ -2164,7 +2168,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           />
                         </div>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployee && (
                           <IconButton
                             iconName="edit"
@@ -2202,7 +2209,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           />
                         </div>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployeeEmail && (
                           <IconButton
                             iconName="edit"
@@ -2239,7 +2249,10 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           />
                         </div>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployeePhone && (
                           <IconButton
                             iconName="edit"
@@ -2257,7 +2270,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       </div>
                     </div>
                     <div className="flex items-center">
-                    {/* <div style={{ marginLeft: -5 }}>
+                      {/* <div style={{ marginLeft: -5 }}>
                       <SVGIconProvider iconName="icard" />
                       </div>
                       <p className="text-sm sm:text-medium ml-2">
@@ -2266,25 +2279,23 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                       </p> */}
 
                       <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="doctor" />
-                    </div>
+                        <SVGIconProvider iconName="doctor" />
+                      </div>
 
-                    {!editSelectedEmployeeDesignation && (
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Designation: </strong> {employeeDesignation}
-                      </p>
-                    )}
+                      {!editSelectedEmployeeDesignation && (
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Designation: </strong> {employeeDesignation}
+                        </p>
+                      )}
                       {editSelectedEmployeeDesignation && (
                         <>
-                              <p className="text-sm sm:text-medium ml-2">
-                          <strong>Designation:</strong>
-                        </p>
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Designation:</strong>
+                          </p>
                           <div
                             className="flex items-center"
                             style={{ marginLeft: 10 }}
                           >
-
-
                             {/* <Input
                             type="text"
                             placeholder="Employee designation.."
@@ -2293,8 +2304,6 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             onChange={(e) => setEmployeeDesignation(e.target.value)}
                           /> */}
 
-
-
                             <Autocomplete
                               color={TOOL_TIP_COLORS.secondary}
                               isDisabled={!editSelectedEmployeeDesignation}
@@ -2302,26 +2311,37 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                               variant="bordered"
                               defaultItems={designations} // Use the designations array as items
                               label="Select Designation"
-                              placeholder={employeeDesignation || "Search Designation"}
-                              // selectedKeys={[selectedDesignation]} 
+                              placeholder={
+                                employeeDesignation || "Search Designation"
+                              }
+                              // selectedKeys={[selectedDesignation]}
                               onSelectionChange={(key) => {
-                                const selected = designations.find((designation) => designation.value === key);
+                                const selected = designations.find(
+                                  (designation) => designation.value === key,
+                                );
                                 setTempDesignation(selected?.label || "");
-                                setEmployeeDesignation(selected?.label || "")
-                                 // Temporarily set the designation
+                                setEmployeeDesignation(selected?.label || "");
+                                // Temporarily set the designation
                               }}
                             >
                               {(item) => (
-                                <AutocompleteItem key={item.value} variant="shadow" color={TOOL_TIP_COLORS.secondary}>
-                                  {item.label} {/* Display the label for each item */}
+                                <AutocompleteItem
+                                  key={item.value}
+                                  variant="shadow"
+                                  color={TOOL_TIP_COLORS.secondary}
+                                >
+                                  {item.label}{" "}
+                                  {/* Display the label for each item */}
                                 </AutocompleteItem>
                               )}
                             </Autocomplete>
-
                           </div>
                         </>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployeeDesignation && (
                           <IconButton
                             iconName="edit"
@@ -2353,30 +2373,39 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                             variant="bordered"
                             value={employeeShiftStartTime}
                             startContent={<SVGIconProvider iconName="clock" />}
-                            onChange={(e) => {handleTimeChange("start", e.toString())
-                              setEmployeeShiftStartTime(e)
+                            onChange={(e) => {
+                              handleTimeChange("start", e.toString());
+                              setEmployeeShiftStartTime(e);
                             }}
                             isDisabled={!editSelectedEmployeeShiftTime}
                           />
 
-                          <div className="flex items-center" style={{ marginLeft: 10 }}>
+                          <div
+                            className="flex items-center"
+                            style={{ marginLeft: 10 }}
+                          >
                             <TimeInput
                               color={TOOL_TIP_COLORS.secondary}
                               label="To"
                               labelPlacement="outside"
                               variant="bordered"
-                              value ={employeeShiftEndTime}
-                              startContent={<SVGIconProvider iconName="clock" />}
-                              onChange={(e) => {handleTimeChange("end", e.toString());
-                                setEmployeeShiftEndTime(e)
+                              value={employeeShiftEndTime}
+                              startContent={
+                                <SVGIconProvider iconName="clock" />
                               }
-                              }
+                              onChange={(e) => {
+                                handleTimeChange("end", e.toString());
+                                setEmployeeShiftEndTime(e);
+                              }}
                               isDisabled={!editSelectedEmployeeShiftTime}
                             />
                           </div>
                         </div>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployeeShiftTime && (
                           <IconButton
                             iconName="edit"
@@ -2462,17 +2491,17 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
                           style={{ marginLeft: 10 }}
                         >
                           <Input
-
                             type="date"
-
                             variant="bordered"
                             value={employeeDOB}
                             onChange={(e) => setEmployeeDOB(e.target.value)}
-
                           />
                         </div>
                       )}
-                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
                         {!editSelectedEmployeeDOB && (
                           <IconButton
                             iconName="edit"
@@ -2494,10 +2523,7 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
               </div>
             </CardBody>
           </Card>
-
-        }
-
-
+        )}
       </>
     );
   }
@@ -2508,10 +2534,11 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
           Are you sure you want to delete this employee?
         </h2>
-        {loading ?
+        {loading ? (
           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
             <Spinner size="lg" />
-          </div> :
+          </div>
+        ) : (
           <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-foreground/90">
@@ -2523,13 +2550,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
               <div className="flex items-center">
                 <SVGIconProvider iconName="user" />
                 <p className="text-sm sm:text-medium ml-2">
-                  <strong>Name: </strong>{employeeName}
+                  <strong>Name: </strong>
+                  {employeeName}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="email" />
                 <p className="text-sm sm:text-medium ml-2">
-                  <strong>email: </strong>{employeeEmail}
+                  <strong>email: </strong>
+                  {employeeEmail}
                 </p>
               </div>
               <div className="flex items-center">
@@ -2541,19 +2570,22 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
               <div className="flex items-center">
                 <SVGIconProvider iconName="icard" />
                 <p className="text-sm sm:text-medium ml-2">
-                  <strong>Designation: </strong>{employeeDesignation}
+                  <strong>Designation: </strong>
+                  {employeeDesignation}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="clock" />
                 <p className="text-sm sm:text-medium ml-2">
-                  <strong>Working Hours: </strong>{employeeShiftTime}
+                  <strong>Working Hours: </strong>
+                  {employeeShiftTime}
                 </p>
               </div>
               <div className="flex items-center">
                 <SVGIconProvider iconName="calendar" />
                 <p className="text-sm sm:text-medium ml-2">
-                  <strong>Joined On: </strong> {formatDateOne(employeeJoiningDate)}
+                  <strong>Joined On: </strong>{" "}
+                  {formatDateOne(employeeJoiningDate)}
                 </p>
               </div>
               <div className="flex items-center">
@@ -2572,13 +2604,15 @@ export default function ModalForm(props: { type: string, userId: string, onDataC
               </div>
             </div>
           </div>
-
-        }
-
+        )}
       </>
     );
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
-      return (<><AddAppointment onUsersAdded={() => { }} /></>);
+      return (
+        <>
+          <AddAppointment onUsersAdded={() => {}} />
+        </>
+      );
     }
   }
   return null;

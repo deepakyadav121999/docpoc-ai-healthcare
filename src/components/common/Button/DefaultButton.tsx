@@ -1,5 +1,4 @@
-
-const DefaultButton = (props:{label:string, clickEvent?:any}) => {
+const DefaultButton = (props: { label: string; clickEvent?: any }) => {
   return (
     <button
       style={{ height: 50 }}

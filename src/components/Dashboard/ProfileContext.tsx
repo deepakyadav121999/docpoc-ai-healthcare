@@ -22,7 +22,11 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
-export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
+export const ProfileProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   // Function to fetch or refresh the profile

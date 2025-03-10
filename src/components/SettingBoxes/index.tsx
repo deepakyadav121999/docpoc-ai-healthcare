@@ -4,16 +4,19 @@ import Image from "next/image";
 import axios from "axios";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useDisclosure } from "@nextui-org/react";
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { updateAccessToken } from "@/store/slices/profileSlice";
+import { RootState } from "../../store";
+import { Spinner } from "@nextui-org/spinner";
+import { AppDispatch } from "../../store";
 const API_URL = process.env.API_URL;
-
 
 interface UserProfile {
   id: string;
   branchId: string | null;
   name: string;
-  phone: string |number| null;
+  phone: string | number | null;
   email: string;
   isActive: boolean;
   json: string;
@@ -29,32 +32,18 @@ const SettingBoxes = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
- const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
+  const profile = useSelector((state: RootState) => state.profile.data);
+  const [accessToken, setAccessToken] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
 
-  const fetchProfile = async () => {
-    setLoading(true)
+  const fetchProfiles = async () => {
+    setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
     // const profileEndpoint = `${API_URL}/auth/profile`;
-  
+
     try {
-    //   // First API call to fetch profile data
-    //   const response = await axios.get(profileEndpoint, {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
-  
-    //   const profileData = response.data;
-
-
-      // setProfile(profileData); // Set the profile data after fetching
-  
-      // Once profile data is fetched, get the user details using the profile's id
-
-      const profile = useSelector((state: RootState) => state.profile.data);
-
       if (profile.id) {
         const userEndpoint = `${API_URL}/user/${profile.id}`;
         const userResponse = await axios.get(userEndpoint, {
@@ -63,32 +52,37 @@ const SettingBoxes = () => {
             "Content-Type": "application/json",
           },
         });
-  
+
         // Handle the user data response
-        console.log("User data:", userResponse.data);
-        setUserProfile(userResponse.data)
+        // console.log("User data:", userResponse.data);
+        setUserProfile(userResponse.data);
         setFormData(userResponse.data);
-        setLoading(false)
+        setLoading(false);
         // You can now use the user data as needed
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
   };
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
   const handleModalClose = () => {
+    dispatch(updateAccessToken(accessToken));
     setModalMessage({ success: "", error: "" });
     onClose();
   };
 
   const handleSave = async (e: React.FormEvent) => {
-    setLoading(true)
     e.preventDefault();
+    console.log("Save button clicked");
+    setLoading(true);
 
-    if (userProfile?.id) {
+    if (profile?.id) {
       const token = localStorage.getItem("docPocAuth_token");
       const userEndpoint = `${API_URL}/user`;
 
@@ -103,23 +97,47 @@ const SettingBoxes = () => {
         console.log("Profile updated successfully:", response.data);
         setModalMessage({ success: "Profile updated successfully", error: "" });
 
-        onOpen();
-
         setUserProfile(response.data);
-        setLoading(false)
-         // Update the state with the response
+        setFormData(response.data); // Update formData with the latest data
+
+        const newAccessToken = response.data.access_token;
+
+        if (newAccessToken) {
+          // Dispatch the updateAccessToken thunk
+
+          setAccessToken(newAccessToken);
+        }
       } catch (error) {
         console.error("Error updating profile:", error);
         setModalMessage({ success: "", error: "Error updating profile" });
+      } finally {
+        setLoading(false); // Ensure loading is set to false in both success and error cases
+        onOpen(); // Open the modal to show the message
       }
-      onOpen()
+    } else {
+      console.error("User profile ID is missing");
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProfile();
+    fetchProfiles();
   }, []);
 
+  useEffect(() => {
+    const header = document.querySelector("header");
+
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+  }, [isOpen]);
 
   return (
     <>
@@ -344,15 +362,24 @@ const SettingBoxes = () => {
                     className="flex justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
                     type="submit"
                   >
-                    Save
+                    {loading ? (
+                      <div className="flex gap-2">
+                        {" "}
+                        <p>Saving</p>{" "}
+                        <p>
+                          <Spinner size="sm" color="white" />{" "}
+                        </p>{" "}
+                      </div>
+                    ) : (
+                      <p>Save</p>
+                    )}
                   </button>
                   <EnhancedModal
-                isOpen={isOpen}
-                loading={loading}
-                modalMessage={modalMessage}
-                onClose={handleModalClose}
-              />
-
+                    isOpen={isOpen}
+                    loading={loading}
+                    modalMessage={modalMessage}
+                    onClose={handleModalClose}
+                  />
                 </div>
               </form>
             </div>

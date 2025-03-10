@@ -14,12 +14,15 @@ export const metadata: Metadata = {
 
 const current = ROUTES.APPOINTMENT;
 const Appointments = () => {
-
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="appointments" />
-        <TabDefaultWithRoute current={current} color={TOOL_TIP_COLORS.primary} options={APPOINTMENT_TAB_KEYS}/>
+        <TabDefaultWithRoute
+          current={current}
+          color={TOOL_TIP_COLORS.primary}
+          options={APPOINTMENT_TAB_KEYS}
+        />
 
         <AppointmentCalendar />
       </div>

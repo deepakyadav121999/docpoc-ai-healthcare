@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  GLOBAL_ACTION_ICON_COLOR,
-  GLOBAL_DANGER_COLOR,
-  
-} from "@/constants";
+import { GLOBAL_ACTION_ICON_COLOR, GLOBAL_DANGER_COLOR } from "@/constants";
 
 import React from "react";
 
 import ChartCircular from "../Charts/ChartCircular";
 import { ApexOptions } from "apexcharts";
-
 
 const Usages = () => {
   const series = [50, 200];
@@ -84,8 +79,8 @@ const Usages = () => {
             <div className="flex flex-col w-full justify-center">
               <div style={{ wordWrap: "break-word" }}>
                 <h3 style={{ color: GLOBAL_ACTION_ICON_COLOR }}>
-                  As your current app is the free version, storage is limited to 250
-                  Mega Bytes. Storage can be increased by either upgrade to
+                  As your current app is the free version, storage is limited to
+                  250 Mega Bytes. Storage can be increased by either upgrade to
                   premium or purchasing storage credits.
                 </h3>
               </div>

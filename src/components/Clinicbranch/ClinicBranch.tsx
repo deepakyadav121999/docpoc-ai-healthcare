@@ -15,7 +15,7 @@ import {
   ModalBody,
   Spinner,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import { TOOL_TIP_COLORS } from "@/constants";
@@ -30,9 +30,9 @@ const API_URL = process.env.API_URL;
 const ClinicBranch = () => {
   const [edit, setEdit] = useState(false);
   const [isMultipleBranch, setIsMultipleBranch] = useState(false);
-    const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-     const { isOpen, onOpen, onClose } = useDisclosure();
-      const [loading, setLoading] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [loading, setLoading] = useState(false);
   const [workingDays] = useState([
     "monday",
     "tuesday",
@@ -40,10 +40,8 @@ const ClinicBranch = () => {
     "thursday",
     "friday",
     "saturday",
-    "sunday"
+    "sunday",
   ]);
- 
-    
 
   // const [selectedDepartments] = useState([
   //   "orthopedics",
@@ -55,11 +53,11 @@ const ClinicBranch = () => {
   // const flipEdit = () => {
   //   // setEdit(!edit);
   // };
-  
+
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [detectedLocation, setDetectedLocation] = useState<string>("");
-  const[hospitalId,setHospitalId] = useState("")
+  const [hospitalId, setHospitalId] = useState("");
   const [clinicDetails, setClinicDetails] = useState({
     name: "",
     phone: "",
@@ -81,8 +79,7 @@ const ClinicBranch = () => {
     setSelectedDepartments(values);
   };
 
-
-   const locationDetact =()=>{
+  const locationDetact = () => {
     try {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -93,15 +90,15 @@ const ClinicBranch = () => {
           console.error("Error obtaining geolocation:", error);
           // alert("Failed to detect location. Please enable location services.");
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true },
       );
     } catch (error) {
       console.error("Error detecting location or creating hospital:", error);
       // alert("An error occurred while detecting location.");
     }
-   }
+  };
 
-   const handleModalClose = () => {
+  const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
@@ -110,7 +107,7 @@ const ClinicBranch = () => {
   };
   const handleDetectLocation = async () => {
     try {
-        locationDetact()
+      locationDetact();
       const hospitalData = {
         name: clinicDetails.name,
         phone: clinicDetails.phone,
@@ -124,23 +121,20 @@ const ClinicBranch = () => {
           shiftEnd: clinicDetails.shiftEnd,
           workingDays: selectedWorkingDays,
           multipleBranch: isMultipleBranch,
-          googleLocation: detectedLocation
+          googleLocation: detectedLocation,
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-    const response = await axios.get(`${API_URL}/hospital`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const { id } = response.data; 
+      const response = await axios.get(`${API_URL}/hospital`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const { id } = response.data;
       setHospitalId(id);
 
       // alert("Hospital created successfully");
-      
     } catch (error) {
       console.error("Error creating hospital:", error);
       // alert("Failed to create hospital.");
@@ -148,8 +142,8 @@ const ClinicBranch = () => {
   };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       const branchData = {
         hospitalId: hospitalId,
@@ -166,37 +160,33 @@ const ClinicBranch = () => {
           workingDays: selectedWorkingDays,
           departments: selectedDepartments,
           multipleBranch: isMultipleBranch,
-          googleLocation: detectedLocation
+          googleLocation: detectedLocation,
         }),
       };
       const token = localStorage.getItem("docPocAuth_token");
-      await axios.post(`${API_URL}/hospital/branch`, branchData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-        setModalMessage({
+      await axios.post(`${API_URL}/hospital/branch`, branchData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setModalMessage({
         success: "Hospital created successfully",
         error: ``,
       });
-      onOpen(); 
+      onOpen();
       // alert("Branch created successfully!");
     } catch (error) {
       console.error("Error creating branch:", error);
       // alert("Failed to create branch.");
-        setModalMessage({
+      setModalMessage({
         success: "",
         error: `Error creating branch: ${error}`,
       });
-      onOpen(); 
+      onOpen();
     }
-    setLoading(false)
+    setLoading(false);
   };
-
- 
 
   return (
     <div className="grid grid-cols-1 gap-9 m-2">
@@ -209,12 +199,12 @@ const ClinicBranch = () => {
             </h3>
             <div>
               <Switch
-               checked={isMultipleBranch}
-               onChange={() => setIsMultipleBranch(!isMultipleBranch)}
+                checked={isMultipleBranch}
+                onChange={() => setIsMultipleBranch(!isMultipleBranch)}
                 size="lg"
                 color="secondary"
-                  // isDisabled={!edit}
-                  onClick={flipEdit}
+                // isDisabled={!edit}
+                onClick={flipEdit}
               >
                 Has Multiple Branch
               </Switch>
@@ -231,7 +221,7 @@ const ClinicBranch = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
                 <Input
                   key="inside"
@@ -243,7 +233,7 @@ const ClinicBranch = () => {
                   maxLength={15}
                   value={clinicDetails.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
                 <Input
                   key="inside"
@@ -254,7 +244,7 @@ const ClinicBranch = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
               </div>
               <div className="flex flex-col w-full">
@@ -264,7 +254,7 @@ const ClinicBranch = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedWorkingDays}
                   onChange={handleWorkingDaysChange}
-                isDisabled={!edit}
+                  isDisabled={!edit}
                 >
                   {workingDays.map((day) => (
                     <Checkbox key={day} value={day}>
@@ -285,7 +275,9 @@ const ClinicBranch = () => {
                   defaultValue={new Time(8, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleInputChange("shiftStart", time.toString())}
+                  onChange={(time) =>
+                    handleInputChange("shiftStart", time.toString())
+                  }
                 />
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
@@ -295,7 +287,9 @@ const ClinicBranch = () => {
                   defaultValue={new Time(6, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleInputChange("shiftEnd", time.toString())}
+                  onChange={(time) =>
+                    handleInputChange("shiftEnd", time.toString())
+                  }
                 />
               </div>
               <div style={{ marginTop: 20 }}>
@@ -325,7 +319,9 @@ const ClinicBranch = () => {
                   defaultItems={IndianStatesList}
                   label="Select State"
                   placeholder="Search a state"
-                  onSelectionChange={(state) => handleInputChange("state", state as string)}
+                  onSelectionChange={(state) =>
+                    handleInputChange("state", state as string)
+                  }
                 >
                   {(IndianStatesList) => (
                     <AutocompleteItem
@@ -348,10 +344,13 @@ const ClinicBranch = () => {
                   maxLength={6}
                   value={clinicDetails.pincode}
                   onChange={(e) => handleInputChange("pincode", e.target.value)}
-                isDisabled={!edit}
+                  isDisabled={!edit}
                 />
               </div>
-              <div className="flex flex-col gap-4.5 xl:flex-row" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col gap-4.5 xl:flex-row"
+                style={{ marginTop: 20 }}
+              >
                 <Input
                   key="location"
                   variant="bordered"
@@ -361,7 +360,7 @@ const ClinicBranch = () => {
                   value={detectedLocation}
                   isReadOnly
                   color={TOOL_TIP_COLORS.secondary}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 />
 
                 <button
@@ -381,7 +380,7 @@ const ClinicBranch = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedDepartments}
                   onChange={handleDepartmentsChange}
-                    isDisabled={!edit}
+                  isDisabled={!edit}
                 >
                   {medicalDepartments.map((department) => (
                     <Checkbox key={department.value} value={department.value}>
@@ -393,13 +392,10 @@ const ClinicBranch = () => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Leave unchecked if appointments from your website needs admin(s)
-                  action to confirm booking.
+                  Leave unchecked if appointments from your website needs
+                  admin(s) action to confirm booking.
                 </label>
-                <Checkbox color={TOOL_TIP_COLORS.secondary} 
-                isDisabled={!edit}
-                >
-                  
+                <Checkbox color={TOOL_TIP_COLORS.secondary} isDisabled={!edit}>
                   All appointments gets confirmed by default.
                 </Checkbox>
               </div>
@@ -418,7 +414,7 @@ const ClinicBranch = () => {
                 Save Changes
               </button>
 
-                {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
+              {/* <Modal isOpen={isOpen} onClose={handleModalClose}>
                 <ModalContent>
                   <ModalHeader>{loading ?(<div className="flex justify-center">
                       

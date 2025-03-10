@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { GLOBAL_ICON_COLOR_WHITE} from "@/constants";
+import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
 
 import ChartLine from "../Charts/ChartLine";
 import { ApexOptions } from "apexcharts";
@@ -8,7 +8,6 @@ import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import DataTable from "./DataTable";
-
 
 export default function App() {
   const dataStatsList: dataStatsDefault[] = [
@@ -41,8 +40,6 @@ export default function App() {
       growthRate: 6,
     },
   ];
-
-  
 
   const OverView = () => {
     const series = [
@@ -171,17 +168,9 @@ export default function App() {
             footer={footer}
           />
         </div>
-        
       </div>
     );
   };
 
-  
-
- 
-
-  return (
-   
-    <OverView/>
-  );
+  return <OverView />;
 }

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import { useEffect } from "react";
+// import { useRouter } from "next/navigation";
 import { SignOut } from "@/api/auth";
 const SignoutPage = () => {
   // const router = useRouter();
@@ -14,7 +14,7 @@ const SignoutPage = () => {
   //   }, 100);
   // }, [router]);
   // router.push("/");
-  SignOut()
+  SignOut();
 
   return null;
 };

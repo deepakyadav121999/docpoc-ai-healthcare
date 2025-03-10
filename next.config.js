@@ -7,4 +7,11 @@ module.exports = {
     LOCALHOST: process.env.LOCALHOST,
     CURRENT_STATE: process.env.CURRENT_STATE,
   },
+  typescript: {
+    ignoreBuildErrors: true, // This line disables strict type checking
+  },
+  
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };

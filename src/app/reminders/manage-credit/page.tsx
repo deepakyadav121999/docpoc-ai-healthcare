@@ -11,14 +11,18 @@ export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
 };
-const current = ROUTES.MANAGE_CREDIT
+const current = ROUTES.MANAGE_CREDIT;
 
 const RemindersPage = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Reminder Notifications" />
-        <TabDefaultWithRoute current={current}  options={REMINDER_TAB_KEYS} color={TOOL_TIP_COLORS.primary}/>
+        <TabDefaultWithRoute
+          current={current}
+          options={REMINDER_TAB_KEYS}
+          color={TOOL_TIP_COLORS.primary}
+        />
         <ManageCredit />
       </div>
     </DefaultLayout>

@@ -2,8 +2,60 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import axios from "axios";
+import { useEffect, useState } from "react";
+// import { UseDispatch } from "react-redux";
+
+const API_URL = process.env.API_URL;
+interface Profile {
+  id: string;
+  userName: string;
+  email: string;
+  name: string;
+  designation: string;
+  json: string;
+}
 
 const ProfileBox = () => {
+  const profile = useSelector((state: RootState) => state.profile.data);
+
+  const [profiles, setProfiles] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("docPocAuth_token");
+
+    const profileEndpoint = `${API_URL}/auth/profile`;
+
+    try {
+      if (profile && profile.id) {
+        const userEndpoint = `${API_URL}/user/${profile.id}`;
+        const userResponse = await axios.get(userEndpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        setProfiles(userResponse.data);
+        // Handle the user data response
+        console.log("User data profile", userResponse.data);
+        setLoading(false);
+        // You can now use the user data as needed
+      }
+      // Set the profile data after fetching
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
   return (
     <>
       <div className="overflow-hidden rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
@@ -95,7 +147,8 @@ const ProfileBox = () => {
           </div>
           <div className="mt-4">
             <h3 className="mb-1 text-heading-6 font-bold text-dark dark:text-white">
-              Danish Heilium
+              {/* Danish Heilium */}
+              <p>{profiles?.name ? profiles.name : "New user"}</p>
             </h3>
             <p className="font-medium">Ui/Ux Designer</p>
             <div className="mx-auto mb-5.5 mt-5 grid max-w-[370px] grid-cols-3 rounded-[5px] border border-stroke py-[9px] shadow-1 dark:border-dark-3 dark:bg-dark-2 dark:shadow-card">
@@ -124,11 +177,12 @@ const ProfileBox = () => {
                 About Me
               </h4>
               <p className="mt-4">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                {/* Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                 Pellentesque posuere fermentum urna, eu condimentum mauris
                 tempus ut. Donec fermentum blandit aliquet. Etiam dictum dapibus
                 ultricies. Sed vel aliquet libero. Nunc a augue fermentum,
-                pharetra ligula sed, aliquam lacus.
+                pharetra ligula sed, aliquam lacus. */}
+                {profiles?.json && profiles.json}
               </p>
             </div>
 

@@ -5,7 +5,7 @@ interface BreadcrumbProps {
 }
 
 const Breadcrumb = ({ pageName }: BreadcrumbProps) => {
-  const parts = pageName.split('/');
+  const parts = pageName.split("/");
   const isNested = parts.length > 1;
 
   return (
@@ -23,7 +23,7 @@ const Breadcrumb = ({ pageName }: BreadcrumbProps) => {
           </li>
           {isNested ? (
             parts.map((part, index) => {
-              const href = '/' + parts.slice(0, index + 1).join('/');
+              const href = "/" + parts.slice(0, index + 1).join("/");
               return (
                 <li key={index}>
                   {index < parts.length - 1 ? (

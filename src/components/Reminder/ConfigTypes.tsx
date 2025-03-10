@@ -48,9 +48,15 @@ export default function ConfigTypes(props: {
           </Switch>
         </div>
         <div className="flex flex-col w-full" style={{ marginTop: 10 }}>
-          <p>or enable notification for all patients above a certain age by entring age. </p>
+          <p>
+            or enable notification for all patients above a certain age by
+            entring age.{" "}
+          </p>
         </div>
-        <div className="flex flex-col w-full" style={{ maxWidth: 300, marginTop: 10 }}>
+        <div
+          className="flex flex-col w-full"
+          style={{ maxWidth: 300, marginTop: 10 }}
+        >
           <Input
             key="inside"
             type="number"

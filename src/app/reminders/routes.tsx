@@ -1,16 +1,15 @@
 import { ROUTES } from "@/constants/routes";
-export const REMINDER_TAB_KEYS ={
-   RemindersOverview:{
-    name:"Reminders Overview",
+export const REMINDER_TAB_KEYS = {
+  RemindersOverview: {
+    name: "Reminders Overview",
     screen: ROUTES.REMINDER_OVERVIEW,
-   },
-   ConfigureReminder:{
-    name:"Configure Reminder",
+  },
+  ConfigureReminder: {
+    name: "Configure Reminder",
     screen: ROUTES.CONFIGURE_REMINDER,
-   },
-   ManageCredit:{
+  },
+  ManageCredit: {
     name: "Manage Credit",
-    screen: ROUTES.MANAGE_CREDIT
-   } 
-
-}
+    screen: ROUTES.MANAGE_CREDIT,
+  },
+};

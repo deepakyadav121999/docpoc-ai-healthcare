@@ -13,7 +13,9 @@ export const DayView: React.FC = () => {
       const time = new Date();
       time.setHours(hour, minute, 0, 0);
       const hasBooking = appointments.some(
-        (appt) => appt.date.getHours() === time.getHours() && appt.date.getMinutes() === time.getMinutes()
+        (appt) =>
+          appt.date.getHours() === time.getHours() &&
+          appt.date.getMinutes() === time.getMinutes(),
       );
       return (
         <div

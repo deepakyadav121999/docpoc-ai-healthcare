@@ -8,18 +8,16 @@ export const metadata: Metadata = {
   description: "Manage easy.",
 };
 
-
 const PatientPage = () => {
   return (
     <>
-  
-    <DefaultLayout>
-      <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="Patients" />
+      <DefaultLayout>
+        <div className="mx-auto max-w-7xl">
+          <Breadcrumb pageName="Patients" />
 
-        <Patient />
-      </div>
-    </DefaultLayout>
+          <Patient />
+        </div>
+      </DefaultLayout>
     </>
   );
 };

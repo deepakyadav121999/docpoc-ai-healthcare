@@ -1,9 +1,7 @@
-import React from 'react'
-import DataStatsOne from '../DataStats/DataStatsOne';
+import React from "react";
+import DataStatsOne from "../DataStats/DataStatsOne";
 const PaymentDetails = () => {
+  return <DataStatsOne />;
+};
 
-    return <DataStatsOne />;
-  
-}
-
-export default PaymentDetails
+export default PaymentDetails;

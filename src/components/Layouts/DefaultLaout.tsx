@@ -32,11 +32,10 @@ export default function DefaultLayout({
   //       },
   //     });
 
-     
   //       const data = await response.data;
   //       const res = JSON.stringify(data, null, 2)
   //       setProfile( data?JSON.parse(res)  :null); // Store the profile in state
-       
+
   //   } catch (error) {
   //     console.error("Error fetching profile:", error);
   //   } finally {
@@ -49,10 +48,6 @@ export default function DefaultLayout({
   //   fetchProfile();
   // }, []);
 
-
-
-
-
   return (
     <>
       {/* <!-- ===== Page Wrapper Star ===== --> */}
@@ -64,7 +59,7 @@ export default function DefaultLayout({
         {/* <!-- ===== Content Area Star ===== --> */}
         <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
           {/* <!-- ===== Header Star ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}   />
+          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Star ===== --> */}

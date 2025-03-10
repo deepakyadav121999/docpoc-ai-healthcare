@@ -1,4 +1,12 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Spinner,
+} from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 // import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"; // Example: Heroicons
@@ -83,8 +91,12 @@ interface EnhancedModalProps {
   onClose: () => void; // Function to handle modal close
 }
 
-
-const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMessage, onClose }) => {
+const EnhancedModal: React.FC<EnhancedModalProps> = ({
+  isOpen,
+  loading,
+  modalMessage,
+  onClose,
+}) => {
   // const getIcon = () => {
   //   if (modalMessage.success) {
   //     return <CheckCircleIcon className="h-12 w-12 text-green-600" />;
@@ -94,14 +106,13 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
   //   return null;
   // };
 
-
- 
-
-
   return (
-    <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}
-    // style={{ margin: 0, marginTop:"50%", marginBottom: "60%"}}
-    className="mt-[30%] mb-[70%] sm:mt[10%] sm:mb-[10%]"
+    <Modal
+      backdrop={"blur"}
+      isOpen={isOpen}
+      onClose={onClose}
+      // style={{ margin: 0, marginTop:"50%", marginBottom: "60%"}}
+      className="mt-[30%] mb-[70%] sm:mt[10%] sm:mb-[10%]"
     >
       <ModalContent>
         <ModalHeader>
@@ -126,7 +137,9 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
               className="flex flex-col items-center text-center text-green-600"
-            >  <AnimatedSuccessIcon />
+            >
+              {" "}
+              <AnimatedSuccessIcon />
               <p className="text-lg font-semibold">{modalMessage.success}</p>
               {/* <motion.div
                 className="mt-4"
@@ -161,8 +174,8 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({ isOpen, loading, modalMes
               transition={{ duration: 0.3 }}
               className="flex flex-col items-center text-center text-red-600"
             >
-                {/* <ExclamationCircleIcon className="h-12 w-12" /> */}
-                <AnimatedErrorIcon />
+              {/* <ExclamationCircleIcon className="h-12 w-12" /> */}
+              <AnimatedErrorIcon />
               <p className="text-md font-semibold">{modalMessage.error}</p>
               {/* <motion.div
                 className="mt-4"

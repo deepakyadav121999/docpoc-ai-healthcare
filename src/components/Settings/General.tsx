@@ -192,8 +192,8 @@ const General = () => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Leave unchecked if appointments from your website needs admin(s)
-                  action to confirm booking.
+                  Leave unchecked if appointments from your website needs
+                  admin(s) action to confirm booking.
                 </label>
                 <Checkbox color={TOOL_TIP_COLORS.secondary} isDisabled={!edit}>
                   All appointments gets confirmed by default.

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
@@ -35,18 +35,17 @@ import AddAppointment from "./AddAppointment";
 import axios from "axios";
 import Appointments from "@/app/appointment/page";
 import { CalendarDate, parseDate } from "@internationalized/date";
-import debounce from 'lodash.debounce';
+import debounce from "lodash.debounce";
 import { DateInput } from "@nextui-org/react";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { color } from "framer-motion";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
   unsure: "warning",
-  
 };
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -73,7 +72,7 @@ interface appointments {
   startDateTime: string;
   endDateTime: string;
   dateTime: string;
-  statusName:string;
+  statusName: string;
 }
 
 // type User = (typeof Appointments)[0];
@@ -83,17 +82,19 @@ interface AppointmentListTableProps {
   endTime: string; // Add endTime prop
 }
 
-export default function AppointmentListTable({ startTime, endTime }: AppointmentListTableProps) {
+export default function AppointmentListTable({
+  startTime,
+  endTime,
+}: AppointmentListTableProps) {
   // const { isOpen, onOpen, onOpenChange } = useDisclosure();
- 
-  const profile = useSelector((state: RootState) => state.profile.data);
 
+  const profile = useSelector((state: RootState) => state.profile.data);
 
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
-  
+
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -102,8 +103,6 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
 
   const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
     useState(false);
-
-   
 
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
@@ -118,11 +117,10 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
-  const [statusCache, setStatusCache] = React.useState<Record<string, string>>({});
+  const [statusCache, setStatusCache] = React.useState<Record<string, string>>(
+    {},
+  );
 
-
-
-  
   useEffect(() => {
     localStorage.setItem("page", String(page));
   }, [page]);
@@ -132,14 +130,14 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
   }, [rowsPerPage]);
 
   const extractDate = (dateTimeString: string): string => {
-    const date = (dateTimeString);
+    const date = dateTimeString;
     return date && date.split("T")[0];
   };
   function extractTime(dateTime: string): string {
     const date = new Date(dateTime);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
+    const amPm = hours >= 12 ? "PM" : "AM";
 
     // Convert to 12-hour format
     hours = hours % 12 || 12;
@@ -170,14 +168,13 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     return `${hours}:${formattedMinutes}`;
   }
 
-  const singleDate = appointments.length > 0 ? extractDate(appointments[0].startDateTime) : null;
+  const singleDate =
+    appointments.length > 0 ? extractDate(appointments[0].startDateTime) : null;
 
   const fetchUsers = async () => {
-
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-
 
       // const hospitalEndpoint = `${API_URL}/hospital`;
       // const hospitalResponse = await axios.get(hospitalEndpoint, {
@@ -207,32 +204,28 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
 
       // Parse the JSON string if it exists
       const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-  
+
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
-      
+
       const endpoint = `${API_URL}/appointment/timeslot/${fetchedBranchId}`;
 
       const utcStartTime = convertLocalToUTC(startTime);
-    const utcEndTime = convertLocalToUTC(endTime);
+      const utcEndTime = convertLocalToUTC(endTime);
 
-    const params: any = {
-      page: page,
-      pageSize: rowsPerPage,
-      startDateTime : startTime,
-      endDateTime: endTime,
-     status:["visiting"],
-     from:startTime,
-     end:startTime
-    };
-    
-   
-      
+      const params: any = {
+        page: page,
+        pageSize: rowsPerPage,
+        startDateTime: startTime,
+        endDateTime: endTime,
+        status: ["visiting"],
+        from: startTime,
+        end: startTime,
+      };
 
       if (filterValue) {
         params.name = filterValue; // API should accept a "search" parameter for filtering
       }
-
 
       const response = await axios.get(endpoint, {
         params,
@@ -241,13 +234,12 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
           "Content-Type": "application/json",
         },
       });
-   console.log(response)
+      console.log(response);
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
       setTotalappointments(total);
       setTotalUsers(total);
       // console.log(total)
-
     } catch (err) {
       setError("Failed to fetch patients.");
     } finally {
@@ -255,12 +247,10 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     }
   };
 
-
   useEffect(() => {
     fetchUsers();
-
-  }, [page, rowsPerPage, filterValue, selectedDate,singleDate]);
-  console.log(totalappointments)
+  }, [page, rowsPerPage, filterValue, selectedDate, singleDate]);
+  console.log(totalappointments);
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
     const currentDate = new Date();
@@ -269,15 +259,15 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     const monthDifference = currentDate.getMonth() - birthDate.getMonth();
 
     // Adjust age if the birthday hasn't occurred yet this year
-    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
 
     return age;
   };
-
- 
-
 
   type User = (typeof appointments)[0];
   const hasSearchFilter = Boolean(filterValue);
@@ -285,7 +275,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -294,7 +284,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -302,15 +292,15 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
     return filteredUsers;
   }, [filterValue, statusFilter]);
 
-  const pages = totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
-
+  const pages =
+    totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
 
   const sortedItems = useMemo(() => {
     return [...appointments].sort((a: User, b: User) => {
@@ -330,7 +320,6 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     const cellValue = user[columnKey as keyof User];
 
     if (columnKey === "age") {
-
       let age = "";
       try {
         const userJson = JSON.parse(user.json);
@@ -349,8 +338,11 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       // console.log(startTime);
 
       const endTime = user.endDateTime;
-      return <p className="text-xs sm:text-sm ">{startTime}-{extractTime(endTime)}</p>;
-
+      return (
+        <p className="text-xs sm:text-sm ">
+          {startTime}-{extractTime(endTime)}
+        </p>
+      );
     }
     // if (columnKey === "date") {
     //   const startDate = extractDate(user.dateTime);
@@ -371,7 +363,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
         // console.error("Error parsing JSON:", error);
       }
     }
-  
+
     switch (columnKey) {
       case "name":
         return (
@@ -382,8 +374,6 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
           />
         );
 
-
-        
       case "name":
         return (
           <User
@@ -398,12 +388,12 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
         return (
           <div className="flex flex-col">
             <p className="font-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-xs capitalize text-gray-400">{ }</p>
+            <p className="text-xs capitalize text-gray-400">{}</p>
           </div>
         );
       case "status":
         // const status = user.startDateTime ? "visiting" : "declined";
-        const status =  user.statusName
+        const status = user.statusName;
         return (
           <Chip
             className="capitalize"
@@ -435,31 +425,31 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-
   }, []);
 
-
-  const onRowsPerPageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
+  const onRowsPerPageChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setRowsPerPage(Number(e.target.value));
+      setPage(1);
+    },
+    [],
+  );
 
   const toggleAddAppointment = useCallback(() => {
     setAddAppointmentModelToggle((prev) => !prev);
   }, []);
 
-
   //  const debouncedFetchUser = React.useMemo(
   //      () => debounce((value: string) => searchAppointments(), 500),
   //      [fetchUsers]
   //    );
-  
+
   const debouncedFetchUsers = useCallback(
     debounce((searchValue: string) => {
       setFilterValue(searchValue);
       fetchUsers();
     }, 500), // Adjust debounce time as needed
-    []
+    [],
   );
 
   const onSearchChange = React.useCallback((value?: string) => {
@@ -468,7 +458,6 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     // fetchUsers();
     //  debouncedFetchUser(value || "");
   }, []);
-
 
   const onClear = useCallback(() => {
     setFilterValue("");
@@ -479,7 +468,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
   const handleDateChange = (date: CalendarDate | null) => {
     if (date) {
       const jsDate = date.toDate(getLocalTimeZone());
-      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, '0')}-${String(jsDate.getDate()).padStart(2, '0')}`;
+      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
       setSelectedDate(formattedDate);
       setSelectedDateShow(formattedDate);
     } else {
@@ -487,7 +476,7 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       setSelectedDateShow(null);
     }
   };
-  
+
   const handleDateBlur = () => {
     if (!selectedDateShow) {
       setSelectedDate(null);
@@ -505,29 +494,28 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col gap-4 w-full">
-         
           <div className="flex flex-wrap sm:flex-nowrap gap-3 justify-between  sm:items-end w-full items-center">
             <Input
               isClearable
-            
-           className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
+              className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
               placeholder="Search by name..."
               startContent={<SearchIcon />}
               value={filterValue}
               onClear={() => onClear()}
               onValueChange={onSearchChange}
             />
-          
-           
           </div>
-        
         </div>
-
-   
       </div>
     );
-  }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);
-
+  }, [
+    onClear,
+    onSearchChange,
+    visibleColumns,
+    statusFilter,
+    filterValue,
+    onRowsPerPageChange,
+  ]);
 
   const paginationContent = (
     <div className="flex justify-end items-center w-full py-4">
@@ -568,15 +556,15 @@ export default function AppointmentListTable({ startTime, endTime }: Appointment
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
-            <TableColumn
-              key={column.uid}
-              allowsSorting={column.uid === "age"}
-            >
+            <TableColumn key={column.uid} allowsSorting={column.uid === "age"}>
               {column.name}
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No Appointment Available"} items={sortedItems}>
+        <TableBody
+          emptyContent={"No Appointment Available"}
+          items={sortedItems}
+        >
           {(item: User) => (
             <TableRow key={item.id}>
               {(columnKey) => (

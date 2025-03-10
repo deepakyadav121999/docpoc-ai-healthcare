@@ -11,15 +11,18 @@ export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
 };
-const current = ROUTES.PAYMENT_OVERVIRW
-
+const current = ROUTES.PAYMENT_OVERVIRW;
 
 const Overview = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Payment" />
-        <TabDefaultWithRoute current={current} options={PAYMENT_TAB_KEY} color={TOOL_TIP_COLORS.primary}/>
+        <TabDefaultWithRoute
+          current={current}
+          options={PAYMENT_TAB_KEY}
+          color={TOOL_TIP_COLORS.primary}
+        />
         <Payment />
       </div>
     </DefaultLayout>
