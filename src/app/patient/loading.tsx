@@ -1,25 +1,24 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import CalendarBox from "@/components/CalenderBox";
-import AddAppointment from "@/components/CalenderBox/AddAppointment";
+import { Spinner } from "@nextui-org/spinner";
 
 export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
 };
 
-
-const AddAppointmentPage = () => {
+const Loading = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="appointment/add" />
-
-        <AddAppointment />
+        <Breadcrumb pageName="Patients" />
+        <div className="flex justify-center items-center w-full h-full">
+          <Spinner size="lg" />
+        </div>
       </div>
     </DefaultLayout>
   );
 };
 
-export default AddAppointmentPage;
+export default Loading;

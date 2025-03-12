@@ -6,10 +6,14 @@ interface DataStatsDefaultProps {
   dataStatsList: dataStatsDefault[];
 }
 
-const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({ dataStatsList }) => {
+const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
+  dataStatsList,
+}) => {
   const columnLength = dataStatsList.length || 3;
   return (
-    <div className={`grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3`}>
+    <div
+      className={`grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3`}
+    >
       {dataStatsList.map((item, index) => (
         <div
           key={index}

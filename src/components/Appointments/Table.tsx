@@ -21,11 +21,14 @@ import {
   DatePicker,
   useDisclosure,
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
-import { ChevronDownIcon } from "./ChevronDownIcon";
-import { SearchIcon } from "./SearchIcon";
-import { columns, users, statusOptions } from "./data";
-import { capitalize } from "./utils";
+// import { PlusIcon } from "./PlusIcon";
+
+import { ChevronDownIcon } from "../CalenderBox/ChevronDownIcon";
+
+import { SearchIcon } from "../CalenderBox/SearchIcon";
+// import {users } from "./data";
+import { columns,  statusOptions, users } from "../CalenderBox/data";
+import { capitalize } from "../CalenderBox/utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
 import OpaqueDefaultModel from "../common/Modal/OpaqueDefaultModal";
@@ -48,11 +51,11 @@ const INITIAL_VISIBLE_COLUMNS = [
 type User = (typeof users)[0];
 
 export default function AppointmentTable() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -68,8 +71,8 @@ export default function AppointmentTable() {
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
-    return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+    return columns.filter((column:any) =>
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -78,7 +81,7 @@ export default function AppointmentTable() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -86,7 +89,7 @@ export default function AppointmentTable() {
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
@@ -132,7 +135,7 @@ export default function AppointmentTable() {
         return (
           <div className="flex flex-col">
             <p className="font-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-xs capitalize text-gray-400">{user.team}</p>
+            {/* <p className="text-xs capitalize text-gray-400">{user.team}</p> */}
           </div>
         );
       case "status":
@@ -156,6 +159,8 @@ export default function AppointmentTable() {
             }}
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
+            userId=""
+            onPatientDelete={()=>{}}
           />
         );
       default:
@@ -167,14 +172,17 @@ export default function AppointmentTable() {
     setPage(newPage);
   }, []);
 
-  const onRowsPerPageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
+  const onRowsPerPageChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setRowsPerPage(Number(e.target.value));
+      setPage(1);
+    },
+    [],
+  );
 
-  const toggleAddAppointment = useCallback(() => {
-    setAddAppointmentModelToggle((prev) => !prev);
-  }, []);
+  // const toggleAddAppointment = useCallback(() => {
+  //   setAddAppointmentModelToggle((prev) => !prev);
+  // }, []);
 
   const onSearchChange = useCallback((value?: string) => {
     setFilterValue(value || "");
@@ -224,7 +232,7 @@ export default function AppointmentTable() {
                   selectionMode="multiple"
                   onSelectionChange={setStatusFilter}
                 >
-                  {statusOptions.map((status) => (
+                  {statusOptions.map((status:any) => (
                     <DropdownItem key={status.uid} className="capitalize">
                       {capitalize(status.name)}
                     </DropdownItem>
@@ -249,14 +257,14 @@ export default function AppointmentTable() {
                   selectionMode="multiple"
                   onSelectionChange={setVisibleColumns}
                 >
-                  {columns.map((column) => (
+                  {columns.map((column:any) => (
                     <DropdownItem key={column.uid} className="capitalize">
                       {capitalize(column.name)}
                     </DropdownItem>
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModel />
+              <OpaqueDefaultModel child="" headingName=""/>
             </div>
           </div>
           <div className="flex justify-between items-center">
@@ -278,9 +286,15 @@ export default function AppointmentTable() {
         </div>
       </div>
     );
-  }, [onClear, onSearchChange, visibleColumns, statusFilter, filterValue, onRowsPerPageChange]);
+  }, [
+    onClear,
+    onSearchChange,
+    visibleColumns,
+    statusFilter,
+    filterValue,
+    onRowsPerPageChange,
+  ]);
 
-  
   const paginationContent = (
     <div className="flex justify-end items-center w-full py-4">
       <Button
@@ -319,11 +333,8 @@ export default function AppointmentTable() {
         onSelectionChange={setSelectedKeys}
       >
         <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              allowsSorting={column.uid === "age"}
-            >
+          {(column:any) => (
+            <TableColumn key={column.uid} allowsSorting={column.uid === "age"}>
               {column.name}
             </TableColumn>
           )}
@@ -341,14 +352,16 @@ export default function AppointmentTable() {
       {paginationContent}
       {addAppointmentModelToggle && (
         <OpaqueModal
-        modalType={{
-          view: MODAL_TYPES.VIEW_APPOINTMENT,
-          edit: MODAL_TYPES.EDIT_APPOINTMENT,
-          delete: MODAL_TYPES.DELETE_APPOINTMENT,
-        }}
-        actionButtonName={"Ok"}
-        modalTitle={"Appointment"}
-      />
+          modalType={{
+            view: MODAL_TYPES.VIEW_APPOINTMENT,
+            edit: MODAL_TYPES.EDIT_APPOINTMENT,
+            delete: MODAL_TYPES.DELETE_APPOINTMENT,
+          }}
+          actionButtonName={"Ok"}
+          modalTitle={"Appointment"}
+          onPatientDelete ={ () => {}}
+          userId ={""} 
+        />
       )}
     </>
   );

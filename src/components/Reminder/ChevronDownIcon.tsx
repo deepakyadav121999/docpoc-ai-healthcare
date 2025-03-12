@@ -1,7 +1,10 @@
 import React from "react";
-import {IconSvgProps} from "./types";
+import { IconSvgProps } from "./types";
 
-export const ChevronDownIcon = ({strokeWidth = 1.5, ...otherProps}: IconSvgProps) => (
+export const ChevronDownIcon = ({
+  strokeWidth = 1.5,
+  ...otherProps
+}: IconSvgProps) => (
   <svg
     aria-hidden="true"
     fill="none"

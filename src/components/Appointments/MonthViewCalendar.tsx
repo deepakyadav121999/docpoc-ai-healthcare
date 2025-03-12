@@ -11,7 +11,9 @@ export const MonthView: React.FC = () => {
   const changeMonth = (direction: "next" | "previous") => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(
-      direction === "next" ? selectedDate.getMonth() + 1 : selectedDate.getMonth() - 1
+      direction === "next"
+        ? selectedDate.getMonth() + 1
+        : selectedDate.getMonth() - 1,
     );
     setSelectedDate(newDate);
   };
@@ -38,7 +40,7 @@ export const MonthView: React.FC = () => {
       const date = new Date(year, month, i + 1);
       const isToday = date.toDateString() === new Date().toDateString();
       const hasBooking = appointments.some(
-        (appt) => appt.date.toDateString() === date.toDateString()
+        (appt) => appt.date.toDateString() === date.toDateString(),
       );
       return (
         <div

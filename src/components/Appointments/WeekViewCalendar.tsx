@@ -24,7 +24,7 @@ export const WeekView: React.FC = () => {
       date.setDate(startOfWeek.getDate() + i);
       const isToday = date.toDateString() === new Date().toDateString();
       const hasBooking = appointments.some(
-        (appt) => appt.date.toDateString() === date.toDateString()
+        (appt) => appt.date.toDateString() === date.toDateString(),
       );
       return (
         <div

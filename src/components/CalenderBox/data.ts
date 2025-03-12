@@ -2,6 +2,7 @@ const columns = [
   { name: "NAME", uid: "name", sortable: true },
   { name: "AGE", uid: "age", sortable: true },
   { name: "TIME", uid: "time", sortable: true },
+  { name: "DATE", uid: "date" },
   { name: "EMAIL", uid: "email" },
   { name: "STATUS", uid: "status", sortable: true },
   { name: "ACTIONS", uid: "actions" },
@@ -146,4 +147,4 @@ const users = [
   },
 ];
 
-export { columns, users, statusOptions };
+export { columns, statusOptions,users };

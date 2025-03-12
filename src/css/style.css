@@ -6,8 +6,8 @@
 
 :root {
   --primary: #3490dc;
-  --primary-light: #42A5F5;
-  --primary-dark: #1976D2;
+  --primary-light: #42a5f5;
+  --primary-dark: #1976d2;
   --background: #ffffff;
   --text-primary: #333333;
   --text-secondary: #ffffff;
@@ -24,11 +24,11 @@
 }
 
 .dark {
-  --background: #020D1A;
+  --background: #020d1a;
   --text-primary: #ffffff;
-  --primary-light: #1E3A8A;
+  --primary-light: #1e3a8a;
   --light-shadow: var(--dark-shadow);
-  --primary-dark: #1E40AF;
+  --primary-dark: #1e40af;
   --shadow-dark: rgba(0, 0, 0, 0.8);
   --calendar-background-color: var(--dark-background);
   --calendar-cell-color: var(--calendar-cell-color-dark);
@@ -44,7 +44,8 @@
   }
 }
 
-@layer components {}
+@layer components {
+}
 
 @layer utilities {
   /* Chrome, Safari and Opera */
@@ -195,7 +196,9 @@ span.flatpickr-weekday,
 }
 
 .flatpickr-day.inRange {
-  box-shadow: -5px 0 0 #f3f4f6, 5px 0 0 #f3f4f6 !important;
+  box-shadow:
+    -5px 0 0 #f3f4f6,
+    5px 0 0 #f3f4f6 !important;
   @apply dark:!shadow-datepicker;
 }
 
@@ -495,7 +498,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .custom-gradient-1 {
-  background-image: linear-gradient(145deg, #EEF 0%, #FFF8FC 100%);
+  background-image: linear-gradient(145deg, #eef 0%, #fff8fc 100%);
 }
 
 /* Additional Styles */
@@ -569,5 +572,3 @@ input[type="search"]::-webkit-search-cancel-button {
 .time {
   font-size: 32px;
 }
-
-

@@ -5,8 +5,13 @@ import GoogleSigninButton from "../GoogleSigninButton";
 import SignUpWithPassword from "../SignUpWithPassword";
 import StyledButton from "@/components/common/Button/StyledButton";
 
-export default function SignUp({setAuthPage}: {setAuthPage: any}) {
-
+export default function SignUp({
+  setAuthPage,
+  onLogin,
+}: {
+  setAuthPage: () => void;
+  onLogin: (token: string) => void;
+}) {
   return (
     <>
       <GoogleSigninButton text="Sign in" />
@@ -20,14 +25,14 @@ export default function SignUp({setAuthPage}: {setAuthPage: any}) {
       </div>
 
       <div>
-        <SignUpWithPassword />
+        <SignUpWithPassword setAuthPage={setAuthPage} onLogin={onLogin} />
       </div>
 
       <div className="mt-6 text-center">
-        <p>
-          Already have any account?{" "}
-        </p>
-        <StyledButton label={'Sign In'} clickEvent={setAuthPage}/>
+        <p>Already have any account? </p>
+        <Link href="/auth/signin">
+          <StyledButton label={"Sign In"} clickEvent={setAuthPage} />
+        </Link>
       </div>
     </>
   );

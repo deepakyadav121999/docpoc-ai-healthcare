@@ -1,10 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import GoogleSigninButton from "../GoogleSigninButton";
 import SigninWithPassword from "../SigninWithPassword";
 import StyledButton from "@/components/common/Button/StyledButton";
+import Link from "next/link";
 
-export default function Signin({ setAuthPage }: { setAuthPage: any }) {
+interface SignInProps {
+  setAuthPage: () => void;
+  onLogin: (token: string) => void;
+}
+
+const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
   return (
     <>
       <GoogleSigninButton text="Sign in" />
@@ -18,13 +24,17 @@ export default function Signin({ setAuthPage }: { setAuthPage: any }) {
       </div>
 
       <div>
-        <SigninWithPassword />
+        <SigninWithPassword setAuthPage={setAuthPage} onLogin={onLogin} />
       </div>
 
       <div className="mt-6 text-center">
         <p>Don’t have any account? </p>
-        <StyledButton label={'Sign Up'} clickEvent={setAuthPage}/>
+        <Link href="/auth/signup">
+          {" "}
+          <StyledButton label={"Sign Up"} clickEvent={setAuthPage} />
+        </Link>
       </div>
     </>
   );
-}
+};
+export default SignIn;

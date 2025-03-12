@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -9,40 +9,64 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
-import AddAppointment from "@/components/CalenderBox/AddAppointment";
 
-export default function App() {
+interface ParentComponentProps {
+  child: React.ReactNode;
+  headingName: string;
+}
+
+const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+  }, [isOpen]);
+
   return (
-    <>
+    <div>
       <Button
         color="primary"
         endContent={<PlusIcon />}
         onPress={onOpen}
-        style={{ minHeight: 55 }}
+        className="responsive-button"
+        // style={{ minHeight: 55 }}
       >
         Add New
       </Button>
+
       <Modal
         backdrop="opaque"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        style={{maxWidth: 800, maxHeight: 600, overflowY: "scroll", marginTop: '15%'}}
+        style={{
+          maxWidth: 800,
+          maxHeight: 600,
+          overflowY: "scroll",
+          marginTop: "10%",
+        }}
+        className="max-w-[95%] sm:max-w-[800px] mx-auto debug-border"
         classNames={{
           backdrop:
-            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+            "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
       >
-        <ModalContent>
+        <ModalContent className="modal-content">
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                Add New Appointment
+              <ModalHeader className="flex flex-col gap-0.5">
+                {headingName}
               </ModalHeader>
-              <ModalBody>
-                <AddAppointment />
-              </ModalBody>
+              <ModalBody className="modal-body">{child}</ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
@@ -52,6 +76,60 @@ export default function App() {
           )}
         </ModalContent>
       </Modal>
-    </>
-  );
+
+      <style>
+        {" "}
+        {`
+        /* Base styling for the button */
+        .responsive-button {
+          min-height: 55px;
+          font-size: 1rem;
+          padding: 0.8rem 1.5rem;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+          .responsive-button {
+            font-size: 0.9rem; /* Smaller font size */
+            padding: 0.7rem 1.2rem; /* Reduced padding */
+            min-height: 50px; /* Smaller height */
+          }
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh; /* Adjust as needed */
+  overflow-y: auto;
+  width: 97%; /* Adjust as needed */
+  max-width: 800px; /* Adjust as needed */
+  // background: white;
+  border-radius: 15px;
+  padding-top:10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Ensure the modal is scrollable */
+.modal-body {
+  max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+  overflow-y: auto;
+}
+        }
+
+        @media (max-width: 480px) {
+          .responsive-button {
+            font-size: 0.7rem; /* Further reduce font size */
+            padding: 0.5rem 0.9rem; /* Further reduce padding */
+            min-height: 40px; /* Smaller height */
+          } 
+        }
+
+
+
+      `}
+      </style>
+    </div>
+  );
+};
+
+export default App;

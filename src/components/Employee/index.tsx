@@ -1,55 +1,282 @@
 "use client";
-import React from "react";
-import { GLOBAL_ICON_COLOR_WHITE, TOOL_TIP_COLORS } from "@/constants";
-import DataStatsOne from "../DataStats/DataStatsOne";
-import TabDefault from "../common/Tab";
+import React, { useEffect, useState } from "react";
+import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
+
 import ChartLine from "../Charts/ChartLine";
-import DataTable from "./DataTable";
+import { Spacer } from "@nextui-org/react";
 import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { ApexOptions } from "apexcharts";
-import UserGroup from "./UserGroup";
-import UserAccess from "./UserAccess";
+import axios from "axios";
+import CustomCard from "./CustomCard";
+import { Spinner } from "@nextui-org/spinner";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+const API_URL = process.env.API_URL;
 
 export default function App() {
-  const dataStatsList: dataStatsDefault[] = [
-    {
-      icon: (
-        <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE}/>
-      ),
-      color: "#4b9c78",
-      title: "new doctors (since last month)",
-      value: "Total Doctors: 3",
-      growthRate: 0,
-    },
-    {
-      icon: (
-        <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />
-      ),
-      color: "#FF9C55",
-      title: "new employees (since last month)",
-      value: "Total Staff: 10",
-      growthRate: 2,
-    },
-    {
-      icon: (
-        <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
-      ),
-      color: "#8155FF",
-      title: "new nurses (since last month)",
-      value: "Total Nurses: 6",
-      growthRate: 0,
-    }
-  ];
+  const profile = useSelector((state: RootState) => state.profile.data);
+  const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [brancId, setBranchId] = useState();
 
+  // const dataStatsList: dataStatsDefault[] = [
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE}/>
+  //     ),
+  //     color: "#4b9c78",
+  //     title: "new doctors (since last month)",
+  //     value: "Total Doctors: 3",
+  //     growthRate: 0,
+  //   },
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />
+  //     ),
+  //     color: "#FF9C55",
+  //     title: "new employees (since last month)",
+  //     value: "Total Staff: 10",
+  //     growthRate: 2,
+  //   },
+  //   {
+  //     icon: (
+  //       <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+  //     ),
+  //     color: "#8155FF",
+  //     title: "new nurses (since last month)",
+  //     value: "Total Nurses: 6",
+  //     growthRate: 0,
+  //   }
+  // ];
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      //   setDataStatsList([
+      //     {
+      //       icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#4b9c78",
+      //       title: "new doctors (since last month)",
+      //       value: "Total Doctors: 0",
+      //       growthRate: 0,
+      //     },
+      //     {
+      //       icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#FF9C55",
+      //       title: "new employees (since last month)",
+      //       value: "Total Staff: 0",
+      //       growthRate: 0,
+      //     },
+      //     {
+      //       icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+      //       color: "#8155FF",
+      //       title: "new nurses (since last month)",
+      //       value: "Total Nurses: 0",
+      //       growthRate: 0,
+      //     },
+      //   ]);
+      //   setLoading(false)
+      //   return;
+      // }
+
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
+
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
+
+      // const fetchedBranchId = profileResponse.data?.branchId;
+
+      // const userProfile = localStorage.getItem("userProfile");
+
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+      // Extract the branchId from the user profile
+      const fetchedBranchId = profile?.branchId;
+
+      // console.log(fetchedHospitalId)
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
+
+      // const fetchedBranchId = branchResponse.data[0]?.id;
+
+      setBranchId(fetchedBranchId);
+
+      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+      const params = {
+        page: 1,
+        pageSize: 100,
+        from: "2024-12-04T03:32:25.812Z",
+        to: "2024-12-11T03:32:25.815Z",
+      };
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const users = response.data.rows || [];
+      console.log(users);
+      // Parse and count doctors, nurses, and staff
+      let doctorCount = 0;
+      let nurseCount = 0;
+      let staffCount = 0;
+
+      users.forEach((user: any) => {
+        setLoading(true);
+        try {
+          const parsedJson = JSON.parse(user.json || "{}");
+          const designation = parsedJson.designation?.toLowerCase();
+
+          if (designation === "doctor") {
+            doctorCount++;
+          } else if (designation === "nurse") {
+            nurseCount++;
+          } else {
+            staffCount++;
+          }
+        } catch (error) {
+          console.error("Error parsing user json:", error);
+        }
+      });
+
+      setDataStatsList([
+        {
+          icon: (
+            <SVGIconProvider
+              iconName="doctor"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
+          color: "#4b9c78",
+          title: "new doctors (since last month)",
+          value: `Total Doctors: ${doctorCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+        {
+          icon: (
+            <SVGIconProvider
+              iconName="employee"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
+          color: "#FF9C55",
+          title: "new employees (since last month)",
+          value: `Total Staff: ${staffCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+        {
+          icon: (
+            <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+          ),
+          color: "#8155FF",
+          title: "new nurses (since last month)",
+          value: `Total Nurses: ${nurseCount}`,
+          growthRate: 0, // Replace with actual growth rate logic if needed
+        },
+      ]);
+
+      setLoading(false);
+    } catch (error) {
+      console.log("Failed to fetch users:", error);
+      setDataStatsList([
+        {
+          icon: (
+            <SVGIconProvider
+              iconName="doctor"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
+          color: "#4b9c78",
+          title: "new doctors (since last month)",
+          value: "Total Doctors: 0",
+          growthRate: 0,
+        },
+        {
+          icon: (
+            <SVGIconProvider
+              iconName="employee"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
+          color: "#FF9C55",
+          title: "new employees (since last month)",
+          value: "Total Staff: 0",
+          growthRate: 0,
+        },
+        {
+          icon: (
+            <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+          ),
+          color: "#8155FF",
+          title: "new nurses (since last month)",
+          value: "Total Nurses: 0",
+          growthRate: 0,
+        },
+      ]);
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchUsers();
+    //  setDataStatsList([
+    //   {
+    //     icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#4b9c78",
+    //     title: "new doctors (since last month)",
+    //     value: "Total Doctors: 0",
+    //     growthRate: 0,
+    //   },
+    //   {
+    //     icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#FF9C55",
+    //     title: "new employees (since last month)",
+    //     value: "Total Staff: 0",
+    //     growthRate: 0,
+    //   },
+    //   {
+    //     icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+    //     color: "#8155FF",
+    //     title: "new nurses (since last month)",
+    //     value: "Total Nurses: 0",
+    //     growthRate: 0,
+    //   },
+    // ]);
+  }, []);
   const series = [
     {
       name: "Received Amount",
       data: [75, 60, 75, 90, 110, 180, 200],
-    }
+    },
   ];
-  
+
   const options: ApexOptions = {
     legend: {
       show: false,
@@ -92,7 +319,7 @@ export default function App() {
     stroke: {
       curve: "smooth",
     },
-  
+
     markers: {
       size: 0,
     },
@@ -132,15 +359,7 @@ export default function App() {
     },
     xaxis: {
       type: "category",
-      categories: [
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sept",
-        "Oct",
-        "Nov",
-        "Dec"
-      ],
+      categories: ["Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"],
       axisBorder: {
         show: false,
       },
@@ -157,21 +376,31 @@ export default function App() {
     },
   };
 
-  
   const OverView = () => {
     return (
-      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-        <div className="flex flex-col w-full">
-          <DataStatsDefault dataStatsList={dataStatsList} />
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full m-1">
+        <div className="flex flex-col w-full justify-between">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3">
+              {/* Render CustomCard components in a responsive grid */}
+              <CustomCard />
+              <CustomCard />
+              <CustomCard />
+            </div>
+          ) : (
+            <DataStatsDefault dataStatsList={dataStatsList} />
+          )}
         </div>
         <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
-          <ChartLine options={options} series={series} label="Total Strength Overview"/>
+          <ChartLine
+            options={options}
+            series={series}
+            label="Total Strength Overview"
+          />
         </div>
       </div>
     );
   };
 
-  return (
-    <OverView />
-  );
+  return <OverView />;
 }

@@ -24,7 +24,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "createdOn",
-  'totalTriggers',
+  "totalTriggers",
   "channels",
   "status",
 ];
@@ -34,10 +34,10 @@ type User = (typeof users)[0];
 export default function DataTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
+    new Set([]),
   );
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -53,7 +53,7 @@ export default function DataTable() {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -62,7 +62,7 @@ export default function DataTable() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -70,13 +70,12 @@ export default function DataTable() {
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
     return filteredUsers;
   }, [users, filterValue, statusFilter]);
-
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -102,11 +101,11 @@ export default function DataTable() {
       case "name":
         return (
           <div className="flex flex-col">
-          <p className="text-bold text-small capitalize">{cellValue}</p>
-          <p className="text-bold text-tiny capitalize text-default-400">
-            {user.name}
-          </p>
-        </div>
+            <p className="text-bold text-small capitalize">{cellValue}</p>
+            <p className="text-bold text-tiny capitalize text-default-400">
+              {user.name}
+            </p>
+          </div>
         );
       case "createdOn":
         return (
@@ -135,38 +134,39 @@ export default function DataTable() {
 
   return (
     <div>
-    <Table
-      aria-label="Appointment Details"
-      classNames={{
-        wrapper: "max-h-[482px] ",
-      }}
-      sortDescriptor={sortDescriptor}
-      onSelectionChange={setSelectedKeys}
-      onSortChange={setSortDescriptor}
-      style={{backgroundColor: 'var(--calendar-background-color)'}}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
-        {(item) => (
-          <TableRow key={item.id}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-    <style>{`
+      <Table
+        aria-label="Appointment Details"
+        classNames={{
+          wrapper: "max-h-[482px] ",
+        }}
+        sortDescriptor={sortDescriptor}
+        onSelectionChange={setSelectedKeys}
+        onSortChange={setSortDescriptor}
+        style={{ backgroundColor: "var(--calendar-background-color)" }}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={"No users found"} items={sortedItems}>
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <style>
+        {`
       :root {
         --calendar-background-color: #ecf0f1;
         --dark-background: #122031;
@@ -179,7 +179,7 @@ export default function DataTable() {
       .table-custom {
         background-color: var(--calendar-background-color);
       }`}
-    </style>
+      </style>
     </div>
   );
 }
