@@ -1,8 +1,144 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import axios from "axios";
+import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useDisclosure } from "@nextui-org/react";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { updateAccessToken } from "@/store/slices/profileSlice";
+import { RootState } from "../../store";
+import { Spinner } from "@nextui-org/spinner";
+import { AppDispatch } from "../../store";
+const API_URL = process.env.API_URL;
 
+interface UserProfile {
+  id: string;
+  branchId: string | null;
+  name: string;
+  phone: string | number | null;
+  email: string;
+  isActive: boolean;
+  json: string;
+  accessType: string;
+  createdBy: string | null;
+  modifiedBy: string | null;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
 const SettingBoxes = () => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [loading, setLoading] = useState(false);
+  const profile = useSelector((state: RootState) => state.profile.data);
+  const [accessToken, setAccessToken] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+
+  const fetchProfiles = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("docPocAuth_token");
+    // const profileEndpoint = `${API_URL}/auth/profile`;
+
+    try {
+      if (profile.id) {
+        const userEndpoint = `${API_URL}/user/${profile.id}`;
+        const userResponse = await axios.get(userEndpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        // Handle the user data response
+        // console.log("User data:", userResponse.data);
+        setUserProfile(userResponse.data);
+        setFormData(userResponse.data);
+        setLoading(false);
+        // You can now use the user data as needed
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  const handleModalClose = () => {
+    dispatch(updateAccessToken(accessToken));
+    setModalMessage({ success: "", error: "" });
+    onClose();
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Save button clicked");
+    setLoading(true);
+
+    if (profile?.id) {
+      const token = localStorage.getItem("docPocAuth_token");
+      const userEndpoint = `${API_URL}/user`;
+
+      try {
+        const response = await axios.patch(userEndpoint, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("Profile updated successfully:", response.data);
+        setModalMessage({ success: "Profile updated successfully", error: "" });
+
+        setUserProfile(response.data);
+        setFormData(response.data); // Update formData with the latest data
+
+        const newAccessToken = response.data.access_token;
+
+        if (newAccessToken) {
+          // Dispatch the updateAccessToken thunk
+
+          setAccessToken(newAccessToken);
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        setModalMessage({ success: "", error: "Error updating profile" });
+      } finally {
+        setLoading(false); // Ensure loading is set to false in both success and error cases
+        onOpen(); // Open the modal to show the message
+      }
+    } else {
+      console.error("User profile ID is missing");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+
+    if (header) {
+      // Only modify z-index when modal is open
+      if (isOpen) {
+        header.classList.remove("z-999");
+        header.classList.add("z-0");
+      } else {
+        header.classList.remove("z-0");
+        header.classList.add("z-999");
+      }
+    }
+  }, [isOpen]);
+
   return (
     <>
       <div className="grid grid-cols-5 gap-8">
@@ -14,7 +150,7 @@ const SettingBoxes = () => {
               </h3>
             </div>
             <div className="p-7">
-              <form>
+              <form onSubmit={handleSave}>
                 <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                   <div className="w-full sm:w-1/2">
                     <label
@@ -50,10 +186,11 @@ const SettingBoxes = () => {
                       <input
                         className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                         type="text"
-                        name="fullName"
+                        name="name"
                         id="fullName"
-                        placeholder="Devid Jhon"
-                        defaultValue="Devid Jhon"
+                        placeholder="name"
+                        value={formData.name || ""}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -87,10 +224,11 @@ const SettingBoxes = () => {
                       <input
                         className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                         type="text"
-                        name="phoneNumber"
+                        name="phone"
                         id="phoneNumber"
-                        placeholder="+990 3343 7865"
-                        defaultValue="+990 3343 7865"
+                        placeholder="+910000000000"
+                        value={formData.phone || ""}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -124,10 +262,11 @@ const SettingBoxes = () => {
                     <input
                       className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                       type="email"
-                      name="emailAddress"
+                      name="email"
                       id="emailAddress"
-                      placeholder="devidjond45@gmail.com"
-                      defaultValue="devidjond45@gmail.com"
+                      placeholder={userProfile?.email}
+                      value={formData.email || ""}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -168,8 +307,8 @@ const SettingBoxes = () => {
                       type="text"
                       name="Username"
                       id="Username"
-                      placeholder="devidjhon24"
-                      defaultValue="devidjhon24"
+                      placeholder={userProfile?.email}
+                      value={formData.email || ""}
                     />
                   </div>
                 </div>
@@ -206,8 +345,8 @@ const SettingBoxes = () => {
                       id="bio"
                       rows={6}
                       placeholder="Write your bio here"
-                      defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam lacinia turpis tortor, consequat efficitur mi congue a. Curabitur cursus, ipsum ut lobortis sodales, enim arcu pellentesque lectus
- ac suscipit diam sem a felis. Cras sapien ex, blandit eu dui et suscipit gravida nunc. Sed sed est quis dui."
+                      value={formData.json || ""}
+                      onChange={handleInputChange}
                     ></textarea>
                   </div>
                 </div>
@@ -215,7 +354,7 @@ const SettingBoxes = () => {
                 <div className="flex justify-end gap-3">
                   <button
                     className="flex justify-center rounded-[7px] border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
-                    type="submit"
+                    // type="submit"
                   >
                     Cancel
                   </button>
@@ -223,8 +362,24 @@ const SettingBoxes = () => {
                     className="flex justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
                     type="submit"
                   >
-                    Save
+                    {loading ? (
+                      <div className="flex gap-2">
+                        {" "}
+                        <p>Saving</p>{" "}
+                        <p>
+                          <Spinner size="sm" color="white" />{" "}
+                        </p>{" "}
+                      </div>
+                    ) : (
+                      <p>Save</p>
+                    )}
                   </button>
+                  <EnhancedModal
+                    isOpen={isOpen}
+                    loading={loading}
+                    modalMessage={modalMessage}
+                    onClose={handleModalClose}
+                  />
                 </div>
               </form>
             </div>

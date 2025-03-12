@@ -1,9 +1,9 @@
 import React from "react";
-import {CheckboxGroup} from "@nextui-org/react";
+import { CheckboxGroup } from "@nextui-org/react";
 import { CustomCheckbox } from "./CustomCheckbox";
 
 export default function UserGroup() {
-    const [groupSelected, setGroupSelected] = React.useState<string[]>([]);
+  const [groupSelected, setGroupSelected] = React.useState<string[]>([]);
 
   return (
     <div className="flex flex-col gap-1 w-full">
@@ -12,7 +12,7 @@ export default function UserGroup() {
         value={groupSelected}
         onChange={setGroupSelected}
         classNames={{
-          base: "w-full"
+          base: "w-full",
         }}
       >
         <CustomCheckbox

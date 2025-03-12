@@ -10,7 +10,7 @@ const columns = [
 
 const statusOptions = [
   { name: "Active", uid: "active" },
-  { name: "Inactive", uid: "Inactive" },
+  { name: "Inactive", uid: "inactive" },
   { name: "On Leave", uid: "onLeave" },
 ];
 

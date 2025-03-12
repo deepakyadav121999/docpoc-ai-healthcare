@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 };
 
 const PatientPage = () => {
-  const content =
-   `
+  const content = `
    
    <div class="section">
        <strong>Promotional notifications Feature:</strong>

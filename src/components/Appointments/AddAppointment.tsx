@@ -4,9 +4,9 @@ import {
   AutocompleteItem,
   Button,
   Checkbox,
-  CheckboxGroup,
-  Input,
-  Switch,
+  // CheckboxGroup,
+  // Input,
+  // Switch,
   Textarea,
   TimeInput,
 } from "@nextui-org/react";
@@ -16,36 +16,35 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import React from "react";
 import { IndianStatesList } from "@/constants/IndiaStates";
-import { medicalDepartments } from "@/constants/MedicalDepartments";
+// import { medicalDepartments } from "@/constants/MedicalDepartments";
 
 const AddAppointment = () => {
   const [edit, setEdit] = useState(true);
-  const [workingDays] = useState([
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ]);
+  // const [workingDays] = useState([
+  //   "monday",
+  //   "tuesday",
+  //   "wednesday",
+  //   "thursday",
+  //   "friday",
+  //   "saturday",
+  // ]);
 
-  const [selectedDepartments] = useState([
-    "orthopedics",
-    "dental",
-    "ent",
-    "pediatrics",
-  ]);
+  // const [selectedDepartments] = useState([
+  //   "orthopedics",
+  //   "dental",
+  //   "ent",
+  //   "pediatrics",
+  // ]);
 
-  const flipEdit = () => {
-    setEdit(!edit);
-  };
+  // const flipEdit = () => {
+  //   setEdit(!edit);
+  // };
   return (
-    <div className="grid grid-cols-1 gap-9" >
+    <div className="grid grid-cols-1 gap-9">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-           
             {/* <div>
               <Switch
                 defaultSelected
@@ -59,12 +58,8 @@ const AddAppointment = () => {
           </div>
           <form action="#">
             <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
-               
-              </div>
-              <div className="flex flex-col w-full">
-               
-              </div>
+              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
+              <div className="flex flex-col w-full"></div>
               <div
                 className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
@@ -148,9 +143,14 @@ const AddAppointment = () => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Mark uncheck if no notification has to be sent for appointment.
+                  Mark uncheck if no notification has to be sent for
+                  appointment.
                 </label>
-                <Checkbox color={TOOL_TIP_COLORS.secondary} defaultSelected={true} isDisabled={!edit}>
+                <Checkbox
+                  color={TOOL_TIP_COLORS.secondary}
+                  defaultSelected={true}
+                  isDisabled={!edit}
+                >
                   All appointments gets notified to the patient by default.
                 </Checkbox>
               </div>

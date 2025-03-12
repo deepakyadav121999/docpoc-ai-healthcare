@@ -31,7 +31,7 @@ const PricingTable: React.FC<PricingTableProps> = ({
   tableFooterText,
 }) => {
   const [selectedColor, setSelectedColor] = React.useState<TOOL_TIP_COLORS>(
-    TOOL_TIP_COLORS.success
+    TOOL_TIP_COLORS.success,
   );
   return (
     <div className="flex flex-col gap-3" style={{ marginTop: -30 }}>
@@ -58,11 +58,11 @@ const PricingTable: React.FC<PricingTableProps> = ({
         </TableBody>
       </Table>
       {tableFooterText && (
-        <div >
+        <div>
           {" "}
           <h4>{tableFooterText}</h4>{" "}
           <a
-            style={{color: GLOBAL_ACTION_ICON_COLOR }}
+            style={{ color: GLOBAL_ACTION_ICON_COLOR }}
             target="_blank"
             href="https://slicedinvoices.com/pdf/wordpress-pdf-invoice-plugin-sample.pdf"
           >

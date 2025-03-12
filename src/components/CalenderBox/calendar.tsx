@@ -1,7 +1,14 @@
 import React from "react";
-import {DatePicker, RadioGroup, Radio, ButtonGroup, Button, cn} from "@nextui-org/react";
-import {today} from "@internationalized/date";
-import {useLocale, useDateFormatter} from "@react-aria/i18n";
+import {
+  DatePicker,
+  RadioGroup,
+  Radio,
+  ButtonGroup,
+  Button,
+  cn,
+} from "@nextui-org/react";
+import { today } from "@internationalized/date";
+import { useLocale, useDateFormatter } from "@react-aria/i18n";
 import {
   DateValue,
   now,
@@ -11,19 +18,19 @@ import {
 } from "@internationalized/date";
 
 export default function App() {
-  let defaultDate = today(getLocalTimeZone());
+  const defaultDate = today(getLocalTimeZone());
 
   const [value, setValue] = React.useState<DateValue>(defaultDate);
 
-  let {locale} = useLocale();
-  let formatter = useDateFormatter({dateStyle: "full"});
+  const { locale } = useLocale();
+  const formatter = useDateFormatter({ dateStyle: "full" });
 
-  let now = today(getLocalTimeZone());
-  let nextWeek = startOfWeek(now.add({weeks: 1}), locale);
-  let nextMonth = startOfMonth(now.add({months: 1}));
+  const now = today(getLocalTimeZone());
+  const nextWeek = startOfWeek(now.add({ weeks: 1 }), locale);
+  const nextMonth = startOfMonth(now.add({ months: 1 }));
 
   const CustomRadio = (props: any) => {
-    const {children, ...otherProps} = props;
+    const { children, ...otherProps } = props;
 
     return (
       <Radio
@@ -52,7 +59,8 @@ export default function App() {
             aria-label="Date precision"
             classNames={{
               base: "w-full pb-2",
-              wrapper: "-my-2.5 py-2.5 px-3 gap-1 flex-nowrap max-w-[380px] overflow-x-scroll",
+              wrapper:
+                "-my-2.5 py-2.5 px-3 gap-1 flex-nowrap max-w-[380px] overflow-x-scroll",
             }}
             defaultValue="exact_dates"
             orientation="horizontal"
@@ -93,7 +101,8 @@ export default function App() {
         label="Event date"
       />
       <p className="text-default-500 text-sm">
-        Selected date: {value ? formatter.format(value.toDate(getLocalTimeZone())) : "--"}
+        Selected date:{" "}
+        {value ? formatter.format(value.toDate(getLocalTimeZone())) : "--"}
       </p>
     </div>
   );

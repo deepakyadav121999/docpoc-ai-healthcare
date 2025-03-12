@@ -1,9 +1,9 @@
+"use client";
 import React from "react";
 import { Accordion, AccordionItem, Avatar } from "@nextui-org/react";
 import ConfigTypes from "./ConfigTypes";
 
 export default function ReminderConfiguration() {
-
   return (
     <Accordion selectionMode="multiple">
       <AccordionItem
@@ -20,7 +20,15 @@ export default function ReminderConfiguration() {
         subtitle="Enabled for 231 patients."
         title="WhatsApp Notifications"
       >
-        <ConfigTypes buttons={["Medicine Reminder", "Patient Report", "Patient Invoice", "Birthday Wish", "Visit Confirmation"]}/>
+        <ConfigTypes
+          buttons={[
+            "Medicine Reminder",
+            "Patient Report",
+            "Patient Invoice",
+            "Birthday Wish",
+            "Visit Confirmation",
+          ]}
+        />
       </AccordionItem>
       <AccordionItem
         key="2"
@@ -36,7 +44,15 @@ export default function ReminderConfiguration() {
         subtitle="Enabled for 820 patients."
         title="SMS Notifications"
       >
-        <ConfigTypes buttons={["Medicine Reminder", "Patient Report", "Patient Invoice", "Birthday Wish", "Visit Confirmation"]} />
+        <ConfigTypes
+          buttons={[
+            "Medicine Reminder",
+            "Patient Report",
+            "Patient Invoice",
+            "Birthday Wish",
+            "Visit Confirmation",
+          ]}
+        />
       </AccordionItem>
       <AccordionItem
         key="3"
@@ -52,7 +68,7 @@ export default function ReminderConfiguration() {
         subtitle="Enabled for 1231 patients."
         title="Email Notifications"
       >
-       <ConfigTypes buttons={["Medicine Reminder", "Birthday Wish"]} />
+        <ConfigTypes buttons={["Medicine Reminder", "Birthday Wish"]} />
       </AccordionItem>
     </Accordion>
   );

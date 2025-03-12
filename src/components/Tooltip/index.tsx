@@ -3,7 +3,7 @@ import { Tooltip, Button } from "@nextui-org/react";
 import { TOOL_TIP_COLORS } from "@/constants";
 
 export default function ToolTip(props: {
-  label:string,
+  label: string;
   color: TOOL_TIP_COLORS;
   clickEvent?: any;
 }) {
@@ -15,7 +15,13 @@ export default function ToolTip(props: {
         content={props.color}
         className="capitalize"
       >
-        <Button style={{maxWidth:15 , maxHeight: 15}} variant="flat" color={props.color} onClick={props.clickEvent} className="capitalize">
+        <Button
+          style={{ maxWidth: 15, maxHeight: 15 }}
+          variant="flat"
+          color={props.color}
+          onClick={props.clickEvent}
+          className="capitalize"
+        >
           {props.label}
         </Button>
       </Tooltip>

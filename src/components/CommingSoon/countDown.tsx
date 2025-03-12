@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
@@ -9,10 +9,29 @@ const daySeconds = 86400;
 const timerProps = {
   isPlaying: true,
   size: 120,
-  strokeWidth: 6
+  strokeWidth: 6,
 };
 
-const renderTime = (dimension: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.PromiseLikeOfReactNode | null | undefined, time: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.PromiseLikeOfReactNode | null | undefined) => {
+const renderTime = (
+  dimension:
+    | string
+    | number
+    | boolean
+    | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+    | Iterable<React.ReactNode>
+    | React.PromiseLikeOfReactNode
+    | null
+    | undefined,
+  time:
+    | string
+    | number
+    | boolean
+    | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+    | Iterable<React.ReactNode>
+    | React.PromiseLikeOfReactNode
+    | null
+    | undefined,
+) => {
   return (
     <div className="time-wrapper">
       <div className="time">{time}</div>
@@ -22,7 +41,8 @@ const renderTime = (dimension: string | number | boolean | React.ReactElement<an
 };
 
 const getTimeSeconds = (time: number) => (minuteSeconds - time) | 0;
-const getTimeMinutes = (time: number) => ((time % hourSeconds) / minuteSeconds) | 0;
+const getTimeMinutes = (time: number) =>
+  ((time % hourSeconds) / minuteSeconds) | 0;
 const getTimeHours = (time: number) => ((time % daySeconds) / hourSeconds) | 0;
 const getTimeDays = (time: number) => (time / daySeconds) | 0;
 
@@ -42,7 +62,7 @@ export default function CountDown() {
         duration={daysDuration}
         initialRemainingTime={remainingTime}
       >
-        {({ elapsedTime, color }:any) => (
+        {({ elapsedTime, color }: any) => (
           <span style={{ color }}>
             {renderTime("days", getTimeDays(daysDuration - elapsedTime))}
           </span>
@@ -54,10 +74,10 @@ export default function CountDown() {
         duration={daySeconds}
         initialRemainingTime={remainingTime % daySeconds}
         onComplete={(totalElapsedTime: number) => ({
-          shouldRepeat: remainingTime - totalElapsedTime > hourSeconds
+          shouldRepeat: remainingTime - totalElapsedTime > hourSeconds,
         })}
       >
-        {({ elapsedTime, color }:any) => (
+        {({ elapsedTime, color }: any) => (
           <span style={{ color }}>
             {renderTime("hours", getTimeHours(daySeconds - elapsedTime))}
           </span>
@@ -69,10 +89,10 @@ export default function CountDown() {
         duration={hourSeconds}
         initialRemainingTime={remainingTime % hourSeconds}
         onComplete={(totalElapsedTime: number) => ({
-          shouldRepeat: remainingTime - totalElapsedTime > minuteSeconds
+          shouldRepeat: remainingTime - totalElapsedTime > minuteSeconds,
         })}
       >
-        {({ elapsedTime, color }:any) => (
+        {({ elapsedTime, color }: any) => (
           <span style={{ color }}>
             {renderTime("minutes", getTimeMinutes(hourSeconds - elapsedTime))}
           </span>
@@ -84,10 +104,10 @@ export default function CountDown() {
         duration={minuteSeconds}
         initialRemainingTime={remainingTime % minuteSeconds}
         onComplete={(totalElapsedTime: number) => ({
-          shouldRepeat: remainingTime - totalElapsedTime > 0
+          shouldRepeat: remainingTime - totalElapsedTime > 0,
         })}
       >
-        {({ elapsedTime, color }:any) => (
+        {({ elapsedTime, color }: any) => (
           <span style={{ color }}>
             {renderTime("seconds", getTimeSeconds(elapsedTime))}
           </span>

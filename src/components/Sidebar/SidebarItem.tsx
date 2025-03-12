@@ -1,12 +1,30 @@
-import React from "react";
+import { useState } from "react";
 import Link from "next/link";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
+import { Spinner } from "@nextui-org/spinner";
 
-const SidebarItem = ({ item, pageName, setPageName, isActive }:any) => {
-  const handleClick = () => {
-    const updatedPageName =
-      pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
-    setPageName(updatedPageName);
+const SidebarItem = ({
+  item,
+  pageName,
+  setPageName,
+  isActive,
+  loadingitem,
+  onClick,
+}: any) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    // Check if the item has children (dropdown functionality)
+    if (item.children) {
+      e.preventDefault(); // Prevent navigation for dropdown toggle
+      const updatedPageName =
+        pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
+      setPageName(updatedPageName);
+    } else {
+      // Start loading only if it's a navigation link
+      setLoading(true);
+      setPageName(item.label.toLowerCase());
+    }
   };
 
   return (
@@ -14,28 +32,37 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }:any) => {
       <Link
         href={item.route}
         onClick={handleClick}
-        className={`${
+        className={`relative flex items-center gap-3 rounded-[7px] px-3.5 py-3 font-medium duration-300 ease-in-out ${
           isActive
             ? "bg-primary/[.07] text-primary dark:bg-white/10 dark:text-white"
-            : "text-dark-4 hover:bg-gray-2 hover:text-dark dark:text-gray-5 dark:hover:bg-white/10 dark:hover:text-white"
-        } group relative flex items-center gap-3 rounded-[7px] px-3.5 py-3 font-medium duration-300 ease-in-out`}
+            : "text-dark-4 hover:bg-gray-2 dark:text-gray-5 dark:hover:bg-white/10"
+        }`}
       >
         {item.icon}
         {item.label}
+        {/* Show spinner only when loading */}
+        {!item.children && loading && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+            <Spinner size="sm" />
+          </div>
+        )}
+        {/* Badge for messages */}
         {item.message && (
           <span className="absolute right-11.5 top-1/2 -translate-y-1/2 rounded-full bg-red-light-6 px-1.5 py-px text-[10px] font-medium leading-[17px] text-red">
             {item.message}
           </span>
         )}
+        {/* Pro badge */}
         {item.pro && (
           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md bg-primary px-1.5 py-px text-[10px] font-medium leading-[17px] text-white">
             Pro
           </span>
         )}
+        {/* Dropdown toggle icon */}
         {item.children && (
           <svg
             className={`absolute right-3.5 top-1/2 -translate-y-1/2 fill-current ${
-              pageName !== item.label.toLowerCase() && "rotate-180"
+              pageName === item.label.toLowerCase() ? "rotate-180" : ""
             }`}
             width="22"
             height="22"
@@ -53,10 +80,11 @@ const SidebarItem = ({ item, pageName, setPageName, isActive }:any) => {
         )}
       </Link>
 
+      {/* Dropdown items */}
       {item.children && (
         <div
-          className={`translate transform overflow-hidden ${
-            pageName !== item.label.toLowerCase() && "hidden"
+          className={`translate transform overflow-hidden transition-all duration-300 ${
+            pageName === item.label.toLowerCase() ? "block" : "hidden"
           }`}
         >
           <SidebarDropdown item={item.children} />

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -28,7 +28,13 @@ import { columns, users, statusOptions } from "./data";
 import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
-
+import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+import { Spinner } from "@nextui-org/react";
+import AddEmployee from "./AddEmployee";
+import debounce from "lodash.debounce";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   inactive: "warning",
@@ -38,39 +44,157 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "age",
-  'bloodGroup',
+  "bloodGroup",
   "phone",
   "email",
   "status",
   "actions",
-  "lastVisit"
+  "lastVisit",
 ];
+interface Employee {
+  id: string;
+  name: string;
+  age: number;
+  bloodGroup: string;
+  phone: string;
+  email: string;
+  status: string;
+  lastVisit: string;
+  displayPicture: string;
+  isActive: string;
+  json: string;
+}
 
 type User = (typeof users)[0];
-
+const API_URL = process.env.API_URL;
 export default function DataTable() {
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
+    new Set([]),
   );
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(50);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
   const [page, setPage] = React.useState(1);
 
+  const [users, setUsers] = React.useState<Employee[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [totalUsers, setTotalUsers] = React.useState(0);
+  const [branchId, setBranchId] = useState("");
+
+  const fetchUsers = async (
+    searchName = "",
+    selectedStatuses: string[] = [],
+  ) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+
+      // const hospitalEndpoint = `${API_URL}/hospital`;
+      // const hospitalResponse = await axios.get(hospitalEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+
+      //   return;
+      // }
+
+      // const fetchedHospitalId = hospitalResponse.data[0].id;
+      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
+      // const branchResponse = await axios.get(branchEndpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+
+      // if (!branchResponse.data || branchResponse.data.length === 0) {
+      //   return;
+      // }
+      // const fetchedBranchId = branchResponse.data[0]?.id;
+
+      // const profileEndpoint = `${API_URL}/auth/profile`;
+      // const profileResponse = await axios.get(profileEndpoint,{
+      //  headers:{
+      //    Authorization: `Bearer ${token}`,
+      //    "Content-Type": "application/json",
+      //  },
+      // })
+
+      // const fetchedBranchId = profileResponse.data?.branchId;
+      // const userProfile = localStorage.getItem("userProfile");
+
+      // // Parse the JSON string if it exists
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+
+      // Extract the branchId from the user profile
+      const fetchedBranchId = profile?.branchId;
+
+      setBranchId(fetchedBranchId);
+
+      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+      const params: any = {};
+      params.page = page;
+      params.pageSize = rowsPerPage;
+      params.from = "2024-12-04T03:32:25.812Z";
+      params.to = "2024-12-11T03:32:25.815Z";
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setUsers(response.data.rows || response.data);
+      setTotalUsers(response.data.count || response.data.length);
+    } catch (err) {
+      setError("Failed to fetch users.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  React.useEffect(() => {
+    fetchUsers();
+  }, [page, rowsPerPage]);
+  console.log(users);
+  console.log(totalUsers);
+
+  const getAgeFromDob = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const currentDate = new Date();
+
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+
+    // Adjust age if the birthday hasn't occurred yet this year
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  type User = (typeof users)[0];
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
-
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -79,29 +203,30 @@ export default function DataTable() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
+
+    // Apply the status filter
     if (
       statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
+      Array.from(statusFilter).length > 0 // Ensure there are selected statuses
     ) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
-      );
+      filteredUsers = filteredUsers.filter((user) => {
+        const userStatus = user.isActive ? "active" : "inactive"; // Map isActive to "active" or "inactive"
+        return Array.from(statusFilter).includes(userStatus); // Check if it matches selected statuses
+      });
     }
 
     return filteredUsers;
   }, [users, filterValue, statusFilter]);
+  const handleStatusFilterChange = (selected: Selection) => {
+    setStatusFilter(selected);
+  };
 
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = totalUsers > 0 ? Math.ceil(totalUsers / rowsPerPage) : 1;
 
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+  const items = filteredItems;
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: User, b: User) => {
@@ -116,11 +241,24 @@ export default function DataTable() {
   const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
     const cellValue = user[columnKey as keyof User];
 
+    if (columnKey === "age") {
+      let age = "";
+      try {
+        const userJson = JSON.parse(user.json);
+        const dob = userJson.dob || "";
+        age = getAgeFromDob(dob).toString();
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+
+      return <p className="capitalize">{age}</p>;
+    }
+
     switch (columnKey) {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
+            avatarProps={{ radius: "lg", src: user.displayPicture }}
             description={user.email}
             name={cellValue}
           >
@@ -137,14 +275,15 @@ export default function DataTable() {
           </div>
         );
       case "status":
+        const status = user.isActive ? "Active" : "Inactive";
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[user.status]}
+            color={statusColorMap[status.toLowerCase()]}
             size="sm"
             variant="flat"
           >
-            {cellValue}
+            {status}
           </Chip>
         );
       case "actions":
@@ -157,6 +296,8 @@ export default function DataTable() {
             }}
             actionButtonName={"Ok"}
             modalTitle={"Employee"}
+            userId={user.id}
+            onPatientDelete={fetchUsers}
           />
         );
       default:
@@ -181,17 +322,30 @@ export default function DataTable() {
       setRowsPerPage(Number(e.target.value));
       setPage(1);
     },
-    []
+    [],
+  );
+  const debouncedFetchUser = React.useMemo(
+    () => debounce((value: string) => fetchUsers(value), 500),
+    [fetchUsers],
   );
 
-  const onSearchChange = React.useCallback((value?: string) => {
-    if (value) {
-      setFilterValue(value);
+  const onSearchChange = React.useCallback(
+    (value?: string) => {
+      setFilterValue(value || "");
       setPage(1);
-    } else {
-      setFilterValue("");
-    }
-  }, []);
+      debouncedFetchUser(value || "");
+    },
+    [debouncedFetchUser],
+  );
+
+  // const onSearchChange = React.useCallback((value?: string) => {
+  //   if (value) {
+  //     setFilterValue(value|| " ");
+  //     setPage(1);
+  //   } else {
+  //     setFilterValue("");
+  //   }
+  // }, []);
 
   const onClear = React.useCallback(() => {
     setFilterValue("");
@@ -217,7 +371,7 @@ export default function DataTable() {
                 <Button
                   endContent={<ChevronDownIcon className="text-small" />}
                   variant="flat"
-                  style={{minHeight: 55}}
+                  style={{ minHeight: 55 }}
                 >
                   Status
                 </Button>
@@ -228,7 +382,7 @@ export default function DataTable() {
                 closeOnSelect={false}
                 selectedKeys={statusFilter}
                 selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
+                onSelectionChange={handleStatusFilterChange}
               >
                 {statusOptions.map((status) => (
                   <DropdownItem key={status.uid} className="capitalize">
@@ -242,7 +396,7 @@ export default function DataTable() {
                 <Button
                   endContent={<ChevronDownIcon className="text-small" />}
                   variant="flat"
-                  style={{minHeight: 55}}
+                  style={{ minHeight: 55 }}
                 >
                   Columns
                 </Button>
@@ -263,17 +417,18 @@ export default function DataTable() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <Button color="primary" endContent={<PlusIcon />} style={{minHeight: 55}}>
-              Add New
-            </Button>
+            <OpaqueDefaultModal
+              headingName="Add New Employee"
+              child={<AddEmployee onUsersAdded={fetchUsers} />}
+            />
           </div>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
-            Total {users.length} users
+            Total {totalUsers} users
           </span>
           <label className="flex items-center text-default-400 text-small">
-            Rows per page:
+            {/* Rows per page:
             <select
               className="bg-transparent outline-none text-default-400 text-small"
               onChange={onRowsPerPageChange}
@@ -281,7 +436,7 @@ export default function DataTable() {
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="15">15</option>
-            </select>
+            </select> */}
           </label>
         </div>
       </div>
@@ -302,7 +457,7 @@ export default function DataTable() {
         <span className="w-[30%] text-small text-default-400">
           {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+            : `${selectedKeys.size} of ${users.length} selected`}
         </span>
         <Pagination
           isCompact
@@ -336,41 +491,53 @@ export default function DataTable() {
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
-    <Table
-      aria-label="Appointment Details"
-      isHeaderSticky
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[482px] ",
-      }}
-      selectedKeys={selectedKeys}
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSelectionChange={setSelectedKeys}
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
+    <div className="relative">
+      <Table
+        aria-label="Appointment Details"
+        isHeaderSticky
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[482px] ",
+        }}
+        selectedKeys={selectedKeys}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={setSelectedKeys}
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          emptyContent={loading ? " " : "No users found"}
+          items={sortedItems}
+        >
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <div>
+        {loading && (
+          <div className="absolute inset-0 flex justify-center items-center  z-50">
+            <Spinner />
+          </div>
         )}
-      </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
-        {(item) => (
-          <TableRow key={item.id}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+      </div>
+    </div>
   );
 }

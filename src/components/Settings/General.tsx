@@ -40,7 +40,7 @@ const General = () => {
     setEdit(!edit);
   };
   return (
-    <div className="grid grid-cols-1 gap-9">
+    <div className="grid grid-cols-1 gap-9 m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
@@ -192,8 +192,8 @@ const General = () => {
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
-                  Leave unchecked if appointments from your website needs admin(s)
-                  action to confirm booking.
+                  Leave unchecked if appointments from your website needs
+                  admin(s) action to confirm booking.
                 </label>
                 <Checkbox color={TOOL_TIP_COLORS.secondary} isDisabled={!edit}>
                   All appointments gets confirmed by default.
