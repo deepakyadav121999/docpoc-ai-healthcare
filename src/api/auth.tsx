@@ -21,12 +21,7 @@ export function AuthData() {
 }
 
 // For Amplify deployment, ensure the referer is set to the correct URL
-const commonHeaders = {
-  "Referer": "https://master.d2rh6aw4go278u.amplifyapp.com/",
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-  "Accept": "application/json, text/plain, */*",
-  "Content-Type": "application/json",
-};
+const commonHeaders = JSON.parse(process.env.DEV_APP_CORS || '');
 
 export async function UserSignUp(
   body: {
