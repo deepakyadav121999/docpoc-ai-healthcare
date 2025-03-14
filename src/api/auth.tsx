@@ -20,6 +20,14 @@ export function AuthData() {
   return { defaultAccessType, defautUserType, baseUrl };
 }
 
+// For Amplify deployment, ensure the referer is set to the correct URL
+const commonHeaders = {
+  "Referer": "https://master.d2rh6aw4go278u.amplifyapp.com",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+  "Accept": "application/json, text/plain, */*",
+  "Content-Type": "application/json",
+};
+
 export async function UserSignUp(
   body: {
     phone?: string;
@@ -41,7 +49,7 @@ export async function UserSignUp(
     const request = await axios({
       method: "post",
       url,
-      headers: {},
+      headers: { ...commonHeaders },
       data: {
         ...body,
         name: userName,
@@ -79,7 +87,7 @@ export async function UserSignIn(
     const request = await axios({
       method: "post",
       url,
-      headers: {},
+      headers: { ...commonHeaders },
       data: {
         username: userName,
         password,
@@ -88,16 +96,12 @@ export async function UserSignIn(
     console.log(request);
     return request.data;
   } catch (error) {
-    console.error("Error making signup request:", error);
+    console.error("Error making signin request:", error);
     return error;
   }
 }
 
 export async function SignOut() {
-  // localStorage.removeItem("profile");
-  // localStorage.removeItem("docPocAuth_token");
-  // localStorage.removeItem("userProfile");
-
   console.log("SignOut called");
   localStorage.removeItem("docPocAuth_token");
   console.log("Token removed");
