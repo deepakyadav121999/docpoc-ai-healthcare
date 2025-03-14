@@ -21,7 +21,7 @@ export function AuthData() {
 }
 
 // For Amplify deployment, ensure the referer is set to the correct URL
-const commonHeaders = JSON.parse(process.env.DEV_APP_CORS || '');
+const commonHeaders = JSON.parse(process.env.DEV_APP_CORS || '{}');
 
 export async function UserSignUp(
   body: {
