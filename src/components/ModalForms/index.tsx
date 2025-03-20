@@ -124,19 +124,24 @@ export default function ModalForm(props: {
     useState<string>(employeeDesignation);
 
   const [tempDesignation, setTempDesignation] = useState(employeeDesignation);
-
+  const[employeeId, setEmployeeId] = useState("")
   const [employeePhone, setEmployeePhone] = useState("");
   const [emloyeeBranch, setEmployeeBranch] = useState("");
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
+  const[employeePhoto, setEmployeePhoto]= useState("")
+  const[employeePhotoLoading, setEmployeePhotoLoading] = useState(false)
   const [editSelectedPatient, setEditPatient] = useState(false);
+
   const [patientName, setPatientName] = useState("");
   const [patientId, setPatientId] = useState("");
   const [patientBloodGroup, setPatientBloodGroup] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [patientStatus, setPatientStatus] = useState("");
+  const[patientPhoto,setPatientPhoto] =useState("")
+  const[patientGender, setPatientGender] =useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
   // const [loading, setLoading] = useState<boolean>(true);
   const [lastVisit, setLastVisit] = useState<string>("N/A");
@@ -272,12 +277,14 @@ export default function ModalForm(props: {
       setPatientEmail(response.data.email);
       setPatientStatus(response.data.status);
       setProfilePhoto(response.data.displayPicture);
+      setPatientPhoto(response.data.displayPicture)
       // setLastvisit(response.data.lastVisit)
       setNotificationStatus(response.data.notificationStatus);
       setBranchId(response.data.branchId);
       setPatientDob(response.data.dob);
       setGender(response.data.gender);
       setPatientId(response.data.id);
+      setPatientGender(response.data.gender)
     } catch (err) {
     } finally {
       setLoading(false);
@@ -355,6 +362,8 @@ export default function ModalForm(props: {
       setEmployeeShiftTime(parsedJson.workingHours);
       setEmployeeJoiningDate(users.createdAt);
       setEmployeeBranch(users.branchId);
+      setEmployeePhoto(users.profilePicture)
+      setEmployeeId(users.id)
       console.log(users);
 
       const workingHours = parsedJson.workingHours; // e.g., "9:00 AM - 9:00 PM"
@@ -569,6 +578,7 @@ export default function ModalForm(props: {
         notificationStatus: notificationStatus,
         dob: patientDob,
         gender: gender,
+        displayPicture: patientPhoto
       };
 
       props.onDataChange(updatedData);
@@ -578,6 +588,7 @@ export default function ModalForm(props: {
         name: employeeName,
         phone: employeePhone,
         email: employeeEmail,
+        profilePicture:employeePhoto,
         json: JSON.stringify({
           dob: employeeDOB,
           designation: employeeDesignation,
@@ -606,6 +617,7 @@ export default function ModalForm(props: {
     patientStatus,
     notificationStatus,
     patientDob,
+    patientPhoto,
     gender,
     emloyeeBranch,
     employeeName,
@@ -614,6 +626,7 @@ export default function ModalForm(props: {
     employeeDOB,
     employeeDesignation,
     employeeShiftTime,
+    employeePhoto,
     appointmentName,
     appointmentBranch,
     doctorId,
@@ -683,6 +696,102 @@ export default function ModalForm(props: {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleProfilePhotoChangeEmployee = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; // Get the selected file
+    if (!file) return; // Exit if no file is selected
+  
+    setEmployeePhotoLoading(true); // Set loading state while the upload is happening
+  
+    // Construct the folder name based on the user's name and ID
+    const sanitizedUsername = employeeName.replace(/\s+/g, "").toLowerCase().slice(0, 9);
+    const folderName = `${sanitizedUsername}${employeeId.slice(-6)}`;
+    // const uniqueFileName = `${Date.now()}${file.name}`;
+  
+    try {
+      // Create a FormData object to send the file and additional metadata
+      const data = new FormData();
+      data.append("file", file);
+      data.append("folder", folderName);
+      data.append("contentDisposition", "inline");
+  
+      // Upload the file to the S3 bucket via the API
+      const config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        data: data,
+      };
+  
+      const response = await axios.request(config); // Call the API
+  
+      // If the file is uploaded successfully, construct the file URL
+      if (response.data) {
+        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
+        console.log("File uploaded successfully:", fileUrl);
+  
+        // Update the state variable with the new photo URL
+        setEmployeePhoto(fileUrl);
+      }
+    } catch (error) {
+      console.error("Error uploading the photo:", error);
+      alert("Failed to upload the photo. Please try again.");
+    } finally {
+      setEmployeePhotoLoading(false); // Reset the loading state
+    }
+  };
+
+  const handleProfilePhotoChangePatient= async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; // Get the selected file
+    if (!file) return; // Exit if no file is selected
+  
+    setEmployeePhotoLoading(true); // Set loading state while the upload is happening
+  
+    // Construct the folder name based on the user's name and ID
+    const sanitizedUsername = patientName.replace(/\s+/g, "").toLowerCase().slice(0, 9);
+    const folderName = `${sanitizedUsername}${patientId.slice(-6)}`;
+    // const uniqueFileName = `${Date.now()}${file.name}`;
+  
+    try {
+      // Create a FormData object to send the file and additional metadata
+      const data = new FormData();
+      data.append("file", file);
+      data.append("folder", folderName);
+      data.append("contentDisposition", "inline");
+  
+      // Upload the file to the S3 bucket via the API
+      const config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        data: data,
+      };
+  
+      const response = await axios.request(config); // Call the API
+  
+      // If the file is uploaded successfully, construct the file URL
+      if (response.data) {
+        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
+        console.log("File uploaded successfully:", fileUrl);
+  
+        // Update the state variable with the new photo URL
+        setPatientPhoto(fileUrl);
+      }
+    } catch (error) {
+      console.error("Error uploading the photo:", error);
+      alert("Failed to upload the photo. Please try again.");
+    } finally {
+      setEmployeePhotoLoading(false); // Reset the loading state
+    }
+  };
+  
+
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
     const date = new Date(isoString);
@@ -1463,7 +1572,8 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={USER_ICONS.MALE_USER}
+                        // src={USER_ICONS.MALE_USER}
+                        src={patientPhoto?patientPhoto:patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
                         width="100%"
                       />
                     </div>
@@ -1586,7 +1696,7 @@ export default function ModalForm(props: {
                 <div>
                   <div className="relative drop-shadow-2">
                     <Image
-                      src={USER_ICONS.MALE_USER}
+                       src={patientPhoto?patientPhoto:patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
@@ -1609,7 +1719,7 @@ export default function ModalForm(props: {
                       id="profilePhoto"
                       className="sr-only"
                       accept="image/png, image/jpg, image/jpeg"
-                      onChange={handleProfilePhotoChange}
+                      onChange={handleProfilePhotoChangePatient}
                     />
                   </label>
                 </div>
@@ -2016,7 +2126,7 @@ export default function ModalForm(props: {
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={USER_ICONS.FEMALE_USER}
+                    src={employeePhoto?employeePhoto:USER_ICONS.MALE_USER}
                     width="100%"
                   />
                 </div>
@@ -2112,7 +2222,7 @@ export default function ModalForm(props: {
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                        src={profilePhoto}
+                         src={employeePhoto?employeePhoto:USER_ICONS.MALE_USER}
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
@@ -2135,7 +2245,8 @@ export default function ModalForm(props: {
                         id="profilePhoto"
                         className="sr-only"
                         accept="image/png, image/jpg, image/jpeg"
-                        onChange={handleProfilePhotoChange}
+                        // onChange={handleProfilePhotoChange}
+                        onChange={handleProfilePhotoChangeEmployee}
                       />
                     </label>
                   </div>

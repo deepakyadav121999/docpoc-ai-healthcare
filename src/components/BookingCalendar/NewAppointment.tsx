@@ -67,7 +67,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   // Format as ISO
   const dateTime = correctedDate.toISOString().split("T")[0];
   const profile = useSelector((state: RootState) => state.profile.data);
-
+  const [timeWarning, setTimeWarning] = useState("");
   // console.log(startDateTime)
 
   // const [formData, setFormData] = useState<{
@@ -580,6 +580,29 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     setFormData({ ...formData, dateTime: date });
   };
 
+   const validateWorkingHours = () => {
+      const { startDateTime, endDateTime, doctorId } = formData;
+      const selectedDoctor = doctorList.find((doctor) => doctor.value === doctorId);
+  
+      if (selectedDoctor) {
+        const workingHours = selectedDoctor.workingHours;
+        if (
+          workingHours &&
+          !isWithinWorkingHours(new Date(startDateTime), new Date(endDateTime), workingHours)
+        ) {
+          setTimeWarning("The selected appointment time is outside the doctor's working hours.");
+        } else {
+          setTimeWarning("");
+        }
+      }
+    };
+  
+    // Effect hook to validate working hours when doctor or time changes
+    useEffect(() => {
+      if (formData.doctorId && formData.startDateTime && formData.endDateTime) {
+        validateWorkingHours();
+      }
+    }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
   return (
     <div className="  grid grid-cols-1 gap-9  ">
       <div className="flex flex-col w-full ">
@@ -657,6 +680,12 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   onChange={(time) => handleTimeChange(time, "endDateTime")}
                 />
               </div>
+
+              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              {timeWarning && (
+                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                )}
+                </div>
               <div style={{ marginTop: 20 }}>
                 <Textarea
                   color={TOOL_TIP_COLORS.secondary}
@@ -780,7 +809,12 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   )}
                 </Autocomplete>
               </div>
-
+              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              {timeWarning && (
+                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                )}
+                </div>
+                
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
                   Mark uncheck if no notification has to be sent for

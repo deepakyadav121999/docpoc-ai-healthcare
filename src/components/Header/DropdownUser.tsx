@@ -94,11 +94,12 @@ const DropdownUser = () => {
           className="flex items-center gap-4"
           href="#"
         >
-          <span className="h-12 w-12 rounded-full">
+          <span className="h-12 w-12 rounded-full bg-white">
             <Image
               width={112}
               height={112}
-              src="/images/user/user-03.png"
+              // src="/images/user/user-03.png"
+              src ={profile.profilePicture? profile?.profilePicture :"/images/user/user-03.png"}
               style={{
                 width: "auto",
                 height: "auto",
@@ -142,7 +143,8 @@ const DropdownUser = () => {
                 <Image
                   width={112}
                   height={112}
-                  src="/images/user/user-03.png"
+                  // src="/images/user/user-03.png"
+                  src ={profile.profilePicture? profile?.profilePicture:"/images/user/user-03.png"}
                   style={{
                     width: "auto",
                     height: "auto",

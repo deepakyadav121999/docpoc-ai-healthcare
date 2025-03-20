@@ -113,7 +113,7 @@ export const AppointmentCalendar: React.FC = () => {
         pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
         to: "2025-12-31T23:59:59.999Z", // End of the month
-        status: ["visiting", "declind"],
+        // status: ["visiting", "declind"],
       };
 
       const response = await axios.get(endpoint, {

@@ -14,4 +14,7 @@ module.exports = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: ['docpoc-assets.s3.ap-south-1.amazonaws.com'],
+  }
 };
