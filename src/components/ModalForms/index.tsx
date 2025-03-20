@@ -145,6 +145,7 @@ export default function ModalForm(props: {
   const[patientPhoto,setPatientPhoto] =useState("")
   const[patientGender, setPatientGender] =useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
+  const[patientPhotoLoading, setPatientPhotoLoading] = useState(false)
   // const [loading, setLoading] = useState<boolean>(true);
   const [lastVisit, setLastVisit] = useState<string>("N/A");
   const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
@@ -750,7 +751,7 @@ export default function ModalForm(props: {
     const file = event.target.files?.[0]; // Get the selected file
     if (!file) return; // Exit if no file is selected
   
-    setEmployeePhotoLoading(true); // Set loading state while the upload is happening
+    setPatientPhotoLoading(true); // Set loading state while the upload is happening
   
     // Construct the folder name based on the user's name and ID
     const sanitizedUsername = patientName.replace(/\s+/g, "").toLowerCase().slice(0, 9);
@@ -789,7 +790,7 @@ export default function ModalForm(props: {
       console.error("Error uploading the photo:", error);
       alert("Failed to upload the photo. Please try again.");
     } finally {
-      setEmployeePhotoLoading(false); // Reset the loading state
+      setPatientPhotoLoading(false); // Reset the loading state
     }
   };
   
@@ -1706,7 +1707,7 @@ export default function ModalForm(props: {
                     />
                   </div> */}
 
-{patientPhoto ? (
+{patientPhotoLoading ? (
       <div className="flex items-center justify-center w-[160px] h-[160px] bg-gray-200 rounded-full">
         <Spinner size="lg" className="text-primary" /> {/* Your spinner component */}
       </div>
