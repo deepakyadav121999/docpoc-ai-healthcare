@@ -83,6 +83,8 @@ export default function ModalForm(props: {
   userId: string;
   onDataChange: (data: any) => void;
 }) {
+
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
 
@@ -1694,7 +1696,7 @@ export default function ModalForm(props: {
             <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
                 <div>
-                  <div className="relative drop-shadow-2">
+                  {/* <div className="relative drop-shadow-2">
                     <Image
                        src={patientPhoto?patientPhoto:patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
                       width={160}
@@ -1702,7 +1704,23 @@ export default function ModalForm(props: {
                       className="overflow-hidden rounded-full"
                       alt="profile"
                     />
-                  </div>
+                  </div> */}
+
+{patientPhoto ? (
+      <div className="flex items-center justify-center w-[160px] h-[160px] bg-gray-200 rounded-full">
+        <Spinner size="lg" className="text-primary" /> {/* Your spinner component */}
+      </div>
+    ) : (
+      <div className="relative drop-shadow-2">
+      <Image
+        src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
+        width={160}
+        height={160}
+        className="overflow-hidden rounded-full"
+        alt="profile"
+      />
+      </div>
+    )}
 
                   <label
                     htmlFor="profilePhoto"
@@ -2220,7 +2238,7 @@ export default function ModalForm(props: {
               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
                 <div className="relative col-span-6 md:col-span-4">
                   <div>
-                    <div className="relative drop-shadow-2">
+                    {/* <div className="relative drop-shadow-2">
                       <Image
                          src={employeePhoto?employeePhoto:USER_ICONS.MALE_USER}
                         width={160}
@@ -2228,7 +2246,24 @@ export default function ModalForm(props: {
                         className="overflow-hidden rounded-full"
                         alt="profile"
                       />
-                    </div>
+                    </div> */}
+
+{employeePhotoLoading ? (
+      <div className="flex items-center justify-center w-[160px] h-[160px] bg-gray-200 rounded-full">
+        <Spinner size="lg" className="text-primary" /> {/* Your spinner component */}
+      </div>
+    ) : (
+      <div className="relative drop-shadow-2">
+      <Image
+        src={employeePhoto ? employeePhoto : USER_ICONS.MALE_USER}
+        width={160}
+        height={160}
+        className="overflow-hidden rounded-full"
+        alt="profile"
+      />
+      </div>
+    )}
+ 
 
                     <label
                       htmlFor="profilePhoto"
