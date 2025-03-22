@@ -78,13 +78,16 @@ interface AutocompleteItem {
 }
 
 const API_URL = process.env.API_URL;
+const MAX_FILE_SIZE_MB = 5
 export default function ModalForm(props: {
   type: string;
   userId: string;
   onDataChange: (data: any) => void;
+  onProfilePhotoChange:(file:any)=>void;
+  onFilesChange:(files:any)=>void;
 }) {
 
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
 
@@ -114,7 +117,7 @@ export default function ModalForm(props: {
   const [employeeShiftEndTime, setEmployeeShiftEndTime] = useState<Time | null>(
     null,
   );
-
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const designations = [
     { label: "Doctor", value: "doctor" },
     { label: "Nurse", value: "nurse" },
@@ -176,6 +179,9 @@ export default function ModalForm(props: {
   // Default time
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+
+
+
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -366,6 +372,7 @@ export default function ModalForm(props: {
       setEmployeeJoiningDate(users.createdAt);
       setEmployeeBranch(users.branchId);
       setEmployeePhoto(users.profilePicture)
+      setProfilePhoto(users.profilePicture)
       setEmployeeId(users.id)
       console.log(users);
 
@@ -581,7 +588,7 @@ export default function ModalForm(props: {
         notificationStatus: notificationStatus,
         dob: patientDob,
         gender: gender,
-        displayPicture: patientPhoto
+        dp:patientPhoto
       };
 
       props.onDataChange(updatedData);
@@ -591,7 +598,7 @@ export default function ModalForm(props: {
         name: employeeName,
         phone: employeePhone,
         email: employeeEmail,
-        profilePicture:employeePhoto,
+        dp:employeePhoto,
         json: JSON.stringify({
           dob: employeeDOB,
           designation: employeeDesignation,
@@ -620,7 +627,6 @@ export default function ModalForm(props: {
     patientStatus,
     notificationStatus,
     patientDob,
-    patientPhoto,
     gender,
     emloyeeBranch,
     employeeName,
@@ -629,7 +635,6 @@ export default function ModalForm(props: {
     employeeDOB,
     employeeDesignation,
     employeeShiftTime,
-    employeePhoto,
     appointmentName,
     appointmentBranch,
     doctorId,
@@ -697,102 +702,38 @@ export default function ModalForm(props: {
         setProfilePhoto(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // setSelectedFile(file)
+      props.onProfilePhotoChange(file)
     }
+
+  };
+  // const handleFileChange = (event:React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files ? Array.from(event.target.files) : [];
+  //   const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+
+  //   if (validFiles.length !== files.length) {
+  //     alert('Some files were too large and were not selected.');
+  //   }
+
+  //   setSelectedFiles(validFiles);
+
+  // };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+
+    if (validFiles.length !== files.length) {
+      alert('Some files were too large and were not selected.');
+    }
+
+    // Concatenate new valid files with existing selected files
+    setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
+    props.onFilesChange([...selectedFiles, ...validFiles]); 
   };
 
-  const handleProfilePhotoChangeEmployee = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Get the selected file
-    if (!file) return; // Exit if no file is selected
-  
-    setEmployeePhotoLoading(true); // Set loading state while the upload is happening
-  
-    // Construct the folder name based on the user's name and ID
-    const sanitizedUsername = employeeName.replace(/\s+/g, "").toLowerCase().slice(0, 9);
-    const folderName = `${sanitizedUsername}${employeeId.slice(-6)}`;
-    // const uniqueFileName = `${Date.now()}${file.name}`;
-  
-    try {
-      // Create a FormData object to send the file and additional metadata
-      const data = new FormData();
-      data.append("file", file);
-      data.append("folder", folderName);
-      data.append("contentDisposition", "inline");
-  
-      // Upload the file to the S3 bucket via the API
-      const config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        data: data,
-      };
-  
-      const response = await axios.request(config); // Call the API
-  
-      // If the file is uploaded successfully, construct the file URL
-      if (response.data) {
-        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-        console.log("File uploaded successfully:", fileUrl);
-  
-        // Update the state variable with the new photo URL
-        setEmployeePhoto(fileUrl);
-      }
-    } catch (error) {
-      console.error("Error uploading the photo:", error);
-      alert("Failed to upload the photo. Please try again.");
-    } finally {
-      setEmployeePhotoLoading(false); // Reset the loading state
-    }
-  };
-
-  const handleProfilePhotoChangePatient= async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Get the selected file
-    if (!file) return; // Exit if no file is selected
-  
-    setPatientPhotoLoading(true); // Set loading state while the upload is happening
-  
-    // Construct the folder name based on the user's name and ID
-    const sanitizedUsername = patientName.replace(/\s+/g, "").toLowerCase().slice(0, 9);
-    const folderName = `${sanitizedUsername}${patientId.slice(-6)}`;
-    // const uniqueFileName = `${Date.now()}${file.name}`;
-  
-    try {
-      // Create a FormData object to send the file and additional metadata
-      const data = new FormData();
-      data.append("file", file);
-      data.append("folder", folderName);
-      data.append("contentDisposition", "inline");
-  
-      // Upload the file to the S3 bucket via the API
-      const config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        data: data,
-      };
-  
-      const response = await axios.request(config); // Call the API
-  
-      // If the file is uploaded successfully, construct the file URL
-      if (response.data) {
-        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-        console.log("File uploaded successfully:", fileUrl);
-  
-        // Update the state variable with the new photo URL
-        setPatientPhoto(fileUrl);
-      }
-    } catch (error) {
-      console.error("Error uploading the photo:", error);
-      alert("Failed to upload the photo. Please try again.");
-    } finally {
-      setPatientPhotoLoading(false); // Reset the loading state
-    }
-  };
+ 
   
 
   const formatDateOne = (isoString: string): string => {
@@ -853,7 +794,7 @@ export default function ModalForm(props: {
     },
     {
       key: "3",
-      label: "Blaclisted",
+      label: "Blacklisted",
     },
   ];
 
@@ -985,326 +926,6 @@ export default function ModalForm(props: {
       </>
     );
 
-    // return (
-    //   <>
-    //     <div>
-    //       {loading && (
-    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-    //           <Spinner />
-    //         </div>
-    //       )}
-    //     </div>
-    //     <Card
-    //       isBlurred
-    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-    //       shadow="sm"
-    //     >
-    //       <CardBody>
-
-    //         {!showLastVisit ? (
-
-    //           <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-    //             <div className="relative col-span-6 md:col-span-4">
-    //               <Image
-    //                 alt="Patient photo"
-    //                 className="object-cover"
-    //                 height={200}
-    //                 shadow="md"
-    //                 src={USER_ICONS.FEMALE_USER}
-    //                 width="100%"
-    //               />
-    //             </div>
-
-    //             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-    //               <div className="flex justify-between items-center">
-    //                 <h3 className="font-semibold text-foreground/90">
-    //                   Appointment Details
-    //                 </h3>
-    //                 <StyledButton
-    //                   label="Follow-Up"
-
-    //                 />
-    //               </div>
-
-    //               <div className="space-y-3">
-    //               <div className="flex items-center">
-    //                   <div style={{ marginLeft: -5 }}>
-    //                     <SVGIconProvider iconName="doctor" />
-    //                   </div>
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Patient Name: </strong> {appointmentName}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="clock" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Visiting Time: </strong>{" "}
-    //                     {extractTime(startDateTime)}-{extractTime(endDateTime)}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="calendar" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Date: </strong>
-    //                     {extractDate(appointmentDate)}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <div style={{ marginLeft: -5 }}>
-    //                     <SVGIconProvider iconName="doctor" />
-    //                   </div>
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Appointed Doctor: </strong> {employeeName}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="followup" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Follow-up: </strong> Yes
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   {/* <SVGIconProvider iconName="followup" /> */}
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong>
-    //                   </p>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //           </div>
-
-    //         ) : (
-    //           // Patient Last Visit Details in Table
-
-    //           <div className="w-full animate-fade-in">
-    //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
-    //               Patient Last Visits
-    //             </h3>
-
-    //             {isFetchingLastVisit ? (
-    //               <div className="flex justify-center items-center">
-    //                 <Spinner />
-    //               </div>
-    //             ) : lastVisitData.length > 0 ? (
-    //               <div className="overflow-x-auto">
-    //                 <table className="w-full table-auto border-collapse border border-gray-300">
-    //                   <thead>
-    //                     <tr className="">
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         Date
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         Start Time
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         End Time
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                        Appointed Doctor
-    //                       </th>
-    //                     </tr>
-    //                   </thead>
-    //                   <tbody>
-    //                     {lastVisitData.map((visit) => (
-    //                       <tr key={visit.id}>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractDate(visit.dateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractTime(visit.startDateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractTime(visit.endDateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                          {visit.doctorName}
-    //                         </td>
-    //                       </tr>
-    //                     ))}
-    //                   </tbody>
-    //                 </table>
-    //               </div>
-    //             ) : (
-    //               <p className="text-sm sm:text-medium text-red-500 text-center">
-    //                 No data available for the last visits.
-    //               </p>
-    //             )}
-
-    //             <div className="flex justify-end mt-6">
-    //               <StyledButton
-    //                 label="Close"
-    //                 clickEvent={handleCloseLastVisit}
-
-    //               />
-    //             </div>
-    //           </div>
-
-    //         )}
-    //       </CardBody>
-    //     </Card>
-    //   </>
-    // );
-    // return (
-    //   <>
-    //     <div>
-    //       {loading && (
-    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-    //           <Spinner />
-    //         </div>
-    //       )}
-    //     </div>
-    //     <Card
-    //       isBlurred
-    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-    //       shadow="sm"
-    //     >
-    //       <CardBody>
-    //         <div className="relative overflow-hidden">
-    //           {/* Container for Sliding Views */}
-    //           <div
-    //             className={`flex transition-transform duration-500 ease-in-out ${
-    //               showLastVisit ? '-translate-x-full' : 'translate-x-0'
-    //             }`}
-    //           >
-    //             {/* Appointment Details */}
-    //             <div className="flex-shrink-0 w-full">
-    //               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-    //                 <div className="relative col-span-6 md:col-span-4">
-    //                   <Image
-    //                     alt="Patient photo"
-    //                     className="object-cover"
-    //                     height={200}
-    //                     shadow="md"
-    //                     src={USER_ICONS.FEMALE_USER}
-    //                     width="100%"
-    //                   />
-    //                 </div>
-
-    //                 <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-    //                   <div className="flex justify-between items-center">
-    //                     <h3 className="font-semibold text-foreground/90">
-    //                       Appointment Details
-    //                     </h3>
-    //                     <StyledButton label="Follow-Up" />
-    //                   </div>
-
-    //                   <div className="space-y-3">
-    //                     <div className="flex items-center">
-    //                       <div style={{ marginLeft: -5 }}>
-    //                         <SVGIconProvider iconName="doctor" />
-    //                       </div>
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Patient Name: </strong> {appointmentName}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="clock" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Visiting Time: </strong>
-    //                         {extractTime(startDateTime)}-{extractTime(endDateTime)}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="calendar" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Date: </strong>
-    //                         {extractDate(appointmentDate)}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <div style={{ marginLeft: -5 }}>
-    //                         <SVGIconProvider iconName="doctor" />
-    //                       </div>
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Appointed Doctor: </strong> {employeeName}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="followup" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Follow-up: </strong> Yes
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <p
-    //                         onClick={handleViewLastVisit}
-    //                         className="text-sm sm:text-medium ml-2 underline cursor-pointer"
-    //                       >
-    //                         <strong>See last visit</strong>
-    //                       </p>
-    //                     </div>
-    //                   </div>
-    //                 </div>
-    //               </div>
-    //             </div>
-
-    //             {/* Patient Last Visit */}
-    //             <div className="flex-shrink-0 w-full">
-    //               <div className="w-full">
-    //                 <h3 className="font-semibold text-foreground/90 text-center mb-6">
-    //                   Patient Last Visits
-    //                 </h3>
-
-    //                 {isFetchingLastVisit ? (
-    //                   <div className="flex justify-center items-center">
-    //                     <Spinner />
-    //                   </div>
-    //                 ) : lastVisitData.length > 0 ? (
-    //                   <div className="overflow-x-auto">
-    //                     <table className="w-full table-auto border-collapse border border-gray-300">
-    //                       <thead>
-    //                         <tr>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Date
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Start Time
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             End Time
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Appointed Doctor
-    //                           </th>
-    //                         </tr>
-    //                       </thead>
-    //                       <tbody>
-    //                         {lastVisitData.map((visit) => (
-    //                           <tr key={visit.id}>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractDate(visit.dateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractTime(visit.startDateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractTime(visit.endDateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {visit.doctorName}
-    //                             </td>
-    //                           </tr>
-    //                         ))}
-    //                       </tbody>
-    //                     </table>
-    //                   </div>
-    //                 ) : (
-    //                   <p className="text-sm sm:text-medium text-red-500 text-center">
-    //                     No data available for the last visits.
-    //                   </p>
-    //                 )}
-
-    //                 <div className="flex justify-end mt-6">
-    //                   <StyledButton label="Close" clickEvent={handleCloseLastVisit} />
-    //                 </div>
-    //               </div>
-    //             </div>
-    //           </div>
-    //         </div>
-    //       </CardBody>
-    //     </Card>
-    //   </>
-    // );
   }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
@@ -1576,7 +1197,7 @@ export default function ModalForm(props: {
                         height={200}
                         shadow="md"
                         // src={USER_ICONS.MALE_USER}
-                        src={patientPhoto?patientPhoto:patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
+                        src={profilePhoto ? profilePhoto :USER_ICONS.MALE_USER}
                         width="100%"
                       />
                     </div>
@@ -1697,31 +1318,18 @@ export default function ModalForm(props: {
             <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
                 <div>
-                  {/* <div className="relative drop-shadow-2">
-                    <Image
-                       src={patientPhoto?patientPhoto:patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
-                      width={160}
-                      height={160}
-                      className="overflow-hidden rounded-full"
-                      alt="profile"
-                    />
-                  </div> */}
-
-{patientPhotoLoading ? (
-      <div className="flex items-center justify-center w-[160px] h-[160px] bg-gray-200 rounded-full">
-        <Spinner size="lg" className="text-primary" /> {/* Your spinner component */}
-      </div>
-    ) : (
+                
       <div className="relative drop-shadow-2">
       <Image
-        src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
+        // src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
+         src={profilePhoto ? profilePhoto :USER_ICONS.MALE_USER}
         width={160}
         height={160}
         className="overflow-hidden rounded-full"
         alt="profile"
       />
       </div>
-    )}
+  
 
                   <label
                     htmlFor="profilePhoto"
@@ -1738,7 +1346,7 @@ export default function ModalForm(props: {
                       id="profilePhoto"
                       className="sr-only"
                       accept="image/png, image/jpg, image/jpeg"
-                      onChange={handleProfilePhotoChangePatient}
+                      onChange={handleProfilePhotoChange}
                     />
                   </label>
                 </div>
@@ -1794,47 +1402,7 @@ export default function ModalForm(props: {
                       )}
                     </div>
                   </div>
-                  {/* <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Status: </strong>{" "}
-                      {!editSelectedPatientStatus && patientStatus}
-                    </p>
-                    
-                    {editSelectedPatientStatus && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Input
-                          type="text"
-                          placeholder="Patient status.."
-                          labelPlacement="outside"
-                          value={patientStatus}
-                          onChange={(e) => {
-                            setPatientStatus(e.target.value)
-
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
-                      {!editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
-                      {editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
-                    </div>
-                  </div> */}
+               
 
                   <div className="flex items-center">
                     <SVGIconProvider iconName="blood-drop" />
@@ -2047,6 +1615,18 @@ export default function ModalForm(props: {
                       )}
                     </div>
                   </div>
+
+                  {selectedFiles.length > 0 && (
+        <div className="mt-4">
+          <h4>Selected Files:</h4>
+          <ul>
+            {selectedFiles.map((file, index) => (
+              <li key={index}  className="text-blue underline">{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
                   <div
                     id="FileUpload"
                     className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
@@ -2055,8 +1635,10 @@ export default function ModalForm(props: {
                       type="file"
                       name="profilePhoto"
                       id="profilePhoto"
-                      accept="image/png, image/jpg, image/jpeg"
+                      // accept="image/png, image/jpg, image/jpeg"
+                         accept=".png, .jpg, .jpeg, .pdf, .doc, .docx"
                       className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
+                      onChange={handleFileChange}
                     />
                     <div className="flex flex-col items-center justify-center">
                       <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
@@ -2075,7 +1657,10 @@ export default function ModalForm(props: {
                     </div>
                   </div>
                 </div>
+               
               </div>
+
+             
             </div>
           </CardBody>
         </Card>
@@ -2239,31 +1824,17 @@ export default function ModalForm(props: {
               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
                 <div className="relative col-span-6 md:col-span-4">
                   <div>
-                    {/* <div className="relative drop-shadow-2">
+                    <div className="relative drop-shadow-2">
                       <Image
-                         src={employeePhoto?employeePhoto:USER_ICONS.MALE_USER}
+                         src={profilePhoto?profilePhoto:USER_ICONS.MALE_USER}
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
                         alt="profile"
                       />
-                    </div> */}
+                    </div>
 
-{employeePhotoLoading ? (
-      <div className="flex items-center justify-center w-[160px] h-[160px] bg-gray-200 rounded-full">
-        <Spinner size="lg" className="text-primary" /> {/* Your spinner component */}
-      </div>
-    ) : (
-      <div className="relative drop-shadow-2">
-      <Image
-        src={employeePhoto ? employeePhoto : USER_ICONS.MALE_USER}
-        width={160}
-        height={160}
-        className="overflow-hidden rounded-full"
-        alt="profile"
-      />
-      </div>
-    )}
+ 
  
 
                     <label
@@ -2282,7 +1853,7 @@ export default function ModalForm(props: {
                         className="sr-only"
                         accept="image/png, image/jpg, image/jpeg"
                         // onChange={handleProfilePhotoChange}
-                        onChange={handleProfilePhotoChangeEmployee}
+                        onChange={handleProfilePhotoChange}
                       />
                     </label>
                   </div>
