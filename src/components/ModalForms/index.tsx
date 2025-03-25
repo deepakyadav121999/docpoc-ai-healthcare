@@ -55,6 +55,56 @@ import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
 import { Time } from "@internationalized/date";
 
+interface FileItemProps {
+  file: File;
+  onRemove: (file: File) => void;
+}
+
+const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
+  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  let iconName = 'file-icon'; // Default icon
+
+  switch (fileExtension) {
+    case 'pdf':
+      iconName = 'document';
+      break;
+    case 'doc':
+    case 'docx':
+      iconName = 'document';
+      break;
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+      iconName = 'document';
+      break;
+    default:
+      iconName = 'document';
+  }
+
+  // Truncate file name if it's too long
+  const truncatedName = file.name.length > 20 ? `${file.name.substring(0, 17)}...` : file.name;
+
+  return (
+    <div className="flex items-center justify-between p-2 border rounded mb-2  shadow-sm">
+      <div className="flex items-center">
+        <SVGIconProvider iconName={iconName}  />
+        <span className="truncate max-w-xs">{truncatedName}</span>
+      </div>
+      <button
+        onClick={() => onRemove(file)}
+        className="text-red-500 hover:text-red-700"
+      > X
+        <SVGIconProvider iconName="close" />
+      </button>
+    </div>
+  );
+};
+
+
+
+
+
+
 const PlaceholderImage = () => (
   <svg width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
     <rect width="100%" height="100%" fill="#e0e0e0" />
@@ -149,6 +199,24 @@ export default function ModalForm(props: {
   const[patientGender, setPatientGender] =useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
   const[patientPhotoLoading, setPatientPhotoLoading] = useState(false)
+const[patientDocument, setPatientDocument]= useState({})
+  const [appointmentId, setAppointmentId] = useState('');
+  const [reportType, setReportType] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSharedWithPatient, setIsSharedWithPatient] = useState(false);
+  const [amount, setAmount] = useState('');
+
+  // Example lists for dropdowns
+  const appointmentList = [
+    { key: 'a1234567-89ab-cdef-0123-456789abcdef', label: 'Appointment 1' },
+    { key: 'b2345678-90bc-def0-1234-567890abcdef', label: 'Appointment 2' },
+    // Add more appointments as needed
+  ];
+  const reportTypeList = [
+    { key: 'INVOICE', label: 'Invoice' },
+    { key: 'REPORT', label: 'Report' },
+    // Add more report types as needed
+  ];
   // const [loading, setLoading] = useState<boolean>(true);
   const [lastVisit, setLastVisit] = useState<string>("N/A");
   const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
@@ -294,6 +362,7 @@ export default function ModalForm(props: {
       setGender(response.data.gender);
       setPatientId(response.data.id);
       setPatientGender(response.data.gender)
+      setPatientDocument(response.data.documents)
     } catch (err) {
     } finally {
       setLoading(false);
@@ -588,7 +657,8 @@ export default function ModalForm(props: {
         notificationStatus: notificationStatus,
         dob: patientDob,
         gender: gender,
-        dp:patientPhoto
+        dp:patientPhoto,
+        document:patientDocument
       };
 
       props.onDataChange(updatedData);
@@ -627,6 +697,7 @@ export default function ModalForm(props: {
     patientStatus,
     notificationStatus,
     patientDob,
+    patientDocument,
     gender,
     emloyeeBranch,
     employeeName,
@@ -708,7 +779,9 @@ export default function ModalForm(props: {
     }
 
   };
-  // const handleFileChange = (event:React.ChangeEvent<HTMLInputElement>) => {
+
+
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   //   const files = event.target.files ? Array.from(event.target.files) : [];
   //   const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
 
@@ -716,9 +789,16 @@ export default function ModalForm(props: {
   //     alert('Some files were too large and were not selected.');
   //   }
 
-  //   setSelectedFiles(validFiles);
-
+  //   // Concatenate new valid files with existing selected files
+  //   setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
+  //   props.onFilesChange([...selectedFiles, ...validFiles]); 
   // };
+
+
+  // const handleRemoveFile = (fileToRemove: File) => {
+  //   setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
+  // };
+  
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
@@ -733,8 +813,10 @@ export default function ModalForm(props: {
     props.onFilesChange([...selectedFiles, ...validFiles]); 
   };
 
- 
-  
+  const handleRemoveFile = (fileToRemove: File) => {
+    setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  };
+
 
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
@@ -1616,16 +1698,6 @@ export default function ModalForm(props: {
                     </div>
                   </div>
 
-                  {selectedFiles.length > 0 && (
-        <div className="mt-4">
-          <h4>Selected Files:</h4>
-          <ul>
-            {selectedFiles.map((file, index) => (
-              <li key={index}  className="text-blue underline">{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</li>
-            ))}
-          </ul>
-        </div>
-      )}
 
                   <div
                     id="FileUpload"
@@ -1640,6 +1712,17 @@ export default function ModalForm(props: {
                       className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
                       onChange={handleFileChange}
                     />
+
+{selectedFiles.length > 0 && (
+                    <div className="mt-4 max-h-40 overflow-y-auto">
+                      {/* <h4>Selected Files:</h4> */}
+                      <div className="grid grid-cols-1 gap-2">
+                        {selectedFiles.map((file, index) => (
+                          <FileItem key={index} file={file} onRemove={handleRemoveFile} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                     <div className="flex flex-col items-center justify-center">
                       <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
                         <SVGIconProvider
@@ -1655,6 +1738,7 @@ export default function ModalForm(props: {
                         PDF, DOC, PNG, JPG (max, 800 X 800px)
                       </p>
                     </div>
+                  
                   </div>
                 </div>
                

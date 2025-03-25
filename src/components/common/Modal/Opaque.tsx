@@ -39,6 +39,9 @@ interface PatientData{
   name?: string;
   displayPicture?: string;
   dp?:string;
+  document?:string;
+  documents?: Array<string>;
+
 }
 export default function OpaqueModal(props: {
   modalType: { view: MODAL_TYPES; edit: MODAL_TYPES; delete: MODAL_TYPES };
@@ -66,7 +69,7 @@ export default function OpaqueModal(props: {
   const[profilePhotoUrl, setProfilePhotoUrl] =useState("")
     const [accessToken, setAccessToken] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-
+  const [fileUrls, setFileUrls] = useState<string[]>([]);
  const dispatch = useDispatch<AppDispatch>();
 
   const handleProfilePhotoChange = (file:any) => {
@@ -302,13 +305,39 @@ export default function OpaqueModal(props: {
         profilePictureUrl = await uploadProfilePicture(selectedFile, updatedPatientData.name || "");
         setProfilePhotoUrl(profilePictureUrl);
       }
+  // Parse existing documents
+  let existingDocuments: Record<string, string> = {};
+  if (updatedPatientData.document) {
+    try {
+      existingDocuments = JSON.parse(updatedPatientData.document);
+    } catch (error) {
+      console.error("Error parsing existing documents:", error);
+    }
+  }
 
+  // Upload new files and get their URLs
+  const documentsObject: Record<string, string> = { ...existingDocuments };
+  if (selectedFiles.length > 0) {
+    const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
+    setFileUrls(uploadedFileUrls);
 
-      const requestData = {
-        id: props.userId,
-        displayPicture: profilePictureUrl ?profilePictureUrl:updatedPatientData.dp,
-        ...updatedPatientData,
-      };
+    // Append new documents to the existing ones
+    uploadedFileUrls.forEach((url, index) => {
+      const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
+      documentsObject[newKey] = url;
+    });
+  }
+
+  // Convert documentsObject to a JSON string
+  const documentsPayload = JSON.stringify(documentsObject);
+
+  const requestData = {
+    id: props.userId,
+    displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
+    documents: documentsPayload ? documentsPayload : updatedPatientData.document,
+    ...updatedPatientData,
+  };
+   
 
       const response = await axios.patch(endpoint, requestData, {
         headers: {
@@ -352,9 +381,8 @@ export default function OpaqueModal(props: {
        profilePictureUrl = await uploadProfilePicture(selectedFile, updatedEmployeeData.name || "");
         setProfilePhotoUrl(profilePictureUrl);
       }
-      if(selectedFiles){
-
-      }
+     
+     
 
       const requestData = {
         id: props.userId,
