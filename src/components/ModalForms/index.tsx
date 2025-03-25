@@ -60,18 +60,20 @@ interface FileItemProps {
   onRemove: (file: File) => void;
 }
 
+interface FileItemProps {
+  file: File;
+  onRemove: (file: File) => void;
+}
+
 const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
-  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  const fileExtension = file.name.split('.').pop()?.toLowerCase(); // Get file extension
   let iconName = 'file-icon'; // Default icon
 
+  // Use appropriate icon for supported extensions
   switch (fileExtension) {
     case 'pdf':
-      iconName = 'document';
-      break;
     case 'doc':
     case 'docx':
-      iconName = 'document';
-      break;
     case 'jpg':
     case 'jpeg':
     case 'png':
@@ -81,19 +83,19 @@ const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
       iconName = 'document';
   }
 
-  // Truncate file name if it's too long
-  const truncatedName = file.name.length > 20 ? `${file.name.substring(0, 17)}...` : file.name;
+  // Generate a name in the format: timestamp.extension (e.g., 1679672736284.jpg)
+  const generatedName = `${Date.now()}.${fileExtension}`;
 
   return (
-    <div className="flex items-center justify-between p-2 border rounded mb-2  shadow-sm">
+    <div className="flex items-center justify-between p-2 border rounded mb-2 shadow-sm">
       <div className="flex items-center">
-        <SVGIconProvider iconName={iconName}  />
-        <span className="truncate max-w-xs">{truncatedName}</span>
+        <SVGIconProvider iconName={iconName} />
+        <span className="truncate max-w-xs">{generatedName}</span>
       </div>
       <button
         onClick={() => onRemove(file)}
         className="text-red-500 hover:text-red-700"
-      > X
+      >
         <SVGIconProvider iconName="close" />
       </button>
     </div>
@@ -133,8 +135,8 @@ export default function ModalForm(props: {
   type: string;
   userId: string;
   onDataChange: (data: any) => void;
-  onProfilePhotoChange:(file:any)=>void;
-  onFilesChange:(files:any)=>void;
+  onProfilePhotoChange: (file: any) => void;
+  onFilesChange: (files: any) => void;
 }) {
 
 
@@ -179,14 +181,14 @@ export default function ModalForm(props: {
     useState<string>(employeeDesignation);
 
   const [tempDesignation, setTempDesignation] = useState(employeeDesignation);
-  const[employeeId, setEmployeeId] = useState("")
+  const [employeeId, setEmployeeId] = useState("")
   const [employeePhone, setEmployeePhone] = useState("");
   const [emloyeeBranch, setEmployeeBranch] = useState("");
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
-  const[employeePhoto, setEmployeePhoto]= useState("")
-  const[employeePhotoLoading, setEmployeePhotoLoading] = useState(false)
+  const [employeePhoto, setEmployeePhoto] = useState("")
+  const [employeePhotoLoading, setEmployeePhotoLoading] = useState(false)
   const [editSelectedPatient, setEditPatient] = useState(false);
 
   const [patientName, setPatientName] = useState("");
@@ -195,11 +197,11 @@ export default function ModalForm(props: {
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [patientStatus, setPatientStatus] = useState("");
-  const[patientPhoto,setPatientPhoto] =useState("")
-  const[patientGender, setPatientGender] =useState("")
+  const [patientPhoto, setPatientPhoto] = useState("")
+  const [patientGender, setPatientGender] = useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
-  const[patientPhotoLoading, setPatientPhotoLoading] = useState(false)
-const[patientDocument, setPatientDocument]= useState({})
+  const [patientPhotoLoading, setPatientPhotoLoading] = useState(false)
+  const [patientDocument, setPatientDocument] = useState({})
   const [appointmentId, setAppointmentId] = useState('');
   const [reportType, setReportType] = useState('');
   const [description, setDescription] = useState('');
@@ -657,8 +659,8 @@ const[patientDocument, setPatientDocument]= useState({})
         notificationStatus: notificationStatus,
         dob: patientDob,
         gender: gender,
-        dp:patientPhoto,
-        document:patientDocument
+        dp: patientPhoto,
+        document: patientDocument
       };
 
       props.onDataChange(updatedData);
@@ -668,7 +670,7 @@ const[patientDocument, setPatientDocument]= useState({})
         name: employeeName,
         phone: employeePhone,
         email: employeeEmail,
-        dp:employeePhoto,
+        dp: employeePhoto,
         json: JSON.stringify({
           dob: employeeDOB,
           designation: employeeDesignation,
@@ -798,7 +800,7 @@ const[patientDocument, setPatientDocument]= useState({})
   // const handleRemoveFile = (fileToRemove: File) => {
   //   setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
   // };
-  
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
@@ -810,8 +812,9 @@ const[patientDocument, setPatientDocument]= useState({})
 
     // Concatenate new valid files with existing selected files
     setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
-    props.onFilesChange([...selectedFiles, ...validFiles]); 
+    props.onFilesChange([...selectedFiles, ...validFiles]);
   };
+  
 
   const handleRemoveFile = (fileToRemove: File) => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
@@ -913,9 +916,8 @@ const[patientDocument, setPatientDocument]= useState({})
           <CardBody>
             <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${
-                  showLastVisit ? "-translate-x-full" : "translate-x-0"
-                }`}
+                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
+                  }`}
               >
                 <div className="flex-shrink-0 w-full">
                   <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
@@ -1265,9 +1267,8 @@ const[patientDocument, setPatientDocument]= useState({})
           <CardBody>
             <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${
-                  showLastVisit ? "-translate-x-full" : "translate-x-0"
-                }`}
+                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
+                  }`}
               >
                 <div className="flex-shrink-0 w-full">
                   {/* patient details */}
@@ -1279,7 +1280,7 @@ const[patientDocument, setPatientDocument]= useState({})
                         height={200}
                         shadow="md"
                         // src={USER_ICONS.MALE_USER}
-                        src={profilePhoto ? profilePhoto :USER_ICONS.MALE_USER}
+                        src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
                         width="100%"
                       />
                     </div>
@@ -1400,18 +1401,18 @@ const[patientDocument, setPatientDocument]= useState({})
             <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
                 <div>
-                
-      <div className="relative drop-shadow-2">
-      <Image
-        // src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
-         src={profilePhoto ? profilePhoto :USER_ICONS.MALE_USER}
-        width={160}
-        height={160}
-        className="overflow-hidden rounded-full"
-        alt="profile"
-      />
-      </div>
-  
+
+                  <div className="relative drop-shadow-2">
+                    <Image
+                      // src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
+                      src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
+                      width={160}
+                      height={160}
+                      className="overflow-hidden rounded-full"
+                      alt="profile"
+                    />
+                  </div>
+
 
                   <label
                     htmlFor="profilePhoto"
@@ -1484,7 +1485,7 @@ const[patientDocument, setPatientDocument]= useState({})
                       )}
                     </div>
                   </div>
-               
+
 
                   <div className="flex items-center">
                     <SVGIconProvider iconName="blood-drop" />
@@ -1698,11 +1699,40 @@ const[patientDocument, setPatientDocument]= useState({})
                     </div>
                   </div>
 
+             
 
+                  { 
+//                   selectedFiles.length > 0 && ( 
+//                       <div className="  block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
+                   
+//                                         <div className="mt-4 max-h-40 overflow-y-auto">
+//                                           {/* <h4>Selected Files:</h4> */}
+//                                           <div className="grid grid-cols-1 gap-2">
+//                                             {selectedFiles.map((file, index) => (
+//                                               <FileItem key={index} file={file} onRemove={handleRemoveFile} />
+//                                             ))}
+//                                           </div>
+//                                         </div>
+//                                       </div>
+// )
+}
+         
+               
+               
                   <div
                     id="FileUpload"
                     className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
                   >
+                
+                                         <div className="mt-4 max-h-40 overflow-y-auto">
+                                          {/* <h4>Selected Files:</h4> */}
+                                          <div className="grid grid-cols-1 gap-2">
+                                            {selectedFiles.map((file, index) => (
+                                              <FileItem key={index} file={file} onRemove={handleRemoveFile} />
+                                            ))}
+                                          </div>
+                                        </div>
+
                     <input
                       type="file"
                       name="profilePhoto"
@@ -1713,17 +1743,8 @@ const[patientDocument, setPatientDocument]= useState({})
                       onChange={handleFileChange}
                     />
 
-{selectedFiles.length > 0 && (
-                    <div className="mt-4 max-h-40 overflow-y-auto">
-                      {/* <h4>Selected Files:</h4> */}
-                      <div className="grid grid-cols-1 gap-2">
-                        {selectedFiles.map((file, index) => (
-                          <FileItem key={index} file={file} onRemove={handleRemoveFile} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                    <div className="flex flex-col items-center justify-center">
+
+                  <div className="flex flex-col items-center justify-center">
                       <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
                         <SVGIconProvider
                           iconName="upload"
@@ -1740,14 +1761,16 @@ const[patientDocument, setPatientDocument]= useState({})
                     </div>
                   
                   </div>
-                </div>
-               
+
+              
               </div>
 
-             
             </div>
-          </CardBody>
-        </Card>
+
+
+          </div>
+        </CardBody>
+      </Card >
       </>
     );
   }
@@ -1814,7 +1837,7 @@ const[patientDocument, setPatientDocument]= useState({})
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={employeePhoto?employeePhoto:USER_ICONS.MALE_USER}
+                    src={employeePhoto ? employeePhoto : USER_ICONS.MALE_USER}
                     width="100%"
                   />
                 </div>
@@ -1910,7 +1933,7 @@ const[patientDocument, setPatientDocument]= useState({})
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                         src={profilePhoto?profilePhoto:USER_ICONS.MALE_USER}
+                        src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
@@ -1918,8 +1941,8 @@ const[patientDocument, setPatientDocument]= useState({})
                       />
                     </div>
 
- 
- 
+
+
 
                     <label
                       htmlFor="profilePhoto"
@@ -2412,7 +2435,7 @@ const[patientDocument, setPatientDocument]= useState({})
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
       return (
         <>
-          <AddAppointment onUsersAdded={() => {}} />
+          <AddAppointment onUsersAdded={() => { }} />
         </>
       );
     }
