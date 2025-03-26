@@ -959,7 +959,9 @@ export default function ModalForm(props: {
                     </h3>
 
                     <div className="flex flex-col center">
-                      <VisitHistoryTable patientId={patientId} />
+                    {
+                    showLastVisit && <VisitHistoryTable patientId={patientId} /> 
+                    }
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -1312,7 +1314,7 @@ export default function ModalForm(props: {
                         <div className="flex items-center">
                           <p
                             onClick={() => {
-                              fetchLastVisitData(props.userId)
+                              // fetchLastVisitData(props.userId)
                               setShowLastVisit(true)
                             }}
                             className="text-sm sm:text-medium ml-2 underline cursor-pointer"
@@ -1333,7 +1335,8 @@ export default function ModalForm(props: {
 
                     {/* Show VisitHistoryTable */}
                     <div className="flex flex-col center">
-                      <VisitHistoryTable patientId={patientId} />
+                    {showLastVisit  &&  <VisitHistoryTable patientId={patientId} />
+                    }
                     </div>
 
                     <div className="flex justify-end mt-6">
