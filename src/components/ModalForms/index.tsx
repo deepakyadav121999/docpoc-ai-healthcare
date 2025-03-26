@@ -57,15 +57,12 @@ import { Time } from "@internationalized/date";
 
 interface FileItemProps {
   file: File;
+  displayName: string; // Generated name (e.g., 2025-03-25.jpg)
   onRemove: (file: File) => void;
 }
 
-interface FileItemProps {
-  file: File;
-  onRemove: (file: File) => void;
-}
 
-const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, onRemove , displayName}) => {
   const fileExtension = file.name.split('.').pop()?.toLowerCase(); // Get file extension
   let iconName = 'file-icon'; // Default icon
 
@@ -90,7 +87,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
     <div className="flex items-center justify-between p-2 border rounded mb-2 shadow-sm">
       <div className="flex items-center">
         <SVGIconProvider iconName={iconName} />
-        <span className="truncate max-w-xs">{generatedName}</span>
+        <span className="truncate max-w-xs">{displayName}</span>
       </div>
       <button
         onClick={() => onRemove(file)}
@@ -606,7 +603,7 @@ export default function ModalForm(props: {
       props.type === MODAL_TYPES.DELETE_PATIENT
     ) {
       fetchPatientById(props.userId);
-      fetchLastVisitData(props.userId);
+      // fetchLastVisitData(props.userId);
     } else if (
       props.type === MODAL_TYPES.VIEW_EMPLOYEE ||
       props.type === MODAL_TYPES.EDIT_EMPLOYEE ||
@@ -783,24 +780,6 @@ export default function ModalForm(props: {
   };
 
 
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = event.target.files ? Array.from(event.target.files) : [];
-  //   const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
-
-  //   if (validFiles.length !== files.length) {
-  //     alert('Some files were too large and were not selected.');
-  //   }
-
-  //   // Concatenate new valid files with existing selected files
-  //   setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
-  //   props.onFilesChange([...selectedFiles, ...validFiles]); 
-  // };
-
-
-  // const handleRemoveFile = (fileToRemove: File) => {
-  //   setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
-  // };
-
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
@@ -883,19 +862,7 @@ export default function ModalForm(props: {
     },
   ];
 
-  // const extractDate = (dateTimeString: string): string => {
-  //   if (!dateTimeString) {
-  //     return "N/A"; // Fallback value
-  //   }
-  //   return dateTimeString.split("T")[0]; // Extract the date portion
-  // };
-
-  // const extractTime = (dateTimeString: string): string => {
-  //   if (!dateTimeString) {
-  //     return "N/A"; // Fallback value
-  //   }
-  //   return dateTimeString.split("T")[1]?.split(".")[0]; // Extract the time portion
-  // };
+ 
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
@@ -1344,7 +1311,10 @@ export default function ModalForm(props: {
 
                         <div className="flex items-center">
                           <p
-                            onClick={() => setShowLastVisit(true)}
+                            onClick={() => {
+                              fetchLastVisitData(props.userId)
+                              setShowLastVisit(true)
+                            }}
                             className="text-sm sm:text-medium ml-2 underline cursor-pointer"
                           >
                             <strong>See Previous Visits</strong>
@@ -1727,9 +1697,15 @@ export default function ModalForm(props: {
                                          <div className="mt-4 max-h-40 overflow-y-auto">
                                           {/* <h4>Selected Files:</h4> */}
                                           <div className="grid grid-cols-1 gap-2">
-                                            {selectedFiles.map((file, index) => (
-                                              <FileItem key={index} file={file} onRemove={handleRemoveFile} />
-                                            ))}
+                                            {selectedFiles.map((file, index) => { 
+                                              const fileExtension = file.name.split('.').pop();
+                                              // Create a new display name using Date.now() and the file extension
+                                              const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
+
+                                             return (<FileItem key={index} file={file} displayName={displayName} onRemove={handleRemoveFile} />
+                                            )
+                                            })}
+                                          
                                           </div>
                                         </div>
 
