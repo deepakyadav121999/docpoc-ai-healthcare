@@ -44,44 +44,6 @@ export default function UserAccess() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedBranchId = branchResponse.data[0]?.id;
-      // const profileEndpoint = `${API_URL}/auth/profile`;
-      // const profileResponse = await axios.get(profileEndpoint,{
-      //  headers:{
-      //    Authorization: `Bearer ${token}`,
-      //    "Content-Type": "application/json",
-      //  },
-      // })
-      // const userProfile = localStorage.getItem("userProfile");
-
-      // // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-
-      // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
       // const fetchedBranchId = profileResponse.data?.branchId;

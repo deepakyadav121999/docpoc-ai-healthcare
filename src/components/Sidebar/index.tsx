@@ -321,6 +321,34 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loadingItem, setLoadingItem] = useState<string | null>(null); // Track which menu item is loading
 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  
+  useEffect(() => {
+    const rootElement = document.documentElement;
+
+    // Function to update the theme state
+    const updateDarkMode = () => {
+      setIsDarkMode(rootElement.classList.contains("dark"));
+    };
+
+   
+    updateDarkMode();
+
+    // MutationObserver to watch for changes to the "class" attribute of the <html> tag
+    const observer = new MutationObserver(() => {
+      updateDarkMode();
+    });
+
+    // Observe the class attribute on the <html> element
+    observer.observe(rootElement, { attributes: true, attributeFilter: ["class"] });
+
+    // Cleanup observer on unmount
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const handleSignOutClick = () => {
     onOpen(); // Open the modal when "Sign Out" is clicked
   };
@@ -379,7 +407,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Image
                 width={65}
                 height={65}
-                src={"/images/logo/logo-dark.png"}
+                src={
+                isDarkMode?
+                  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
+                  :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
+              }
                 alt="Logo"
                 priority
                 className="dark:hidden"
@@ -388,7 +420,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Image
                 width={65}
                 height={65}
-                src={"/images/logo/logo-dark.png"}
+                src={
+                  isDarkMode?
+                    "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
+                    :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
+                }
                 alt="Logo"
                 priority
                 className="hidden dark:block"

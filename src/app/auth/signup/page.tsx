@@ -59,7 +59,7 @@ const Signup = ({
 
               <div className="mt-31">
                 <Image
-                  src={"/images/grids/grid-02.svg"}
+                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/grid-02.svg"}
                   alt="Logo"
                   width={405}
                   height={325}

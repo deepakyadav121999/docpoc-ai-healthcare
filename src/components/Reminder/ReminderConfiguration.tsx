@@ -14,7 +14,7 @@ export default function ReminderConfiguration() {
             isBordered
             color="primary"
             radius="lg"
-            src="images/others/whatsApp.png"
+            src="https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/whatsapp.png"
           />
         }
         subtitle="Enabled for 231 patients."
@@ -38,7 +38,7 @@ export default function ReminderConfiguration() {
             isBordered
             color="warning"
             radius="lg"
-            src="images/others/sms-big.png"
+            src="https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/sms-big.png"
           />
         }
         subtitle="Enabled for 820 patients."

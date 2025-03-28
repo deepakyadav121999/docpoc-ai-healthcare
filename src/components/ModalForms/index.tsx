@@ -54,53 +54,9 @@ import { VisitHistoryTable } from "./VisitHistoryTable";
 import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
 import { Time } from "@internationalized/date";
+import { useDropzone } from "react-dropzone";
 
-interface FileItemProps {
-  file: File;
-  displayName: string; // Generated name (e.g., 2025-03-25.jpg)
-  onRemove: (file: File) => void;
-}
-
-
-const FileItem: React.FC<FileItemProps> = ({ file, onRemove , displayName}) => {
-  const fileExtension = file.name.split('.').pop()?.toLowerCase(); // Get file extension
-  let iconName = 'file-icon'; // Default icon
-
-  // Use appropriate icon for supported extensions
-  switch (fileExtension) {
-    case 'pdf':
-    case 'doc':
-    case 'docx':
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-      iconName = 'document';
-      break;
-    default:
-      iconName = 'document';
-  }
-
-  // Generate a name in the format: timestamp.extension (e.g., 1679672736284.jpg)
-  const generatedName = `${Date.now()}.${fileExtension}`;
-
-  return (
-    <div className="flex items-center justify-between p-2 border rounded mb-2 shadow-sm">
-      <div className="flex items-center">
-        <SVGIconProvider iconName={iconName} />
-        <span className="truncate max-w-xs">{displayName}</span>
-      </div>
-      <button
-        onClick={() => onRemove(file)}
-        className="text-red-500 hover:text-red-700"
-      >
-        <SVGIconProvider iconName="close" />
-      </button>
-    </div>
-  );
-};
-
-
-
+type FileWithPreview = File & { preview?: string };
 
 
 
@@ -166,7 +122,7 @@ export default function ModalForm(props: {
   const [employeeShiftEndTime, setEmployeeShiftEndTime] = useState<Time | null>(
     null,
   );
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  // const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const designations = [
     { label: "Doctor", value: "doctor" },
     { label: "Nurse", value: "nurse" },
@@ -781,24 +737,56 @@ export default function ModalForm(props: {
 
 
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files ? Array.from(event.target.files) : [];
-    const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files ? Array.from(event.target.files) : [];
+  //   const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
 
-    if (validFiles.length !== files.length) {
-      alert('Some files were too large and were not selected.');
-    }
+  //   if (validFiles.length !== files.length) {
+  //     alert('Some files were too large and were not selected.');
+  //   }
 
-    // Concatenate new valid files with existing selected files
-    setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
-    props.onFilesChange([...selectedFiles, ...validFiles]);
+  //   // Concatenate new valid files with existing selected files
+  //   setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
+  //   props.onFilesChange([...selectedFiles, ...validFiles]);
+  // };
+
+
+  // const handleRemoveFile = (fileToRemove: File) => {
+  //   setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  // };
+
+
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
+
+  // Handle files when dropped or selected
+  const onDrop = (acceptedFiles: File[]) => {
+    const filesWithPreview = acceptedFiles.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return Object.assign(file, {
+          preview: URL.createObjectURL(file), // Generate preview for images
+        });
+      }
+      return file; // No preview for other file types
+    });
+
+    setFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
+    setSelectedFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
+    props.onFilesChange([...selectedFiles, ...filesWithPreview]);
   };
-  
 
-  const handleRemoveFile = (fileToRemove: File) => {
-    setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  const { getRootProps, getInputProps,
+    isDragActive } = useDropzone({
+      onDrop,
+      accept: undefined, // Accept any file type
+      multiple: true,
+    });
+
+  // Remove a specific file
+  const removeFile = (fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setSelectedFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
   };
-
 
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
@@ -862,7 +850,7 @@ export default function ModalForm(props: {
     },
   ];
 
- 
+
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
@@ -894,7 +882,7 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={USER_ICONS.FEMALE_USER}
+                        src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                         width="100%"
                       />
                     </div>
@@ -959,9 +947,9 @@ export default function ModalForm(props: {
                     </h3>
 
                     <div className="flex flex-col center">
-                    {
-                    showLastVisit && <VisitHistoryTable patientId={patientId} /> 
-                    }
+                      {
+                        showLastVisit && <VisitHistoryTable patientId={patientId} />
+                      }
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -1004,7 +992,7 @@ export default function ModalForm(props: {
                   className="object-cover"
                   height={200}
                   shadow="md"
-                  src={USER_ICONS.MALE_USER}
+                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                   width="100%"
                 />
               </div>
@@ -1249,7 +1237,7 @@ export default function ModalForm(props: {
                         height={200}
                         shadow="md"
                         // src={USER_ICONS.MALE_USER}
-                        src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
+                        src={profilePhoto ? profilePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                         width="100%"
                       />
                     </div>
@@ -1335,8 +1323,8 @@ export default function ModalForm(props: {
 
                     {/* Show VisitHistoryTable */}
                     <div className="flex flex-col center">
-                    {showLastVisit  &&  <VisitHistoryTable patientId={patientId} />
-                    }
+                      {showLastVisit && <VisitHistoryTable patientId={patientId} />
+                      }
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -1378,7 +1366,9 @@ export default function ModalForm(props: {
                   <div className="relative drop-shadow-2">
                     <Image
                       // src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
-                      src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
+                      src={profilePhoto ? profilePhoto : 
+                        "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                      }
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
@@ -1672,58 +1662,39 @@ export default function ModalForm(props: {
                     </div>
                   </div>
 
-             
-
-                  { 
-//                   selectedFiles.length > 0 && ( 
-//                       <div className="  block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
-                   
-//                                         <div className="mt-4 max-h-40 overflow-y-auto">
-//                                           {/* <h4>Selected Files:</h4> */}
-//                                           <div className="grid grid-cols-1 gap-2">
-//                                             {selectedFiles.map((file, index) => (
-//                                               <FileItem key={index} file={file} onRemove={handleRemoveFile} />
-//                                             ))}
-//                                           </div>
-//                                         </div>
-//                                       </div>
-// )
-}
-         
-               
-               
+                  {/* 
                   <div
                     id="FileUpload"
                     className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
                   >
-                
-                                         <div className="mt-4 overflow-y-auto">
-                                          {/* <h4>Selected Files:</h4> */}
-                                          <div className="grid grid-cols-1 gap-2">
-                                            {selectedFiles.map((file, index) => { 
-                                              const fileExtension = file.name.split('.').pop();
-                                              // Create a new display name using Date.now() and the file extension
-                                              const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
 
-                                             return (<FileItem key={index} file={file} displayName={displayName} onRemove={handleRemoveFile} />
-                                            )
-                                            })}
-                                          
-                                          </div>
-                                        </div>
+                    <div className="mt-4 overflow-y-auto">
+                    
+                      <div className="grid grid-cols-1 gap-2">
+                        {selectedFiles.map((file, index) => {
+                          const fileExtension = file.name.split('.').pop();
+                          // Create a new display name using Date.now() and the file extension
+                          const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
+
+                          return (<FileItem key={index} file={file} displayName={displayName} onRemove={handleRemoveFile} />
+                          )
+                        })}
+
+                      </div>
+                    </div>
 
                     <input
                       type="file"
-                      name="profilePhoto"
-                      id="profilePhoto"
+                      name="fileUpload"
+                      id="fileUpload"
                       // accept="image/png, image/jpg, image/jpeg"
-                         accept=".png, .jpg, .jpeg, .pdf, .doc, .docx"
+                      accept=".png, .jpg, .jpeg, .pdf, .doc, .docx"
                       className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
                       onChange={handleFileChange}
                     />
 
 
-                  <div className="flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center justify-center">
                       <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
                         <SVGIconProvider
                           iconName="upload"
@@ -1738,18 +1709,90 @@ export default function ModalForm(props: {
                         PDF, DOC, PNG, JPG (max, 800 X 800px)
                       </p>
                     </div>
-                  
+
+                  </div> */}
+
+                  <div className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-400 bg-gray-100 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
+                    {/* File Preview Section */}
+                    <div className="flex flex-wrap gap-4">
+                      {files.map((file) => {
+                         const fileExtension = file.name.split('.').pop();
+                        
+                         const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
+                        
+                         const trimmedFileName =
+                         file.name.length > 8
+                           ? file.name.substring(0, 7)+"."+fileExtension // Trim to 12 characters + "..."
+                           : file.name +"."+fileExtension;
+                        return (
+                        <div
+                          key={file.name}
+                          className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
+                        >
+                          {/* Remove Button*/}
+                          <button
+                            onClick={() => removeFile(file.name)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            X
+                          </button>
+
+                          {/* preview for image files */}
+                          {file.type.startsWith("image/") && file.preview && (
+                            <img
+                              src={file.preview}
+                              alt={file.name}
+                              className="w-full h-full object-cover rounded-md"
+                            />
+                          )}
+
+                
+                          {!file.type.startsWith("image/") && (
+                            <div className="flex flex-col items-center">
+                              <SVGIconProvider iconName="document" />
+                              <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
+                                {/* {file.name} */}
+                                {trimmedFileName}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )})}
+                    </div>
+
+                    {/* Drag-and-Drop Area */}
+                    <div
+                      {...getRootProps()}
+                      className={`mt-6 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 sm:p-8 bg-gray-50 hover:border-primary dark:bg-dark-2 dark:border-dark-3 dark:hover:border-primary`}
+                    >
+                      <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-gray-300 bg-white dark:border-dark-3 dark:bg-gray-dark">
+                        <SVGIconProvider
+                          iconName="upload"
+                          color={GLOBAL_ACTION_ICON_COLOR}
+                        />
+                      </span>
+                      <input {...getInputProps()} />
+                      {isDragActive ? (
+                        <p className="text-green-600 mt-4">Drop the files here...</p>
+                      ) : (
+                        <p className="text-gray-600 mt-4 text-sm sm:text-base">
+                          Drag & drop some files here, or click to select files
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-              
+
+
+
+                </div>
+
               </div>
 
+
             </div>
-
-
-          </div>
-        </CardBody>
-      </Card >
+          </CardBody>
+        </Card >
       </>
     );
   }
@@ -1816,7 +1859,7 @@ export default function ModalForm(props: {
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={employeePhoto ? employeePhoto : USER_ICONS.MALE_USER}
+                    src={employeePhoto ? employeePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                     width="100%"
                   />
                 </div>
@@ -1912,7 +1955,7 @@ export default function ModalForm(props: {
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                        src={profilePhoto ? profilePhoto : USER_ICONS.MALE_USER}
+                        src={profilePhoto ? profilePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
