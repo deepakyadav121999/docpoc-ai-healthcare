@@ -30,14 +30,14 @@ const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
               <Link className="mb-10 inline-block" href="/">
                 <Image
                   className="hidden dark:block"
-                  src={"/images/logo/logo-dark.png"}
+                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"}
                   alt="Logo"
                   width={176}
                   height={32}
                 />
                 <Image
                   className="dark:hidden"
-                  src={"/images/logo/logo-dark.png"}
+                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"}
                   alt="Logo"
                   width={176}
                   height={32}

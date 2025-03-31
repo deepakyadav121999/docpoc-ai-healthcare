@@ -24,11 +24,15 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
 import { useEffect } from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+
 interface AddUsersProps {
   onUsersAdded: () => void;
 }
 const API_URL = process.env.API_URL;
 const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [edit, setEdit] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -42,6 +46,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }),
     userName: "",
     password: "",
+    gender: "",
   });
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -105,13 +110,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     let newWorkingHours = "";
     if (key === "start") {
-      newWorkingHours = `${formattedTime} - ${
-        updatedWorkingHours.split(" - ")[1] || ""
-      }`;
+      newWorkingHours = `${formattedTime} - ${updatedWorkingHours.split(" - ")[1] || ""
+        }`;
     } else {
-      newWorkingHours = `${
-        updatedWorkingHours.split(" - ")[0] || ""
-      } - ${formattedTime}`;
+      newWorkingHours = `${updatedWorkingHours.split(" - ")[0] || ""
+        } - ${formattedTime}`;
     }
 
     handleJsonUpdate("workingHours", newWorkingHours);
@@ -135,6 +138,9 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
     if (!jsonFields.workingHours || jsonFields.workingHours.trim() === " - ") {
       missingFields.push("Working Hours");
+    }
+    if (!formData.gender) {
+      missingFields.push("Gender");
     }
 
     if (missingFields.length > 0) {
@@ -161,38 +167,8 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-        console.error("No hospitals found.");
-        return;
-      }
 
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        console.warn("No branches found for the hospital.");
-        setModalMessage({
-          success: "",
-          error: `No branches found for the hospital."}`,
-        });
-        onOpen();
-        return;
-      }
-
-      const fetchedBranchId = branchResponse.data[0]?.id;
+      const fetchedBranchId = profile?.branchId;
 
       const payload = {
         ...formData,
@@ -219,6 +195,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         }),
         userName: "",
         password: "",
+        gender: "",
       });
       setAccessTypes({
         setAppointments: false,
@@ -234,7 +211,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         // Extract and display the error message from the response
         const apiErrorMessage =
           error.response.data.message &&
-          Array.isArray(error.response.data.message)
+            Array.isArray(error.response.data.message)
             ? error.response.data.message[0].message
             : error.response.data.message || "Unknown error occurred";
 
@@ -391,7 +368,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  onBlur={(e) => {}}
+                  onBlur={(e) => { }}
                   isDisabled={!edit}
                 />
               </div>
@@ -409,6 +386,27 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 />
               </div>
               <div className="mb-4.5 flex flex-col gap-4.5">
+                <Autocomplete
+                  label="Gender"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  placeholder="Select Gender"
+                  defaultItems={[
+                    { label: "Male" },
+                    { label: "Female" },
+                    { label: "Other" },
+                  ]}
+                  onSelectionChange={(key) =>
+                    setFormData({ ...formData, gender: key as string })
+                  }
+                  isDisabled={!edit}
+                  color={TOOL_TIP_COLORS.secondary}
+                >
+                  {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
+                </Autocomplete>
+              </div>
+
+              <div className="mb-4.5 flex flex-col gap-4.5">
                 {/* username */}
                 <Input
                   label="Username"
@@ -419,7 +417,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, userName: e.target.value })
                   }
-                  onBlur={(e) => {}}
+                  onBlur={(e) => { }}
                   isDisabled={!edit}
                 />
               </div>

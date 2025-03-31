@@ -99,7 +99,7 @@ const DropdownUser = () => {
               width={112}
               height={112}
               // src="/images/user/user-03.png"
-              src ={profile.profilePicture? profile?.profilePicture :"/images/user/user-03.png"}
+              src ={profile.profilePicture? profile?.profilePicture :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-placeholder.jpg"}
               style={{
                 width: "auto",
                 height: "auto",
@@ -144,7 +144,7 @@ const DropdownUser = () => {
                   width={112}
                   height={112}
                   // src="/images/user/user-03.png"
-                  src ={profile.profilePicture? profile?.profilePicture:"/images/user/user-03.png"}
+                  src ={profile.profilePicture? profile?.profilePicture:"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-placeholder.jpg"}
                   style={{
                     width: "auto",
                     height: "auto",

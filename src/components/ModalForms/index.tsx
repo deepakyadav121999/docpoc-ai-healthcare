@@ -141,7 +141,7 @@ export default function ModalForm(props: {
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
   const [employeePhoto, setEmployeePhoto] = useState("")
-  const [employeePhotoLoading, setEmployeePhotoLoading] = useState(false)
+  const [employeeGender, setEmployeeGender] = useState(" ")
   const [editSelectedPatient, setEditPatient] = useState(false);
 
   const [patientName, setPatientName] = useState("");
@@ -398,6 +398,7 @@ export default function ModalForm(props: {
       setEmployeePhoto(users.profilePicture)
       setProfilePhoto(users.profilePicture)
       setEmployeeId(users.id)
+      setEmployeeGender(users.gender)
       console.log(users);
 
       const workingHours = parsedJson.workingHours; // e.g., "9:00 AM - 9:00 PM"
@@ -527,12 +528,15 @@ export default function ModalForm(props: {
       setEndDateTime(users.endDateTime);
       setAppointmentDate(users.dateTime);
       setPatientId(users.patientId);
+
+      await fetchPatientById(users.patientId)
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
 
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
       // setShiftStartTime(startTimeObject)
 
       // setShiftEndTime(endTimeObject)
+
 
       const startTimeObject = extractTimeDisplay(users.startDateTime);
       console.log(parseTime(startTimeObject));
@@ -600,6 +604,15 @@ export default function ModalForm(props: {
     setPatientPhone(patientPhone);
     setEditPatientPhone(!editSelectedPatientPhone);
   };
+
+
+  const [editSelectedEmployeeGender, setEditSelectedEmployeeGender] = useState(false);
+
+  const editEmployeeGender = () => {
+    setEmployeeGender(employeeGender)
+    setEditSelectedEmployeeGender(!editSelectedEmployeeGender);
+  };
+
   useEffect(() => {
     if (props.type === MODAL_TYPES.EDIT_PATIENT) {
       const updatedData = {
@@ -611,7 +624,7 @@ export default function ModalForm(props: {
         status: patientStatus,
         notificationStatus: notificationStatus,
         dob: patientDob,
-        gender: gender,
+        gender: patientGender,
         dp: patientPhoto,
         document: patientDocument
       };
@@ -622,6 +635,7 @@ export default function ModalForm(props: {
         branchId: emloyeeBranch,
         name: employeeName,
         phone: employeePhone,
+        gender:employeeGender,
         email: employeeEmail,
         dp: employeePhoto,
         json: JSON.stringify({
@@ -653,12 +667,13 @@ export default function ModalForm(props: {
     notificationStatus,
     patientDob,
     patientDocument,
-    gender,
+    patientGender,
     emloyeeBranch,
     employeeName,
     employeePhone,
     employeeEmail,
     employeeDOB,
+    employeeGender,
     employeeDesignation,
     employeeShiftTime,
     appointmentName,
@@ -734,6 +749,12 @@ export default function ModalForm(props: {
     }
 
   };
+const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false);
+
+  const editGender = () => {
+  setEditSelectedPatientGender(!editSelectedPatientGender);
+ 
+};
 
 
 
@@ -882,7 +903,7 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                        src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                         width="100%"
                       />
                     </div>
@@ -992,7 +1013,7 @@ export default function ModalForm(props: {
                   className="object-cover"
                   height={200}
                   shadow="md"
-                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                  src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
                   width="100%"
                 />
               </div>
@@ -1236,8 +1257,15 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        // src={USER_ICONS.MALE_USER}
-                        src={profilePhoto ? profilePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                        src={
+                          profilePhoto
+                            ? profilePhoto
+                            : patientGender
+                              ? patientGender === "Male"
+                                ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                                : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
+                              : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                        }
                         width="100%"
                       />
                     </div>
@@ -1251,7 +1279,7 @@ export default function ModalForm(props: {
 
                       <div className="space-y-3">
                         <div className="flex items-center">
-                          <SVGIconProvider iconName="clock" />
+                          <SVGIconProvider iconName="user" />
                           <p className="text-sm sm:text-medium ml-2">
                             <strong>Patient Name: </strong>
                             {patientName}
@@ -1270,6 +1298,13 @@ export default function ModalForm(props: {
                             <strong>Status: </strong> {patientStatus}
                           </p>
                         </div>
+                        <div className="flex items-center">
+                          <SVGIconProvider iconName="calendar" />
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Gender: </strong> {patientGender}
+                          </p>
+                        </div>
+
                         <div className="flex items-center">
                           <div style={{ marginLeft: -5 }}>
                             <SVGIconProvider iconName="doctor" />
@@ -1365,10 +1400,17 @@ export default function ModalForm(props: {
 
                   <div className="relative drop-shadow-2">
                     <Image
-                      // src={patientPhoto ? patientPhoto : patientGender=="Male"?USER_ICONS.MALE_USER:USER_ICONS.FEMALE_USER}
-                      src={profilePhoto ? profilePhoto : 
-                        "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                     
+                      src={
+                        profilePhoto
+                          ? profilePhoto
+                          : patientGender
+                            ? patientGender === "Male"
+                              ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                              : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
+                            : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
                       }
+                      
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
@@ -1407,7 +1449,7 @@ export default function ModalForm(props: {
 
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
+                  <SVGIconProvider iconName="user" />
                     <p className="text-sm sm:text-medium ml-2">
                       <strong>Name: </strong>
                       {!editSelectedPatient && patientName}
@@ -1662,6 +1704,51 @@ export default function ModalForm(props: {
                     </div>
                   </div>
 
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="user" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Gender: </strong>
+                      {!editSelectedPatientGender && patientGender}
+                    </p>
+                    {editSelectedPatientGender && (
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button variant="bordered">{patientGender}</Button>
+                          </DropdownTrigger>
+                          <DropdownMenu
+                            aria-label="Select Gender"
+                            items={[
+                              { key: "Male", label: "Male" },
+                              { key: "Female", label: "Female" },
+                              { key: "Other", label: "Other" },
+                            ]}
+                            onAction={(key) => setPatientGender(key.toString())}
+                          >
+                            {(item) => <DropdownItem key={item.key}>{item.label}</DropdownItem>}
+                          </DropdownMenu>
+                        </Dropdown>
+                      </div>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientGender ? (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={() => setEditSelectedPatientGender(true)}
+                        />
+                      ) : (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={() => setEditSelectedPatientGender(false)}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+
+
                   {/* 
                   <div
                     id="FileUpload"
@@ -1716,48 +1803,49 @@ export default function ModalForm(props: {
                     {/* File Preview Section */}
                     <div className="flex flex-wrap gap-4">
                       {files.map((file) => {
-                         const fileExtension = file.name.split('.').pop();
-                        
-                         const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
-                        
-                         const trimmedFileName =
-                         file.name.length > 8
-                           ? file.name.substring(0, 7)+"."+fileExtension // Trim to 12 characters + "..."
-                           : file.name +"."+fileExtension;
+                        const fileExtension = file.name.split('.').pop();
+
+                        const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
+
+                        const trimmedFileName =
+                          file.name.length > 8
+                            ? file.name.substring(0, 7) + "." + fileExtension // Trim to 12 characters + "..."
+                            : file.name + "." + fileExtension;
                         return (
-                        <div
-                          key={file.name}
-                          className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
-                        >
-                          {/* Remove Button*/}
-                          <button
-                            onClick={() => removeFile(file.name)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          <div
+                            key={file.name}
+                            className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
                           >
-                            X
-                          </button>
+                            {/* Remove Button*/}
+                            <button
+                              onClick={() => removeFile(file.name)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                              X
+                            </button>
 
-                          {/* preview for image files */}
-                          {file.type.startsWith("image/") && file.preview && (
-                            <img
-                              src={file.preview}
-                              alt={file.name}
-                              className="w-full h-full object-cover rounded-md"
-                            />
-                          )}
+                            {/* preview for image files */}
+                            {file.type.startsWith("image/") && file.preview && (
+                              <img
+                                src={file.preview}
+                                alt={file.name}
+                                className="w-full h-full object-cover rounded-md"
+                              />
+                            )}
 
-                
-                          {!file.type.startsWith("image/") && (
-                            <div className="flex flex-col items-center">
-                              <SVGIconProvider iconName="document" />
-                              <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
-                                {/* {file.name} */}
-                                {trimmedFileName}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )})}
+
+                            {!file.type.startsWith("image/") && (
+                              <div className="flex flex-col items-center">
+                                <SVGIconProvider iconName="document" />
+                                <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
+                                  {/* {file.name} */}
+                                  {trimmedFileName}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
 
                     {/* Drag-and-Drop Area */}
@@ -1859,7 +1947,7 @@ export default function ModalForm(props: {
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={employeePhoto ? employeePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                    src={employeePhoto ? employeePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
                     width="100%"
                   />
                 </div>
@@ -1892,6 +1980,14 @@ export default function ModalForm(props: {
                         <strong>Phone: </strong>+91- {employeePhone}
                       </p>
                     </div>
+
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="user" />
+                      <p className="text-sm sm:text-medium ml-2">
+                        <strong>Gender: </strong>{employeeGender}
+                      </p>
+                    </div>
+
                     <div className="flex items-center">
                       <SVGIconProvider iconName="icard" />
                       <p className="text-sm sm:text-medium ml-2">
@@ -1909,7 +2005,7 @@ export default function ModalForm(props: {
                     <div className="flex items-center">
                       <SVGIconProvider iconName="calendar" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>Joined On: </strong> 27th Jan, 2021
+                        <strong>Joined On: </strong>  {extractDate(employeeJoiningDate)}
                       </p>
                     </div>
                     <div className="flex items-center">
@@ -1955,7 +2051,7 @@ export default function ModalForm(props: {
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                        src={profilePhoto ? profilePhoto : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                        src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
@@ -2116,6 +2212,83 @@ export default function ModalForm(props: {
                         )}
                       </div>
                     </div>
+
+
+
+                    <div className="flex items-center">
+                      <div style={{ marginLeft: -5 }}>
+                        <SVGIconProvider iconName="user" />
+                      </div>
+
+                      {!editSelectedEmployeeGender && (
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Gender: </strong> {employeeGender}
+                        </p>
+                      )}
+
+                      {editSelectedEmployeeGender && (
+                        <>
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Gender:</strong>
+                          </p>
+                          <div
+                            className="flex items-center"
+                            style={{ marginLeft: 10 }}
+                          >
+                            <Autocomplete
+                              color={TOOL_TIP_COLORS.secondary}
+                              isDisabled={!editSelectedEmployeeGender}
+                              labelPlacement="outside"
+                              variant="bordered"
+                              defaultItems={[
+                                { label: "Male", value: "Male" },
+                                { label: "Female", value: "Female" },
+                              ]} // Gender options
+                              label="Select Gender"
+                              placeholder={employeeGender || "Select Gender"}
+                              onSelectionChange={(key) => {
+                                const selected = key as string; // Cast 'key' to a string
+                                setEmployeeGender(selected || "");
+                              }}
+                            >
+                              {({ label, value }) => (
+                                <AutocompleteItem
+                                  key={value}
+                                  variant="shadow"
+                                  color={TOOL_TIP_COLORS.secondary}
+                                >
+                                  {label}
+                                </AutocompleteItem>
+                              )}
+                            </Autocomplete>
+                          </div>
+                        </>
+                      )}
+
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        {!editSelectedEmployeeGender && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeGender}
+                          />
+                        )}
+                        {editSelectedEmployeeGender && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeGender}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+
+
+
                     <div className="flex items-center">
                       {/* <div style={{ marginLeft: -5 }}>
                       <SVGIconProvider iconName="icard" />
