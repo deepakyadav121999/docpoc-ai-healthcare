@@ -1501,37 +1501,71 @@ export default function AppointmentTable() {
     localStorage.setItem("rowsPerPage", String(rowsPerPage));
   }, [rowsPerPage]);
 
-  const fetchUsers = useCallback(() => {
+  // const fetchUsers = useCallback(() => {
     
-    if (!profile) return;
+  //   if (!profile) return;
 
-    const params: any = {
-      page,
-      pageSize: rowsPerPage,
-      from: "2024-12-01T00:00:00.000Z",
-      to: "2025-12-31T23:59:59.999Z",
-      branchId: profile.branchId, // Ensure branchId is included
-    };
+  //   const params: any = {
+  //     page,
+  //     pageSize: rowsPerPage,
+  //     from: "2024-12-01T00:00:00.000Z",
+  //     to: "2025-12-31T23:59:59.999Z",
+  //     branchId: profile.branchId, // Ensure branchId is included
+  //   };
 
-    if (selectedDate) {
-      params.from = selectedDate;
-      params.to = selectedDate;
-    }
+  //   if (selectedDate) {
+  //     params.from = selectedDate;
+  //     params.to = selectedDate;
+  //   }
 
-    if (filterValue && searchTerm) {
-      params.name = filterValue;
-    }
+  //   if (filterValue && searchTerm) {
+  //     params.name = filterValue;
+  //   }
 
-    if (assignedToMe && profile.id) {
-      params.doctorId = profile.id;
-    }
+  //   if (assignedToMe && profile.id) {
+  //     params.doctorId = profile.id;
+  //   }
 
-    if (createdByMe && profile.id) {
-      params.createdBy = profile.id;
-    }
+  //   if (createdByMe && profile.id) {
+  //     params.createdBy = profile.id;
+  //   }
 
-    dispatch(fetchAppointments(params));
-  }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe, profile, dispatch]);
+  //   dispatch(fetchAppointments(params));
+  // }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe, profile, dispatch]);
+
+  
+const fetchUsers = useCallback(() => {
+  if (!profile) return;
+
+  const params: any = {
+    page,
+    pageSize: rowsPerPage,
+    from: "2024-12-01T00:00:00.000Z",
+    to: "2025-12-31T23:59:59.999Z",
+    branchId: profile.branchId,
+  };
+
+  if (selectedDate) {
+    params.from = selectedDate;
+    params.to = selectedDate;
+  }
+
+  if (filterValue && searchTerm) {
+    params.name = filterValue;
+  }
+
+  if (assignedToMe && profile.id) {
+    params.doctorId = profile.id;
+  }
+
+  if (createdByMe && profile.id) {
+    params.createdBy = profile.id;
+  }
+
+  console.log("Fetching users with params:", params); // Debugging line
+
+  dispatch(fetchAppointments(params));
+}, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe, profile, dispatch]);
 
   useEffect(() => {
     fetchUsers();
@@ -1813,26 +1847,45 @@ useEffect(() => {
   //   [switchLoading, loading, fetchUsers]
   // );
 
+  // const handleToggle = useCallback(
+  //   (setter: React.Dispatch<React.SetStateAction<boolean>>, key: 'doctorId' | 'createdBy') => {
+  //     if (switchLoading || loading) return; // Prevent toggling if loading
+
+  //     setter((prev) => !prev);
+  //     setSwitchLoading(true);
+
+  //     // Update the state that fetchUsers relies on
+  //     if (key === 'doctorId') {
+  //       setAssignedToMe((prev) => !prev);
+  //     } else if (key === 'createdBy') {
+  //       setCreatedByMe((prev) => !prev);
+  //     }
+
+  //     // Simulate a delay to manage switch loading state
+  //     setTimeout(() => {
+  //       setSwitchLoading(false); // Reset loading state after delay
+  //     }, 1000); // Adjust the delay as needed
+  //   },
+  //   [switchLoading, loading]
+  // );
+
+
   const handleToggle = useCallback(
     (setter: React.Dispatch<React.SetStateAction<boolean>>, key: 'doctorId' | 'createdBy') => {
-      if (switchLoading || loading) return; // Prevent toggling if loading
-
-      setter((prev) => !prev);
-      setSwitchLoading(true);
-
-      // Update the state that fetchUsers relies on
-      if (key === 'doctorId') {
-        setAssignedToMe((prev) => !prev);
-      } else if (key === 'createdBy') {
-        setCreatedByMe((prev) => !prev);
-      }
-
-      // Simulate a delay to manage switch loading state
+      if (switchLoading || loading) return; // Prevent toggling if already loading
+  
+      setSwitchLoading(true); // Set loading state to true
+      setter((prev) => !prev); // Toggle the state
+  
+      // Call fetchUsers after state update
+      fetchUsers();
+  
+      // Re-enable the switch after 10 seconds
       setTimeout(() => {
-        setSwitchLoading(false); // Reset loading state after delay
-      }, 1000); // Adjust the delay as needed
+        setSwitchLoading(false);
+      }, 1000); // 10 seconds delay
     },
-    [switchLoading, loading]
+    [switchLoading, loading, fetchUsers]
   );
 
   const topContent = useMemo(() => {
