@@ -285,6 +285,11 @@ const menuGroups = [
         label: "Reminders",
         route: "/reminders",
       },
+      {
+        icon: <SVGIconProvider iconName="smalldocument" />,
+        label: "Reports",
+        route: "/reports",
+      }
     ],
   },
   {
