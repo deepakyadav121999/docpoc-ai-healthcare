@@ -26,6 +26,8 @@ import { AppDispatch } from "@/store";
 
 
 const API_URL = process.env.API_URL;
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+const S3_BUCKET_URL = process.env.NEXT_PUBLIC_S3_BUCKET_URL;
 
 interface EmployeeData {
   id?: string;
@@ -95,7 +97,7 @@ export default function OpaqueModal(props: {
       const config = {
         method: "post",
         maxBodyLength: Infinity,
-        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
+        url: S3_BUCKET_URL,
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -105,7 +107,7 @@ export default function OpaqueModal(props: {
       const response = await axios.request(config);
 
       if (response.data) {
-        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
+        const fileUrl = `${AWS_URL}/${folderName}/${file.name}`;
         console.log("File uploaded successfully:", fileUrl);
         return fileUrl;
       }
@@ -132,7 +134,7 @@ export default function OpaqueModal(props: {
         const config = {
           method: "post",
           maxBodyLength: Infinity,
-          url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
+          url: S3_BUCKET_URL,
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -142,7 +144,7 @@ export default function OpaqueModal(props: {
         const response = await axios.request(config);
   
         if (response.data) {
-          const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
+          const fileUrl = `${AWS_URL}/${folderName}/${file.name}`;
           console.log("File uploaded successfully:", fileUrl);
           uploadedFileUrls.push(fileUrl);
         }

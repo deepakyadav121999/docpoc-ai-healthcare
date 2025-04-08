@@ -26,6 +26,9 @@ interface Employee {
   email: string;
   json: string;
   accessType: string; // JSON string
+  profilePicture?: string; 
+  gender?: string; 
+
 }
 const API_URL = process.env.API_URL;
 export default function UserAccess() {
@@ -46,15 +49,13 @@ export default function UserAccess() {
 
       const fetchedBranchId = profile?.branchId;
 
-      // const fetchedBranchId = profileResponse.data?.branchId;
+     
 
       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
 
       const params = {
         page: 1,
         pageSize: 50,
-        from: "2024-12-04T03:32:25.812Z",
-        to: "2024-12-11T03:32:25.815Z",
       };
 
       const response = await axios.get(endpoint, {
@@ -139,7 +140,16 @@ export default function UserAccess() {
                 isBordered
                 color="primary"
                 radius="lg"
-                src={"images/user/user-male.jpg"}
+                src={
+                  user.profilePicture
+                    ? user.profilePicture
+                    : user.gender === "Male"
+                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                    : user.gender === "Female"
+                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
+                    : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                }
+          
               />
             }
             subtitle={user.email}
@@ -152,33 +162,7 @@ export default function UserAccess() {
           </AccordionItem>
         ))}
       </Accordion>
-      {/* <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose} >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-              {modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}
-              </ModalHeader>
-              <ModalBody>
-                {loading ? (
-                  <div className="flex justify-center">
-                    <Spinner size="lg" />
-                  </div>
-                ) : modalMessage.success ? (
-                  <p className="text-green-600">{modalMessage.success}</p>
-                ) : (
-                  <p className="text-red-600">{modalMessage.error}</p>
-                )}
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal> */}
+   
       <EnhancedModal
         isOpen={isOpen}
         loading={loading}

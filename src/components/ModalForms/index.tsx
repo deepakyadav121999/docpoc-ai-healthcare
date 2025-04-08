@@ -50,11 +50,13 @@ import ToolTip from "../Tooltip";
 import { VerticalDotsIcon } from "../CalenderBox/VerticalDotsIcon";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import IconButton from "../Buttons/IconButton";
-import { VisitHistoryTable } from "./VisitHistoryTable";
+
+import { VisitHistoryTable } from "../Patient/VisitHistoryTable";
 import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
 import { Time } from "@internationalized/date";
 import { useDropzone } from "react-dropzone";
+import DocumentList from "../Patient/DocumentList";
 
 type FileWithPreview = File & { preview?: string };
 
@@ -83,7 +85,16 @@ interface AutocompleteItem {
 }
 
 const API_URL = process.env.API_URL;
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+
+
 const MAX_FILE_SIZE_MB = 5
+
+interface VisitData {
+  date: string;
+  doctor: string;
+  report: string;
+}
 export default function ModalForm(props: {
   type: string;
   userId: string;
@@ -92,7 +103,7 @@ export default function ModalForm(props: {
   onFilesChange: (files: any) => void;
 }) {
 
-
+  // console.log("aws url is" + AWS_URL)
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
 
@@ -154,7 +165,7 @@ export default function ModalForm(props: {
   const [patientGender, setPatientGender] = useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
   const [patientPhotoLoading, setPatientPhotoLoading] = useState(false)
-  const [patientDocument, setPatientDocument] = useState({})
+  const [patientDocument, setPatientDocument] = useState<VisitData[]>([]); // Initialize as an array
   const [appointmentId, setAppointmentId] = useState('');
   const [reportType, setReportType] = useState('');
   const [description, setDescription] = useState('');
@@ -174,6 +185,7 @@ export default function ModalForm(props: {
   ];
   // const [loading, setLoading] = useState<boolean>(true);
   const [lastVisit, setLastVisit] = useState<string>("N/A");
+
   const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
   // const [lastVisit, setLastvisit] = useState("");
   const [notificationStatus, setNotificationStatus] = useState("");
@@ -317,7 +329,15 @@ export default function ModalForm(props: {
       setGender(response.data.gender);
       setPatientId(response.data.id);
       setPatientGender(response.data.gender)
-      setPatientDocument(response.data.documents)
+      const uploadedDocuments = Object.entries(
+        JSON.parse(response.data.documents)
+      ).map(([key, value]) => ({
+        date: "N/A",
+        doctor: key, // Use the document key as the document name
+        report: String(value), // Ensure the report is a string
+      }));
+
+      setPatientDocument(uploadedDocuments)
     } catch (err) {
     } finally {
       setLoading(false);
@@ -635,7 +655,7 @@ export default function ModalForm(props: {
         branchId: emloyeeBranch,
         name: employeeName,
         phone: employeePhone,
-        gender:employeeGender,
+        gender: employeeGender,
         email: employeeEmail,
         dp: employeePhoto,
         json: JSON.stringify({
@@ -749,12 +769,12 @@ export default function ModalForm(props: {
     }
 
   };
-const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false);
+  const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false);
 
   const editGender = () => {
-  setEditSelectedPatientGender(!editSelectedPatientGender);
- 
-};
+    setEditSelectedPatientGender(!editSelectedPatientGender);
+
+  };
 
 
 
@@ -903,7 +923,8 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                        src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg` : `${AWS_URL}/docpoc-images/user-male.jpg`}
+
                         width="100%"
                       />
                     </div>
@@ -1013,7 +1034,7 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                   className="object-cover"
                   height={200}
                   shadow="md"
-                  src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"}
+                  src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg` : `${AWS_URL}/docpoc-images/user-male.jpg`}
                   width="100%"
                 />
               </div>
@@ -1228,6 +1249,7 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
 
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
+    const [viewMode, setViewMode] = useState("history");
     return (
       <>
         <div>
@@ -1247,6 +1269,8 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
               <div
                 className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
                   }`}
+
+
               >
                 <div className="flex-shrink-0 w-full">
                   {/* patient details */}
@@ -1257,14 +1281,13 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={
-                          profilePhoto
-                            ? profilePhoto
-                            : patientGender
-                              ? patientGender === "Male"
-                                ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
-                                : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
-                              : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                        src={profilePhoto
+                          ? profilePhoto
+                          : patientGender
+                            ? patientGender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                            : `${AWS_URL}/docpoc-images/user-male.jpg`
                         }
                         width="100%"
                       />
@@ -1299,7 +1322,7 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                           </p>
                         </div>
                         <div className="flex items-center">
-                          <SVGIconProvider iconName="calendar" />
+                          <SVGIconProvider iconName="user" />
                           <p className="text-sm sm:text-medium ml-2">
                             <strong>Gender: </strong> {patientGender}
                           </p>
@@ -1339,12 +1362,27 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                             onClick={() => {
                               // fetchLastVisitData(props.userId)
                               setShowLastVisit(true)
+                              setViewMode("history");
                             }}
                             className="text-sm sm:text-medium ml-2 underline cursor-pointer"
                           >
                             <strong>See Previous Visits</strong>
                           </p>
                         </div>
+                        <div className="flex items-center">
+                          <p
+                            onClick={() => {
+                              // fetchLastVisitData(props.userId)
+                              setShowLastVisit(true)
+                              setViewMode("documents");
+                            }}
+                            className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+                          >
+                            <strong>See Uploaded Documents</strong>
+                          </p>
+                        </div>
+
+
                       </div>
                     </div>
                   </div>
@@ -1352,13 +1390,20 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
 
                 <div className="flex-shrink-0 w-full">
                   <div className="w-full">
-                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+
+
+                    {/* <h3 className="font-semibold text-foreground/90 text-center mb-6">
                       Previous Visits
+                    </h3> */}
+                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                      {viewMode === "history"
+                        ? "Previous Visits"
+                        : "Uploaded Documents"}
                     </h3>
 
-                    {/* Show VisitHistoryTable */}
                     <div className="flex flex-col center">
-                      {showLastVisit && <VisitHistoryTable patientId={patientId} />
+                      {showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={viewMode}
+                        uploadedDocuments={patientDocument} />
                       }
                     </div>
 
@@ -1370,6 +1415,9 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                     </div>
                   </div>
                 </div>
+
+
+
               </div>
             </div>
           </CardBody>
@@ -1400,17 +1448,17 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
 
                   <div className="relative drop-shadow-2">
                     <Image
-                     
+
                       src={
                         profilePhoto
                           ? profilePhoto
                           : patientGender
                             ? patientGender === "Male"
-                              ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
-                              : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
-                            : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                            : `${AWS_URL}/docpoc-images/user-male.jpg`
                       }
-                      
+
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
@@ -1449,7 +1497,7 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
 
                 <div className="space-y-3">
                   <div className="flex items-center">
-                  <SVGIconProvider iconName="user" />
+                    <SVGIconProvider iconName="user" />
                     <p className="text-sm sm:text-medium ml-2">
                       <strong>Name: </strong>
                       {!editSelectedPatient && patientName}
@@ -1947,7 +1995,17 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={employeePhoto ? employeePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+                    // src={employeePhoto ? employeePhoto : employeeGender == "Male" ? `https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg` : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+
+                    src={
+                      profilePhoto
+                        ? profilePhoto
+                        : employeeGender
+                          ? employeeGender === "Male"
+                            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                            : `${AWS_URL}/docpoc-images/user-female.jpg`
+                          : `${AWS_URL}/docpoc-images/user-male.jpg`
+                    }
                     width="100%"
                   />
                 </div>
@@ -2051,7 +2109,18 @@ const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                        src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+                        // src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+
+
+                        src={
+                          profilePhoto
+                            ? profilePhoto
+                            : employeeGender
+                              ? employeeGender === "Male"
+                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                                : `${AWS_URL}/docpoc-images/user-female.jpg`
+                              : `${AWS_URL}/docpoc-images/user-male.jpg`
+                        }
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"

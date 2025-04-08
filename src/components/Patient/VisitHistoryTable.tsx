@@ -343,6 +343,191 @@
 //   );
 // };
 
+// import React, { useEffect, useState, useMemo, useCallback } from "react";
+// import {
+//   Input,
+//   Pagination,
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableColumn,
+//   TableHeader,
+//   TableRow,
+//   getKeyValue,
+// } from "@nextui-org/react";
+// import axios from "axios";
+// import { SVGIconProvider } from "@/constants/svgIconProvider";
+// import { Spinner, user } from "@nextui-org/react";
+
+// // Define type for visit data
+// interface VisitData {
+//   date: string; // Formatted date string
+//   doctor: string; // Doctor's name
+//   report: string; // Report placeholder (can be updated later)
+// }
+
+// interface VisitHistoryTableProps {
+//   patientId: string; // patientId must be a string
+// }
+// const API_URL = process.env.API_URL;
+// export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
+//   patientId,
+// }) => {
+//   const [page, setPage] = useState<number>(1);
+//   const [filterValue, setFilterValue] = useState<string>("");
+//   const [rowsPerPage, setRowsPerPage] = useState<number>(3);
+//   const [visitData, setVisitData] = useState<VisitData[]>([]);
+//   const [loading, setLoading] = useState<boolean>(true);
+
+//   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
+//     const dateObj = new Date(dateTimeString);
+//     const day = String(dateObj.getDate()).padStart(2, "0");
+//     const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+//     const year = dateObj.getFullYear();
+//     return `${day}/${month}/${year}`;
+//   };
+
+//   // Fetch visit data from the API
+//   useEffect(() => {
+//     const fetchVisitData = async () => {
+//       const token = localStorage.getItem("docPocAuth_token");
+//       const endpoint = `${API_URL}/appointment/visits/patient/${patientId}`;
+
+//       try {
+//         setLoading(true);
+//         const response = await axios.get(endpoint, {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         });
+
+//         const formattedData = response.data.map((item: any) => ({
+//           date: formatDateToDDMMYYYY(item.dateTime), // Format date to dd/mm/yyyy
+//           doctor: item.doctorName, // Extract doctorName
+//           report: "#", // Placeholder for report (can be updated later)
+//         }));
+//         setVisitData(formattedData);
+//       } catch (error) {
+//         console.error("Error fetching visit data:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     if (patientId) {
+//       fetchVisitData();
+//     }
+//   }, [patientId]);
+
+//   // Filtered data based on the search input
+//   const filteredVisits = useMemo(() => {
+//     const lowerCaseFilter = filterValue.toLowerCase();
+//     return visitData.filter((visit) => {
+//       return (
+//         visit.date.toLowerCase().includes(lowerCaseFilter) ||
+//         visit.doctor.toLowerCase().includes(lowerCaseFilter)
+//       );
+//     });
+//   }, [filterValue, visitData]);
+
+//   // Paginated data
+//   const pages = Math.ceil(filteredVisits.length / rowsPerPage);
+//   const items = useMemo(() => {
+//     const start = (page - 1) * rowsPerPage;
+//     const end = start + rowsPerPage;
+//     return filteredVisits.slice(start, end);
+//   }, [page, filteredVisits]);
+
+//   // Handle search input change
+//   const onSearchChange = useCallback((value: string) => {
+//     if (value) {
+//       setFilterValue(value);
+//       setPage(1);
+//     } else {
+//       setFilterValue("");
+//     }
+//   }, []);
+
+//   // Clear search input
+//   const onClear = useCallback(() => {
+//     setFilterValue("");
+//     setPage(1);
+//   }, []);
+
+//   return (
+//     <>
+//       <div>{loading && <Spinner />}</div>
+//       <div
+//         className="flex w-full justify-center px-2 sm:px-4"
+//         style={{ marginBottom: 5 }}
+//       >
+//         <Input
+//           isClearable
+//           className="w-full max-w-[97%] sm:max-w-md"
+//           placeholder="Search by date or doctor.."
+//           startContent={<SVGIconProvider iconName="search" />}
+//           value={filterValue}
+//           onClear={() => onClear()}
+//           onValueChange={(value) => onSearchChange(value as string)}
+//         />
+//       </div>
+//       {loading ? (
+//         <div className="flex justify-center items-center">
+//           <SVGIconProvider iconName="spinner" />
+//         </div>
+//       ) : (
+//         <Table
+//           aria-label="Example table with client side pagination"
+//           bottomContent={
+//             <div className="flex w-full justify-center">
+//               <Pagination
+//                 isCompact
+//                 showControls
+//                 showShadow
+//                 color="secondary"
+//                 page={page}
+//                 total={pages}
+//                 onChange={(page) => setPage(page)}
+//               />
+//             </div>
+//           }
+//           classNames={{
+//             wrapper: "min-h-[222px] max-w-[95%] sm:max-w-[100%] mx-auto",
+//           }}
+//         >
+//           <TableHeader>
+//             <TableColumn key="date">DATE</TableColumn>
+//             <TableColumn key="doctor">DOCTOR</TableColumn>
+//             <TableColumn key="report">REPORT</TableColumn>
+//           </TableHeader>
+//           <TableBody items={items}>
+//             {(item: VisitData) => (
+//               <TableRow key={item.date + item.doctor}>
+//                 {(columnKey) => (
+//                   <TableCell>
+//                     {columnKey === "report" ? (
+//                       <a
+//                         href={getKeyValue(item, columnKey)}
+//                         target="_blank"
+//                         rel="noopener noreferrer"
+//                       >
+//                         <SVGIconProvider iconName="download" />
+//                       </a>
+//                     ) : (
+//                       getKeyValue(item, columnKey)
+//                     )}
+//                   </TableCell>
+//                 )}
+//               </TableRow>
+//             )}
+//           </TableBody>
+//         </Table>
+//       )}
+//     </>
+//   );
+// };
+
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Input,
@@ -357,37 +542,41 @@ import {
 } from "@nextui-org/react";
 import axios from "axios";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
-import { Spinner, user } from "@nextui-org/react";
+import { Spinner } from "@nextui-org/react";
 
-// Define type for visit data
 interface VisitData {
-  date: string; // Formatted date string
-  doctor: string; // Doctor's name
-  report: string; // Report placeholder (can be updated later)
+  date: string;
+  doctor: string;
+  report: string;
 }
 
 interface VisitHistoryTableProps {
-  patientId: string; // patientId must be a string
+  patientId: string;
+  viewMode: string; // "history" or "documents"
+  uploadedDocuments: VisitData[];
 }
+
 const API_URL = process.env.API_URL;
+
 export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   patientId,
+  viewMode,
+  uploadedDocuments = [], // Default to an empty array
 }) => {
   const [page, setPage] = useState<number>(1);
   const [filterValue, setFilterValue] = useState<string>("");
   const [rowsPerPage, setRowsPerPage] = useState<number>(3);
-  const [visitData, setVisitData] = useState<VisitData[]>([]);
+  const [visitData, setVisitData] = useState<VisitData[]>([]); // Ensure this is always an array
   const [loading, setLoading] = useState<boolean>(true);
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
     const day = String(dateObj.getDate()).padStart(2, "0");
-    const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
-  // Fetch visit data from the API
   useEffect(() => {
     const fetchVisitData = async () => {
       const token = localStorage.getItem("docPocAuth_token");
@@ -403,24 +592,27 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
         });
 
         const formattedData = response.data.map((item: any) => ({
-          date: formatDateToDDMMYYYY(item.dateTime), // Format date to dd/mm/yyyy
-          doctor: item.doctorName, // Extract doctorName
-          report: "#", // Placeholder for report (can be updated later)
+          date: formatDateToDDMMYYYY(item.dateTime),
+          doctor: item.doctorName,
+          report: "#",
         }));
         setVisitData(formattedData);
       } catch (error) {
         console.error("Error fetching visit data:", error);
+        setVisitData([]); // Ensure visitData is an array even on error
       } finally {
         setLoading(false);
       }
     };
 
-    if (patientId) {
+    if (viewMode === "history" && patientId) {
       fetchVisitData();
+    } else if (viewMode === "documents") {
+      setVisitData(Array.isArray(uploadedDocuments) ? uploadedDocuments : []);
+      setLoading(false);
     }
-  }, [patientId]);
+  }, [patientId, viewMode, uploadedDocuments]);
 
-  // Filtered data based on the search input
   const filteredVisits = useMemo(() => {
     const lowerCaseFilter = filterValue.toLowerCase();
     return visitData.filter((visit) => {
@@ -431,7 +623,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     });
   }, [filterValue, visitData]);
 
-  // Paginated data
   const pages = Math.ceil(filteredVisits.length / rowsPerPage);
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -439,7 +630,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     return filteredVisits.slice(start, end);
   }, [page, filteredVisits]);
 
-  // Handle search input change
   const onSearchChange = useCallback((value: string) => {
     if (value) {
       setFilterValue(value);
@@ -449,7 +639,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     }
   }, []);
 
-  // Clear search input
   const onClear = useCallback(() => {
     setFilterValue("");
     setPage(1);
@@ -498,9 +687,11 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
         >
           <TableHeader>
             <TableColumn key="date">DATE</TableColumn>
-            <TableColumn key="doctor">DOCTOR</TableColumn>
+            <TableColumn key="doctor">NAME</TableColumn>
             <TableColumn key="report">REPORT</TableColumn>
           </TableHeader>
+
+
           <TableBody items={items}>
             {(item: VisitData) => (
               <TableRow key={item.date + item.doctor}>

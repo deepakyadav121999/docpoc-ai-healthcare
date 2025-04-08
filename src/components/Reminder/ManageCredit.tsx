@@ -9,7 +9,7 @@ import { Divider } from "@nextui-org/react";
 import HighlightedText from "../common/HighLightedText";
 import { TOOL_TIP_COLORS } from "@/constants";
 import CreditCardBouncing from "../common/CreditCardBouncing";
-
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 const ManageCredit = () => {
   const dataStatsListCredit: dataStatsDefault[] = [
     {
@@ -46,7 +46,7 @@ const ManageCredit = () => {
           <div style={{ minWidth: 200, marginTop: "5%" }}>
             <CardBlurred
               label="Whats App"
-              img={{ url: "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/whatsapp.png", paddingTop: 20 }}
+              img={{ url: `${AWS_URL}/docpoc-images/whatsapp.png`, paddingTop: 20 }}
             />
           </div>
           <div className="flex-grow md:ml-5">
@@ -92,7 +92,7 @@ const ManageCredit = () => {
           <div style={{ minWidth: 200, marginTop: "4%" }}>
             <CardBlurred
               label="SMS"
-              img={{ url: "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/sms-big.png" }}
+              img={{ url: `${AWS_URL}/docpoc-images/sms-big.png` }}
             />
           </div>
           <div className="flex-grow md:ml-5">

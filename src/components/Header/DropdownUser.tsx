@@ -16,6 +16,8 @@ type LoadingStates = {
   settings: boolean;
 };
 
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+
 const DropdownUser = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
@@ -99,7 +101,7 @@ const DropdownUser = () => {
               width={112}
               height={112}
               // src="/images/user/user-03.png"
-              src ={profile.profilePicture? profile?.profilePicture :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-placeholder.jpg"}
+              src ={profile.profilePicture? profile?.profilePicture :`${AWS_URL}/docpoc-images/user-placeholder.jpg`}
               style={{
                 width: "auto",
                 height: "auto",
@@ -144,7 +146,7 @@ const DropdownUser = () => {
                   width={112}
                   height={112}
                   // src="/images/user/user-03.png"
-                  src ={profile.profilePicture? profile?.profilePicture:"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-placeholder.jpg"}
+                  src ={profile.profilePicture? profile?.profilePicture :`${AWS_URL}/docpoc-images/user-placeholder.jpg`}
                   style={{
                     width: "auto",
                     height: "auto",

@@ -8,7 +8,7 @@ import SignUp from "@/components/Auth/Signup";
 //   title: "Next.js Login Page | NextAdmin - Next.js Dashboard Kit",
 //   description: "This is Next.js Login Page NextAdmin Dashboard Kit",
 // };
-
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 const Signup = ({
   setAuthPage,
   onLogin,
@@ -31,14 +31,14 @@ const Signup = ({
               <Link className="mb-10 inline-block" href="/">
                 <Image
                   className="hidden dark:block"
-                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"}
+                  src={`${AWS_URL}/docpoc-images/logo-icon.png`}
                   alt="Logo"
                   width={176}
                   height={32}
                 />
                 <Image
                   className="dark:hidden"
-                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"}
+                  src={`${AWS_URL}/docpoc-images/logo-icon.png`}
                   alt="Logo"
                   width={176}
                   height={32}
@@ -59,7 +59,7 @@ const Signup = ({
 
               <div className="mt-31">
                 <Image
-                  src={"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/grid-02.svg"}
+                  src={`${AWS_URL}/docpoc-images/grid-02.svg`}
                   alt="Logo"
                   width={405}
                   height={325}

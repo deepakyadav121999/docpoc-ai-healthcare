@@ -62,3 +62,11 @@ const appointmentsSlice = createSlice({
 });
 
 export default appointmentsSlice.reducer;
+
+
+
+
+
+
+
+
