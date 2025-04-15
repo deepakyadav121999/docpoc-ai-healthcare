@@ -27,16 +27,19 @@ export const fetchAppointments = createAsyncThunk(
       throw new Error("User not authenticated");
     }
 
-    const response = await axios.get(`${API_URL}/appointment/list/${params.branchId}`, {
-      params,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    const response = await axios.get(
+      `${API_URL}/appointment/list/${params.branchId}`,
+      {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     return response.data;
-  }
+  },
 );
 
 const appointmentsSlice = createSlice({
@@ -62,11 +65,3 @@ const appointmentsSlice = createSlice({
 });
 
 export default appointmentsSlice.reducer;
-
-
-
-
-
-
-
-

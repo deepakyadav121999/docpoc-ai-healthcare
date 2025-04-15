@@ -1458,6 +1458,7 @@ interface appointments {
   dateTime: string;
   statusName: string;
 }
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 export default function AppointmentTable() {
   const dispatch = useDispatch<AppDispatch>();
@@ -1668,14 +1669,25 @@ const fetchUsers = useCallback(() => {
       try {
         const userJson = JSON.parse(user.json || "{}");
         const email = userJson.email || "N/A";
+
         return <p>{email}</p>;
       } catch (error) {}
     }
     switch (columnKey) {
+
+    
+
       case "name":
+    const gender = user.gender || "unknown"; // Directly access the gender property
+      const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+      const avatarSrc = user.displayPicture || placeholderImage;
+
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.displayPicture }}
+            avatarProps={{ radius: "lg",
+               src: avatarSrc
+              
+              }}
             description={user.email}
             name={cellValue}
           />

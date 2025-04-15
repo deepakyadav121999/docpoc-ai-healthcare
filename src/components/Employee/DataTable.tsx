@@ -40,6 +40,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
   inactive: "warning",
   blacklisted: "danger",
 };
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -63,6 +64,7 @@ interface Employee {
   profilePicture: string;
   isActive: string;
   json: string;
+  gender:string;
 }
 
 type User = (typeof users)[0];
@@ -216,9 +218,14 @@ export default function DataTable() {
 
     switch (columnKey) {
       case "name":
+
+        const gender = user.gender || "unknown"; // Directly access the gender property
+        const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+        const avatarSrc = user.profilePicture || placeholderImage;
+
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.profilePicture }}
+            avatarProps={{ radius: "lg", src: avatarSrc }}
             description={user.email}
             name={cellValue}
           >

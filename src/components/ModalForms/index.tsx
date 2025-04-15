@@ -329,15 +329,46 @@ export default function ModalForm(props: {
       setGender(response.data.gender);
       setPatientId(response.data.id);
       setPatientGender(response.data.gender)
-      const uploadedDocuments = Object.entries(
-        JSON.parse(response.data.documents)
-      ).map(([key, value]) => ({
-        date: "N/A",
-        doctor: key, // Use the document key as the document name
-        report: String(value), // Ensure the report is a string
-      }));
+      // const uploadedDocuments = Object.entries(
+      //   JSON.parse(response.data.documents)
+      // ).map(([key, value]) => ({
+      //   date: "N/A",
+      //   doctor: key, // Use the document key as the document name
+      //   report: String(value), // Ensure the report is a string
+      // }));
 
-      setPatientDocument(uploadedDocuments)
+      // setPatientDocument(uploadedDocuments)
+
+      const uploadedDocuments = Object.entries(
+        JSON.parse(response.data.documents || "{}") // Handle empty documents gracefully
+      ).map(([key, value]) => {
+        try {
+          const parsedValue = JSON.parse(String(value)); 
+          
+          // Parse the JSON string of the document
+
+            // Format the date
+        const formattedDate = parsedValue.date
+        ? formatDateToDDMMYYYY(parsedValue.date) // Format the date if available
+        : "N/A";
+          return {
+            date: formattedDate, // Use the date if available, otherwise default to "N/A"
+            doctor: key, // Use the document key as the document name
+            report: parsedValue.url || "N/A", // Use the URL if available
+          };
+        } catch (error) {
+          console.error(`Error parsing document ${key}:`, error);
+          return {
+            date: "N/A",
+            doctor: key, // Use the document key as the document name
+            report: String(value) || "N/A", // Use the raw value if parsing fails
+          };
+        }
+      });
+  
+      // Set the documents to the state
+      setPatientDocument(uploadedDocuments);
+        
     } catch (err) {
     } finally {
       setLoading(false);
@@ -583,7 +614,7 @@ export default function ModalForm(props: {
       props.type === MODAL_TYPES.DELETE_PATIENT
     ) {
       fetchPatientById(props.userId);
-      // fetchLastVisitData(props.userId);
+      fetchLastVisitData(props.userId);
     } else if (
       props.type === MODAL_TYPES.VIEW_EMPLOYEE ||
       props.type === MODAL_TYPES.EDIT_EMPLOYEE ||
@@ -990,7 +1021,8 @@ export default function ModalForm(props: {
 
                     <div className="flex flex-col center">
                       {
-                        showLastVisit && <VisitHistoryTable patientId={patientId} />
+                        showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={""}
+                        uploadedDocuments={[]} />
                       }
                     </div>
 
@@ -1796,56 +1828,6 @@ export default function ModalForm(props: {
                   </div>
 
 
-
-                  {/* 
-                  <div
-                    id="FileUpload"
-                    className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
-                  >
-
-                    <div className="mt-4 overflow-y-auto">
-                    
-                      <div className="grid grid-cols-1 gap-2">
-                        {selectedFiles.map((file, index) => {
-                          const fileExtension = file.name.split('.').pop();
-                          // Create a new display name using Date.now() and the file extension
-                          const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
-
-                          return (<FileItem key={index} file={file} displayName={displayName} onRemove={handleRemoveFile} />
-                          )
-                        })}
-
-                      </div>
-                    </div>
-
-                    <input
-                      type="file"
-                      name="fileUpload"
-                      id="fileUpload"
-                      // accept="image/png, image/jpg, image/jpeg"
-                      accept=".png, .jpg, .jpeg, .pdf, .doc, .docx"
-                      className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
-                      onChange={handleFileChange}
-                    />
-
-
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
-                        <SVGIconProvider
-                          iconName="upload"
-                          color={GLOBAL_ACTION_ICON_COLOR}
-                        />
-                      </span>
-                      <p className="mt-2.5 text-body-sm font-medium">
-                        <span className="text-primary">Click to upload</span> or
-                        drag and drop any relevant document(s) of patient.
-                      </p>
-                      <p className="mt-1 text-body-xs">
-                        PDF, DOC, PNG, JPG (max, 800 X 800px)
-                      </p>
-                    </div>
-
-                  </div> */}
 
                   <div className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-400 bg-gray-100 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
                     {/* File Preview Section */}

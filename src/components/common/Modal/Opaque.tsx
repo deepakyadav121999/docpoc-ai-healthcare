@@ -308,38 +308,84 @@ export default function OpaqueModal(props: {
         setProfilePhotoUrl(profilePictureUrl);
       }
   // Parse existing documents
+  // let existingDocuments: Record<string, string> = {};
+  // if (updatedPatientData.document) {
+  //   try {
+  //     existingDocuments = JSON.parse(updatedPatientData.document);
+  //   } catch (error) {
+  //     console.error("Error parsing existing documents:", error);
+  //   }
+  // }
+
+  // // Upload new files and get their URLs
+  // const documentsObject: Record<string, string> = { ...existingDocuments };
+  // if (selectedFiles.length > 0) {
+  //   const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
+  //   setFileUrls(uploadedFileUrls);
+
+  //   // Append new documents to the existing ones
+  //   uploadedFileUrls.forEach((url, index) => {
+  //     const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
+  //     documentsObject[newKey] = url;
+  //   });
+  // }
+
+  // // Convert documentsObject to a JSON string
+  // const documentsPayload = JSON.stringify(documentsObject);
+
+  // const requestData = {
+  //   id: props.userId,
+  //   displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
+  //   documents: documentsPayload ? documentsPayload : updatedPatientData.document,
+  //   ...updatedPatientData,
+  // };
+   
+
+
   let existingDocuments: Record<string, string> = {};
   if (updatedPatientData.document) {
-    try {
-      existingDocuments = JSON.parse(updatedPatientData.document);
-    } catch (error) {
-      console.error("Error parsing existing documents:", error);
+    if (typeof updatedPatientData.document === "string") {
+      try {
+        existingDocuments = JSON.parse(updatedPatientData.document);
+      } catch (error) {
+        console.error("Error parsing existing documents:", error);
+        existingDocuments = {}; // Fallback to empty object
+      }
+    } else if (typeof updatedPatientData.document === "object") {
+      existingDocuments = updatedPatientData.document as Record<string, string>;
     }
   }
 
   // Upload new files and get their URLs
-  const documentsObject: Record<string, string> = { ...existingDocuments };
-  if (selectedFiles.length > 0) {
-    const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
-    setFileUrls(uploadedFileUrls);
+  const uploadedFileUrls = selectedFiles.length > 0
+    ? await uploadFiles(selectedFiles, updatedPatientData.name || "")
+    : [];
 
-    // Append new documents to the existing ones
-    uploadedFileUrls.forEach((url, index) => {
-      const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
-      documentsObject[newKey] = url;
-    });
-  }
+  // Append new files to existing documents
+  const mergedDocuments: Record<string, string> = { ...existingDocuments };
 
-  // Convert documentsObject to a JSON string
-  const documentsPayload = JSON.stringify(documentsObject);
+  // Find the next document index
+  let documentIndex = Object.keys(mergedDocuments).length;
 
+  // Add each uploaded file URL with a `date`
+  uploadedFileUrls.forEach((url) => {
+    documentIndex += 1; // Increment the index
+    const newDocumentKey = `document${documentIndex}`;
+    const documentData = {
+      url: url,
+      date: new Date().toISOString(), // Attach the current date in ISO format
+    };
+    mergedDocuments[newDocumentKey] = JSON.stringify(documentData);
+  });
+
+  // Prepare the request payload
   const requestData = {
     id: props.userId,
-    displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
-    documents: documentsPayload ? documentsPayload : updatedPatientData.document,
-    ...updatedPatientData,
+    displayPicture: profilePictureUrl || updatedPatientData.dp,
+    documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
+    ...updatedPatientData, // Include other patient data
   };
-   
+
 
       const response = await axios.patch(endpoint, requestData, {
         headers: {

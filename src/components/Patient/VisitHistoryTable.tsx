@@ -703,7 +703,7 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <SVGIconProvider iconName="download" />
+                        <SVGIconProvider iconName="eye" />
                       </a>
                     ) : (
                       getKeyValue(item, columnKey)

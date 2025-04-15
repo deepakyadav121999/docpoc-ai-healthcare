@@ -62,8 +62,11 @@ interface Patient {
   status: string;
   lastVisit: string;
   displayPicture: string;
+  gender:string;
 }
 const API_URL = process.env.API_URL;
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+
 export default function App() {
   const profile = useSelector((state: RootState) => state.profile.data);
   const [users, setUsers] = React.useState<Patient[]>([]);
@@ -218,9 +221,12 @@ export default function App() {
 
     switch (columnKey) {
       case "name":
+        const gender = user.gender || "unknown"; // Directly access the gender property
+        const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+        const avatarSrc = user.displayPicture || placeholderImage;
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.displayPicture }}
+            avatarProps={{ radius: "lg", src: avatarSrc }}
             description={user.email}
             name={cellValue}
           >

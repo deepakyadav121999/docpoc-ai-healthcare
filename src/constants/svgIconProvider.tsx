@@ -1232,7 +1232,33 @@ export const SVGIconProvider: React.FC<SVGIconProps> = ({
             />
           </svg>
         );
+
+        case "eye":
+          return (
+            <svg
+              className="fill-current"
+              version="1.1"
+              id="Capa_1"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={color ?? iconColor}
+              xmlns="http://www.w3.org/2000/svg"
+              stroke={color ?? iconColor}
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M12 4.5c-4.2 0-8.1 2.3-10.4 6a12.7 12.7 0 0 0 10.4 6c4.2 0 8.1-2.3 10.4-6a12.7 12.7 0 0 0-10.4-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-6.4a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"
+                fill={color ?? iconColor}
+                stroke={color ?? iconColor}
+              />
+            </svg>
+          );
+        
     default:
       return null;
   }
+
 };

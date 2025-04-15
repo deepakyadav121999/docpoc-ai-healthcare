@@ -1,3 +1,5 @@
+
+"use client";
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
@@ -6,11 +8,12 @@ import TabDefaultWithRoute from "@/components/common/TabWithRoute";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { ROUTES } from "@/constants/routes";
 import { REPORTS_TAB_KEYS } from "../routes";
+import ReportForm from "../../../components/Reports/ReportForm"
 
-export const metadata: Metadata = {
-  title: "DocPOC.",
-  description: "Manage easy.",
-};
+// export const metadata: Metadata = {
+//   title: "DocPOC.",
+//   description: "Manage easy.",
+// };
 const current = ROUTES.GENERATE_REPORTS;
 
 const GenerateReports = () => {
@@ -23,7 +26,10 @@ const GenerateReports = () => {
           options={REPORTS_TAB_KEYS}
           color={TOOL_TIP_COLORS.primary}
         />
-        <ReminderConfiguration />
+        <div className="mt-2">
+        <ReportForm />
+        </div>
+       
       </div>
     </DefaultLayout>
   );
