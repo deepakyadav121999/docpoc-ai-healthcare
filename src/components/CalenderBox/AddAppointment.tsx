@@ -245,7 +245,7 @@
 //         // Clear the warning message if the time is within working hours
 //         setWarningMessage("");
 //       }
-    
+
 //     }
 
 //     const missingFields: string[] = [];
@@ -306,14 +306,14 @@
 //         "Error creating appointment:",
 //         error.response?.data || error.message,
 //       );
-   
+
 //       let errorMessage = "An unknown error occurred.";
 
 //       if (error.response?.data) {
 //         const errorData = error.response.data;
 
 //         if (Array.isArray(errorData.message)) {
-        
+
 //           errorMessage = errorData.message
 //             .map((msg: any) => msg.message) // Access the `message` property from each object
 //             .join(", ");
@@ -1314,10 +1314,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 />
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
-              {timeWarning && (
-                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                {timeWarning && (
+                  <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
                 )}
-                </div>
+              </div>
               <div
                 className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
@@ -1468,13 +1468,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-              
+
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
-              {timeWarning && (
-                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                {timeWarning && (
+                  <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
                 )}
-                </div>
+              </div>
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
