@@ -25,6 +25,8 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 interface Appointment {
   id: string;
@@ -56,10 +58,14 @@ interface Doctor {
   name: string;
 }
 
-const BASE_URL = "http://127.0.0.1:3037/DocPOC/v1";
+const API_URL = process.env.API_URL;
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+const BASE_URL = API_URL
 
 const AppointmentForm = () => {
   // Form state (unchanged)
+    const profile = useSelector((state: RootState) => state.profile.data);
+
   const [reportName, setReportName] = useState("");
   const [enableSharingWithPatient, setEnableSharingWithPatient] = useState(true);
   const [isSharedWithPatient, setIsSharedWithPatient] = useState(true);
@@ -214,7 +220,8 @@ const AppointmentForm = () => {
     try {
       setIsLoading(true);
       const token = getAuthToken();
-      const branchId = "ace96994-7b68-4c95-9ede-181dd5890eff";
+    
+      const branchId =profile?.branchId;
       const response = await fetch(
         `${BASE_URL}/appointment/list/${branchId}?page=${page}&pageSize=10`,
         {
@@ -248,7 +255,7 @@ const AppointmentForm = () => {
     try {
       setIsLoading(true);
       const token = getAuthToken();
-      const branchId = "ace96994-7b68-4c95-9ede-181dd5890eff";
+      const branchId = profile?.branchId;
       const response = await fetch(
         `${BASE_URL}/patient/list/${branchId}?page=${page}&pageSize=10`,
         {
@@ -315,7 +322,7 @@ const AppointmentForm = () => {
     try {
       setIsLoading(true);
       const token = getAuthToken();
-      const branchId = "ace96994-7b68-4c95-9ede-181dd5890eff";
+      const branchId = profile?.branchId;
       const response = await fetch(
         `${BASE_URL}/user/list/${branchId}?page=${page}&pageSize=10`,
         {
@@ -988,7 +995,7 @@ const AppointmentForm = () => {
                     className="order-2 sm:order-1 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                     onPress={handleSaveReport}
                   >
-                    {`${saveReportLoading?`Genrating Report... `:"Save and Generate Report" }`}
+                    {`${saveReportLoading?`Generating Report... `:"Save and Generate Report" }`}
                     <p>{saveReportLoading && <Spinner size="sm" color="white"/>}</p>
                   </Button>
                   <Button 
