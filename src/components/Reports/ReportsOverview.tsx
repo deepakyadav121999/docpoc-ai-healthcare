@@ -156,7 +156,7 @@ export default function App() {
     //   end: { title: "Reminder Sent (between Jan - Mar 2024)", data: "42,000+" },
     };
     return (
-      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+      <div className="py-2 px-2  flex flex-col justify-center items-center w-full ">
         <div className="flex flex-col w-full">
           <DataStatsReport dataStatsList={dataStatsList} />
         </div>

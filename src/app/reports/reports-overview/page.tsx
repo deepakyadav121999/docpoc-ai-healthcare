@@ -26,7 +26,7 @@ const GenerateReports = () => {
           options={REPORTS_TAB_KEYS}
           color={TOOL_TIP_COLORS.primary}
         />
-        <div className="mt-2">
+        <div className="mt-5" >
         <ReportsOverview />
         </div>
        
