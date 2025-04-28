@@ -226,14 +226,14 @@ const AppointmentForm = () => {
       }
 
       const result = await response.json();
-      // alert("Report saved successfully!");
+   
 
 
       const documentUrl = JSON.parse(result.documentUrl).url;
     
-    // Open the PDF in a new tab
+ 
     window.open(documentUrl, '_blank');
-    
+
       setModalMessage({
         success: "Report saved successfully!",
         error: ""

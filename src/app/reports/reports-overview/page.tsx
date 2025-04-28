@@ -9,12 +9,12 @@ import { TOOL_TIP_COLORS } from "@/constants";
 import { ROUTES } from "@/constants/routes";
 import { REPORTS_TAB_KEYS } from "../routes";
 import ReportForm from "../../../components/Reports/ReportForm"
-
+import ReportsOverview from "../../../components/Reports/ReportsOverview"
 // export const metadata: Metadata = {
 //   title: "DocPOC.",
 //   description: "Manage easy.",
 // };
-const current = ROUTES.GENERATE_REPORTS;
+const current =  ROUTES.REPORTS_OVERVIEW;
 
 const GenerateReports = () => {
   return (
@@ -27,7 +27,7 @@ const GenerateReports = () => {
           color={TOOL_TIP_COLORS.primary}
         />
         <div className="mt-2">
-        <ReportForm />
+        <ReportsOverview />
         </div>
        
       </div>

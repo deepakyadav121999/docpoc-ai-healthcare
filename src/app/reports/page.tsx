@@ -6,7 +6,7 @@ import TabDefaultWithRoute from "@/components/common/TabWithRoute";
 import { REPORTS_TAB_KEYS } from "./routes";
 import { TOOL_TIP_COLORS } from "@/constants";
 import ReportsOverview from ".././../components/Reports/ReportsOverview"
-
+import GenerateReports from "../../components/Reports/ReportForm";
 import { ROUTES } from "@/constants/routes";
 
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
 };
-const current = ROUTES.REPORTS_OVERVIEW;
+const current = ROUTES.GENERATE_REPORTS;
 
 const ReportPage = () => {
   return (
@@ -26,7 +26,8 @@ const ReportPage = () => {
           options={REPORTS_TAB_KEYS}
           color={TOOL_TIP_COLORS.primary}
         />
-        <ReportsOverview />
+        <GenerateReports />
+       
       </div>
     </DefaultLayout>
   );
