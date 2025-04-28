@@ -20,7 +20,8 @@ import {
   Checkbox,
   Autocomplete,
   AutocompleteItem,
-  useDisclosure 
+  useDisclosure,
+  Switch
 } from "@nextui-org/react";
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
@@ -64,7 +65,7 @@ const BASE_URL = API_URL
 
 const AppointmentForm = () => {
   // Form state (unchanged)
-    const profile = useSelector((state: RootState) => state.profile.data);
+  const profile = useSelector((state: RootState) => state.profile.data);
 
   const [reportName, setReportName] = useState("");
   const [enableSharingWithPatient, setEnableSharingWithPatient] = useState(true);
@@ -82,17 +83,25 @@ const AppointmentForm = () => {
   const [reportType, setReportType] = useState<string | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const[saveReportLoading, setSaveReportLoading] = useState(false)
+  const [saveReportLoading, setSaveReportLoading] = useState(false)
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
   // Vital Signs state (unchanged)
+  // const [vitals, setVitals] = useState({
+  //   bloodPressure: "0/0 mmHg",
+  //   heartRate: "0 bpm",
+  //   temperature: "0.0 °F",
+  //   respiratoryRate: "0 rpm"
+  // });
+
+  // Update the vitals state initialization
   const [vitals, setVitals] = useState({
-    bloodPressure: "0/0 mmHg",
-    heartRate: "0 bpm",
-    temperature: "0.0 °F",
-    respiratoryRate: "0 rpm"
+    bloodPressure: { value: "0/0 mmHg", enabled: false },
+    heartRate: { value: "0 bpm", enabled: false },
+    temperature: { value: "0.0 °F", enabled: false },
+    respiratoryRate: { value: "0 rpm", enabled: false }
   });
 
   // Patient details state (unchanged)
@@ -125,12 +134,32 @@ const AppointmentForm = () => {
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
   const genders = ["Male", "Female", "Other"];
 
+
+  const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
+    setVitals(prev => ({
+      ...prev,
+      [field]: { ...prev[field], value }
+    }));
+  };
+
+  const toggleVitalField = (field: keyof typeof vitals) => {
+    setVitals(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        enabled: !prev[field].enabled,
+        value: !prev[field].enabled ? prev[field].value : "0" + (field === "bloodPressure" ? "/0 mmHg" :
+          field === "heartRate" ? " bpm" :
+            field === "temperature" ? " °F" : " rpm")
+      }
+    }));
+  };
   const handleSaveReport = async () => {
     try {
       setIsLoading(true);
       setSaveReportLoading(true)
       const token = getAuthToken();
-      
+
       if (!selectedPatient || !selectedDoctor) {
         setModalMessage({
           success: "",
@@ -144,7 +173,7 @@ const AppointmentForm = () => {
       const branchId = profile?.branchId;
       const reportData = {
         patientId: selectedPatient,
-        branchId:branchId,
+        branchId: branchId,
         patient: {
           id: patient?.id,
           name: patient?.name,
@@ -161,9 +190,17 @@ const AppointmentForm = () => {
           name: doctor?.name,
         },
         appointmentId: selectedAppointment,
-        reportType:"MEDICAL_REPORT",
+        reportType: "MEDICAL_REPORT",
         name: reportName,
-        vitals,
+        // vitals,
+
+        vitals: {
+          ...(vitals.bloodPressure.enabled && { bloodPressure: vitals.bloodPressure.value }),
+          ...(vitals.heartRate.enabled && { heartRate: vitals.heartRate.value }),
+          ...(vitals.temperature.enabled && { temperature: vitals.temperature.value }),
+          ...(vitals.respiratoryRate.enabled && { respiratoryRate: vitals.respiratoryRate.value })
+        },
+
         observations,
         additionalNotes,
         medications,
@@ -174,7 +211,7 @@ const AppointmentForm = () => {
         isSharedWithPatient,
         reportDate: new Date().toISOString(),
       };
-  
+
       const response = await fetch(`${BASE_URL}/reports`, {
         method: "POST",
         headers: {
@@ -183,11 +220,11 @@ const AppointmentForm = () => {
         },
         body: JSON.stringify(reportData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to save report");
       }
-  
+
       const result = await response.json();
       // alert("Report saved successfully!");
 
@@ -221,8 +258,8 @@ const AppointmentForm = () => {
     try {
       setIsLoading(true);
       const token = getAuthToken();
-    
-      const branchId =profile?.branchId;
+
+      const branchId = profile?.branchId;
       const response = await fetch(
         `${BASE_URL}/appointment/list/${branchId}?page=${page}&pageSize=10`,
         {
@@ -251,7 +288,7 @@ const AppointmentForm = () => {
     }
   }, []);
 
-  
+
   const fetchPatients = useCallback(async (page: number) => {
     try {
       setIsLoading(true);
@@ -369,9 +406,9 @@ const AppointmentForm = () => {
     setMedications(updatedMedications);
   };
 
-  const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
-    setVitals(prev => ({ ...prev, [field]: value }));
-  };
+  // const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
+  //   setVitals(prev => ({ ...prev, [field]: value }));
+  // };
 
   const openPreviewModal = async () => {
     if (selectedPatient) {
@@ -424,13 +461,13 @@ const AppointmentForm = () => {
     if (!dateString) return "N/A";
     try {
       const date = new Date(dateString);
-      return isNaN(date.getTime()) 
-        ? dateString 
+      return isNaN(date.getTime())
+        ? dateString
         : date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
     } catch {
       return dateString;
     }
@@ -443,49 +480,49 @@ const AppointmentForm = () => {
   };
 
   useEffect(() => {
-        const header = document.querySelector("header");
-        if (isPreviewModalOpen) {
-          header?.classList.remove("z-999");
-          header?.classList.add("z-0");
-        } else {
-          header?.classList.remove("z-0");
-          header?.classList.add("z-999");
-        }
-      }, [isPreviewModalOpen]);
+    const header = document.querySelector("header");
+    if (isPreviewModalOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0");
+    } else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999");
+    }
+  }, [isPreviewModalOpen]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-gray-100 dark:bg-gray-dark text-black dark:text-white">
+    <div className="min-h-screen p-4 md:p-8  text-black dark:text-white">
       <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">Appointment Report Form</h1>
 
         {/* Mode selection - made responsive */}
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
           <Button
-             style={{
+            style={{
               margin: 5,
               backgroundColor:
-              appointmentMode === "appointment" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
+                appointmentMode === "appointment" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
             }}
             className={`rounded-[7px] py-2 px-4 ${appointmentMode === "appointment"
               ? ""
               : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
               }`}
-              
+
             onPress={() => setAppointmentMode("appointment")}
           >
             Generate Using Appointment
           </Button>
           <Button
-           style={{
-            margin: 5,
-            backgroundColor:
-            appointmentMode === "manual" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
-          }}
+            style={{
+              margin: 5,
+              backgroundColor:
+                appointmentMode === "manual" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
+            }}
             className={`rounded-[7px] py-2 px-4 ${appointmentMode === "manual"
               ? ""
               : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
               }`}
-               
+
             onPress={() => setAppointmentMode("manual")}
           >
             Manual Report
@@ -600,7 +637,7 @@ const AppointmentForm = () => {
         </div>
 
         {/* Vital Signs Section - made responsive */}
-        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+        {/* <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">Vital Signs</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -640,6 +677,108 @@ const AppointmentForm = () => {
               className="w-full"
             />
           </div>
+        </div> */}
+
+
+<div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Vital Signs</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+            Leave fields disabled to exclude from report
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={`p-3 rounded-lg ${vitals.bloodPressure.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Blood Pressure</span>
+                <Switch 
+                  size="sm" 
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.bloodPressure.enabled }
+                  onValueChange={() => toggleVitalField("bloodPressure")}
+                />
+              </div>
+              <Input
+                label=""
+                variant="bordered"
+                color={TOOL_TIP_COLORS.secondary}
+                value={vitals.bloodPressure.value}
+                onChange={(e) => handleVitalsChange("bloodPressure", e.target.value)}
+                placeholder="e.g. 120/80 mmHg"
+                className="w-full"
+                isDisabled={!vitals.bloodPressure.enabled}
+              />
+            </div>
+
+            <div className={`p-3 rounded-lg ${vitals.heartRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Heart Rate</span>
+                <Switch 
+                  size="sm" 
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.heartRate.enabled}
+                  onValueChange={() => toggleVitalField("heartRate")}
+                />
+              </div>
+              <Input
+                label=""
+                variant="bordered"
+                color={TOOL_TIP_COLORS.secondary}
+                value={vitals.heartRate.value}
+                onChange={(e) => handleVitalsChange("heartRate", e.target.value)}
+                placeholder="e.g. 72 bpm"
+                className="w-full"
+                isDisabled={!vitals.heartRate.enabled}
+              />
+            </div>
+
+            <div className={`p-3 rounded-lg ${vitals.temperature.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Temperature</span>
+                <Switch 
+                  size="sm" 
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.temperature.enabled}
+                  onValueChange={() => toggleVitalField("temperature")}
+                />
+              </div>
+              <Input
+                label=""
+                variant="bordered"
+                color={TOOL_TIP_COLORS.secondary}
+                value={vitals.temperature.value}
+                onChange={(e) => handleVitalsChange("temperature", e.target.value)}
+                placeholder="e.g. 98.6 °F"
+                className="w-full"
+                isDisabled={!vitals.temperature.enabled}
+              />
+            </div>
+
+            <div className={`p-3 rounded-lg ${vitals.respiratoryRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Respiratory Rate</span>
+                <Switch 
+                  size="sm" 
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.respiratoryRate.enabled}
+                  onValueChange={() => toggleVitalField("respiratoryRate")}
+                />
+              </div>
+              <Input
+                label=""
+                variant="bordered"
+                color={TOOL_TIP_COLORS.secondary}
+                value={vitals.respiratoryRate.value}
+                onChange={(e) => handleVitalsChange("respiratoryRate", e.target.value)}
+                placeholder="e.g. 16 rpm"
+                className="w-full"
+                isDisabled={!vitals.respiratoryRate.enabled}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            
+          </p>
         </div>
 
         {/* Observations and Notes - made responsive */}
@@ -917,7 +1056,7 @@ const AppointmentForm = () => {
                         </div>
                       </div>
 
-                      <div className="mb-6">
+                      {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">Vital Signs</h3>
                         <div className="overflow-x-auto">
                           <table className="min-w-full border">
@@ -939,7 +1078,33 @@ const AppointmentForm = () => {
                             </tbody>
                           </table>
                         </div>
-                      </div>
+                      </div> */}
+
+
+                      {/* In the preview modal's vital signs section */}
+<div className="mb-6">
+  <h3 className="text-base md:text-lg font-medium mb-2">Vital Signs</h3>
+  <div className="overflow-x-auto">
+    <table className="min-w-full border">
+      <thead>
+        <tr className="bg-gray-100 dark:bg-gray-700">
+          {vitals.bloodPressure.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Blood Pressure</th>}
+          {vitals.heartRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Heart Rate</th>}
+          {vitals.temperature.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Temperature</th>}
+          {vitals.respiratoryRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Respiratory Rate</th>}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {vitals.bloodPressure.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.bloodPressure.value}</td>}
+          {vitals.heartRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.heartRate.value}</td>}
+          {vitals.temperature.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.temperature.value}</td>}
+          {vitals.respiratoryRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.respiratoryRate.value}</td>}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
                       <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">Observations</h3>
@@ -991,17 +1156,17 @@ const AppointmentForm = () => {
                   </div>
                 </ModalBody>
                 <ModalFooter className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <Button 
-                    color={TOOL_TIP_COLORS.secondary} 
+                  <Button
+                    color={TOOL_TIP_COLORS.secondary}
                     className="order-2 sm:order-1 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                     onPress={handleSaveReport}
                   >
-                    {`${saveReportLoading?`Generating Report... `:"Save and Generate Report" }`}
-                    <p>{saveReportLoading && <Spinner size="sm" color="white"/>}</p>
+                    {`${saveReportLoading ? `Generating Report... ` : "Save and Generate Report"}`}
+                    <p>{saveReportLoading && <Spinner size="sm" color="white" />}</p>
                   </Button>
-                  <Button 
-                    color={TOOL_TIP_COLORS.secondary} 
-                    variant="light" 
+                  <Button
+                    color={TOOL_TIP_COLORS.secondary}
+                    variant="light"
                     onPress={onClose}
                     className="order-1 sm:order-2 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                   >
