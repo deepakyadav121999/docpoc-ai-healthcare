@@ -228,6 +228,12 @@ const AppointmentForm = () => {
       const result = await response.json();
       // alert("Report saved successfully!");
 
+
+      const documentUrl = JSON.parse(result.documentUrl).url;
+    
+    // Open the PDF in a new tab
+    window.open(documentUrl, '_blank');
+    
       setModalMessage({
         success: "Report saved successfully!",
         error: ""
@@ -688,7 +694,7 @@ const AppointmentForm = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className={`p-3 rounded-lg ${vitals.bloodPressure.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <div className={` border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.bloodPressure.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Blood Pressure</span>
                 <Switch 
@@ -710,7 +716,7 @@ const AppointmentForm = () => {
               />
             </div>
 
-            <div className={`p-3 rounded-lg ${vitals.heartRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <div className={` border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.heartRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Heart Rate</span>
                 <Switch 
@@ -732,7 +738,7 @@ const AppointmentForm = () => {
               />
             </div>
 
-            <div className={`p-3 rounded-lg ${vitals.temperature.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <div className={`border border-stroke dark:border-dark-3  p-3 rounded-lg ${vitals.temperature.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Temperature</span>
                 <Switch 
@@ -754,7 +760,7 @@ const AppointmentForm = () => {
               />
             </div>
 
-            <div className={`p-3 rounded-lg ${vitals.respiratoryRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <div className={`border border-stroke dark:border-dark-3  p-3 rounded-lg ${vitals.respiratoryRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Respiratory Rate</span>
                 <Switch 
