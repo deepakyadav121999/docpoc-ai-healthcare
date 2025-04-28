@@ -141,9 +141,10 @@ const AppointmentForm = () => {
       }
       const patient = patients.find(p => p.id === selectedPatient);
       const doctor = doctors.find(d => d.id === selectedDoctor);
-  
+      const branchId = profile?.branchId;
       const reportData = {
         patientId: selectedPatient,
+        branchId:branchId,
         patient: {
           id: patient?.id,
           name: patient?.name,
