@@ -261,6 +261,12 @@ const menuGroups = [
         route: "/payment/overview",
       },
       {
+        icon: <SVGIconProvider iconName="smalldocument" />,
+        label: "Reports",
+        route: "/reports",
+      },
+
+      {
         icon: <SVGIconProvider iconName="patient" />,
         label: "Patients",
         route: "/patient",
@@ -285,11 +291,7 @@ const menuGroups = [
         label: "Reminders",
         route: "/reminders",
       },
-      {
-        icon: <SVGIconProvider iconName="smalldocument" />,
-        label: "Reports",
-        route: "/reports",
-      }
+     
     ],
   },
   {
