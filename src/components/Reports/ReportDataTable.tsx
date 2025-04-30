@@ -174,11 +174,11 @@
 //         --calendar-background-color: #ecf0f1;
 //         --dark-background: #122031;
 //       }
-      
+
 //       .dark {
 //         --calendar-background-color: var(--dark-background);
 //       }    
-      
+
 //       .table-custom {
 //         background-color: var(--calendar-background-color);
 //       }`}
@@ -265,17 +265,17 @@ export default function ReportDataTable() {
         const fromDate = "2025-01-01T05:19:15.544Z";
         const toDate = "2025-05-02T05:19:15.545Z";
 
-      //  const endpoint = searchName
-      //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`
-      //     : `${API_URL}/DocPOC/v1/reports/list/${branchId} `;
-          const endpoint =  `${API_URL}/reports/list/${branchId}`;
+        //  const endpoint = searchName
+        //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`
+        //     : `${API_URL}/DocPOC/v1/reports/list/${branchId} `;
+        const endpoint = `${API_URL}/reports/list/${branchId}`;
 
         const params = {
           page,
           pageSize: rowsPerPage,
           from: fromDate,
           to: toDate,
-          reportType: [ "MEDICAL_REPORT", "INVOICE"],
+          reportType: ["MEDICAL_REPORT", "INVOICE"],
         };
 
         const response = await axios.get(endpoint, {
@@ -352,7 +352,7 @@ export default function ReportDataTable() {
             <p className="text-bold text-small capitalize">
               {/* {report.name} */}
               {report.patientName}
-              </p>
+            </p>
             {/* <p className="text-bold text-tiny capitalize text-default-400">
               {report.patientName}
             </p> */}
@@ -378,11 +378,25 @@ export default function ReportDataTable() {
             </p>
           </div>
         );
+      // case "note":
+      //   return (
+      //     <div className="flex flex-col">
+      //       <p className="text-bold text-small capitalize">
+      //         {report.additionalNotes || "N/A"}
+      //       </p>
+      //     </div>
+      //   );
+
       case "note":
+        const note = report.additionalNotes || "N/A";
+        const truncatedNote = note.length > 10 ? `${note.substring(0, 10)}...` : note;
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">
-              {report.additionalNotes || "N/A"}
+            <p
+              className="text-bold text-small capitalize"
+              // title={note} 
+            >
+              {truncatedNote}
             </p>
           </div>
         );
@@ -393,7 +407,7 @@ export default function ReportDataTable() {
               href={JSON.parse(report.documentUrl).url}
               target="_blank"
               rel="noopener noreferrer"
-              // className="text-blue-500 hover:underline"
+            // className="text-blue-500 hover:underline"
             >
               View Report
             </a>

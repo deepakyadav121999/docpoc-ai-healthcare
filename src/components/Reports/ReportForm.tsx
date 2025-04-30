@@ -58,6 +58,12 @@ interface Doctor {
   id: string;
   name: string;
 }
+interface Medication {
+  time: string;
+  name: string;
+  note: string;
+  quantity: number;
+}
 
 const API_URL = process.env.API_URL;
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
@@ -76,7 +82,8 @@ const AppointmentForm = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [observations, setObservations] = useState<string>("");
   const [additionalNotes, setAdditionalNotes] = useState<string>("");
-  const [medications, setMedications] = useState<{ time: string; name: string; note: string }[]>([]);
+  // const [medications, setMedications] = useState<{ time: string; name: string; note: string }[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [followUpRequired, setFollowUpRequired] = useState<"yes" | "no">("no");
   const [followUpDate, setFollowUpDate] = useState<string>("");
   const [followUpNotes, setFollowUpNotes] = useState<string>("");
@@ -203,7 +210,7 @@ const AppointmentForm = () => {
 
         observations,
         additionalNotes,
-        medications,
+        medications: JSON.stringify(medications),
         followUpRequired,
         followUpDate: followUpRequired === "yes" ? followUpDate : undefined,
         followUpNotes: followUpRequired === "yes" ? followUpNotes : undefined,
@@ -226,13 +233,13 @@ const AppointmentForm = () => {
       }
 
       const result = await response.json();
-   
+
 
 
       const documentUrl = JSON.parse(result.documentUrl).url;
-    
- 
-    window.open(documentUrl, '_blank');
+
+
+      window.open(documentUrl, '_blank');
 
       setModalMessage({
         success: "Report saved successfully!",
@@ -402,14 +409,33 @@ const AppointmentForm = () => {
   }, [fetchAppointments, fetchPatients, fetchDoctors]);
 
   // Form handlers (unchanged)
+  // const addMedication = () => {
+  //   setMedications([...medications, { time: "", name: "", note: "" }]);
+  // };
+
   const addMedication = () => {
-    setMedications([...medications, { time: "", name: "", note: "" }]);
+    setMedications([...medications, { time: "", name: "", note: "", quantity: 1 }]);
   };
 
-  const updateMedication = (index: number, field: "time" | "name" | "note", value: string) => {
-    const updatedMedications = [...medications];
-    updatedMedications[index][field] = value;
-    setMedications(updatedMedications);
+  // const updateMedication = (index: number, field: "time" | "name" | "note", value: string) => {
+  //   const updatedMedications = [...medications];
+  //   updatedMedications[index][field] = value;
+  //   setMedications(updatedMedications);
+  // };
+
+  const updateMedication = (
+    index: number,
+    field: keyof Medication,
+    value: Medication[keyof Medication]
+  ) => {
+    setMedications(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value
+      };
+      return updated;
+    });
   };
 
   // const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
@@ -686,21 +712,21 @@ const AppointmentForm = () => {
         </div> */}
 
 
-<div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Vital Signs</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-            Leave fields disabled to exclude from report
+              Leave fields disabled to exclude from report
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={` border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.bloodPressure.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Blood Pressure</span>
-                <Switch 
-                  size="sm" 
+                <Switch
+                  size="sm"
                   color={TOOL_TIP_COLORS.secondary}
-                  isSelected={vitals.bloodPressure.enabled }
+                  isSelected={vitals.bloodPressure.enabled}
                   onValueChange={() => toggleVitalField("bloodPressure")}
                 />
               </div>
@@ -719,8 +745,8 @@ const AppointmentForm = () => {
             <div className={` border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.heartRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Heart Rate</span>
-                <Switch 
-                  size="sm" 
+                <Switch
+                  size="sm"
                   color={TOOL_TIP_COLORS.secondary}
                   isSelected={vitals.heartRate.enabled}
                   onValueChange={() => toggleVitalField("heartRate")}
@@ -741,8 +767,8 @@ const AppointmentForm = () => {
             <div className={`border border-stroke dark:border-dark-3  p-3 rounded-lg ${vitals.temperature.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Temperature</span>
-                <Switch 
-                  size="sm" 
+                <Switch
+                  size="sm"
                   color={TOOL_TIP_COLORS.secondary}
                   isSelected={vitals.temperature.enabled}
                   onValueChange={() => toggleVitalField("temperature")}
@@ -763,8 +789,8 @@ const AppointmentForm = () => {
             <div className={`border border-stroke dark:border-dark-3  p-3 rounded-lg ${vitals.respiratoryRate.enabled ? '' : 'bg-gray-100 dark:bg-gray-800'}`}>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm">Respiratory Rate</span>
-                <Switch 
-                  size="sm" 
+                <Switch
+                  size="sm"
                   color={TOOL_TIP_COLORS.secondary}
                   isSelected={vitals.respiratoryRate.enabled}
                   onValueChange={() => toggleVitalField("respiratoryRate")}
@@ -783,7 +809,7 @@ const AppointmentForm = () => {
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            
+
           </p>
         </div>
 
@@ -819,7 +845,7 @@ const AppointmentForm = () => {
           <label className="block text-sm font-medium text-dark dark:text-white">Medications</label>
           {medications.map((med, index) => (
             <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center mt-2">
-              <div className="sm:col-span-3">
+              <div className="sm:col-span-2">
                 <Autocomplete
                   variant="bordered"
                   color={TOOL_TIP_COLORS.secondary}
@@ -838,7 +864,7 @@ const AppointmentForm = () => {
                 </Autocomplete>
               </div>
 
-              <div className="sm:col-span-5">
+              <div className="sm:col-span-4">
                 <Input
                   type="text"
                   variant="bordered"
@@ -850,6 +876,23 @@ const AppointmentForm = () => {
                   onChange={(e) => updateMedication(index, "name", e.target.value)}
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
+              </div>
+              <div className="sm:col-span-2">
+               
+                <Input
+                  type="number"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  label="X"
+                  labelPlacement="outside"
+                  placeholder="X"
+                  min="1"
+                  value={med.quantity as unknown as string}
+                  onChange={(e) => updateMedication(index, "quantity", parseInt(e.target.value) || 1)}
+                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                />
+               
+               
               </div>
 
               <div className="sm:col-span-4">
@@ -902,7 +945,7 @@ const AppointmentForm = () => {
         </div>
 
         {/* Report Name - made responsive */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-dark dark:text-white">
             Report Name
           </label>
@@ -915,7 +958,7 @@ const AppointmentForm = () => {
             placeholder="Enter report name (e.g. Jetha Lal, Diabetes report, test 1)"
             className="w-full mt-1 rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
           />
-        </div>
+        </div> */}
 
         {/* Follow-up section - made responsive */}
         <div>
@@ -957,7 +1000,8 @@ const AppointmentForm = () => {
                     value={followUpNotes}
                     onChange={(e) => setFollowUpNotes(e.target.value)}
                     placeholder="Enter additional notes for follow-up..."
-                    className="w-full h-6 rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                    className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                    minRows={3}
                   />
                 </div>
               </div>
@@ -1088,42 +1132,60 @@ const AppointmentForm = () => {
 
 
                       {/* In the preview modal's vital signs section */}
-<div className="mb-6">
-  <h3 className="text-base md:text-lg font-medium mb-2">Vital Signs</h3>
-  <div className="overflow-x-auto">
-    <table className="min-w-full border">
-      <thead>
-        <tr className="bg-gray-100 dark:bg-gray-700">
-          {vitals.bloodPressure.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Blood Pressure</th>}
-          {vitals.heartRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Heart Rate</th>}
-          {vitals.temperature.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Temperature</th>}
-          {vitals.respiratoryRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Respiratory Rate</th>}
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          {vitals.bloodPressure.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.bloodPressure.value}</td>}
-          {vitals.heartRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.heartRate.value}</td>}
-          {vitals.temperature.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.temperature.value}</td>}
-          {vitals.respiratoryRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.respiratoryRate.value}</td>}
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
                       <div className="mb-6">
+                        <h3 className="text-base md:text-lg font-medium mb-2">Vital Signs</h3>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border">
+                            <thead>
+                              <tr className="bg-gray-100 dark:bg-gray-700">
+                                {vitals.bloodPressure.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Blood Pressure</th>}
+                                {vitals.heartRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Heart Rate</th>}
+                                {vitals.temperature.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Temperature</th>}
+                                {vitals.respiratoryRate.enabled && <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Respiratory Rate</th>}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                {vitals.bloodPressure.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.bloodPressure.value}</td>}
+                                {vitals.heartRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.heartRate.value}</td>}
+                                {vitals.temperature.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.temperature.value}</td>}
+                                {vitals.respiratoryRate.enabled && <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.respiratoryRate.value}</td>}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">Observations</h3>
                         <p className="whitespace-pre-line text-sm md:text-base">
                           {observations || "No observations provided"}
                         </p>
-                      </div>
+                      </div> */}
 
                       <div className="mb-6">
+                        <h3 className="text-base md:text-lg font-medium mb-2">Observations</h3>
+                        <div className="p-3   ">
+                          <p className="whitespace-pre-line text-sm md:text-base break-words overflow-auto max-h-40">
+                            {observations || "No observations provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">Additional Notes</h3>
                         <p className="whitespace-pre-line text-sm md:text-base">
                           {additionalNotes || "No additional notes provided"}
                         </p>
+                      </div> */}
+
+                      <div className="mb-6">
+                        <h3 className="text-base md:text-lg font-medium mb-2">Additional Notes</h3>
+                        <div className="p-3">
+                          <p className="whitespace-pre-line text-sm md:text-base break-words overflow-auto max-h-40">
+                            {additionalNotes || "No additional notes provided"}
+                          </p>
+                        </div>
                       </div>
 
                       {medications.length > 0 && (
@@ -1131,9 +1193,13 @@ const AppointmentForm = () => {
                           <h3 className="text-base md:text-lg font-medium mb-2">Prescribed Medications</h3>
                           <ul className="list-disc pl-5 space-y-1 text-sm md:text-base">
                             {medications.map((med, index) => (
+                              // <li key={index}>
+                              //   <strong>{med.name || "Unnamed medication"}</strong> ({med.time || "No time specified"}) - {med.note || "No notes"}
+                              // </li>
+
                               <li key={index}>
-                                <strong>{med.name || "Unnamed medication"}</strong> ({med.time || "No time specified"}) - {med.note || "No notes"}
-                              </li>
+                              <strong>{med.quantity} x  {med.name || "Unnamed medication"}</strong> ({med.time || "No time specified"}) - {med.note || "No notes"}
+                            </li>
                             ))}
                           </ul>
                         </div>
@@ -1147,10 +1213,20 @@ const AppointmentForm = () => {
                               <p className="text-sm text-gray-500">Follow-Up Date</p>
                               <p className="font-medium">{followUpDate || "Not specified"}</p>
                             </div>
-                            <div>
+                            {/* <div>
                               <p className="text-sm text-gray-500">Follow-Up Notes</p>
                               <p className="font-medium">{followUpNotes || "No notes provided"}</p>
+                            </div> */}
+
+                            <div>
+                              <p className="text-sm text-gray-500">Follow-Up Notes</p>
+                              <div className="p-3 ">
+                                <p className="whitespace-pre-line text-sm md:text-base break-words">
+                                  {followUpNotes || "No notes provided"}
+                                </p>
+                              </div>
                             </div>
+
                           </div>
                         </div>
                       )}
