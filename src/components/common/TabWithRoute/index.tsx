@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@nextui-org/react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
-import { useRouter } from "next/navigation";
+import { useRouter,usePathname } from "next/navigation";
 
 interface TabOption {
   screen: string;
@@ -20,9 +20,14 @@ const TabDefaultWithRoute: React.FC<TableDefaultProps> = ({
   current,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isNext, setIsNext] = React.useState("");
   const handleTabClick = (path: string) => {
+    if (pathname === path) {
+      setIsLoading(false);
+      return;
+    }
     router.push(path); // Correct client-side navigation
   };
 

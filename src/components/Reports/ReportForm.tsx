@@ -142,6 +142,11 @@ const AppointmentForm = () => {
   const genders = ["Male", "Female", "Other"];
 
 
+  const CHARACTER_LIMITS = {
+    followUpNotes: 70,
+    medicationNote: 70
+  };  
+
   const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
     setVitals(prev => ({
       ...prev,
@@ -904,7 +909,15 @@ const AppointmentForm = () => {
                   labelPlacement="outside"
                   placeholder="Note (optional)"
                   value={med.note}
-                  onChange={(e) => updateMedication(index, "note", e.target.value)}
+                  // onChange={(e) => updateMedication(index, "note", e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= CHARACTER_LIMITS.medicationNote) {
+                      updateMedication(index, "note", e.target.value);
+                    }
+                  }}
+                 
+                  maxLength={CHARACTER_LIMITS.medicationNote}
+
                   className="w-full  rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
@@ -998,7 +1011,12 @@ const AppointmentForm = () => {
                     variant="bordered"
                     color={TOOL_TIP_COLORS.secondary}
                     value={followUpNotes}
-                    onChange={(e) => setFollowUpNotes(e.target.value)}
+                    // onChange={(e) => setFollowUpNotes(e.target.value)}
+                    onChange={(e) => {
+                      if (e.target.value.length <= CHARACTER_LIMITS.followUpNotes) {
+                        setFollowUpNotes(e.target.value);
+                      }
+                    }}
                     placeholder="Enter additional notes for follow-up..."
                     className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                     minRows={3}
