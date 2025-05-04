@@ -7,11 +7,11 @@ const ChartTwo: React.FC = () => {
   const series = [
     {
       name: "Patients Reached",
-      data: [22, 43, 65],
+      data: [0, 0, 0],
     },
     {
       name: "Patients booked",
-      data: [13, 27, 15],
+      data: [0, 0, 0],
     },
   ];
 

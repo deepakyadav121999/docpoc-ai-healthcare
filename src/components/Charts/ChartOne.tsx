@@ -7,11 +7,11 @@ const ChartOne: React.FC = () => {
   const series = [
     {
       name: "Received Amount",
-      data: [75, 60, 75],
+      data: [0, 0, 0],
     },
     {
       name: "Due Amount",
-      data: [94, 74, 62],
+      data: [0, 0, 0],
     },
   ];
 
@@ -144,13 +144,13 @@ const ChartOne: React.FC = () => {
         <div className="border-stroke dark:border-dark-3 xsm:w-1/2 xsm:border-r">
           <p className="font-medium">Received Amount</p>
           <h4 className="mt-1 text-xl font-bold text-dark dark:text-white">
-            ₹45,070.00
+            ₹0.00
           </h4>
         </div>
         <div className="xsm:w-1/2">
           <p className="font-medium">Due Amount</p>
           <h4 className="mt-1 text-xl font-bold text-dark dark:text-white">
-            ₹32,400.00
+            ₹0.00
           </h4>
         </div>
       </div>
