@@ -135,11 +135,15 @@ import { Chat } from "@/types/chat";
 interface Appointment {
   id: string;
   name: string;
+  type: string;
   patient: {
+    id: string;
     name: string;
+    gender: string; // Added to match ChatCard's requirements
     displayPicture: string | null;
   };
   visitType: {
+    id: string;
     name: string;
   };
   startDateTime: string;
@@ -149,6 +153,8 @@ interface Appointment {
 interface ChatCardProps {
   appointments?: Appointment[];
 }
+
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
   // Transform API data to chat format
@@ -186,11 +192,14 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
         timeDisplay = date.toLocaleDateString([], { weekday: 'short' });
       }
 
+       const placeholderImage = appointment.patient?.gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+       const avatarSrc = appointment.patient?.displayPicture || placeholderImage;
+
       return {
         active,
-        avatar: appointment.patient.displayPicture || "/images/user/user-01.png",
-        name: appointment.patient.name,
-        text: `${appointment.visitType.name}: ${appointment.name}`,
+        avatar: avatarSrc,
+        name: appointment.patient?.name,
+        text: `${appointment?.visitType?.name}: ${appointment?.name}`,
         time: timeDisplay,
         textCount: 0,
         dot: 3,

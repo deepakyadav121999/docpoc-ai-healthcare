@@ -51,6 +51,7 @@ interface Appointment {
   patient: {
     id: string;
     name: string;
+    gender: string; // Added to match ChatCard's requirements
     displayPicture: string | null;
   };
   visitType: {
@@ -295,8 +296,11 @@ const ECommerce: React.FC = () => {
       <DataStatsOne stats={data.stats} />
       
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
+      <div className="col-span-12">
         <ChartOne />
-        <ChartTwo />
+      </div>
+        {/* <ChartOne /> */}
+        {/* <ChartTwo /> */}
         <ChartThree 
            types={data.visitTypes.types} 
            appointments={data.visitTypes.appointments} 

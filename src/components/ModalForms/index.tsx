@@ -567,41 +567,46 @@ export default function ModalForm(props: {
         },
       });
 
-      const users = response.data;
-      setAppointmentDateTime(users.startDateTime);
-      setAppointmentPatientId(users.patientId);
-      setAppointmentBranch(users.branchId);
-      fetchUsers(users.doctorId);
-      setDoctorId(users.doctorId);
-      fetchDoctors(users.branchId);
-      setAppointmentName(users.name);
-      setStartDateTime(users.startDateTime);
-      setEndDateTime(users.endDateTime);
-      setAppointmentDate(users.dateTime);
-      setPatientId(users.patientId);
+      const appointment = response.data;
+      setAppointmentDateTime(appointment.startDateTime);
+      // setAppointmentPatientId(appointment.patientId);
+      setAppointmentBranch(appointment.branchId);
 
-      await fetchPatientById(users.patientId)
+      // fetchUsers(appointment.doctorId);
+
+      setDoctorId(appointment.doctorId);
+      // fetchDoctors(appointment.branchId);
+      setAppointmentName(appointment.name);
+      setStartDateTime(appointment.startDateTime);
+      setEndDateTime(appointment.endDateTime);
+      setAppointmentDate(appointment.dateTime);
+      setPatientId(appointment.patientId);
+
+      // await fetchPatientById(users.patientId)
+      setPatientPhoto(appointment.patient?.displayPicture)
+      setPatientGender(appointment.patient?.gender)
+      setPatientId(appointment.patient?.id)
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
-
+      setEmployeeName(appointment.doctor?.name);
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
       // setShiftStartTime(startTimeObject)
 
       // setShiftEndTime(endTimeObject)
 
 
-      const startTimeObject = extractTimeDisplay(users.startDateTime);
+      const startTimeObject = extractTimeDisplay(appointment.startDateTime);
       console.log(parseTime(startTimeObject));
-      const endTimeObject = extractTimeDisplay(users.endDateTime);
+      const endTimeObject = extractTimeDisplay(appointment.endDateTime);
 
       setShiftStartTime(
-        users.startDateTime ? parseTime(startTimeObject) : null,
+        appointment.startDateTime ? parseTime(startTimeObject) : null,
       );
       setStartDateTimeDisp(startTimeObject);
 
-      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject) : null);
+      setShiftEndTime(appointment.endDateTime ? parseTime(endTimeObject) : null);
       console.log(`time is ${parseTime(startTimeObject)}`);
     } catch (err) {
-      console.error("Failed to fetch users.", err);
+      console.error("Failed to fetch appointment.", err);
     } finally {
       setLoading(false);
     }
@@ -634,6 +639,10 @@ export default function ModalForm(props: {
     setEditVisitTime(!editVisitTime);
   };
   const editDoctor = () => {
+    if (!editSelectedDoctor) {
+      fetchDoctors(appointmentBranch); // Use the appointment's branch ID
+    }
+ 
     setEditDoctor(!editSelectedDoctor);
   };
 
@@ -707,6 +716,9 @@ export default function ModalForm(props: {
         type: "0151308b-6419-437b-9b41-53c7de566724",
       };
       props.onDataChange(updatedData);
+
+    
+   
     }
   }, [
     branchId,
@@ -746,6 +758,7 @@ export default function ModalForm(props: {
   const editEmployeeName = () => {
     setEmployeeName(employeeName);
     setEditEmployee(!editSelectedEmployee);
+
   };
 
   const editEmployeeEmail = () => {
@@ -1021,7 +1034,7 @@ export default function ModalForm(props: {
 
                     <div className="flex flex-col center">
                       {
-                        showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={""}
+                        showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={"history"}
                         uploadedDocuments={[]} />
                       }
                     </div>
@@ -1076,7 +1089,7 @@ export default function ModalForm(props: {
                   <h3 className="font-semibold text-foreground/90 text-lg md:text-xl">
                     Edit Appointment Details
                   </h3>
-                  <StyledButton label={"Follow-up"} />
+                  {/* <StyledButton label={"Follow-up"} /> */}
                 </div>
 
                 <div className="space-y-3">
@@ -1172,6 +1185,7 @@ export default function ModalForm(props: {
                             labelPlacement="outside"
                             variant="bordered"
                             isDisabled={!editSelectedDoctor}
+                            defaultInputValue={employeeName}
                             defaultItems={doctorList}
                             label="Select Doctor"
                             placeholder="Search a Doctor"

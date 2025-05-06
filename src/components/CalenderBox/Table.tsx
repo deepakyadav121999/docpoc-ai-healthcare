@@ -1680,7 +1680,7 @@ const fetchUsers = useCallback(() => {
       case "name":
     const gender = user.gender || "unknown"; // Directly access the gender property
       const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
-      const avatarSrc = user.patient.displayPicture || placeholderImage;
+      const avatarSrc = user.patient?.displayPicture || placeholderImage;
 
 
         return (

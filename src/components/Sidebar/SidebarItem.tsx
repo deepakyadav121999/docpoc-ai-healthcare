@@ -1,29 +1,56 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
 import { Spinner } from "@nextui-org/spinner";
+
+interface SidebarItemProps {
+  item: {
+    icon: React.ReactNode;
+    label: string;
+    route: string;
+    children?: Array<{ label: string; route: string }>;
+    message?: string;
+    pro?: boolean;
+  };
+  pageName: string;
+  setPageName: (name: string) => void;
+  isActive?: boolean;
+  loading?: boolean;
+  onClick?: () => void;
+}
 
 const SidebarItem = ({
   item,
   pageName,
   setPageName,
   isActive,
-  loadingitem,
+  loading,
   onClick,
-}: any) => {
-  const [loading, setLoading] = useState(false);
+}: SidebarItemProps) => {
+  const [localLoading, setLocalLoading] = useState(false);
+
+  useEffect(() => {
+    // Clear loading state when navigation completes
+    if (!loading) {
+      setLocalLoading(false);
+    }
+  }, [loading]);
+
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    // Check if the item has children (dropdown functionality)
     if (item.children) {
-      e.preventDefault(); // Prevent navigation for dropdown toggle
-      const updatedPageName =
-        pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
+      e.preventDefault();
+      const updatedPageName = pageName !== item.label.toLowerCase() 
+        ? item.label.toLowerCase() 
+        : "";
       setPageName(updatedPageName);
     } else {
-      // Start loading only if it's a navigation link
-      setLoading(true);
-      setPageName(item.label.toLowerCase());
+      // Only set loading if not already active
+      if (!isActive) {
+        setLocalLoading(true);
+        setPageName(item.label.toLowerCase());
+        onClick?.();
+      }
     }
   };
 
@@ -41,7 +68,7 @@ const SidebarItem = ({
         {item.icon}
         {item.label}
         {/* Show spinner only when loading */}
-        {!item.children && loading && (
+        {!item.children && localLoading && (
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
             <Spinner size="sm" />
           </div>
