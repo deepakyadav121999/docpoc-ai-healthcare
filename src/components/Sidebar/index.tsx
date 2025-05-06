@@ -329,7 +329,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [loadingItem, setLoadingItem] = useState<string | null>(null); // Track which menu item is loading
 
   const [isDarkMode, setIsDarkMode] = useState(false);
-
+  const [isNavigating, setIsNavigating] = useState(false);
   
   useEffect(() => {
     const rootElement = document.documentElement;
@@ -365,11 +365,33 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     window.location.href = "/auth/signout";
   };
 
+  // const handleMenuItemClick = async (route: string, label: string) => {
+  //   setLoadingItem(label); // Set the loading state for the clicked menu item
+  //   await router.push(route); // Navigate to the new route
+  //   setLoadingItem(null); // Reset the loading state after navigation
+  // };
+
   const handleMenuItemClick = async (route: string, label: string) => {
-    setLoadingItem(label); // Set the loading state for the clicked menu item
-    await router.push(route); // Navigate to the new route
-    setLoadingItem(null); // Reset the loading state after navigation
+    if (pathname === route) return; // Don't navigate if already on the same route
+    
+    setLoadingItem(label);
+    setIsNavigating(true);
+    
+    try {
+      await router.push(route);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      setLoadingItem(null);
+      setIsNavigating(false);
+    }
   };
+
+  // Alternative solution for route change detection
+  useEffect(() => {
+    // This will run when the pathname changes, indicating navigation completion
+    setLoadingItem(null);
+    setIsNavigating(false);
+  }, [pathname]);
 
   useEffect(() => {
     const header = document.querySelector("header");

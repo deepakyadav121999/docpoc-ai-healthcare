@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
 import { Spinner } from "@nextui-org/spinner";
-
+import { usePathname } from "next/navigation";
 interface SidebarItemProps {
   item: {
     icon: React.ReactNode;
@@ -27,15 +27,43 @@ const SidebarItem = ({
   loading,
   onClick,
 }: SidebarItemProps) => {
+  // const [localLoading, setLocalLoading] = useState(false);
+
+  // useEffect(() => {
+  //   // Clear loading state when navigation completes
+  //   if (!loading) {
+  //     setLocalLoading(false);
+  //   }
+  // }, [loading]);
+
+
+  // const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+  //   if (item.children) {
+  //     e.preventDefault();
+  //     const updatedPageName = pageName !== item.label.toLowerCase() 
+  //       ? item.label.toLowerCase() 
+  //       : "";
+  //     setPageName(updatedPageName);
+  //   } else {
+  //     // Only set loading if not already active
+  //     if (!isActive) {
+  //       setLocalLoading(true);
+  //       setPageName(item.label.toLowerCase());
+  //       onClick?.();
+  //     }
+  //   }
+  // };
+
   const [localLoading, setLocalLoading] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Clear loading state when navigation completes
-    if (!loading) {
+    // Clear loading state when the route changes to match the item's route
+    if (pathname === item.route || 
+        (item.children && item.children.some(child => pathname === child.route))) {
       setLocalLoading(false);
     }
-  }, [loading]);
-
+  }, [pathname, item.route, item.children]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (item.children) {
@@ -68,7 +96,7 @@ const SidebarItem = ({
         {item.icon}
         {item.label}
         {/* Show spinner only when loading */}
-        {!item.children && localLoading && (
+        {!item.children && (localLoading || loading) && (
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
             <Spinner size="sm" />
           </div>
