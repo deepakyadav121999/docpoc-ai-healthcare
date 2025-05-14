@@ -548,6 +548,7 @@ interface VisitData {
   date: string;
   doctor: string;
   report: string;
+  hasReport: boolean;
 }
 
 interface VisitHistoryTableProps {
@@ -568,6 +569,8 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState<number>(3);
   const [visitData, setVisitData] = useState<VisitData[]>([]); // Ensure this is always an array
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+ 
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -582,8 +585,16 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
       const token = localStorage.getItem("docPocAuth_token");
       const endpoint = `${API_URL}/appointment/visits/patient/${patientId}`;
 
+      if (!patientId && viewMode === "history") {
+        setError("No patient ID provided");
+        setLoading(false);
+        setVisitData([]);
+        return;
+      }
+
       try {
         setLoading(true);
+        setError(null);
         const response = await axios.get(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -599,6 +610,7 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
         setVisitData(formattedData);
       } catch (error) {
         console.error("Error fetching visit data:", error);
+        setError("Failed to load data. Please try again.");
         setVisitData([]); // Ensure visitData is an array even on error
       } finally {
         setLoading(false);
@@ -644,9 +656,71 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     setPage(1);
   }, []);
 
+
+
+  const handleViewReport = async () => {
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const response = await axios.get(
+        `${API_URL}/reports/patient/${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Get the first report (if available)
+      const firstReport = response.data[0];
+      
+      if (firstReport?.documentUrl) {
+        try {
+          const documentUrl = JSON.parse(firstReport.documentUrl).url;
+          if (documentUrl) {
+            window.open(documentUrl, "_blank", "noopener,noreferrer");
+          } else {
+            console.error("No document URL found in report");
+          }
+        } catch (e) {
+          console.error("Error parsing document URL:", e);
+        }
+      } else {
+        console.error("No reports found for this patient");
+      }
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-40 text-gray-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (visitData.length === 0 && !loading) {
+    return (
+      <div className="flex justify-center items-center h-40 text-gray-500">
+        No records found
+      </div>
+    );
+  }
+
   return (
     <>
       <div>{loading && <Spinner />}</div>
+      
       <div
         className="flex w-full justify-center px-2 sm:px-4"
         style={{ marginBottom: 5 }}
@@ -698,13 +772,23 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                 {(columnKey) => (
                   <TableCell>
                     {columnKey === "report" ? (
-                      <a
-                        href={getKeyValue(item, columnKey)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <SVGIconProvider iconName="eye" />
-                      </a>
+                      // <a
+                      //   href={getKeyValue(item, columnKey)}
+                      //   target="_blank"
+                      //   rel="noopener noreferrer"
+                      //   onClick={() => handleViewReport(item.date)}
+                      // >
+                         
+                      //   <SVGIconProvider iconName="eye" />
+                      // </a>
+                      <button 
+                       onClick={handleViewReport}
+                      className="text-blue-500 hover:text-blue-700 focus:outline-none"
+                    >
+                      <SVGIconProvider iconName="eye" />
+                    </button>
+                 
+             
                     ) : (
                       getKeyValue(item, columnKey)
                     )}
