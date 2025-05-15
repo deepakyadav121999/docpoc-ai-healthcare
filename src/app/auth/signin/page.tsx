@@ -13,7 +13,7 @@ interface SignInProps {
   setAuthPage: () => void;
   onLogin: (token: string) => void;
 }
-
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
   return (
     <>
@@ -30,14 +30,14 @@ const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
               <Link className="mb-10 inline-block" href="/">
                 <Image
                   className="hidden dark:block"
-                  src={"/images/logo/logo-dark.png"}
+                  src={`${AWS_URL}/docpoc-images/logo-icon.png`}
                   alt="Logo"
                   width={176}
                   height={32}
                 />
                 <Image
                   className="dark:hidden"
-                  src={"/images/logo/logo-dark.png"}
+                  src={`${AWS_URL}/docpoc-images/logo-icon.png`}
                   alt="Logo"
                   width={176}
                   height={32}
@@ -58,7 +58,7 @@ const SignIn: React.FC<SignInProps> = ({ setAuthPage, onLogin }) => {
 
               <div className="mt-31">
                 <Image
-                  src={"/images/grids/grid-02.svg"}
+                  src={`${AWS_URL}/docpoc-images/grid-02.svg`}
                   alt="Logo"
                   width={405}
                   height={325}

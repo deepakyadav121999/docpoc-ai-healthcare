@@ -64,45 +64,7 @@ export const AppointmentCalendar: React.FC = () => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const profileEndpoint = `${API_URL}/auth/profile`;
-      // const profileResponse = await axios.get(profileEndpoint,{
-      //  headers:{
-      //    Authorization: `Bearer ${token}`,
-      //    "Content-Type": "application/json",
-      //  },
-      // })
-
-      // const fetchedBranchId = profileResponse.data?.branchId;
-      // const userProfile = localStorage.getItem("userProfile");
-
-      // // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-
-      // Extract the branchId from the user profile
+    
 
       const fetchedBranchId = profile?.branchId;
 
@@ -113,7 +75,7 @@ export const AppointmentCalendar: React.FC = () => {
         pageSize: rowsPerPage,
         from: "2024-12-01T00:00:00.000Z", // Start of the month
         to: "2025-12-31T23:59:59.999Z", // End of the month
-        status: ["visiting", "declind"],
+        // status: ["visiting", "declind"],
       };
 
       const response = await axios.get(endpoint, {
@@ -201,6 +163,14 @@ export const AppointmentCalendar: React.FC = () => {
   }, [currentView, selectedDate]);
 
   const changeView = (view: "month" | "week" | "day") => {
+    if(view=="month"){
+      setSelectedDate(new Date()); 
+    }
+    if(view =="week"){
+   
+        setSelectedDate(new Date()); 
+   
+    }
     setCurrentView(view);
   };
 
@@ -214,6 +184,23 @@ export const AppointmentCalendar: React.FC = () => {
     setSelectedDate(newDate);
   };
 
+  const formatDate = (date: Date): string => {
+    const today = new Date();
+    const isToday =
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  
+    if (isToday) {
+      return "Today";
+    } else {
+      return date.toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+  };
   const renderCalendar = () => {
     switch (currentView) {
       case "month":
@@ -579,7 +566,7 @@ export const AppointmentCalendar: React.FC = () => {
               className={`view-button ${currentView === "day" ? "active" : ""}`}
               onClick={() => changeView("day")}
             >
-              Today
+              {selectedDate ? formatDate(selectedDate): "Today"}
             </button>
           </div>
           {currentView === "month" && (

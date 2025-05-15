@@ -218,7 +218,7 @@ export default function AppointmentListTable({
         pageSize: rowsPerPage,
         startDateTime: startTime,
         endDateTime: endTime,
-        status: ["visiting"],
+        // status: ["visiting"],
         from: startTime,
         end: startTime,
       };

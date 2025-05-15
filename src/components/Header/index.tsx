@@ -4,12 +4,42 @@ import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
 import SearchForm from "@/components/Header/SearchForm";
+import { useEffect, useState } from "react";
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
   // profile:any;
 }) => {
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  
+  useEffect(() => {
+    const rootElement = document.documentElement;
+
+    // Function to update the theme state
+    const updateDarkMode = () => {
+      setIsDarkMode(rootElement.classList.contains("dark"));
+    };
+
+   
+    updateDarkMode();
+
+    // MutationObserver to watch for changes to the "class" attribute of the <html> tag
+    const observer = new MutationObserver(() => {
+      updateDarkMode();
+    });
+
+    // Observe the class attribute on the <html> element
+    observer.observe(rootElement, { attributes: true, attributeFilter: ["class"] });
+
+    // Cleanup observer on unmount
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  
   return (
     <header className=" sticky top-0 z-999 flex w-full border-b border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark ">
       <div className="flex flex-grow items-center justify-between px-4 py-5 shadow-2 md:px-5 2xl:px-10">
@@ -62,7 +92,11 @@ const Header = (props: {
             <Image
               width={40}
               height={40}
-              src={"/images/logo/logo-icon.png"}
+              src={
+                isDarkMode?
+                  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  
+                  :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  
+              }
               alt="Logo"
             />
           </Link>
@@ -88,7 +122,7 @@ const Header = (props: {
             {/* <!-- Dark Mode Toggle --> */}
 
             {/* <!-- Notification Menu Area --> */}
-            <DropdownNotification />
+            {/* <DropdownNotification /> */}
             {/* <!-- Notification Menu Area --> */}
           </ul>
 
