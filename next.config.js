@@ -11,7 +11,10 @@ module.exports = {
     ignoreBuildErrors: true, // This line disables strict type checking
   },
   
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // eslint: {
+  //   ignoreDuringBuilds: true,
+  // },
+  images: {
+    domains: ['docpoc-assets.s3.ap-south-1.amazonaws.com'],
+  }
 };

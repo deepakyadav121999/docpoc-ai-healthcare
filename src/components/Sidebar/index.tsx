@@ -261,6 +261,12 @@ const menuGroups = [
         route: "/payment/overview",
       },
       {
+        icon: <SVGIconProvider iconName="smalldocument" />,
+        label: "Reports",
+        route: "/reports",
+      },
+
+      {
         icon: <SVGIconProvider iconName="patient" />,
         label: "Patients",
         route: "/patient",
@@ -285,6 +291,7 @@ const menuGroups = [
         label: "Reminders",
         route: "/reminders",
       },
+     
     ],
   },
   {
@@ -321,6 +328,34 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loadingItem, setLoadingItem] = useState<string | null>(null); // Track which menu item is loading
 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  
+  useEffect(() => {
+    const rootElement = document.documentElement;
+
+    // Function to update the theme state
+    const updateDarkMode = () => {
+      setIsDarkMode(rootElement.classList.contains("dark"));
+    };
+
+   
+    updateDarkMode();
+
+    // MutationObserver to watch for changes to the "class" attribute of the <html> tag
+    const observer = new MutationObserver(() => {
+      updateDarkMode();
+    });
+
+    // Observe the class attribute on the <html> element
+    observer.observe(rootElement, { attributes: true, attributeFilter: ["class"] });
+
+    // Cleanup observer on unmount
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const handleSignOutClick = () => {
     onOpen(); // Open the modal when "Sign Out" is clicked
   };
@@ -330,11 +365,33 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     window.location.href = "/auth/signout";
   };
 
+  // const handleMenuItemClick = async (route: string, label: string) => {
+  //   setLoadingItem(label); // Set the loading state for the clicked menu item
+  //   await router.push(route); // Navigate to the new route
+  //   setLoadingItem(null); // Reset the loading state after navigation
+  // };
+
   const handleMenuItemClick = async (route: string, label: string) => {
-    setLoadingItem(label); // Set the loading state for the clicked menu item
-    await router.push(route); // Navigate to the new route
-    setLoadingItem(null); // Reset the loading state after navigation
+    if (pathname === route) return; // Don't navigate if already on the same route
+    
+    setLoadingItem(label);
+    setIsNavigating(true);
+    
+    try {
+      await router.push(route);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      setLoadingItem(null);
+      setIsNavigating(false);
+    }
   };
+
+  // Alternative solution for route change detection
+  useEffect(() => {
+    // This will run when the pathname changes, indicating navigation completion
+    setLoadingItem(null);
+    setIsNavigating(false);
+  }, [pathname]);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -379,7 +436,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Image
                 width={65}
                 height={65}
-                src={"/images/logo/logo-dark.png"}
+                src={
+                isDarkMode?
+                  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
+                  :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
+              }
                 alt="Logo"
                 priority
                 className="dark:hidden"
@@ -388,7 +449,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Image
                 width={65}
                 height={65}
-                src={"/images/logo/logo-dark.png"}
+                src={
+                  isDarkMode?
+                    "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
+                    :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
+                }
                 alt="Logo"
                 priority
                 className="hidden dark:block"

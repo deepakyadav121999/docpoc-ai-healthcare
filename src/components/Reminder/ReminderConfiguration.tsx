@@ -2,7 +2,7 @@
 import React from "react";
 import { Accordion, AccordionItem, Avatar } from "@nextui-org/react";
 import ConfigTypes from "./ConfigTypes";
-
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 export default function ReminderConfiguration() {
   return (
     <Accordion selectionMode="multiple">
@@ -14,7 +14,7 @@ export default function ReminderConfiguration() {
             isBordered
             color="primary"
             radius="lg"
-            src="images/others/whatsApp.png"
+            src={`${AWS_URL}/docpoc-images/whatsapp.png`}
           />
         }
         subtitle="Enabled for 231 patients."
@@ -38,7 +38,7 @@ export default function ReminderConfiguration() {
             isBordered
             color="warning"
             radius="lg"
-            src="images/others/sms-big.png"
+            src={`${AWS_URL}/docpoc-images/sms-big.png`}
           />
         }
         subtitle="Enabled for 820 patients."

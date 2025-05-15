@@ -40,6 +40,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
   inactive: "warning",
   blacklisted: "danger",
 };
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -60,9 +61,10 @@ interface Employee {
   email: string;
   status: string;
   lastVisit: string;
-  displayPicture: string;
+  profilePicture: string;
   isActive: string;
   json: string;
+  gender:string;
 }
 
 type User = (typeof users)[0];
@@ -98,47 +100,7 @@ export default function DataTable() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-
-      //   return;
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   return;
-      // }
-      // const fetchedBranchId = branchResponse.data[0]?.id;
-
-      // const profileEndpoint = `${API_URL}/auth/profile`;
-      // const profileResponse = await axios.get(profileEndpoint,{
-      //  headers:{
-      //    Authorization: `Bearer ${token}`,
-      //    "Content-Type": "application/json",
-      //  },
-      // })
-
-      // const fetchedBranchId = profileResponse.data?.branchId;
-      // const userProfile = localStorage.getItem("userProfile");
-
-      // // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-
-      // Extract the branchId from the user profile
+   
       const fetchedBranchId = profile?.branchId;
 
       setBranchId(fetchedBranchId);
@@ -256,9 +218,14 @@ export default function DataTable() {
 
     switch (columnKey) {
       case "name":
+
+        const gender = user.gender || "unknown"; // Directly access the gender property
+        const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+        const avatarSrc = user.profilePicture || placeholderImage;
+
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.displayPicture }}
+            avatarProps={{ radius: "lg", src: avatarSrc }}
             description={user.email}
             name={cellValue}
           >

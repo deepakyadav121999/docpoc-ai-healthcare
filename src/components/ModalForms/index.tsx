@@ -50,10 +50,17 @@ import ToolTip from "../Tooltip";
 import { VerticalDotsIcon } from "../CalenderBox/VerticalDotsIcon";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import IconButton from "../Buttons/IconButton";
-import { VisitHistoryTable } from "./VisitHistoryTable";
+
+import { VisitHistoryTable } from "../Patient/VisitHistoryTable";
 import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
 import { Time } from "@internationalized/date";
+import { useDropzone } from "react-dropzone";
+import DocumentList from "../Patient/DocumentList";
+
+type FileWithPreview = File & { preview?: string };
+
+
 
 const PlaceholderImage = () => (
   <svg width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
@@ -78,11 +85,25 @@ interface AutocompleteItem {
 }
 
 const API_URL = process.env.API_URL;
+const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+
+
+const MAX_FILE_SIZE_MB = 5
+
+interface VisitData {
+  date: string;
+  doctor: string;
+  report: string;
+}
 export default function ModalForm(props: {
   type: string;
   userId: string;
   onDataChange: (data: any) => void;
+  onProfilePhotoChange: (file: any) => void;
+  onFilesChange: (files: any) => void;
 }) {
+
+  // console.log("aws url is" + AWS_URL)
   const [editVisitTime, setEditVisitTime] = useState(false);
   const [editSelectedDoctor, setEditDoctor] = useState(false);
 
@@ -112,7 +133,7 @@ export default function ModalForm(props: {
   const [employeeShiftEndTime, setEmployeeShiftEndTime] = useState<Time | null>(
     null,
   );
-
+  // const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const designations = [
     { label: "Doctor", value: "doctor" },
     { label: "Nurse", value: "nurse" },
@@ -124,22 +145,47 @@ export default function ModalForm(props: {
     useState<string>(employeeDesignation);
 
   const [tempDesignation, setTempDesignation] = useState(employeeDesignation);
-
+  const [employeeId, setEmployeeId] = useState("")
   const [employeePhone, setEmployeePhone] = useState("");
   const [emloyeeBranch, setEmployeeBranch] = useState("");
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
   const [employeeDOB, setEmployeeDOB] = useState("");
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
+  const [employeePhoto, setEmployeePhoto] = useState("")
+  const [employeeGender, setEmployeeGender] = useState(" ")
   const [editSelectedPatient, setEditPatient] = useState(false);
+
   const [patientName, setPatientName] = useState("");
   const [patientId, setPatientId] = useState("");
   const [patientBloodGroup, setPatientBloodGroup] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [patientStatus, setPatientStatus] = useState("");
+  const [patientPhoto, setPatientPhoto] = useState("")
+  const [patientGender, setPatientGender] = useState("")
   const [profilePhoto, setProfilePhoto] = useState("");
+  const [patientPhotoLoading, setPatientPhotoLoading] = useState(false)
+  const [patientDocument, setPatientDocument] = useState<VisitData[]>([]); // Initialize as an array
+  const [appointmentId, setAppointmentId] = useState('');
+  const [reportType, setReportType] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSharedWithPatient, setIsSharedWithPatient] = useState(false);
+  const [amount, setAmount] = useState('');
+
+  // Example lists for dropdowns
+  const appointmentList = [
+    { key: 'a1234567-89ab-cdef-0123-456789abcdef', label: 'Appointment 1' },
+    { key: 'b2345678-90bc-def0-1234-567890abcdef', label: 'Appointment 2' },
+    // Add more appointments as needed
+  ];
+  const reportTypeList = [
+    { key: 'INVOICE', label: 'Invoice' },
+    { key: 'REPORT', label: 'Report' },
+    // Add more report types as needed
+  ];
   // const [loading, setLoading] = useState<boolean>(true);
   const [lastVisit, setLastVisit] = useState<string>("N/A");
+
   const [lastAppointedDoctor, setLastAppointedDoctor] = useState<string>("N/A");
   // const [lastVisit, setLastvisit] = useState("");
   const [notificationStatus, setNotificationStatus] = useState("");
@@ -168,6 +214,9 @@ export default function ModalForm(props: {
   // Default time
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+
+
+
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -272,12 +321,54 @@ export default function ModalForm(props: {
       setPatientEmail(response.data.email);
       setPatientStatus(response.data.status);
       setProfilePhoto(response.data.displayPicture);
+      setPatientPhoto(response.data.displayPicture)
       // setLastvisit(response.data.lastVisit)
       setNotificationStatus(response.data.notificationStatus);
       setBranchId(response.data.branchId);
       setPatientDob(response.data.dob);
       setGender(response.data.gender);
       setPatientId(response.data.id);
+      setPatientGender(response.data.gender)
+      // const uploadedDocuments = Object.entries(
+      //   JSON.parse(response.data.documents)
+      // ).map(([key, value]) => ({
+      //   date: "N/A",
+      //   doctor: key, // Use the document key as the document name
+      //   report: String(value), // Ensure the report is a string
+      // }));
+
+      // setPatientDocument(uploadedDocuments)
+
+      const uploadedDocuments = Object.entries(
+        JSON.parse(response.data.documents || "{}") // Handle empty documents gracefully
+      ).map(([key, value]) => {
+        try {
+          const parsedValue = JSON.parse(String(value)); 
+          
+          // Parse the JSON string of the document
+
+            // Format the date
+        const formattedDate = parsedValue.date
+        ? formatDateToDDMMYYYY(parsedValue.date) // Format the date if available
+        : "N/A";
+          return {
+            date: formattedDate, // Use the date if available, otherwise default to "N/A"
+            doctor: key, // Use the document key as the document name
+            report: parsedValue.url || "N/A", // Use the URL if available
+          };
+        } catch (error) {
+          console.error(`Error parsing document ${key}:`, error);
+          return {
+            date: "N/A",
+            doctor: key, // Use the document key as the document name
+            report: String(value) || "N/A", // Use the raw value if parsing fails
+          };
+        }
+      });
+  
+      // Set the documents to the state
+      setPatientDocument(uploadedDocuments);
+        
     } catch (err) {
     } finally {
       setLoading(false);
@@ -355,6 +446,10 @@ export default function ModalForm(props: {
       setEmployeeShiftTime(parsedJson.workingHours);
       setEmployeeJoiningDate(users.createdAt);
       setEmployeeBranch(users.branchId);
+      setEmployeePhoto(users.profilePicture)
+      setProfilePhoto(users.profilePicture)
+      setEmployeeId(users.id)
+      setEmployeeGender(users.gender)
       console.log(users);
 
       const workingHours = parsedJson.workingHours; // e.g., "9:00 AM - 9:00 PM"
@@ -472,38 +567,46 @@ export default function ModalForm(props: {
         },
       });
 
-      const users = response.data;
-      setAppointmentDateTime(users.startDateTime);
-      setAppointmentPatientId(users.patientId);
-      setAppointmentBranch(users.branchId);
-      fetchUsers(users.doctorId);
-      setDoctorId(users.doctorId);
-      fetchDoctors(users.branchId);
-      setAppointmentName(users.name);
-      setStartDateTime(users.startDateTime);
-      setEndDateTime(users.endDateTime);
-      setAppointmentDate(users.dateTime);
-      setPatientId(users.patientId);
-      // const startTimeObject = extractTimeAsObject(users.startDateTime);
+      const appointment = response.data;
+      setAppointmentDateTime(appointment.startDateTime);
+      // setAppointmentPatientId(appointment.patientId);
+      setAppointmentBranch(appointment.branchId);
 
+      // fetchUsers(appointment.doctorId);
+
+      setDoctorId(appointment.doctorId);
+      // fetchDoctors(appointment.branchId);
+      setAppointmentName(appointment.name);
+      setStartDateTime(appointment.startDateTime);
+      setEndDateTime(appointment.endDateTime);
+      setAppointmentDate(appointment.dateTime);
+      setPatientId(appointment.patientId);
+
+      // await fetchPatientById(users.patientId)
+      setPatientPhoto(appointment.patient?.displayPicture)
+      setPatientGender(appointment.patient?.gender)
+      setPatientId(appointment.patient?.id)
+      // const startTimeObject = extractTimeAsObject(users.startDateTime);
+      setEmployeeName(appointment.doctor?.name);
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
       // setShiftStartTime(startTimeObject)
 
       // setShiftEndTime(endTimeObject)
 
-      const startTimeObject = extractTimeDisplay(users.startDateTime);
+
+      const startTimeObject = extractTimeDisplay(appointment.startDateTime);
       console.log(parseTime(startTimeObject));
-      const endTimeObject = extractTimeDisplay(users.endDateTime);
+      const endTimeObject = extractTimeDisplay(appointment.endDateTime);
 
       setShiftStartTime(
-        users.startDateTime ? parseTime(startTimeObject) : null,
+        appointment.startDateTime ? parseTime(startTimeObject) : null,
       );
       setStartDateTimeDisp(startTimeObject);
 
-      setShiftEndTime(users.endDateTime ? parseTime(endTimeObject) : null);
+      setShiftEndTime(appointment.endDateTime ? parseTime(endTimeObject) : null);
       console.log(`time is ${parseTime(startTimeObject)}`);
     } catch (err) {
-      console.error("Failed to fetch users.", err);
+      console.error("Failed to fetch appointment.", err);
     } finally {
       setLoading(false);
     }
@@ -536,6 +639,10 @@ export default function ModalForm(props: {
     setEditVisitTime(!editVisitTime);
   };
   const editDoctor = () => {
+    if (!editSelectedDoctor) {
+      fetchDoctors(appointmentBranch); // Use the appointment's branch ID
+    }
+ 
     setEditDoctor(!editSelectedDoctor);
   };
 
@@ -557,6 +664,15 @@ export default function ModalForm(props: {
     setPatientPhone(patientPhone);
     setEditPatientPhone(!editSelectedPatientPhone);
   };
+
+
+  const [editSelectedEmployeeGender, setEditSelectedEmployeeGender] = useState(false);
+
+  const editEmployeeGender = () => {
+    setEmployeeGender(employeeGender)
+    setEditSelectedEmployeeGender(!editSelectedEmployeeGender);
+  };
+
   useEffect(() => {
     if (props.type === MODAL_TYPES.EDIT_PATIENT) {
       const updatedData = {
@@ -568,7 +684,9 @@ export default function ModalForm(props: {
         status: patientStatus,
         notificationStatus: notificationStatus,
         dob: patientDob,
-        gender: gender,
+        gender: patientGender,
+        dp: patientPhoto,
+        document: patientDocument
       };
 
       props.onDataChange(updatedData);
@@ -577,7 +695,9 @@ export default function ModalForm(props: {
         branchId: emloyeeBranch,
         name: employeeName,
         phone: employeePhone,
+        gender: employeeGender,
         email: employeeEmail,
+        dp: employeePhoto,
         json: JSON.stringify({
           dob: employeeDOB,
           designation: employeeDesignation,
@@ -596,6 +716,9 @@ export default function ModalForm(props: {
         type: "0151308b-6419-437b-9b41-53c7de566724",
       };
       props.onDataChange(updatedData);
+
+    
+   
     }
   }, [
     branchId,
@@ -606,12 +729,14 @@ export default function ModalForm(props: {
     patientStatus,
     notificationStatus,
     patientDob,
-    gender,
+    patientDocument,
+    patientGender,
     emloyeeBranch,
     employeeName,
     employeePhone,
     employeeEmail,
     employeeDOB,
+    employeeGender,
     employeeDesignation,
     employeeShiftTime,
     appointmentName,
@@ -633,6 +758,7 @@ export default function ModalForm(props: {
   const editEmployeeName = () => {
     setEmployeeName(employeeName);
     setEditEmployee(!editSelectedEmployee);
+
   };
 
   const editEmployeeEmail = () => {
@@ -681,8 +807,72 @@ export default function ModalForm(props: {
         setProfilePhoto(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // setSelectedFile(file)
+      props.onProfilePhotoChange(file)
     }
+
   };
+  const [editSelectedPatientGender, setEditSelectedPatientGender] = useState(false);
+
+  const editGender = () => {
+    setEditSelectedPatientGender(!editSelectedPatientGender);
+
+  };
+
+
+
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files ? Array.from(event.target.files) : [];
+  //   const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+
+  //   if (validFiles.length !== files.length) {
+  //     alert('Some files were too large and were not selected.');
+  //   }
+
+  //   // Concatenate new valid files with existing selected files
+  //   setSelectedFiles(prevFiles => [...prevFiles, ...validFiles]);
+  //   props.onFilesChange([...selectedFiles, ...validFiles]);
+  // };
+
+
+  // const handleRemoveFile = (fileToRemove: File) => {
+  //   setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  // };
+
+
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
+
+  // Handle files when dropped or selected
+  const onDrop = (acceptedFiles: File[]) => {
+    const filesWithPreview = acceptedFiles.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return Object.assign(file, {
+          preview: URL.createObjectURL(file), // Generate preview for images
+        });
+      }
+      return file; // No preview for other file types
+    });
+
+    setFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
+    setSelectedFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
+    props.onFilesChange([...selectedFiles, ...filesWithPreview]);
+  };
+
+  const { getRootProps, getInputProps,
+    isDragActive } = useDropzone({
+      onDrop,
+      accept: undefined, // Accept any file type
+      multiple: true,
+    });
+
+  // Remove a specific file
+  const removeFile = (fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setSelectedFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+  };
+
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
     const date = new Date(isoString);
@@ -741,23 +931,11 @@ export default function ModalForm(props: {
     },
     {
       key: "3",
-      label: "Blaclisted",
+      label: "Blacklisted",
     },
   ];
 
-  // const extractDate = (dateTimeString: string): string => {
-  //   if (!dateTimeString) {
-  //     return "N/A"; // Fallback value
-  //   }
-  //   return dateTimeString.split("T")[0]; // Extract the date portion
-  // };
 
-  // const extractTime = (dateTimeString: string): string => {
-  //   if (!dateTimeString) {
-  //     return "N/A"; // Fallback value
-  //   }
-  //   return dateTimeString.split("T")[1]?.split(".")[0]; // Extract the time portion
-  // };
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
@@ -778,9 +956,8 @@ export default function ModalForm(props: {
           <CardBody>
             <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${
-                  showLastVisit ? "-translate-x-full" : "translate-x-0"
-                }`}
+                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
+                  }`}
               >
                 <div className="flex-shrink-0 w-full">
                   <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
@@ -790,7 +967,8 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={USER_ICONS.FEMALE_USER}
+                        src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg` : `${AWS_URL}/docpoc-images/user-male.jpg`}
+
                         width="100%"
                       />
                     </div>
@@ -855,7 +1033,10 @@ export default function ModalForm(props: {
                     </h3>
 
                     <div className="flex flex-col center">
-                      <VisitHistoryTable patientId={patientId} />
+                      {
+                        showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={"history"}
+                        uploadedDocuments={[]} />
+                      }
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -873,326 +1054,6 @@ export default function ModalForm(props: {
       </>
     );
 
-    // return (
-    //   <>
-    //     <div>
-    //       {loading && (
-    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-    //           <Spinner />
-    //         </div>
-    //       )}
-    //     </div>
-    //     <Card
-    //       isBlurred
-    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-    //       shadow="sm"
-    //     >
-    //       <CardBody>
-
-    //         {!showLastVisit ? (
-
-    //           <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-    //             <div className="relative col-span-6 md:col-span-4">
-    //               <Image
-    //                 alt="Patient photo"
-    //                 className="object-cover"
-    //                 height={200}
-    //                 shadow="md"
-    //                 src={USER_ICONS.FEMALE_USER}
-    //                 width="100%"
-    //               />
-    //             </div>
-
-    //             <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-    //               <div className="flex justify-between items-center">
-    //                 <h3 className="font-semibold text-foreground/90">
-    //                   Appointment Details
-    //                 </h3>
-    //                 <StyledButton
-    //                   label="Follow-Up"
-
-    //                 />
-    //               </div>
-
-    //               <div className="space-y-3">
-    //               <div className="flex items-center">
-    //                   <div style={{ marginLeft: -5 }}>
-    //                     <SVGIconProvider iconName="doctor" />
-    //                   </div>
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Patient Name: </strong> {appointmentName}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="clock" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Visiting Time: </strong>{" "}
-    //                     {extractTime(startDateTime)}-{extractTime(endDateTime)}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="calendar" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Date: </strong>
-    //                     {extractDate(appointmentDate)}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <div style={{ marginLeft: -5 }}>
-    //                     <SVGIconProvider iconName="doctor" />
-    //                   </div>
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Appointed Doctor: </strong> {employeeName}
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   <SVGIconProvider iconName="followup" />
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong>Follow-up: </strong> Yes
-    //                   </p>
-    //                 </div>
-    //                 <div className="flex items-center">
-    //                   {/* <SVGIconProvider iconName="followup" /> */}
-    //                   <p className="text-sm sm:text-medium ml-2">
-    //                     <strong onClick={handleViewLastVisit} className="underline cursor-pointer">See last visit</strong>
-    //                   </p>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //           </div>
-
-    //         ) : (
-    //           // Patient Last Visit Details in Table
-
-    //           <div className="w-full animate-fade-in">
-    //             <h3 className="font-semibold text-foreground/90 text-center mb-6">
-    //               Patient Last Visits
-    //             </h3>
-
-    //             {isFetchingLastVisit ? (
-    //               <div className="flex justify-center items-center">
-    //                 <Spinner />
-    //               </div>
-    //             ) : lastVisitData.length > 0 ? (
-    //               <div className="overflow-x-auto">
-    //                 <table className="w-full table-auto border-collapse border border-gray-300">
-    //                   <thead>
-    //                     <tr className="">
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         Date
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         Start Time
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                         End Time
-    //                       </th>
-    //                       <th className="px-4 py-2 border border-gray-300 text-left">
-    //                        Appointed Doctor
-    //                       </th>
-    //                     </tr>
-    //                   </thead>
-    //                   <tbody>
-    //                     {lastVisitData.map((visit) => (
-    //                       <tr key={visit.id}>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractDate(visit.dateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractTime(visit.startDateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                           {extractTime(visit.endDateTime)}
-    //                         </td>
-    //                         <td className="px-4 py-2 border border-gray-300">
-    //                          {visit.doctorName}
-    //                         </td>
-    //                       </tr>
-    //                     ))}
-    //                   </tbody>
-    //                 </table>
-    //               </div>
-    //             ) : (
-    //               <p className="text-sm sm:text-medium text-red-500 text-center">
-    //                 No data available for the last visits.
-    //               </p>
-    //             )}
-
-    //             <div className="flex justify-end mt-6">
-    //               <StyledButton
-    //                 label="Close"
-    //                 clickEvent={handleCloseLastVisit}
-
-    //               />
-    //             </div>
-    //           </div>
-
-    //         )}
-    //       </CardBody>
-    //     </Card>
-    //   </>
-    // );
-    // return (
-    //   <>
-    //     <div>
-    //       {loading && (
-    //         <div className="absolute inset-0 flex justify-center items-center bg-gray-900 z-50">
-    //           <Spinner />
-    //         </div>
-    //       )}
-    //     </div>
-    //     <Card
-    //       isBlurred
-    //       className="border-none bg-background/60 dark:bg-default-100/50 w-full max-w-7xl mx-auto"
-    //       shadow="sm"
-    //     >
-    //       <CardBody>
-    //         <div className="relative overflow-hidden">
-    //           {/* Container for Sliding Views */}
-    //           <div
-    //             className={`flex transition-transform duration-500 ease-in-out ${
-    //               showLastVisit ? '-translate-x-full' : 'translate-x-0'
-    //             }`}
-    //           >
-    //             {/* Appointment Details */}
-    //             <div className="flex-shrink-0 w-full">
-    //               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-    //                 <div className="relative col-span-6 md:col-span-4">
-    //                   <Image
-    //                     alt="Patient photo"
-    //                     className="object-cover"
-    //                     height={200}
-    //                     shadow="md"
-    //                     src={USER_ICONS.FEMALE_USER}
-    //                     width="100%"
-    //                   />
-    //                 </div>
-
-    //                 <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-    //                   <div className="flex justify-between items-center">
-    //                     <h3 className="font-semibold text-foreground/90">
-    //                       Appointment Details
-    //                     </h3>
-    //                     <StyledButton label="Follow-Up" />
-    //                   </div>
-
-    //                   <div className="space-y-3">
-    //                     <div className="flex items-center">
-    //                       <div style={{ marginLeft: -5 }}>
-    //                         <SVGIconProvider iconName="doctor" />
-    //                       </div>
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Patient Name: </strong> {appointmentName}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="clock" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Visiting Time: </strong>
-    //                         {extractTime(startDateTime)}-{extractTime(endDateTime)}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="calendar" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Date: </strong>
-    //                         {extractDate(appointmentDate)}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <div style={{ marginLeft: -5 }}>
-    //                         <SVGIconProvider iconName="doctor" />
-    //                       </div>
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Appointed Doctor: </strong> {employeeName}
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <SVGIconProvider iconName="followup" />
-    //                       <p className="text-sm sm:text-medium ml-2">
-    //                         <strong>Follow-up: </strong> Yes
-    //                       </p>
-    //                     </div>
-    //                     <div className="flex items-center">
-    //                       <p
-    //                         onClick={handleViewLastVisit}
-    //                         className="text-sm sm:text-medium ml-2 underline cursor-pointer"
-    //                       >
-    //                         <strong>See last visit</strong>
-    //                       </p>
-    //                     </div>
-    //                   </div>
-    //                 </div>
-    //               </div>
-    //             </div>
-
-    //             {/* Patient Last Visit */}
-    //             <div className="flex-shrink-0 w-full">
-    //               <div className="w-full">
-    //                 <h3 className="font-semibold text-foreground/90 text-center mb-6">
-    //                   Patient Last Visits
-    //                 </h3>
-
-    //                 {isFetchingLastVisit ? (
-    //                   <div className="flex justify-center items-center">
-    //                     <Spinner />
-    //                   </div>
-    //                 ) : lastVisitData.length > 0 ? (
-    //                   <div className="overflow-x-auto">
-    //                     <table className="w-full table-auto border-collapse border border-gray-300">
-    //                       <thead>
-    //                         <tr>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Date
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Start Time
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             End Time
-    //                           </th>
-    //                           <th className="px-4 py-2 border border-gray-300 text-left">
-    //                             Appointed Doctor
-    //                           </th>
-    //                         </tr>
-    //                       </thead>
-    //                       <tbody>
-    //                         {lastVisitData.map((visit) => (
-    //                           <tr key={visit.id}>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractDate(visit.dateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractTime(visit.startDateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {extractTime(visit.endDateTime)}
-    //                             </td>
-    //                             <td className="px-4 py-2 border border-gray-300">
-    //                               {visit.doctorName}
-    //                             </td>
-    //                           </tr>
-    //                         ))}
-    //                       </tbody>
-    //                     </table>
-    //                   </div>
-    //                 ) : (
-    //                   <p className="text-sm sm:text-medium text-red-500 text-center">
-    //                     No data available for the last visits.
-    //                   </p>
-    //                 )}
-
-    //                 <div className="flex justify-end mt-6">
-    //                   <StyledButton label="Close" clickEvent={handleCloseLastVisit} />
-    //                 </div>
-    //               </div>
-    //             </div>
-    //           </div>
-    //         </div>
-    //       </CardBody>
-    //     </Card>
-    //   </>
-    // );
   }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
@@ -1218,7 +1079,7 @@ export default function ModalForm(props: {
                   className="object-cover"
                   height={200}
                   shadow="md"
-                  src={USER_ICONS.MALE_USER}
+                  src={patientPhoto ? patientPhoto : patientGender ? patientGender == "Male" ? `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg` : `${AWS_URL}/docpoc-images/user-male.jpg`}
                   width="100%"
                 />
               </div>
@@ -1228,7 +1089,7 @@ export default function ModalForm(props: {
                   <h3 className="font-semibold text-foreground/90 text-lg md:text-xl">
                     Edit Appointment Details
                   </h3>
-                  <StyledButton label={"Follow-up"} />
+                  {/* <StyledButton label={"Follow-up"} /> */}
                 </div>
 
                 <div className="space-y-3">
@@ -1324,6 +1185,7 @@ export default function ModalForm(props: {
                             labelPlacement="outside"
                             variant="bordered"
                             isDisabled={!editSelectedDoctor}
+                            defaultInputValue={employeeName}
                             defaultItems={doctorList}
                             label="Select Doctor"
                             placeholder="Search a Doctor"
@@ -1433,6 +1295,7 @@ export default function ModalForm(props: {
 
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
     const [showLastVisit, setShowLastVisit] = useState(false);
+    const [viewMode, setViewMode] = useState("history");
     return (
       <>
         <div>
@@ -1450,9 +1313,10 @@ export default function ModalForm(props: {
           <CardBody>
             <div className="relative overflow-hidden">
               <div
-                className={`flex transition-transform duration-500 ease-in-out ${
-                  showLastVisit ? "-translate-x-full" : "translate-x-0"
-                }`}
+                className={`flex transition-transform duration-500 ease-in-out ${showLastVisit ? "-translate-x-full" : "translate-x-0"
+                  }`}
+
+
               >
                 <div className="flex-shrink-0 w-full">
                   {/* patient details */}
@@ -1463,7 +1327,14 @@ export default function ModalForm(props: {
                         className="object-cover"
                         height={200}
                         shadow="md"
-                        src={USER_ICONS.MALE_USER}
+                        src={profilePhoto
+                          ? profilePhoto
+                          : patientGender
+                            ? patientGender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                            : `${AWS_URL}/docpoc-images/user-male.jpg`
+                        }
                         width="100%"
                       />
                     </div>
@@ -1477,7 +1348,7 @@ export default function ModalForm(props: {
 
                       <div className="space-y-3">
                         <div className="flex items-center">
-                          <SVGIconProvider iconName="clock" />
+                          <SVGIconProvider iconName="user" />
                           <p className="text-sm sm:text-medium ml-2">
                             <strong>Patient Name: </strong>
                             {patientName}
@@ -1496,6 +1367,13 @@ export default function ModalForm(props: {
                             <strong>Status: </strong> {patientStatus}
                           </p>
                         </div>
+                        <div className="flex items-center">
+                          <SVGIconProvider iconName="user" />
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Gender: </strong> {patientGender}
+                          </p>
+                        </div>
+
                         <div className="flex items-center">
                           <div style={{ marginLeft: -5 }}>
                             <SVGIconProvider iconName="doctor" />
@@ -1527,12 +1405,30 @@ export default function ModalForm(props: {
 
                         <div className="flex items-center">
                           <p
-                            onClick={() => setShowLastVisit(true)}
+                            onClick={() => {
+                              // fetchLastVisitData(props.userId)
+                              setShowLastVisit(true)
+                              setViewMode("history");
+                            }}
                             className="text-sm sm:text-medium ml-2 underline cursor-pointer"
                           >
                             <strong>See Previous Visits</strong>
                           </p>
                         </div>
+                        <div className="flex items-center">
+                          <p
+                            onClick={() => {
+                              // fetchLastVisitData(props.userId)
+                              setShowLastVisit(true)
+                              setViewMode("documents");
+                            }}
+                            className="text-sm sm:text-medium ml-2 underline cursor-pointer"
+                          >
+                            <strong>See Uploaded Documents</strong>
+                          </p>
+                        </div>
+
+
                       </div>
                     </div>
                   </div>
@@ -1540,13 +1436,21 @@ export default function ModalForm(props: {
 
                 <div className="flex-shrink-0 w-full">
                   <div className="w-full">
-                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+
+
+                    {/* <h3 className="font-semibold text-foreground/90 text-center mb-6">
                       Previous Visits
+                    </h3> */}
+                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                      {viewMode === "history"
+                        ? "Previous Visits"
+                        : "Uploaded Documents"}
                     </h3>
 
-                    {/* Show VisitHistoryTable */}
                     <div className="flex flex-col center">
-                      <VisitHistoryTable patientId={patientId} />
+                      {showLastVisit && <VisitHistoryTable patientId={patientId} viewMode={viewMode}
+                        uploadedDocuments={patientDocument} />
+                      }
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -1557,6 +1461,9 @@ export default function ModalForm(props: {
                     </div>
                   </div>
                 </div>
+
+
+
               </div>
             </div>
           </CardBody>
@@ -1584,15 +1491,27 @@ export default function ModalForm(props: {
             <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
                 <div>
+
                   <div className="relative drop-shadow-2">
                     <Image
-                      src={USER_ICONS.MALE_USER}
+
+                      src={
+                        profilePhoto
+                          ? profilePhoto
+                          : patientGender
+                            ? patientGender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                            : `${AWS_URL}/docpoc-images/user-male.jpg`
+                      }
+
                       width={160}
                       height={160}
                       className="overflow-hidden rounded-full"
                       alt="profile"
                     />
                   </div>
+
 
                   <label
                     htmlFor="profilePhoto"
@@ -1624,7 +1543,7 @@ export default function ModalForm(props: {
 
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
+                    <SVGIconProvider iconName="user" />
                     <p className="text-sm sm:text-medium ml-2">
                       <strong>Name: </strong>
                       {!editSelectedPatient && patientName}
@@ -1665,47 +1584,7 @@ export default function ModalForm(props: {
                       )}
                     </div>
                   </div>
-                  {/* <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Status: </strong>{" "}
-                      {!editSelectedPatientStatus && patientStatus}
-                    </p>
-                    
-                    {editSelectedPatientStatus && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Input
-                          type="text"
-                          placeholder="Patient status.."
-                          labelPlacement="outside"
-                          value={patientStatus}
-                          onChange={(e) => {
-                            setPatientStatus(e.target.value)
 
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="flex items-center" style={{ marginLeft: 10 }}>
-                      {!editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
-                      {editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
-                    </div>
-                  </div> */}
 
                   <div className="flex items-center">
                     <SVGIconProvider iconName="blood-drop" />
@@ -1918,38 +1797,134 @@ export default function ModalForm(props: {
                       )}
                     </div>
                   </div>
-                  <div
-                    id="FileUpload"
-                    className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
-                  >
-                    <input
-                      type="file"
-                      name="profilePhoto"
-                      id="profilePhoto"
-                      accept="image/png, image/jpg, image/jpeg"
-                      className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
-                    />
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="user" />
+                    <p className="text-sm sm:text-medium ml-2">
+                      <strong>Gender: </strong>
+                      {!editSelectedPatientGender && patientGender}
+                    </p>
+                    {editSelectedPatientGender && (
+                      <div className="flex items-center" style={{ marginLeft: 10 }}>
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button variant="bordered">{patientGender}</Button>
+                          </DropdownTrigger>
+                          <DropdownMenu
+                            aria-label="Select Gender"
+                            items={[
+                              { key: "Male", label: "Male" },
+                              { key: "Female", label: "Female" },
+                              { key: "Other", label: "Other" },
+                            ]}
+                            onAction={(key) => setPatientGender(key.toString())}
+                          >
+                            {(item) => <DropdownItem key={item.key}>{item.label}</DropdownItem>}
+                          </DropdownMenu>
+                        </Dropdown>
+                      </div>
+                    )}
+                    <div className="flex items-center" style={{ marginLeft: 10 }}>
+                      {!editSelectedPatientGender ? (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={() => setEditSelectedPatientGender(true)}
+                        />
+                      ) : (
+                        <IconButton
+                          iconName="followup"
+                          color={GLOBAL_SUCCESS_COLOR}
+                          clickEvent={() => setEditSelectedPatientGender(false)}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+
+
+                  <div className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-400 bg-gray-100 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
+                    {/* File Preview Section */}
+                    <div className="flex flex-wrap gap-4">
+                      {files.map((file) => {
+                        const fileExtension = file.name.split('.').pop();
+
+                        const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
+
+                        const trimmedFileName =
+                          file.name.length > 8
+                            ? file.name.substring(0, 7) + "." + fileExtension // Trim to 12 characters + "..."
+                            : file.name + "." + fileExtension;
+                        return (
+                          <div
+                            key={file.name}
+                            className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
+                          >
+                            {/* Remove Button*/}
+                            <button
+                              onClick={() => removeFile(file.name)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                              X
+                            </button>
+
+                            {/* preview for image files */}
+                            {file.type.startsWith("image/") && file.preview && (
+                              <img
+                                src={file.preview}
+                                alt={file.name}
+                                className="w-full h-full object-cover rounded-md"
+                              />
+                            )}
+
+
+                            {!file.type.startsWith("image/") && (
+                              <div className="flex flex-col items-center">
+                                <SVGIconProvider iconName="document" />
+                                <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
+                                  {/* {file.name} */}
+                                  {trimmedFileName}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Drag-and-Drop Area */}
+                    <div
+                      {...getRootProps()}
+                      className={`mt-6 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 sm:p-8 bg-gray-50 hover:border-primary dark:bg-dark-2 dark:border-dark-3 dark:hover:border-primary`}
+                    >
+                      <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-gray-300 bg-white dark:border-dark-3 dark:bg-gray-dark">
                         <SVGIconProvider
                           iconName="upload"
                           color={GLOBAL_ACTION_ICON_COLOR}
                         />
                       </span>
-                      <p className="mt-2.5 text-body-sm font-medium">
-                        <span className="text-primary">Click to upload</span> or
-                        drag and drop any relevant document(s) of patient.
-                      </p>
-                      <p className="mt-1 text-body-xs">
-                        PDF, DOC, PNG, JPG (max, 800 X 800px)
-                      </p>
+                      <input {...getInputProps()} />
+                      {isDragActive ? (
+                        <p className="text-green-600 mt-4">Drop the files here...</p>
+                      ) : (
+                        <p className="text-gray-600 mt-4 text-sm sm:text-base">
+                          Drag & drop some files here, or click to select files
+                        </p>
+                      )}
                     </div>
                   </div>
+
+
+
+
                 </div>
+
               </div>
+
+
             </div>
           </CardBody>
-        </Card>
+        </Card >
       </>
     );
   }
@@ -2016,7 +1991,17 @@ export default function ModalForm(props: {
                     className="object-cover"
                     height={200}
                     shadow="md"
-                    src={USER_ICONS.FEMALE_USER}
+                    // src={employeePhoto ? employeePhoto : employeeGender == "Male" ? `https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg` : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+
+                    src={
+                      profilePhoto
+                        ? profilePhoto
+                        : employeeGender
+                          ? employeeGender === "Male"
+                            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                            : `${AWS_URL}/docpoc-images/user-female.jpg`
+                          : `${AWS_URL}/docpoc-images/user-male.jpg`
+                    }
                     width="100%"
                   />
                 </div>
@@ -2049,6 +2034,14 @@ export default function ModalForm(props: {
                         <strong>Phone: </strong>+91- {employeePhone}
                       </p>
                     </div>
+
+                    <div className="flex items-center">
+                      <SVGIconProvider iconName="user" />
+                      <p className="text-sm sm:text-medium ml-2">
+                        <strong>Gender: </strong>{employeeGender}
+                      </p>
+                    </div>
+
                     <div className="flex items-center">
                       <SVGIconProvider iconName="icard" />
                       <p className="text-sm sm:text-medium ml-2">
@@ -2066,7 +2059,7 @@ export default function ModalForm(props: {
                     <div className="flex items-center">
                       <SVGIconProvider iconName="calendar" />
                       <p className="text-sm sm:text-medium ml-2">
-                        <strong>Joined On: </strong> 27th Jan, 2021
+                        <strong>Joined On: </strong>  {extractDate(employeeJoiningDate)}
                       </p>
                     </div>
                     <div className="flex items-center">
@@ -2112,13 +2105,27 @@ export default function ModalForm(props: {
                   <div>
                     <div className="relative drop-shadow-2">
                       <Image
-                        src={profilePhoto}
+                        // src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
+
+
+                        src={
+                          profilePhoto
+                            ? profilePhoto
+                            : employeeGender
+                              ? employeeGender === "Male"
+                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                                : `${AWS_URL}/docpoc-images/user-female.jpg`
+                              : `${AWS_URL}/docpoc-images/user-male.jpg`
+                        }
                         width={160}
                         height={160}
                         className="overflow-hidden rounded-full"
                         alt="profile"
                       />
                     </div>
+
+
+
 
                     <label
                       htmlFor="profilePhoto"
@@ -2135,6 +2142,7 @@ export default function ModalForm(props: {
                         id="profilePhoto"
                         className="sr-only"
                         accept="image/png, image/jpg, image/jpeg"
+                        // onChange={handleProfilePhotoChange}
                         onChange={handleProfilePhotoChange}
                       />
                     </label>
@@ -2269,6 +2277,83 @@ export default function ModalForm(props: {
                         )}
                       </div>
                     </div>
+
+
+
+                    <div className="flex items-center">
+                      <div style={{ marginLeft: -5 }}>
+                        <SVGIconProvider iconName="user" />
+                      </div>
+
+                      {!editSelectedEmployeeGender && (
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Gender: </strong> {employeeGender}
+                        </p>
+                      )}
+
+                      {editSelectedEmployeeGender && (
+                        <>
+                          <p className="text-sm sm:text-medium ml-2">
+                            <strong>Gender:</strong>
+                          </p>
+                          <div
+                            className="flex items-center"
+                            style={{ marginLeft: 10 }}
+                          >
+                            <Autocomplete
+                              color={TOOL_TIP_COLORS.secondary}
+                              isDisabled={!editSelectedEmployeeGender}
+                              labelPlacement="outside"
+                              variant="bordered"
+                              defaultItems={[
+                                { label: "Male", value: "Male" },
+                                { label: "Female", value: "Female" },
+                              ]} // Gender options
+                              label="Select Gender"
+                              placeholder={employeeGender || "Select Gender"}
+                              onSelectionChange={(key) => {
+                                const selected = key as string; // Cast 'key' to a string
+                                setEmployeeGender(selected || "");
+                              }}
+                            >
+                              {({ label, value }) => (
+                                <AutocompleteItem
+                                  key={value}
+                                  variant="shadow"
+                                  color={TOOL_TIP_COLORS.secondary}
+                                >
+                                  {label}
+                                </AutocompleteItem>
+                              )}
+                            </Autocomplete>
+                          </div>
+                        </>
+                      )}
+
+                      <div
+                        className="flex items-center"
+                        style={{ marginLeft: 10 }}
+                      >
+                        {!editSelectedEmployeeGender && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmployeeGender}
+                          />
+                        )}
+                        {editSelectedEmployeeGender && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmployeeGender}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+
+
+
                     <div className="flex items-center">
                       {/* <div style={{ marginLeft: -5 }}>
                       <SVGIconProvider iconName="icard" />
@@ -2610,7 +2695,7 @@ export default function ModalForm(props: {
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
       return (
         <>
-          <AddAppointment onUsersAdded={() => {}} />
+          <AddAppointment onUsersAdded={() => { }} />
         </>
       );
     }
