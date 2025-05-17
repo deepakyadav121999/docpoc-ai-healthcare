@@ -1,7 +1,13 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["localhost", 'http://3.7.45.143/', 'http://3.7.45.143:8000/', 'http://3.7.45.143', '3.7.45.143'],
+    domains: [
+      "localhost",
+      "http://3.7.45.143/",
+      "http://3.7.45.143:8000/",
+      "http://3.7.45.143",
+      "3.7.45.143",
+    ],
     remotePatterns: [
       {
         protocol: "https",

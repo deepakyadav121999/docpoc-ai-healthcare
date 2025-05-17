@@ -22,13 +22,13 @@ const ProfileBox = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   const [profiles, setProfiles] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   const fetchProfile = async () => {
-    setLoading(true);
+    // setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
 
-    const profileEndpoint = `${API_URL}/auth/profile`;
+    // const profileEndpoint = `${API_URL}/auth/profile`;
 
     try {
       if (profile && profile.id) {
@@ -43,13 +43,13 @@ const ProfileBox = () => {
         setProfiles(userResponse.data);
         // Handle the user data response
         console.log("User data profile", userResponse.data);
-        setLoading(false);
+        // setLoading(false);
         // You can now use the user data as needed
       }
       // Set the profile data after fetching
     } catch (error) {
       console.error("Error fetching profile:", error);
-      setLoading(false);
+      // setLoading(false);
     }
   };
 

@@ -187,13 +187,19 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
 
       let timeDisplay: string;
       if (hoursDiff < 24) {
-        timeDisplay = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timeDisplay = date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       } else {
-        timeDisplay = date.toLocaleDateString([], { weekday: 'short' });
+        timeDisplay = date.toLocaleDateString([], { weekday: "short" });
       }
 
-       const placeholderImage = appointment.patient?.gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
-       const avatarSrc = appointment.patient?.displayPicture || placeholderImage;
+      const placeholderImage =
+        appointment.patient?.gender.toLowerCase() === "male"
+          ? `${AWS_URL}/docpoc-images/user-male.jpg`
+          : `${AWS_URL}/docpoc-images/user-female.jpg`;
+      const avatarSrc = appointment.patient?.displayPicture || placeholderImage;
 
       return {
         active,
@@ -224,17 +230,17 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
           >
             {/* Avatar Image with Status Indicator */}
             <div className="relative h-14 w-14 rounded-full">
-            <Image
-                    width={56}
-                    height={56}
-                    src={chat.avatar}
-                    alt={chat.name}
-                    className="h-full w-full object-cover rounded-full"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/images/user/user-01.png";
-                    }}
-                  />
+              <Image
+                width={56}
+                height={56}
+                src={chat.avatar}
+                alt={chat.name}
+                className="h-full w-full object-cover rounded-full"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/images/user/user-01.png";
+                }}
+              />
               {chat.active !== null && (
                 <span
                   className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-dark-2 ${
@@ -254,7 +260,9 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
                   {chat.name}
                 </h5>
                 <p>
-                  <span className={`mb-px text-body-sm font-medium ${chat.seen ? "dark:text-dark-3" : "text-dark-3 dark:text-dark-6"}`}>
+                  <span
+                    className={`mb-px text-body-sm font-medium ${chat.seen ? "dark:text-dark-3" : "text-dark-3 dark:text-dark-6"}`}
+                  >
                     {chat.text}
                   </span>
                   {chat.time && <span className="text-xs"> . {chat.time}</span>}

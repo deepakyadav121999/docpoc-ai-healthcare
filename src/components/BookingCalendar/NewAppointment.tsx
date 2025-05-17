@@ -2,19 +2,11 @@
 import {
   Autocomplete,
   AutocompleteItem,
-  Button,
   Checkbox,
   Input,
   Textarea,
   TimeInput,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Spinner,
-  ModalFooter,
   useDisclosure,
-  DateInput,
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -47,7 +39,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   endDateTime,
   date,
 }) => {
-  const [edit, setEdit] = useState(true);
+  // const [edit, setEdit] = useState(true);
+  const edit = true;
   const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [appointmentTypeList, setAppointmentTypeList] = useState<
@@ -58,7 +51,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   const [appointmentStatusList, setAppointmentStatusList] = useState<
     AutocompleteItem[]
   >([]);
-  const [savingData, setSavingData] = useState(false);
+  // const [savingData, setSavingData] = useState(false);
 
   const inputDate = new Date(date);
   const correctedDate = new Date(
@@ -106,20 +99,20 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   });
   const [loading, setLoading] = useState(false);
 
-  function extractTime(dateTime: string): string {
-    const date = new Date(dateTime);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const amPm = hours >= 12 ? "PM" : "AM";
+  // function extractTime(dateTime: string): string {
+  //   const date = new Date(dateTime);
+  //   let hours = date.getHours();
+  //   const minutes = date.getMinutes();
+  //   const amPm = hours >= 12 ? "PM" : "AM";
 
-    // Convert to 12-hour format
-    hours = hours % 12 || 12;
+  //   // Convert to 12-hour format
+  //   hours = hours % 12 || 12;
 
-    // Add leading zero to minutes if needed
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  //   // Add leading zero to minutes if needed
+  //   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
 
-    return `${hours}:${formattedMinutes} ${amPm}`;
-  }
+  //   return `${hours}:${formattedMinutes} ${amPm}`;
+  // }
 
   const generateDateTime = (baseDate: string, time: Time) => {
     const currentDate = new Date(baseDate); // Use the current date
@@ -222,7 +215,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingData(true);
+    // setSavingData(true);
 
     const { startDateTime, endDateTime, doctorId } = formData;
 
@@ -249,7 +242,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
             "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
         });
         onOpen();
-        setSavingData(false);
+        // setSavingData(false);
         return;
       }
     }
@@ -278,7 +271,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         error: "No access token found. Please log in again.",
       });
       setLoading(false);
-      setSavingData(false);
+      // setSavingData(false);
       onOpen();
       return;
     }
@@ -288,37 +281,9 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedBranchId = branchResponse.data[0]?.id;
-
-      const userProfile = localStorage.getItem("userProfile");
-
       // Parse the JSON string if it exists
       // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = profile?.id;
+
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
@@ -351,7 +316,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       onOpen();
     }
     setLoading(false);
-    setSavingData(false);
+    // setSavingData(false);
   };
 
   const handleTypeSelection = (typeId: string) => {
@@ -396,11 +361,11 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
       // const fetchedBranchId = branchResponse.data[0].id;
 
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
       // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      const userId = profile?.id;
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // const userId = profile?.id;
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
@@ -580,29 +545,37 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     setFormData({ ...formData, dateTime: date });
   };
 
-   const validateWorkingHours = () => {
-      const { startDateTime, endDateTime, doctorId } = formData;
-      const selectedDoctor = doctorList.find((doctor) => doctor.value === doctorId);
-  
-      if (selectedDoctor) {
-        const workingHours = selectedDoctor.workingHours;
-        if (
-          workingHours &&
-          !isWithinWorkingHours(new Date(startDateTime), new Date(endDateTime), workingHours)
-        ) {
-          setTimeWarning("The selected appointment time is outside the doctor's working hours.");
-        } else {
-          setTimeWarning("");
-        }
+  const validateWorkingHours = () => {
+    const { startDateTime, endDateTime, doctorId } = formData;
+    const selectedDoctor = doctorList.find(
+      (doctor) => doctor.value === doctorId,
+    );
+
+    if (selectedDoctor) {
+      const workingHours = selectedDoctor.workingHours;
+      if (
+        workingHours &&
+        !isWithinWorkingHours(
+          new Date(startDateTime),
+          new Date(endDateTime),
+          workingHours,
+        )
+      ) {
+        setTimeWarning(
+          "The selected appointment time is outside the doctor's working hours.",
+        );
+      } else {
+        setTimeWarning("");
       }
-    };
-  
-    // Effect hook to validate working hours when doctor or time changes
-    useEffect(() => {
-      if (formData.doctorId && formData.startDateTime && formData.endDateTime) {
-        validateWorkingHours();
-      }
-    }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
+    }
+  };
+
+  // Effect hook to validate working hours when doctor or time changes
+  useEffect(() => {
+    if (formData.doctorId && formData.startDateTime && formData.endDateTime) {
+      validateWorkingHours();
+    }
+  }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
   return (
     <div className="  grid grid-cols-1 gap-9  ">
       <div className="flex flex-col w-full ">
@@ -682,10 +655,12 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
-              {timeWarning && (
-                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                {timeWarning && (
+                  <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
+                    {timeWarning}
+                  </div>
                 )}
-                </div>
+              </div>
               <div style={{ marginTop: 20 }}>
                 <Textarea
                   color={TOOL_TIP_COLORS.secondary}
@@ -810,11 +785,13 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 </Autocomplete>
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
-              {timeWarning && (
-                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
+                {timeWarning && (
+                  <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
+                    {timeWarning}
+                  </div>
                 )}
-                </div>
-                
+              </div>
+
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 <label>
                   Mark uncheck if no notification has to be sent for

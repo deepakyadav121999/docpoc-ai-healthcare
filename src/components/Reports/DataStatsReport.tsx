@@ -11,7 +11,7 @@ const DataStatsReport: React.FC<DataStatsDefaultProps> = ({
   return (
     <div className="flex justify-center">
       <div
-       className={`flex justify-center gap-3 sm:gap-6 flex-wrap sm:flex-nowrap`}
+        className={`flex justify-center gap-3 sm:gap-6 flex-wrap sm:flex-nowrap`}
       >
         {dataStatsList.map((item, index) => (
           <div

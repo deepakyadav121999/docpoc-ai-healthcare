@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -12,7 +12,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Spinner,
 } from "@nextui-org/react";
 import { VerticalDotsIcon } from "@/components/CalenderBox/VerticalDotsIcon";
 import { MODAL_TYPES } from "@/constants";
@@ -29,29 +28,30 @@ export default function OpaqueList(props: {
   onPatientDelete: () => void;
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [title, setTitle] = React.useState(props.modalTitle);
+  // const [title, setTitle] = React.useState(props.modalTitle);
+  const title = props.modalTitle;
   const [formType, setFormType] = React.useState("");
-  const [message, setmessage] = useState("");
-  const [error, seterror] = useState("");
-  const [updatedPatientData, setUpdatedPatientData] = useState({});
-  const [updatedEmployeeData, setUpdatedEmployeeData] = useState({});
-  const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
+  // const [message, setmessage] = useState("");
+  // const [error, seterror] = useState("");
+  // const [updatedPatientData, setUpdatedPatientData] = useState({});
+  // const [updatedEmployeeData, setUpdatedEmployeeData] = useState({});
+  // const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
   const handleDelete = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/patient/${props.userId}`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/patient/${props.userId}`;
 
     try {
-      const response = await axios.delete(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.delete(endpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       // Handle successful deletion
       onClose();
       // if (props.onPatientDelete) props.onPatientDelete();
@@ -164,38 +164,38 @@ export default function OpaqueList(props: {
     setFormType(type);
     onOpen();
   };
-  const handleDataChange = (data: any) => {
+  const handleDataChange = () => {
     if (props.modalType.edit) {
       if (formType === MODAL_TYPES.EDIT_EMPLOYEE) {
-        setUpdatedEmployeeData(data);
+        // setUpdatedEmployeeData(data);
       } else if (formType === MODAL_TYPES.EDIT_PATIENT) {
-        setUpdatedPatientData(data);
+        // setUpdatedPatientData(data);
       } else if (formType === MODAL_TYPES.EDIT_APPOINTMENT) {
-        setUpdatedAppointmentData(data);
+        // setUpdatedAppointmentData(data);
       }
     }
   };
 
   const handleEdit = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/patient`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/patient`;
 
-    const requestData = {
-      id: props.userId,
-      ...updatedPatientData,
-    };
+    // const requestData = {
+    //   id: props.userId,
+    //   ...updatedPatientData,
+    // };
 
     try {
-      const response = await axios.patch(endpoint, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.patch(endpoint, requestData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       if (props.onPatientDelete) props.onPatientDelete();
 
-      setmessage("Patient updated successfully!");
+      // setmessage("Patient updated successfully!");
       setModalMessage({ success: "Patient updated successfully!", error: "" });
       setNotificationOpen(true);
       onClose();
@@ -205,7 +205,7 @@ export default function OpaqueList(props: {
         success: "",
         error: "Failed to update the patient. Please try again.",
       });
-      seterror("Failed to update the patient. Please try again.");
+      // seterror("Failed to update the patient. Please try again.");
       // alert("Failed to update the patient. Please try again.");
       setNotificationOpen(true);
     } finally {
@@ -217,23 +217,23 @@ export default function OpaqueList(props: {
 
   const handleEmployeeEdit = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/user`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/user`;
 
-    const requestData = {
-      id: props.userId,
-      ...updatedEmployeeData,
-    };
+    // const requestData = {
+    //   id: props.userId,
+    //   ...updatedEmployeeData,
+    // };
 
     try {
-      const response = await axios.patch(endpoint, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.patch(endpoint, requestData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       if (props.onPatientDelete) props.onPatientDelete();
-      setmessage("Employee updated successfully!");
+      // setmessage("Employee updated successfully!");
       setModalMessage({
         success: "Employee updated successfully!",
         error: " ",
@@ -244,7 +244,7 @@ export default function OpaqueList(props: {
     } catch (error) {
       console.error("Error updating Employee:", error);
       setModalMessage({ success: "", error: "Error updating Employee" });
-      seterror("Error updating Employee");
+      // seterror("Error updating Employee");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
     } finally {
@@ -256,23 +256,23 @@ export default function OpaqueList(props: {
 
   const handleAppointmentEdit = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/appointment`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/appointment`;
 
-    const requestData = {
-      id: props.userId,
-      ...updatedAppointmentData,
-    };
+    // const requestData = {
+    //   id: props.userId,
+    //   ...updatedAppointmentData,
+    // };
 
     try {
-      const response = await axios.patch(endpoint, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.patch(endpoint, requestData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       if (props.onPatientDelete) props.onPatientDelete();
-      setmessage("appointment updated successfully!");
+      // setmessage("appointment updated successfully!");
       setModalMessage({
         success: "appointment updated successfully!",
         error: " ",
@@ -283,7 +283,7 @@ export default function OpaqueList(props: {
     } catch (error) {
       console.error("Error updating appointment:", error);
       setModalMessage({ success: "", error: "Error updating appointment" });
-      seterror("Error updating appointment");
+      // seterror("Error updating appointment");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
     } finally {
@@ -371,10 +371,22 @@ export default function OpaqueList(props: {
             <>
               <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
               <ModalBody>
+                {/* <ModalForm
+                  type={formType}
+                  userId={props.userId}
+                  onDataChange={handleDataChange}
+                /> */}
+
                 <ModalForm
                   type={formType}
                   userId={props.userId}
                   onDataChange={handleDataChange}
+                  onProfilePhotoChange={function (): void {
+                    throw new Error("Function not implemented.");
+                  }}
+                  onFilesChange={function (): void {
+                    throw new Error("Function not implemented.");
+                  }}
                 />
               </ModalBody>
               <ModalFooter>

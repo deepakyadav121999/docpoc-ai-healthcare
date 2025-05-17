@@ -29,11 +29,10 @@
 
 // export default ECommerce;
 
-
 "use client";
 import React, { useEffect, useState } from "react";
 import ChartThree from "../Charts/ChartThree";
-import ChartTwo from "../Charts/ChartTwo";
+// import ChartTwo from "../Charts/ChartTwo";
 import ChatCard from "../Chat/ChatCard";
 import DataStatsOne from "@/components/DataStats/DataStatsOne";
 import ChartOne from "@/components/Charts/ChartOne";
@@ -77,14 +76,17 @@ interface DashboardData {
   visitTypes: {
     types?: { id: string; name: string }[];
     appointments?: Appointment[];
-
   };
 }
 
 // Throttle function to limit API calls
-const throttle = (func: Function, limit: number) => {
+// const throttle = (func: Function, limit: number) => {
+const throttle = <T extends unknown[], R>(
+  func: (...args: T) => R,
+  limit: number,
+) => {
   let inThrottle = false;
-  return function(this: any, ...args: any[]) {
+  return function (this: any, ...args: T) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -100,7 +102,10 @@ const ECommerce: React.FC = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
   const branchId = profile?.branchId;
 
-  const fetchDataWithFallback = async (fetchFunction: () => Promise<any>, defaultValue: any) => {
+  const fetchDataWithFallback = async (
+    fetchFunction: () => Promise<any>,
+    defaultValue: any,
+  ) => {
     try {
       const response = await fetchFunction();
       return response;
@@ -126,7 +131,7 @@ const ECommerce: React.FC = () => {
 
     try {
       setLoading(true);
-      
+
       // Set date ranges
       const now = new Date();
       const thirtyDaysAgo = new Date();
@@ -143,125 +148,182 @@ const ECommerce: React.FC = () => {
       const api = axios.create({
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       // First fetch - appointment types and current appointments
       const [typesResponse, appointmentsResponse] = await Promise.all([
         fetchDataWithFallback(
           () => api.get(`${API_URL}/appointment/types/${branchId}`),
-          { data: [] }
+          { data: [] },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/appointment/list/${branchId}`, {
-            params: { page: 1, pageSize: 1000, from: currentFrom, to: currentTo }
-          }),
-          { data: { rows: [] } }
-        )
+          () =>
+            api.get(`${API_URL}/appointment/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1000,
+                from: currentFrom,
+                to: currentTo,
+              },
+            }),
+          { data: { rows: [] } },
+        ),
       ]);
 
       // Second fetch - all other data in batches
       const [
-        currentPatients, previousPatients,
-        currentBookings, previousBookings
+        currentPatients,
+        previousPatients,
+        currentBookings,
+        previousBookings,
       ] = await Promise.all([
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/patient/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: currentFrom, to: currentTo }
-          }),
-          { data: { count: 0 } }
+          () =>
+            api.get(`${API_URL}/patient/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: currentFrom,
+                to: currentTo,
+              },
+            }),
+          { data: { count: 0 } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/patient/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: previousFrom, to: previousTo }
-          }),
-          { data: { count: 0 } }
+          () =>
+            api.get(`${API_URL}/patient/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: previousFrom,
+                to: previousTo,
+              },
+            }),
+          { data: { count: 0 } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/appointment/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: currentFrom, to: currentTo }
-          }),
-          { data: { count: 0 } }
+          () =>
+            api.get(`${API_URL}/appointment/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: currentFrom,
+                to: currentTo,
+              },
+            }),
+          { data: { count: 0 } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/appointment/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: previousFrom, to: previousTo }
-          }),
-          { data: { count: 0 } }
-        )
+          () =>
+            api.get(`${API_URL}/appointment/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: previousFrom,
+                to: previousTo,
+              },
+            }),
+          { data: { count: 0 } },
+        ),
       ]);
 
       // Third fetch - revenue and campaigns
       const [
-        currentRevenue, previousRevenue,
-        currentCampaigns, previousCampaigns
+        currentRevenue,
+        previousRevenue,
+        currentCampaigns,
+        previousCampaigns,
       ] = await Promise.all([
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/payment/list/${branchId}`, {
-            params: { 
-              page: 1, 
-              pageSize: 1, 
-              from: currentFrom, 
-              to: currentTo, 
-              status: "Completed" 
-            }
-          }),
-          { data: { rows: [] } }
+          () =>
+            api.get(`${API_URL}/payment/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: currentFrom,
+                to: currentTo,
+                status: "Completed",
+              },
+            }),
+          { data: { rows: [] } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/payment/list/${branchId}`, {
-            params: { 
-              page: 1, 
-              pageSize: 1, 
-              from: previousFrom, 
-              to: previousTo, 
-              status: "Completed" 
-            }
-          }),
-          { data: { rows: [] } }
+          () =>
+            api.get(`${API_URL}/payment/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: previousFrom,
+                to: previousTo,
+                status: "Completed",
+              },
+            }),
+          { data: { rows: [] } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/campaign/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: currentFrom, to: currentTo }
-          }),
-          { data: { count: 0 } }
+          () =>
+            api.get(`${API_URL}/campaign/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: currentFrom,
+                to: currentTo,
+              },
+            }),
+          { data: { count: 0 } },
         ),
         fetchDataWithFallback(
-          () => api.get(`${API_URL}/campaign/list/${branchId}`, {
-            params: { page: 1, pageSize: 1, from: previousFrom, to: previousTo }
-          }),
-          { data: { count: 0 } }
-        )
+          () =>
+            api.get(`${API_URL}/campaign/list/${branchId}`, {
+              params: {
+                page: 1,
+                pageSize: 1,
+                from: previousFrom,
+                to: previousTo,
+              },
+            }),
+          { data: { count: 0 } },
+        ),
       ]);
 
       setData({
         stats: {
           patients: {
             current: currentPatients.data.count,
-            previous: previousPatients.data.count
+            previous: previousPatients.data.count,
           },
           bookings: {
             current: currentBookings.data.count,
-            previous: previousBookings.data.count
+            previous: previousBookings.data.count,
           },
           revenue: {
-            current: currentRevenue.data.rows?.reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0) || 0,
-            previous: previousRevenue.data.rows?.reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0) || 0
+            current:
+              currentRevenue.data.rows?.reduce(
+                (sum: number, payment: any) => sum + (payment.amount || 0),
+                0,
+              ) || 0,
+            previous:
+              previousRevenue.data.rows?.reduce(
+                (sum: number, payment: any) => sum + (payment.amount || 0),
+                0,
+              ) || 0,
           },
           campaigns: {
             current: currentCampaigns.data.count,
-            previous: previousCampaigns.data.count
-          }
+            previous: previousCampaigns.data.count,
+          },
         },
         visitTypes: {
           types: typesResponse.data,
-          appointments: appointmentsResponse.data.rows
-        }
+          appointments: appointmentsResponse.data.rows,
+        },
       });
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
       console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
@@ -294,18 +356,18 @@ const ECommerce: React.FC = () => {
   return (
     <>
       <DataStatsOne stats={data.stats} />
-      
+
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
-      <div className="col-span-12">
-        <ChartOne />
-      </div>
+        <div className="col-span-12">
+          <ChartOne />
+        </div>
         {/* <ChartOne /> */}
         {/* <ChartTwo /> */}
-        <ChartThree 
-           types={data.visitTypes.types} 
-           appointments={data.visitTypes.appointments} 
+        <ChartThree
+          types={data.visitTypes.types}
+          appointments={data.visitTypes.appointments}
         />
-       <ChatCard appointments={data?.visitTypes.appointments} />
+        <ChatCard appointments={data?.visitTypes.appointments} />
       </div>
     </>
   );

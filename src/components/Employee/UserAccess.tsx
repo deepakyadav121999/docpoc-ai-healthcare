@@ -5,12 +5,6 @@ import {
   AccordionItem,
   Avatar,
   Spinner,
-  Modal,
-  ModalContent,
-  ModalBody,
-  ModalFooter,
-  Button,
-  ModalHeader,
   useDisclosure,
 } from "@nextui-org/react";
 import UserAccessTypes from "./AccessTypes";
@@ -26,17 +20,16 @@ interface Employee {
   email: string;
   json: string;
   accessType: string; // JSON string
-  profilePicture?: string; 
-  gender?: string; 
-
+  profilePicture?: string;
+  gender?: string;
 }
 const API_URL = process.env.API_URL;
 export default function UserAccess() {
   const profile = useSelector((state: RootState) => state.profile.data);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setUsers] = React.useState<Employee[]>([]);
-  const [error, setError] = React.useState<string | null>(null);
-  const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
+  // const [error, setError] = React.useState<string | null>(null);
+  // const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
   const [modalMessage, setModalMessage] = React.useState<{
     success?: string;
     error?: string;
@@ -48,8 +41,6 @@ export default function UserAccess() {
       const token = localStorage.getItem("docPocAuth_token");
 
       const fetchedBranchId = profile?.branchId;
-
-     
 
       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
 
@@ -68,7 +59,8 @@ export default function UserAccess() {
 
       setUsers(response.data.rows || response.data);
     } catch (err) {
-      setError("Failed to fetch users.");
+      // setError("Failed to fetch users.");
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -144,12 +136,11 @@ export default function UserAccess() {
                   user.profilePicture
                     ? user.profilePicture
                     : user.gender === "Male"
-                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
-                    : user.gender === "Female"
-                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
-                    : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                      ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                      : user.gender === "Female"
+                        ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"
+                        : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
                 }
-          
               />
             }
             subtitle={user.email}
@@ -162,7 +153,7 @@ export default function UserAccess() {
           </AccordionItem>
         ))}
       </Accordion>
-   
+
       <EnhancedModal
         isOpen={isOpen}
         loading={loading}

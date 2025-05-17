@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 // import Link from "next/link";
 // import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import {useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 // import { AuthData, UserSignIn, UserSignUp } from "@/api/auth";
 import axios from "axios";
 import { useDisclosure } from "@nextui-org/react";
@@ -20,14 +20,15 @@ const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
 const API_URL = process.env.API_URL;
 
 interface SignUpProps {
-  setAuthPage: () => void; // Function to switch to the sign-in page
+  // setAuthPage: () => void;
+  // Function to switch to the sign-in page
   onLogin: (token: string) => void; // Function to handle login after sign-up
 }
 
-const SignUp: React.FC<SignUpProps> = ({ 
-  setAuthPage,
-   onLogin }
-) => {
+const SignUp: React.FC<SignUpProps> = ({
+  // setAuthPage,
+  onLogin,
+}) => {
   const [data, setData] = useState({
     remember: false,
     signUpMethod: "email",
@@ -39,7 +40,7 @@ const SignUp: React.FC<SignUpProps> = ({
   const [userInput, setUserInput] = useState(""); // Unified field for email/phone
   const [inputType, setInputType] = useState<"email" | "phone">("email");
 
-  const [phone, setPhone] = useState("");
+  // const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [errors, setShowErrors] = useState(false);
@@ -542,13 +543,13 @@ const SignUp: React.FC<SignUpProps> = ({
                     if (/^\d+$/.test(input)) {
                       // Input contains only numbers
                       setInputType("phone");
-                      setPhone(input);
+                      // setPhone(input);
                       setEmail(""); // Clear email value
                     } else {
                       // Input contains alphanumeric characters or is email-like
                       setInputType("email");
                       setEmail(input);
-                      setPhone(""); // Clear phone value
+                      // setPhone(""); // Clear phone value
                     }
                   }}
                   className="w-full rounded-lg border border-stroke bg-transparent py-[15px] pl-6 pr-11 font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"

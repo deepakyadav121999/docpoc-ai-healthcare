@@ -1,14 +1,13 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import Reminder from "@/components/Reminder";
+// import Reminder from "@/components/Reminder";
 import TabDefaultWithRoute from "@/components/common/TabWithRoute";
 import { REPORTS_TAB_KEYS } from "./routes";
 import { TOOL_TIP_COLORS } from "@/constants";
-import ReportsOverview from ".././../components/Reports/ReportsOverview"
+// import ReportsOverview from ".././../components/Reports/ReportsOverview";
 import GenerateReports from "../../components/Reports/ReportForm";
 import { ROUTES } from "@/constants/routes";
-
 
 export const metadata: Metadata = {
   title: "DocPOC.",
@@ -27,7 +26,6 @@ const ReportPage = () => {
           color={TOOL_TIP_COLORS.primary}
         />
         <GenerateReports />
-       
       </div>
     </DefaultLayout>
   );

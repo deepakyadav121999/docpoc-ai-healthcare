@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@nextui-org/react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
-import { useRouter,usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface TabOption {
   screen: string;
@@ -37,7 +37,7 @@ const TabDefaultWithRoute: React.FC<TableDefaultProps> = ({
         aria-label="Tabs colors"
         className="bg-[var(--background-color)] dark:bg-gray-800 rounded-full p-2 shadow-[2px_2px_6px_var(--shadow-color),-2px_-2px_6px_var(--light-shadow)] dark:shadow-[2px_2px_6px_rgba(0,0,0,0.5),-2px_-2px_6px_rgba(0,0,0,0.5)] tab_buttons"
       >
-        {Object.entries(options).map(([key, item], index) => (
+        {Object.entries(options).map(([_key, item], index) => (
           <Button
             key={index}
             style={{
@@ -48,9 +48,9 @@ const TabDefaultWithRoute: React.FC<TableDefaultProps> = ({
             isLoading={isLoading && isNext === item.screen}
             className="dark:bg-gray-800 rounded-full p-2 shadow-[2px_2px_6px_var(--shadow-color),-2px_-2px_6px_var(--light-shadow)] dark:shadow-[2px_2px_6px_rgba(0,0,0,0.5),-2px_-2px_6px_rgba(0,0,0,0.5)] text-medium px-5 m-0 "
             onClick={async () => {
-              setIsNext(item.screen),
-                setIsLoading(true),
-                handleTabClick(item.screen);
+              setIsNext(item.screen);
+              setIsLoading(true);
+              handleTabClick(item.screen);
             }} // Use router.push() instead
           >
             {item.name}

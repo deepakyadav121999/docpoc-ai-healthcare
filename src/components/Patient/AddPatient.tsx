@@ -5,20 +5,12 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
-  Spinner,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { TOOL_TIP_COLORS } from "@/constants";
+
 import { useDisclosure } from "@nextui-org/react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-} from "@nextui-org/react";
+
 import EnhancedModal from "../common/Modal/EnhancedModal";
 interface AddPatientProps {
   onPatientAdded: () => void;
@@ -26,7 +18,7 @@ interface AddPatientProps {
 const API_URL = process.env.API_URL;
 
 const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
-  const [edit, setEdit] = useState(true);
+  const [edit] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -43,18 +35,18 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     notificationStatus: '{"allergies":["Peanut","Dust"]}',
   });
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   // const [size, setSize] = useState('md');
   // const sizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "full"];
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [message, setmessage] = useState("");
-  const [errmessage, seterrmessage] = useState("");
+  // const [message, setmessage] = useState("");
+  // const [errmessage, seterrmessage] = useState("");
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-  const handleOpen = () => {
-    setmessage("");
-    onClose();
-  };
+  // const handleOpen = () => {
+  //   setmessage("");
+  //   onClose();
+  // };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
@@ -129,7 +121,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         ...formData,
         branchId: fetchedBranchId,
       };
-      const response = await axios.post(`${API_URL}/patient`, payload, {
+      await axios.post(`${API_URL}/patient`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -275,7 +267,7 @@ const AddPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  onBlur={(e) => {
+                  onBlur={() => {
                     // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     // if (!emailRegex.test(e.target.value)) {
                     //   setErrors((prev) => [...prev, "Please enter a valid email address."]);

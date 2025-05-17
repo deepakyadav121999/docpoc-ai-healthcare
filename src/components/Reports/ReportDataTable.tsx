@@ -110,7 +110,6 @@
 //                   </div>
 //                 );
 
-
 //             case "reportDate":
 //                 return (
 //                   <div className="flex flex-col">
@@ -177,7 +176,7 @@
 
 //       .dark {
 //         --calendar-background-color: var(--dark-background);
-//       }    
+//       }
 
 //       .table-custom {
 //         background-color: var(--calendar-background-color);
@@ -186,7 +185,6 @@
 //     </div>
 //   );
 // }
-
 
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -207,7 +205,7 @@ import {
 import { columns, statusOptions } from "./data";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-import debounce from "lodash.debounce";
+// import debounce from "lodash.debounce";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -232,16 +230,16 @@ export default function ReportDataTable() {
   const profile = useSelector((state: RootState) => state.profile.data);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage] = useState(5);
   const [totalCount, setTotalCount] = useState(0);
-  const [filterValue, setFilterValue] = useState("");
+  const [filterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
-  const [visibleColumns, setVisibleColumns] = useState<Selection>(
+  const [visibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
-  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [statusFilter] = useState<Selection>("all");
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "reportDate",
     direction: "ascending",
@@ -250,53 +248,50 @@ export default function ReportDataTable() {
   const API_URL = process.env.API_URL;
   const hasSearchFilter = Boolean(filterValue);
 
-  const fetchReports = useCallback(
-    async (searchName = "") => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("docPocAuth_token");
-        const branchId = profile?.branchId;
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const branchId = profile?.branchId;
 
-        if (!branchId) {
-          throw new Error("Branch ID not available");
-        }
-
-        // Set default date range (adjust as needed)
-        const fromDate = "2025-01-01T05:19:15.544Z";
-        const toDate = "2025-05-02T05:19:15.545Z";
-
-        //  const endpoint = searchName
-        //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`
-        //     : `${API_URL}/DocPOC/v1/reports/list/${branchId} `;
-        const endpoint = `${API_URL}/reports/list/${branchId}`;
-
-        const params = {
-          page,
-          pageSize: rowsPerPage,
-          from: fromDate,
-          to: toDate,
-          reportType: ["MEDICAL_REPORT", "INVOICE"],
-        };
-
-        const response = await axios.get(endpoint, {
-          params,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        setReports(response.data.rows || []);
-        setTotalCount(response.data.count || 0);
-      } catch (err) {
-        setError("Failed to fetch reports");
-        console.error("Error fetching reports:", err);
-      } finally {
-        setLoading(false);
+      if (!branchId) {
+        throw new Error("Branch ID not available");
       }
-    },
-    [page, rowsPerPage, profile?.branchId],
-  );
+
+      // Set default date range (adjust as needed)
+      const fromDate = "2025-01-01T05:19:15.544Z";
+      const toDate = "2025-05-02T05:19:15.545Z";
+
+      //  const endpoint = searchName
+      //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`
+      //     : `${API_URL}/DocPOC/v1/reports/list/${branchId} `;
+      const endpoint = `${API_URL}/reports/list/${branchId}`;
+
+      const params = {
+        page,
+        pageSize: rowsPerPage,
+        from: fromDate,
+        to: toDate,
+        reportType: ["MEDICAL_REPORT", "INVOICE"],
+      };
+
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setReports(response.data.rows || []);
+      setTotalCount(response.data.count || 0);
+    } catch (err) {
+      // setError("Failed to fetch reports");
+      console.error("Error fetching reports:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, rowsPerPage, profile?.branchId]);
 
   useEffect(() => {
     fetchReports();
@@ -361,7 +356,9 @@ export default function ReportDataTable() {
       case "doctorName":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{report.doctorName}</p>
+            <p className="text-bold text-small capitalize">
+              {report.doctorName}
+            </p>
             {/* <p className="text-bold text-tiny capitalize text-default-400">
             {report.doctorName}
             </p> */}
@@ -389,12 +386,13 @@ export default function ReportDataTable() {
 
       case "note":
         const note = report.additionalNotes || "N/A";
-        const truncatedNote = note.length > 10 ? `${note.substring(0, 10)}...` : note;
+        const truncatedNote =
+          note.length > 10 ? `${note.substring(0, 10)}...` : note;
         return (
           <div className="flex flex-col">
             <p
               className="text-bold text-small capitalize"
-              // title={note} 
+              // title={note}
             >
               {truncatedNote}
             </p>
@@ -407,7 +405,7 @@ export default function ReportDataTable() {
               href={JSON.parse(report.documentUrl).url}
               target="_blank"
               rel="noopener noreferrer"
-            // className="text-blue-500 hover:underline"
+              // className="text-blue-500 hover:underline"
             >
               View Report
             </a>
@@ -418,39 +416,39 @@ export default function ReportDataTable() {
     }
   }, []);
 
-  const onRowsPerPageChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setRowsPerPage(Number(e.target.value));
-      setPage(1);
-    },
-    [],
-  );
+  // const onRowsPerPageChange = useCallback(
+  //   (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //     setRowsPerPage(Number(e.target.value));
+  //     setPage(1);
+  //   },
+  //   [],
+  // );
 
-  const debouncedFetchReports = useMemo(
-    () => debounce((value: string) => fetchReports(value), 500),
-    [fetchReports],
-  );
+  // const debouncedFetchReports = useMemo(
+  //   () => debounce((value: string) => fetchReports(), 500),
+  //   [fetchReports],
+  // );
 
-  const onSearchChange = useCallback(
-    (value?: string) => {
-      setFilterValue(value || "");
-      setPage(1);
-      debouncedFetchReports(value || "");
-    },
-    [debouncedFetchReports],
-  );
+  // const onSearchChange = useCallback(
+  //   (value?: string) => {
+  //     setFilterValue(value || "");
+  //     setPage(1);
+  //     debouncedFetchReports(value || "");
+  //   },
+  //   [debouncedFetchReports],
+  // );
 
-  const onClear = useCallback(() => {
-    setFilterValue("");
-    setPage(1);
-  }, []);
+  // const onClear = useCallback(() => {
+  //   setFilterValue("");
+  //   setPage(1);
+  // }, []);
 
-  const onStatusFilterChange = (selected: Selection) => {
-    const selectedStatuses = Array.from(selected) as string[];
-    setStatusFilter(selected);
-    setPage(1);
-    // You can add status filtering logic here if needed
-  };
+  // const onStatusFilterChange = (selected: Selection) => {
+  //   // const selectedStatuses = Array.from(selected) as string[];
+  //   setStatusFilter(selected);
+  //   setPage(1);
+  //   // You can add status filtering logic here if needed
+  // };
 
   const bottomContent = useMemo(() => {
     return (
@@ -501,13 +499,7 @@ export default function ReportDataTable() {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={
-            loading ? (
-              <Spinner />
-            ) : (
-              "No reports found"
-            )
-          }
+          emptyContent={loading ? <Spinner /> : "No reports found"}
           items={sortedItems}
         >
           {(item) => (

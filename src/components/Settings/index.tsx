@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import General from "./General";
+// import General from "./General";
 import Clinic from "../Clinic/Clinic";
 
 export default function App() {

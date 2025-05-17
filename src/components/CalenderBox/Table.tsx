@@ -749,14 +749,11 @@
 //         }}
 //         actionButtonName={"Ok"}
 //         modalTitle={"Appointment"}
-//         userId="123"  
+//         userId="123"
 //         onPatientDelete={refreshUsers}
 //       />
 //       )} */
 // }
-
-
-
 
 // "use client";
 
@@ -1104,7 +1101,6 @@
 //   //   [debouncedFetchUsers]
 //   // );
 
-
 //   const debouncedFetchUsers = useCallback(
 //     debounce((searchValue: string) => {
 //       setFilterValue(searchValue);
@@ -1121,7 +1117,7 @@
 //     },
 //     [debouncedFetchUsers]
 //   );
-  
+
 //   const onClear = useCallback(() => {
 //     setFilterValue("");
 //     setPage(1);
@@ -1373,12 +1369,6 @@
 //   );
 // }
 
-
-
-
-
-
-
 "use client";
 import { useRef } from "react";
 
@@ -1403,9 +1393,9 @@ import {
   ChipProps,
   SortDescriptor,
   DatePicker,
-  useDisclosure,
+  // useDisclosure,
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
+// import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
 import { columns, statusOptions } from "./data";
@@ -1416,15 +1406,13 @@ import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddAppointment from "./AddAppointment";
 import { CalendarDate, parseDate } from "@internationalized/date";
 // import debounce from "lodash.debounce";
-import { now, getLocalTimeZone } from "@internationalized/date";
+import { getLocalTimeZone } from "@internationalized/date";
 import { Switch } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
 import { fetchAppointments } from "@/store/slices/appointmentsSlice";
 import debounce from "lodash.debounce";
 import type { DebouncedFunc } from "lodash";
-;
-
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
   declined: "danger",
@@ -1441,28 +1429,28 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-interface appointments {
-  id: string;
-  name: string;
-  age: number;
-  bloodGroup: string;
-  phone: string;
-  email: string;
-  status: string;
-  lastVisit: string;
-  displayPicture: string;
-  isActive: string;
-  json: string;
-  startDateTime: string;
-  endDateTime: string;
-  dateTime: string;
-  statusName: string;
-}
+// interface appointments {
+//   id: string;
+//   name: string;
+//   age: number;
+//   bloodGroup: string;
+//   phone: string;
+//   email: string;
+//   status: string;
+//   lastVisit: string;
+//   displayPicture: string;
+//   isActive: string;
+//   json: string;
+//   startDateTime: string;
+//   endDateTime: string;
+//   dateTime: string;
+//   statusName: string;
+// }
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 export default function AppointmentTable() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
@@ -1475,24 +1463,29 @@ export default function AppointmentTable() {
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
   const [assignedToMe, setAssignedToMe] = useState(false);
   const [createdByMe, setCreatedByMe] = useState(false);
-  const [switchLoading, setSwitchLoading] = useState(false); 
+  const [switchLoading, setSwitchLoading] = useState(false);
 
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
-  const [addAppointmentModelToggle, setAddAppointmentModelToggle] = useState(false);
+  // const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
+  //   useState(false);
 
   const profile = useSelector((state: RootState) => state.profile.data);
-  const appointments = useSelector((state: RootState) => state.appointments.data);
+  const appointments = useSelector(
+    (state: RootState) => state.appointments.data,
+  );
   const loading = useSelector((state: RootState) => state.appointments.loading);
-  const error = useSelector((state: RootState) => state.appointments.error);
-  const totalAppointments = useSelector((state: RootState) => state.appointments.total);
+  // const error = useSelector((state: RootState) => state.appointments.error);
+  const totalAppointments = useSelector(
+    (state: RootState) => state.appointments.total,
+  );
 
-
-  const debouncedFetchRef = useRef<DebouncedFunc<(searchValue: string) => void>>();
-  const debouncedDateFetchRef = useRef<DebouncedFunc<(date: string | null) => void>>();
-
+  const debouncedFetchRef =
+    useRef<DebouncedFunc<(searchValue: string) => void>>();
+  const debouncedDateFetchRef =
+    useRef<DebouncedFunc<(date: string | null) => void>>();
 
   useEffect(() => {
     localStorage.setItem("page", String(page));
@@ -1503,7 +1496,7 @@ export default function AppointmentTable() {
   }, [rowsPerPage]);
 
   // const fetchUsers = useCallback(() => {
-    
+
   //   if (!profile) return;
 
   //   const params: any = {
@@ -1534,39 +1527,47 @@ export default function AppointmentTable() {
   //   dispatch(fetchAppointments(params));
   // }, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe, profile, dispatch]);
 
-  
-const fetchUsers = useCallback(() => {
-  if (!profile) return;
+  const fetchUsers = useCallback(() => {
+    if (!profile) return;
 
-  const params: any = {
+    const params: any = {
+      page,
+      pageSize: rowsPerPage,
+      from: "2024-12-01T00:00:00.000Z",
+      to: "2025-12-31T23:59:59.999Z",
+      branchId: profile.branchId,
+    };
+
+    if (selectedDate) {
+      params.from = selectedDate;
+      params.to = selectedDate;
+    }
+
+    if (filterValue && searchTerm) {
+      params.name = filterValue;
+    }
+
+    if (assignedToMe && profile.id) {
+      params.doctorId = profile.id;
+    }
+
+    if (createdByMe && profile.id) {
+      params.createdBy = profile.id;
+    }
+
+    console.log("Fetching users with params:", params); // Debugging line
+
+    dispatch(fetchAppointments(params));
+  }, [
     page,
-    pageSize: rowsPerPage,
-    from: "2024-12-01T00:00:00.000Z",
-    to: "2025-12-31T23:59:59.999Z",
-    branchId: profile.branchId,
-  };
-
-  if (selectedDate) {
-    params.from = selectedDate;
-    params.to = selectedDate;
-  }
-
-  if (filterValue && searchTerm) {
-    params.name = filterValue;
-  }
-
-  if (assignedToMe && profile.id) {
-    params.doctorId = profile.id;
-  }
-
-  if (createdByMe && profile.id) {
-    params.createdBy = profile.id;
-  }
-
-  console.log("Fetching users with params:", params); // Debugging line
-
-  dispatch(fetchAppointments(params));
-}, [page, rowsPerPage, filterValue, selectedDate, assignedToMe, createdByMe, profile, dispatch]);
+    rowsPerPage,
+    filterValue,
+    selectedDate,
+    assignedToMe,
+    createdByMe,
+    profile,
+    dispatch,
+  ]);
 
   useEffect(() => {
     fetchUsers();
@@ -1577,7 +1578,10 @@ const fetchUsers = useCallback(() => {
     const currentDate = new Date();
     let age = currentDate.getFullYear() - birthDate.getFullYear();
     const monthDifference = currentDate.getMonth() - birthDate.getMonth();
-    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -1599,7 +1603,7 @@ const fetchUsers = useCallback(() => {
   };
 
   type User = (typeof appointments)[0];
-  const hasSearchFilter = Boolean(filterValue);
+  // const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -1608,23 +1612,23 @@ const fetchUsers = useCallback(() => {
     );
   }, [visibleColumns]);
 
-  const filteredItems = useMemo(() => {
-    let filteredUsers = [...appointments];
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase()),
-      );
-    }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status),
-      );
-    }
-    return filteredUsers;
-  }, [filterValue, statusFilter, appointments]);
+  // const filteredItems = useMemo(() => {
+  //   let filteredUsers = [...appointments];
+  //   if (hasSearchFilter) {
+  //     filteredUsers = filteredUsers.filter((user) =>
+  //       user.name.toLowerCase().includes(filterValue.toLowerCase()),
+  //     );
+  //   }
+  //   if (
+  //     statusFilter !== "all" &&
+  //     Array.from(statusFilter).length !== statusOptions.length
+  //   ) {
+  //     filteredUsers = filteredUsers.filter((user) =>
+  //       Array.from(statusFilter).includes(user.status),
+  //     );
+  //   }
+  //   return filteredUsers;
+  // }, [filterValue, statusFilter, appointments]);
 
   const pages =
     totalAppointments > 0 ? Math.ceil(totalAppointments / rowsPerPage) : 1;
@@ -1641,95 +1645,98 @@ const fetchUsers = useCallback(() => {
     });
   }, [sortDescriptor, appointments]);
 
-  const renderCell = useCallback((user: User, columnKey: React.Key) => {
-    const cellValue = user[columnKey as keyof User];
-    if (columnKey === "age") {
-      let age = "";
-      try {
-        const userJson = JSON.parse(user.json);
-        const dob = userJson.dob || "";
-        age = getAgeFromDob(dob).toString();
-      } catch (error) {}
-      return <p className="capitalize">{age}</p>;
-    }
-    if (columnKey === "time") {
-      const startTime = extractTime(user.startDateTime);
-      const endTime = user.endDateTime;
-      return (
-        <p className="capitalize">
-          {startTime}-{extractTime(endTime)}
-        </p>
-      );
-    }
-    if (columnKey === "date") {
-      const startDate = extractDate(user.dateTime);
-      return <p>{startDate}</p>;
-    }
-    if (columnKey === "email") {
-      try {
-        const userJson = JSON.parse(user.json || "{}");
-        const email = userJson.email || "N/A";
-
-        return <p>{email}</p>;
-      } catch (error) {}
-    }
-    switch (columnKey) {
-
-    
-
-      case "name":
-    const gender = user.gender || "unknown"; // Directly access the gender property
-      const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
-      const avatarSrc = user.patient?.displayPicture || placeholderImage;
-
-
+  const renderCell = useCallback(
+    (user: User, columnKey: React.Key) => {
+      const cellValue = user[columnKey as keyof User];
+      if (columnKey === "age") {
+        let age = "";
+        try {
+          const userJson = JSON.parse(user.json);
+          const dob = userJson.dob || "";
+          age = getAgeFromDob(dob).toString();
+        } catch (err) {
+          console.log(err);
+        }
+        return <p className="capitalize">{age}</p>;
+      }
+      if (columnKey === "time") {
+        const startTime = extractTime(user.startDateTime);
+        const endTime = user.endDateTime;
         return (
-          <User
-            avatarProps={{ radius: "lg",
-               src: avatarSrc
-              
+          <p className="capitalize">
+            {startTime}-{extractTime(endTime)}
+          </p>
+        );
+      }
+      if (columnKey === "date") {
+        const startDate = extractDate(user.dateTime);
+        return <p>{startDate}</p>;
+      }
+      if (columnKey === "email") {
+        try {
+          const userJson = JSON.parse(user.json || "{}");
+          const email = userJson.email || "N/A";
+
+          return <p>{email}</p>;
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      switch (columnKey) {
+        case "name":
+          const gender = user.gender || "unknown"; // Directly access the gender property
+          const placeholderImage =
+            gender.toLowerCase() === "male"
+              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+              : `${AWS_URL}/docpoc-images/user-female.jpg`;
+          const avatarSrc = user.patient?.displayPicture || placeholderImage;
+
+          return (
+            <User
+              avatarProps={{ radius: "lg", src: avatarSrc }}
+              description={user.email}
+              name={cellValue}
+            />
+          );
+        case "role":
+          return (
+            <div className="flex flex-col">
+              <p className="font-bold text-sm capitalize">{cellValue}</p>
+              <p className="text-xs capitalize text-gray-400">{}</p>
+            </div>
+          );
+        case "status":
+          const status = user.statusName;
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[status.toLowerCase()]}
+              size="sm"
+              variant="flat"
+            >
+              {status}
+            </Chip>
+          );
+        case "actions":
+          return (
+            <OpaqueModal
+              modalType={{
+                view: MODAL_TYPES.VIEW_APPOINTMENT,
+                edit: MODAL_TYPES.EDIT_APPOINTMENT,
+                delete: MODAL_TYPES.DELETE_APPOINTMENT,
               }}
-            description={user.email}
-            name={cellValue}
-          />
-        );
-      case "role":
-        return (
-          <div className="flex flex-col">
-            <p className="font-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-xs capitalize text-gray-400">{}</p>
-          </div>
-        );
-      case "status":
-        const status = user.statusName;
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[status.toLowerCase()]}
-            size="sm"
-            variant="flat"
-          >
-            {status}
-          </Chip>
-        );
-      case "actions":
-        return (
-          <OpaqueModal
-            modalType={{
-              view: MODAL_TYPES.VIEW_APPOINTMENT,
-              edit: MODAL_TYPES.EDIT_APPOINTMENT,
-              delete: MODAL_TYPES.DELETE_APPOINTMENT,
-            }}
-            actionButtonName={"Ok"}
-            modalTitle={"Appointment"}
-            userId={user.id}
-            onPatientDelete={fetchUsers}
-          />
-        );
-      default:
-        return cellValue;
-    }
-  }, [fetchUsers]);
+              actionButtonName={"Ok"}
+              modalTitle={"Appointment"}
+              userId={user.id}
+              onPatientDelete={fetchUsers}
+            />
+          );
+        default:
+          return cellValue;
+      }
+    },
+    [fetchUsers],
+  );
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
@@ -1743,9 +1750,9 @@ const fetchUsers = useCallback(() => {
     [],
   );
 
-  const toggleAddAppointment = useCallback(() => {
-    setAddAppointmentModelToggle((prev) => !prev);
-  }, []);
+  // const toggleAddAppointment = useCallback(() => {
+  //   setAddAppointmentModelToggle((prev) => !prev);
+  // }, []);
 
   // const debouncedFetchUsers = useCallback(
   //   debounce((searchValue: string) => {
@@ -1756,52 +1763,49 @@ const fetchUsers = useCallback(() => {
   // );
 
   // const onSearchChange = React.useCallback((value?: string) => {
-   
+
   //   setPage(1);
   // }, []);
   const [searchTerm, setSearchTerm] = useState("");
 
-// Debounce is initialized once and uses latest fetchUsers
-useEffect(() => {
-  debouncedFetchRef.current = debounce((searchValue: string) => {
-    setFilterValue(searchValue);
-    fetchUsers();
-  }, 500);
+  // Debounce is initialized once and uses latest fetchUsers
+  useEffect(() => {
+    debouncedFetchRef.current = debounce((searchValue: string) => {
+      setFilterValue(searchValue);
+      fetchUsers();
+    }, 500);
 
-  return () => {
-    debouncedFetchRef.current?.cancel();
+    return () => {
+      debouncedFetchRef.current?.cancel();
+    };
+  }, [fetchUsers]);
+
+  const onSearchChange = (value?: string) => {
+    const val = value || "";
+    setSearchTerm(val);
+    setPage(1);
+    debouncedFetchRef.current?.(val);
   };
-}, [fetchUsers]);
 
-const onSearchChange = (value?: string) => {
-  const val = value || "";
-  setSearchTerm(val);
-  setPage(1);
-  debouncedFetchRef.current?.(val);
-};
-
-const onClear = useCallback(() => {
-  debouncedFetchRef.current?.cancel(); // ✅ No more TS error
-  setFilterValue("");
-  setSearchTerm("");
-  setPage(1);
-  fetchUsers();
-}, [fetchUsers]);
-
-
-
-useEffect(() => {
-  debouncedDateFetchRef.current = debounce((date: string | null) => {
-    setSelectedDate(date);
+  const onClear = useCallback(() => {
+    debouncedFetchRef.current?.cancel(); // ✅ No more TS error
+    setFilterValue("");
+    setSearchTerm("");
     setPage(1);
     fetchUsers();
-  }, 500);
+  }, [fetchUsers]);
 
-  return () => {
-    debouncedDateFetchRef.current?.cancel();
-  };
-}, [fetchUsers]);
+  useEffect(() => {
+    debouncedDateFetchRef.current = debounce((date: string | null) => {
+      setSelectedDate(date);
+      setPage(1);
+      fetchUsers();
+    }, 500);
 
+    return () => {
+      debouncedDateFetchRef.current?.cancel();
+    };
+  }, [fetchUsers]);
 
   // const handleDateChange = (date: CalendarDate | null) => {
   //   if (date) {
@@ -1825,18 +1829,17 @@ useEffect(() => {
       debouncedDateFetchRef.current?.(null); // 🔥 Debounced clear
     }
   };
-  
 
-  const handleDateBlur = () => {
-    if (!selectedDateShow) {
-      setSelectedDate(null);
-      setSelectedDateShow(null);
-    } else {
-      setSelectedDate(selectedDateShow);
-      setPage(1);
-      fetchUsers();
-    }
-  };
+  // const handleDateBlur = () => {
+  //   if (!selectedDateShow) {
+  //     setSelectedDate(null);
+  //     setSelectedDateShow(null);
+  //   } else {
+  //     setSelectedDate(selectedDateShow);
+  //     setPage(1);
+  //     fetchUsers();
+  //   }
+  // };
   // const handleToggle = useCallback(
   //   (setter: React.Dispatch<React.SetStateAction<boolean>>, key: 'doctorId' | 'createdBy') => {
   //     if (switchLoading || loading) return; // Prevent toggling if loading
@@ -1882,23 +1885,25 @@ useEffect(() => {
   //   [switchLoading, loading]
   // );
 
-
   const handleToggle = useCallback(
-    (setter: React.Dispatch<React.SetStateAction<boolean>>, key: 'doctorId' | 'createdBy') => {
+    (
+      setter: React.Dispatch<React.SetStateAction<boolean>>,
+      // key: "doctorId" | "createdBy",
+    ) => {
       if (switchLoading || loading) return; // Prevent toggling if already loading
-  
+
       setSwitchLoading(true); // Set loading state to true
       setter((prev) => !prev); // Toggle the state
-  
+
       // Call fetchUsers after state update
       fetchUsers();
-  
+
       // Re-enable the switch after 10 seconds
       setTimeout(() => {
         setSwitchLoading(false);
       }, 1000); // 10 seconds delay
     },
-    [switchLoading, loading, fetchUsers]
+    [switchLoading, loading, fetchUsers],
   );
 
   const topContent = useMemo(() => {
@@ -1906,7 +1911,7 @@ useEffect(() => {
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-wrap xl:flex-nowrap  gap-3 justify-between sm:items-end w-full items-center">
-          {/* sm:flex-nowrap */}
+            {/* sm:flex-nowrap */}
             <Input
               isClearable
               className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
@@ -1926,11 +1931,9 @@ useEffect(() => {
                   ? parseDate(selectedDateShow)
                   : undefined
               }
-              
-
               onChange={handleDateChange}
             />
-            
+
             <div className="flex flex-wrap gap-2">
               <div className="flex gap-2 justify-center items-center sm:items-center sm:justify-between w-full mt-2">
                 <div className="flex items-center gap-2">

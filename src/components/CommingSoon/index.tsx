@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollShadow } from "@nextui-org/react";
 import { Content } from "./content";
 import CountDown from "./countDown";
-import ConfettiExplosion from "react-confetti-explosion";
+// import ConfettiExplosion from "react-confetti-explosion";
 
 export default function CommingSoonPage(props: { content: string }) {
   return (

@@ -2,19 +2,12 @@
 import {
   Autocomplete,
   AutocompleteItem,
-  Button,
   Checkbox,
   CheckboxGroup,
   Input,
   Switch,
   Textarea,
   TimeInput,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Spinner,
-  ModalFooter,
   useDisclosure,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
@@ -27,13 +20,13 @@ import { medicalDepartments } from "@/constants/MedicalDepartments";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import axios from "axios";
 import { parseTime } from "@internationalized/date";
-import { json } from "stream/consumers";
+
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store";
 import {
-  fetchProfile,
+  // fetchProfile,
   updateAccessToken,
 } from "../../store/slices/profileSlice";
 
@@ -57,7 +50,7 @@ const Clinic = () => {
     "saturday",
     "sunday",
   ]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [selectedWorkingDays, setSelectedWorkingDays] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -223,12 +216,12 @@ const Clinic = () => {
       errors.departments = "At least one department must be selected.";
 
     if (Object.keys(errors).length > 0) {
-      setErrors(errors); // Set the errors in state for further use
+      // setErrors(errors); // Set the errors in state for further use
       setLoading(false);
 
       // Build the modal message for displaying required fields
       const errorMessage = Object.entries(errors)
-        .map(([field, message]) => `- ${message}`)
+        .map(([message]) => `- ${message}`)
         .join("\n");
 
       setModalMessage({
@@ -240,7 +233,7 @@ const Clinic = () => {
       return;
     }
 
-    setErrors({});
+    // setErrors({});
 
     try {
       const hospitalData = {

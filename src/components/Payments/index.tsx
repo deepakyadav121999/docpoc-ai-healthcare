@@ -86,7 +86,7 @@ export default function App() {
         },
         y: {
           title: {
-            formatter: function (e) {
+            formatter: function () {
               return "";
             },
           },

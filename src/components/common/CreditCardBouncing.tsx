@@ -20,14 +20,14 @@ export const CreditCardBouncing: React.FC = () => {
     return () => darkModeObserver.disconnect();
   }, []);
 
-  const toggleMode = () => {
-    const root = window.document.documentElement;
-    if (root.classList.contains("dark")) {
-      root.classList.remove("dark");
-    } else {
-      root.classList.add("dark");
-    }
-  };
+  // const toggleMode = () => {
+  //   const root = window.document.documentElement;
+  //   if (root.classList.contains("dark")) {
+  //     root.classList.remove("dark");
+  //   } else {
+  //     root.classList.add("dark");
+  //   }
+  // };
 
   return (
     <div className={`flex flex-col items-center justify-center  `}>

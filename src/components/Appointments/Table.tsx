@@ -19,7 +19,6 @@ import {
   ChipProps,
   SortDescriptor,
   DatePicker,
-  useDisclosure,
 } from "@nextui-org/react";
 // import { PlusIcon } from "./PlusIcon";
 
@@ -27,7 +26,7 @@ import { ChevronDownIcon } from "../CalenderBox/ChevronDownIcon";
 
 import { SearchIcon } from "../CalenderBox/SearchIcon";
 // import {users } from "./data";
-import { columns,  statusOptions, users } from "../CalenderBox/data";
+import { columns, statusOptions, users } from "../CalenderBox/data";
 import { capitalize } from "../CalenderBox/utils";
 import OpaqueModal from "../common/Modal/Opaque";
 import { MODAL_TYPES } from "@/constants";
@@ -59,8 +58,10 @@ export default function AppointmentTable() {
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
-    useState(false);
+  // const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
+  //   useState(false);
+  const addAppointmentModelToggle = false;
+
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
@@ -71,7 +72,7 @@ export default function AppointmentTable() {
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
-    return columns.filter((column:any) =>
+    return columns.filter((column: any) =>
       Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
@@ -94,7 +95,7 @@ export default function AppointmentTable() {
     }
 
     return filteredUsers;
-  }, [filterValue, statusFilter]);
+  }, [filterValue, statusFilter, hasSearchFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -160,7 +161,7 @@ export default function AppointmentTable() {
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId=""
-            onPatientDelete={()=>{}}
+            onPatientDelete={() => {}}
           />
         );
       default:
@@ -232,7 +233,7 @@ export default function AppointmentTable() {
                   selectionMode="multiple"
                   onSelectionChange={setStatusFilter}
                 >
-                  {statusOptions.map((status:any) => (
+                  {statusOptions.map((status: any) => (
                     <DropdownItem key={status.uid} className="capitalize">
                       {capitalize(status.name)}
                     </DropdownItem>
@@ -257,14 +258,14 @@ export default function AppointmentTable() {
                   selectionMode="multiple"
                   onSelectionChange={setVisibleColumns}
                 >
-                  {columns.map((column:any) => (
+                  {columns.map((column: any) => (
                     <DropdownItem key={column.uid} className="capitalize">
                       {capitalize(column.name)}
                     </DropdownItem>
                   ))}
                 </DropdownMenu>
               </Dropdown>
-              <OpaqueDefaultModel child="" headingName=""/>
+              <OpaqueDefaultModel child="" headingName="" />
             </div>
           </div>
           <div className="flex justify-between items-center">
@@ -333,7 +334,7 @@ export default function AppointmentTable() {
         onSelectionChange={setSelectedKeys}
       >
         <TableHeader columns={headerColumns}>
-          {(column:any) => (
+          {(column: any) => (
             <TableColumn key={column.uid} allowsSorting={column.uid === "age"}>
               {column.name}
             </TableColumn>
@@ -359,8 +360,8 @@ export default function AppointmentTable() {
           }}
           actionButtonName={"Ok"}
           modalTitle={"Appointment"}
-          onPatientDelete ={ () => {}}
-          userId ={""} 
+          onPatientDelete={() => {}}
+          userId={""}
         />
       )}
     </>

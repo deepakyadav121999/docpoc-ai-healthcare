@@ -31,10 +31,7 @@ const ManagePage = () => {
 
 export default ManagePage;
 
-
 // "use client";
-
-
 
 // import React, { useState, useEffect, useCallback } from "react";
 // import { Metadata } from "next";
@@ -48,7 +45,6 @@ export default ManagePage;
 // import axios from "axios";
 // import { useSelector } from "react-redux";
 // import { RootState } from "@/store";
-
 
 // // export const metadata: Metadata = {
 // //   title: "DocPOC.",
@@ -70,9 +66,8 @@ export default ManagePage;
 //     setLoading(true);
 //     try {
 //       const token = localStorage.getItem("docPocAuth_token");
-    
-//       const fetchedBranchId = profile?.branchId;
 
+//       const fetchedBranchId = profile?.branchId;
 
 //       const endpoint = `${process.env.API_URL}/appointment/list/${fetchedBranchId}`;
 

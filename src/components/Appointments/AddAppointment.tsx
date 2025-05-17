@@ -10,7 +10,7 @@ import {
   Textarea,
   TimeInput,
 } from "@nextui-org/react";
-import { useState } from "react";
+// import { useState } from "react";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
@@ -19,7 +19,8 @@ import { IndianStatesList } from "@/constants/IndiaStates";
 // import { medicalDepartments } from "@/constants/MedicalDepartments";
 
 const AddAppointment = () => {
-  const [edit, setEdit] = useState(true);
+  // const [edit, setEdit] = useState(true);
+  const edit = true;
   // const [workingDays] = useState([
   //   "monday",
   //   "tuesday",

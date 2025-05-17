@@ -1,12 +1,23 @@
 import React, { useMemo, useState } from "react";
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Pagination } from "@nextui-org/react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+  Pagination,
+} from "@nextui-org/react";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 
 interface DocumentListProps {
   documents: Record<string, string>; // Assuming documents is an object with key-value pairs
 }
 const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
-  const documentEntries = useMemo(() => Object.entries(documents || {}), [documents]);
+  const documentEntries = useMemo(
+    () => Object.entries(documents || {}),
+    [documents],
+  );
   const [page, setPage] = useState<number>(1);
   const rowsPerPage = 3; // Set the number of documents per page
 
@@ -27,7 +38,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   }
 
   return (
-    <div className="flex w-full justify-center px-2 sm:px-4" style={{ marginBottom: 5 }}>
+    <div
+      className="flex w-full justify-center px-2 sm:px-4"
+      style={{ marginBottom: 5 }}
+    >
       <Table
         aria-label="Documents table with pagination"
         bottomContent={

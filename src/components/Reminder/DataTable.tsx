@@ -32,20 +32,24 @@ const INITIAL_VISIBLE_COLUMNS = [
 type User = (typeof users)[0];
 
 export default function DataTable() {
-  const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([]),
-  );
-  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
+  const [filterValue] = React.useState("");
+  // const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
+  //   new Set([]),
+  // );
+  const [visibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
-  const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  // const visibleColumns =   new Set(INITIAL_VISIBLE_COLUMNS)
+  // const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
+  const statusFilter = "all";
+  // const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const rowsPerPage = 5;
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
-  const [page, setPage] = React.useState(1);
+  // const [page, setPage] = React.useState(1);
+  const page = 1;
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -140,7 +144,7 @@ export default function DataTable() {
           wrapper: "max-h-[482px] ",
         }}
         sortDescriptor={sortDescriptor}
-        onSelectionChange={setSelectedKeys}
+        // onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
         style={{ backgroundColor: "var(--calendar-background-color)" }}
       >
