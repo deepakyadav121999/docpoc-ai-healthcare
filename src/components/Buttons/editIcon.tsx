@@ -1,7 +1,7 @@
 import React from "react";
 
 export const EditIcon = ({
-  fill = "currentColor",
+  // fill = "currentColor",
   size = 24,
   height = 24,
   width = 24,

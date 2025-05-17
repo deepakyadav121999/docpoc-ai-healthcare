@@ -46,7 +46,10 @@ const ManageCredit = () => {
           <div style={{ minWidth: 200, marginTop: "5%" }}>
             <CardBlurred
               label="Whats App"
-              img={{ url: `${AWS_URL}/docpoc-images/whatsapp.png`, paddingTop: 20 }}
+              img={{
+                url: `${AWS_URL}/docpoc-images/whatsapp.png`,
+                paddingTop: 20,
+              }}
             />
           </div>
           <div className="flex-grow md:ml-5">

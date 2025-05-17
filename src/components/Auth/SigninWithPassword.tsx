@@ -10,12 +10,12 @@ import { useDisclosure } from "@nextui-org/react";
 const API_URL = process.env.API_URL;
 
 interface SignInProps {
-  setAuthPage: () => void;
+  // setAuthPage: () => void;
   onLogin: (token: string) => void;
 }
 
 const SigninWithPassword: React.FC<SignInProps> = ({
-  setAuthPage,
+  // setAuthPage,
   onLogin,
 }) => {
   const router = useRouter();
@@ -92,7 +92,7 @@ const SigninWithPassword: React.FC<SignInProps> = ({
       if (access_token) {
         onLogin(access_token);
         localStorage.setItem("docPocAuth_token", access_token);
-         await fetchProfile(access_token);
+        await fetchProfile(access_token);
         router.push("/");
         // window.location.reload();
       } else {
@@ -126,12 +126,8 @@ const SigninWithPassword: React.FC<SignInProps> = ({
       //   `${API_URL}/auth/otp/generate`,
       //   payload,
       // );
-     await axios.post(
-        `${API_URL}/auth/otp/generate`,
-        payload,
-      );
-       
-       
+      await axios.post(`${API_URL}/auth/otp/generate`, payload);
+
       setTimer(timerCount);
       setIsOtpFieldVisible(true);
     } catch (err) {
@@ -296,9 +292,14 @@ const SigninWithPassword: React.FC<SignInProps> = ({
                     checked={showPassword}
                     onChange={(e) => {
                       setShowPassword(e.target.checked);
-                      showPassword == false
-                        ? setPasswordBoxType("text")
-                        : setPasswordBoxType("password");
+                      // showPassword == false
+                      //   ? setPasswordBoxType("text")
+                      //   : setPasswordBoxType("password");
+                      if (showPassword === false) {
+                        setPasswordBoxType("text");
+                      } else {
+                        setPasswordBoxType("password");
+                      }
                     }}
                   />
                   <label

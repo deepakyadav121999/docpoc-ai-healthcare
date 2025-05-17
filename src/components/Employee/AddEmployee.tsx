@@ -2,26 +2,26 @@
 import {
   Checkbox,
   Input,
-  Textarea,
+  // Textarea,
   Autocomplete,
   AutocompleteItem,
-  Spinner,
+  // Spinner,
   TimeInput,
 } from "@nextui-org/react";
 import { useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { useDisclosure } from "@nextui-org/react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-} from "@nextui-org/react";
+// import {
+//   Modal,
+//   ModalContent,
+//   ModalHeader,
+//   ModalBody,
+//   ModalFooter,
+//   Button,
+// } from "@nextui-org/react";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
-import { Time } from "@internationalized/date";
+// import { Time } from "@internationalized/date";
 import { useEffect } from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
@@ -33,7 +33,8 @@ interface AddUsersProps {
 const API_URL = process.env.API_URL;
 const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const profile = useSelector((state: RootState) => state.profile.data);
-  const [edit, setEdit] = useState(true);
+  // const [edit, setEdit] = useState(true);
+  const edit = true;
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -49,7 +50,8 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     gender: "",
   });
 
-  const [errors, setErrors] = useState<string[]>([]);
+  // const [errors, setErrors] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [accessTypes, setAccessTypes] = useState({
     setAppointments: false,
@@ -93,12 +95,12 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     });
   };
 
-  const convertTo12HourFormat = (time: string): string => {
-    const [hours, minutes] = time.split(":").map(Number);
-    const period = hours >= 12 ? "PM" : "AM";
-    const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
-    return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-  };
+  // const convertTo12HourFormat = (time: string): string => {
+  //   const [hours, minutes] = time.split(":").map(Number);
+  //   const period = hours >= 12 ? "PM" : "AM";
+  //   const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
+  //   return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  // };
 
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number);
@@ -110,11 +112,13 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     let newWorkingHours = "";
     if (key === "start") {
-      newWorkingHours = `${formattedTime} - ${updatedWorkingHours.split(" - ")[1] || ""
-        }`;
+      newWorkingHours = `${formattedTime} - ${
+        updatedWorkingHours.split(" - ")[1] || ""
+      }`;
     } else {
-      newWorkingHours = `${updatedWorkingHours.split(" - ")[0] || ""
-        } - ${formattedTime}`;
+      newWorkingHours = `${
+        updatedWorkingHours.split(" - ")[0] || ""
+      } - ${formattedTime}`;
     }
 
     handleJsonUpdate("workingHours", newWorkingHours);
@@ -165,8 +169,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       return;
     }
     try {
-      const token = localStorage.getItem("docPocAuth_token");
-
+      // const token = localStorage.getItem("docPocAuth_token");
 
       const fetchedBranchId = profile?.branchId;
 
@@ -176,7 +179,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         accessType: JSON.stringify(accessTypes),
       };
 
-      const response = await axios.post(`${API_URL}/user`, payload, {
+      await axios.post(`${API_URL}/user`, payload, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -211,7 +214,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         // Extract and display the error message from the response
         const apiErrorMessage =
           error.response.data.message &&
-            Array.isArray(error.response.data.message)
+          Array.isArray(error.response.data.message)
             ? error.response.data.message[0].message
             : error.response.data.message || "Unknown error occurred";
 
@@ -368,7 +371,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  onBlur={(e) => { }}
+                  onBlur={() => {}}
                   isDisabled={!edit}
                 />
               </div>
@@ -402,7 +405,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   isDisabled={!edit}
                   color={TOOL_TIP_COLORS.secondary}
                 >
-                  {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
+                  {(item) => (
+                    <AutocompleteItem key={item.label}>
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
                 </Autocomplete>
               </div>
 
@@ -417,7 +424,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, userName: e.target.value })
                   }
-                  onBlur={(e) => { }}
+                  onBlur={() => {}}
                   isDisabled={!edit}
                 />
               </div>
@@ -491,13 +498,13 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   </Checkbox>
                 </div>
               </div>
-              {errors.length > 0 && (
+              {/* {errors.length > 0 && (
                 <div className="text-red-500 mt-4">
                   {errors.map((error, index) => (
                     <p key={index}>{error}</p>
                   ))}
                 </div>
-              )}
+              )} */}
             </div>
 
             <div className="flex justify-center mt-4">

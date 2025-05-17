@@ -55,7 +55,6 @@
 //     try {
 //       const token = localStorage.getItem("docPocAuth_token");
 
-     
 //       const fetchedBranchId = profile?.branchId;
 
 //       setBranchId(fetchedBranchId);
@@ -342,7 +341,7 @@
 import React, { useEffect, useState } from "react";
 import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
 import ChartLine from "../Charts/ChartLine";
-import { Spacer } from "@nextui-org/react";
+
 import DataStatsDefault from "../DataStats/DataStatsDefault";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
@@ -365,7 +364,7 @@ export default function App() {
   const profile = useSelector((state: RootState) => state.profile.data);
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
   const [loading, setLoading] = useState(true);
-  const [branchId, setBranchId] = useState<string | undefined>();
+
   const [chartData, setChartData] = useState<{
     series: { name: string; data: number[] }[];
     categories: string[];
@@ -382,20 +381,22 @@ export default function App() {
     const now = new Date();
     const targetDate = new Date(now);
     targetDate.setMonth(now.getMonth() - monthsBack);
-    
+
     // Set to first day of the month
     const from = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
     // Set to last day of the month
     const to = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
-    
+
     return {
       from: from.toISOString(),
       to: to.toISOString(),
-      monthName: from.toLocaleString('default', { month: 'short' })
+      monthName: from.toLocaleString("default", { month: "short" }),
     };
   };
 
-  const countUsersByType = (users: any[]): { doctors: number; nurses: number; staff: number } => {
+  const countUsersByType = (
+    users: any[],
+  ): { doctors: number; nurses: number; staff: number } => {
     let doctorCount = 0;
     let nurseCount = 0;
     let staffCount = 0;
@@ -424,7 +425,6 @@ export default function App() {
     try {
       const token = localStorage.getItem("docPocAuth_token");
       const fetchedBranchId = profile?.branchId;
-      setBranchId(fetchedBranchId);
 
       if (!fetchedBranchId) {
         throw new Error("Branch ID not available");
@@ -454,7 +454,7 @@ export default function App() {
 
   const loadData = async () => {
     setLoading(true);
-    
+
     try {
       // Fetch current users
       const currentUsers = await fetchUsers();
@@ -464,35 +464,50 @@ export default function App() {
       const prevMonthRange = getDateRangeForMonth(1);
       const prevMonthUsers = await fetchUsers({
         from: prevMonthRange.from,
-        to: prevMonthRange.to
+        to: prevMonthRange.to,
       });
       const prevMonthCounts = countUsersByType(prevMonthUsers);
 
       // Calculate growth rates
       const growthRates = {
-        doctors: calculateGrowth(currentCounts.doctors, prevMonthCounts.doctors),
+        doctors: calculateGrowth(
+          currentCounts.doctors,
+          prevMonthCounts.doctors,
+        ),
         nurses: calculateGrowth(currentCounts.nurses, prevMonthCounts.nurses),
-        staff: calculateGrowth(currentCounts.staff, prevMonthCounts.staff)
+        staff: calculateGrowth(currentCounts.staff, prevMonthCounts.staff),
       };
 
       // Prepare stats cards
       setDataStatsList([
         {
-          icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider
+              iconName="doctor"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
           color: "#4b9c78",
           title: "new doctors (since last month)",
           value: `Total Doctors: ${currentCounts.doctors}`,
           growthRate: growthRates.doctors,
         },
         {
-          icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider
+              iconName="employee"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
           color: "#FF9C55",
           title: "new employees (since last month)",
           value: `Total Staff: ${currentCounts.staff}`,
           growthRate: growthRates.staff,
         },
         {
-          icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+          ),
           color: "#8155FF",
           title: "new nurses (since last month)",
           value: `Total Nurses: ${currentCounts.nurses}`,
@@ -511,13 +526,13 @@ export default function App() {
         const range = getDateRangeForMonth(i);
         const users = await fetchUsers({
           from: range.from,
-          to: range.to
+          to: range.to,
         });
         const counts = countUsersByType(users);
-        
+
         monthlyData.push({
           month: range.monthName,
-          ...counts
+          ...counts,
         });
         chartCategories.push(range.monthName);
         doctorData.push(counts.doctors);
@@ -534,26 +549,37 @@ export default function App() {
         ],
         categories: chartCategories,
       });
-
     } catch (error) {
       console.error("Error loading data:", error);
       setDataStatsList([
         {
-          icon: <SVGIconProvider iconName="doctor" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider
+              iconName="doctor"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
           color: "#4b9c78",
           title: "new doctors (since last month)",
           value: "Total Doctors: 0",
           growthRate: 0,
         },
         {
-          icon: <SVGIconProvider iconName="employee" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider
+              iconName="employee"
+              color={GLOBAL_ICON_COLOR_WHITE}
+            />
+          ),
           color: "#FF9C55",
           title: "new employees (since last month)",
           value: "Total Staff: 0",
           growthRate: 0,
         },
         {
-          icon: <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />,
+          icon: (
+            <SVGIconProvider iconName="nurse" color={GLOBAL_ICON_COLOR_WHITE} />
+          ),
           color: "#8155FF",
           title: "new nurses (since last month)",
           value: "Total Nurses: 0",

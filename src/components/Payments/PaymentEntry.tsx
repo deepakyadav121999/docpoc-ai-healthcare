@@ -13,26 +13,18 @@
 import {
   Button,
   Input,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  RadioGroup,
-  Radio,
   Modal,
   ModalHeader,
   ModalBody,
   ModalFooter,
   ModalContent,
   Spinner,
-  Checkbox,
   Autocomplete,
   AutocompleteItem,
   useDisclosure,
-  Switch,
   Select,
   SelectItem,
-  Textarea
+  Textarea,
 } from "@nextui-org/react";
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
@@ -73,7 +65,7 @@ interface Doctor {
 interface PaymentItem {
   description: string;
   amount: number;
-  rate: number; 
+  rate: number;
   quantity: number;
 }
 
@@ -84,11 +76,17 @@ const PaymentEntry = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // Form state
-  const [paymentMode, setPaymentMode] = useState<"appointment" | "manual">("appointment");
-  const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<"appointment" | "manual">(
+    "appointment",
+  );
+  const [selectedAppointment, setSelectedAppointment] = useState<string | null>(
+    null,
+  );
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
-  const [paymentItems, setPaymentItems] = useState<PaymentItem[]>([{ description: "", amount: 0, rate:0,  quantity: 1 }]);
+  const [paymentItems, setPaymentItems] = useState<PaymentItem[]>([
+    { description: "", amount: 0, rate: 0, quantity: 1 },
+  ]);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [paymentNotes, setPaymentNotes] = useState<string>("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
@@ -110,30 +108,46 @@ const PaymentEntry = () => {
     dob: "",
     age: 0,
     gender: "",
-    address: ""
+    address: "",
   });
 
   // Data fetching state
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [appointmentPage, setAppointmentPage] = useState(1);
-  const [patientPage, setPatientPage] = useState(1);
-  const [doctorPage, setDoctorPage] = useState(1);
-  const [hasMoreAppointments, setHasMoreAppointments] = useState(true);
-  const [hasMorePatients, setHasMorePatients] = useState(true);
-  const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
+  // const [appointmentPage, setAppointmentPage] = useState(1);
+  // const [patientPage, setPatientPage] = useState(1);
+  // const [doctorPage, setDoctorPage] = useState(1);
+  // const [hasMoreAppointments, setHasMoreAppointments] = useState(true);
+  // const [hasMorePatients, setHasMorePatients] = useState(true);
+  // const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
 
   // Constants
-  const paymentMethods = ["cash", "credit card", "debit card", "bank transfer", "upi", "other"];
-  const serviceTypes = ["consultation", "procedure", "medication", "test", "other"];
+  const paymentMethods = [
+    "cash",
+    "credit card",
+    "debit card",
+    "bank transfer",
+    "upi",
+    "other",
+  ];
+  // const serviceTypes = [
+  //   "consultation",
+  //   "procedure",
+  //   "medication",
+  //   "test",
+  //   "other",
+  // ];
 
   const getAuthToken = () => {
     return localStorage.getItem("docPocAuth_token") || "";
   };
 
   // Calculate totals
-  const subtotal = paymentItems.reduce((sum, item) => sum + (item.amount * item.quantity), 0);
+  const subtotal = paymentItems.reduce(
+    (sum, item) => sum + item.amount * item.quantity,
+    0,
+  );
   const total = subtotal - discountAmount + taxAmount;
 
   // Data fetching functions
@@ -149,7 +163,7 @@ const PaymentEntry = () => {
             accept: "*/*",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -162,7 +176,7 @@ const PaymentEntry = () => {
       } else {
         setAppointments((prev) => [...prev, ...data.rows]);
       }
-      setHasMoreAppointments(data.rows.length === 10);
+      // setHasMoreAppointments(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching appointments:", error);
     } finally {
@@ -182,7 +196,7 @@ const PaymentEntry = () => {
             accept: "*/*",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -195,7 +209,7 @@ const PaymentEntry = () => {
       } else {
         setPatients((prev) => [...prev, ...data.rows]);
       }
-      setHasMorePatients(data.rows.length === 10);
+      // setHasMorePatients(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching patients:", error);
     } finally {
@@ -207,15 +221,12 @@ const PaymentEntry = () => {
     try {
       setIsLoading(true);
       const token = getAuthToken();
-      const response = await fetch(
-        `${BASE_URL}/patient/${patientId}`,
-        {
-          headers: {
-            accept: "*/*",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/patient/${patientId}`, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch patient details");
@@ -247,7 +258,7 @@ const PaymentEntry = () => {
             accept: "*/*",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -260,7 +271,7 @@ const PaymentEntry = () => {
       } else {
         setDoctors((prev) => [...prev, ...data.rows]);
       }
-      setHasMoreDoctors(data.rows.length === 10);
+      // setHasMoreDoctors(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching doctors:", error);
     } finally {
@@ -276,27 +287,30 @@ const PaymentEntry = () => {
 
   // Form handlers
   const addPaymentItem = () => {
-    setPaymentItems([...paymentItems, { description: "", amount: 0, quantity: 1,rate:0 }]);
+    setPaymentItems([
+      ...paymentItems,
+      { description: "", amount: 0, quantity: 1, rate: 0 },
+    ]);
   };
 
   const updatePaymentItem = (
     index: number,
     field: keyof PaymentItem,
-    value: PaymentItem[keyof PaymentItem]
+    value: PaymentItem[keyof PaymentItem],
   ) => {
-    setPaymentItems(prev => {
+    setPaymentItems((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
         [field]: value,
-           ...(field === 'amount' ? { rate: Number(value) } : {})
+        ...(field === "amount" ? { rate: Number(value) } : {}),
       };
       return updated;
     });
   };
 
   const removePaymentItem = (index: number) => {
-    setPaymentItems(prev => prev.filter((_, i) => i !== index));
+    setPaymentItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const openPreviewModal = async () => {
@@ -310,16 +324,17 @@ const PaymentEntry = () => {
     setIsPreviewModalOpen(false);
   };
 
-
   const paymentMethodMapping = {
-    "cash": "CASH",
+    cash: "CASH",
     "credit card": "CARD",
     "debit card": "CARD",
     "bank transfer": "NET_BANKING",
-    "upi": "UPI",
-    "other": "OTHER"
+    upi: "UPI",
+    other: "OTHER",
   };
-  const backendPaymentMethod = paymentMethodMapping[paymentMethod as keyof typeof paymentMethodMapping] || "OTHER";
+  const backendPaymentMethod =
+    paymentMethodMapping[paymentMethod as keyof typeof paymentMethodMapping] ||
+    "OTHER";
 
   const handleSavePayment = async () => {
     try {
@@ -330,16 +345,17 @@ const PaymentEntry = () => {
       if (!selectedPatient) {
         setModalMessage({
           success: "",
-          error: "Please select a patient"
+          error: "Please select a patient",
         });
         onOpen();
         return;
       }
 
-      if (paymentItems.some(item => !item.description || item.amount <= 0)) {
+      if (paymentItems.some((item) => !item.description || item.amount <= 0)) {
         setModalMessage({
           success: "",
-          error: "Please ensure all payment items have a description and positive amount"
+          error:
+            "Please ensure all payment items have a description and positive amount",
         });
         onOpen();
         return;
@@ -350,12 +366,12 @@ const PaymentEntry = () => {
         branchId: profile?.branchId,
         appointmentId: selectedAppointment,
         doctorId: selectedDoctor,
-       paymentMethod: backendPaymentMethod, 
-         items: paymentItems,
+        paymentMethod: backendPaymentMethod,
+        items: paymentItems,
         subtotal,
         discount: discountAmount,
         tax: taxAmount,
-        amount:total,
+        amount: total,
         notes: paymentNotes,
         paymentDate: new Date().toISOString(),
       };
@@ -375,22 +391,19 @@ const PaymentEntry = () => {
 
       const result = await response.json();
 
-let receiptUrl = "";
-    try {
-      const receiptData = JSON.parse(result.receiptUrl || "{}");
-      receiptUrl = receiptData.url;
-    } catch (e) {
-      console.error("Error parsing receipt URL:", e);
-    }
+      let receiptUrl = "";
+      try {
+        const receiptData = JSON.parse(result.receiptUrl || "{}");
+        receiptUrl = receiptData.url;
+      } catch (e) {
+        console.error("Error parsing receipt URL:", e);
+      }
 
-      
-
-
-      window.open(receiptUrl, '_blank');
+      window.open(receiptUrl, "_blank");
 
       setModalMessage({
         success: "Payment recorded successfully!",
-        error: ""
+        error: "",
       });
       onOpen();
       closePreviewModal();
@@ -398,7 +411,7 @@ let receiptUrl = "";
       console.error("Error saving payment:", error);
       setModalMessage({
         success: "",
-        error: "Error saving payment. Please try again."
+        error: "Error saving payment. Please try again.",
       });
       onOpen();
     } finally {
@@ -413,46 +426,46 @@ let receiptUrl = "";
   };
 
   // Data for dropdowns/autocomplete
-  const appointmentItems = appointments.map(appointment => ({
+  const appointmentItems = appointments.map((appointment) => ({
     id: appointment.id,
-    label: `${appointment.name} with ${appointment.doctorName} on ${new Date(appointment.dateTime).toLocaleDateString()}`
+    label: `${appointment.name} with ${appointment.doctorName} on ${new Date(appointment.dateTime).toLocaleDateString()}`,
   }));
 
-  const patientItems = patients.map(patient => ({
+  const patientItems = patients.map((patient) => ({
     id: patient.id,
-    label: patient.name
+    label: patient.name,
   }));
 
-  const doctorItems = doctors.map(doctor => ({
+  const doctorItems = doctors.map((doctor) => ({
     id: doctor.id,
-    label: doctor.name
+    label: doctor.name,
   }));
 
-  const paymentMethodItems = paymentMethods.map(method => ({
+  const paymentMethodItems = paymentMethods.map((method) => ({
     id: method,
-    label: method.charAt(0).toUpperCase() + method.slice(1)
+    label: method.charAt(0).toUpperCase() + method.slice(1),
   }));
 
-  const serviceTypeItems = serviceTypes.map(type => ({
-    id: type,
-    label: type.charAt(0).toUpperCase() + type.slice(1)
-  }));
+  // const serviceTypeItems = serviceTypes.map((type) => ({
+  //   id: type,
+  //   label: type.charAt(0).toUpperCase() + type.slice(1),
+  // }));
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      return isNaN(date.getTime())
-        ? dateString
-        : date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-    } catch {
-      return dateString;
-    }
-  };
+  // const formatDate = (dateString: string) => {
+  //   if (!dateString) return "N/A";
+  //   try {
+  //     const date = new Date(dateString);
+  //     return isNaN(date.getTime())
+  //       ? dateString
+  //       : date.toLocaleDateString("en-US", {
+  //           year: "numeric",
+  //           month: "long",
+  //           day: "numeric",
+  //         });
+  //   } catch {
+  //     return dateString;
+  //   }
+  // };
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -468,7 +481,9 @@ let receiptUrl = "";
   return (
     <div className="min-h-screen p-4 md:p-8 text-black dark:text-white">
       <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
-        <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">Payment Entry Form</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">
+          Payment Entry Form
+        </h1>
 
         {/* Mode selection */}
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
@@ -476,12 +491,15 @@ let receiptUrl = "";
             style={{
               margin: 5,
               backgroundColor:
-                paymentMode === "appointment" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
+                paymentMode === "appointment"
+                  ? GLOBAL_TAB_NAVIGATOR_ACTIVE
+                  : "",
             }}
-            className={`rounded-[7px] py-2 px-4 ${paymentMode === "appointment"
-              ? ""
-              : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
-              }`}
+            className={`rounded-[7px] py-2 px-4 ${
+              paymentMode === "appointment"
+                ? ""
+                : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
+            }`}
             onPress={() => setPaymentMode("appointment")}
           >
             Payment for Appointment
@@ -492,10 +510,11 @@ let receiptUrl = "";
               backgroundColor:
                 paymentMode === "manual" ? GLOBAL_TAB_NAVIGATOR_ACTIVE : "",
             }}
-            className={`rounded-[7px] py-2 px-4 ${paymentMode === "manual"
-              ? ""
-              : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
-              }`}
+            className={`rounded-[7px] py-2 px-4 ${
+              paymentMode === "manual"
+                ? ""
+                : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700"
+            }`}
             onPress={() => setPaymentMode("manual")}
           >
             Manual Payment Entry
@@ -517,7 +536,7 @@ let receiptUrl = "";
                 defaultItems={appointmentItems}
                 selectedKey={selectedAppointment || ""}
                 onSelectionChange={async (key) => {
-                  const appointment = appointments.find(a => a.id === key);
+                  const appointment = appointments.find((a) => a.id === key);
                   if (appointment) {
                     setSelectedAppointment(key as string);
                     setSelectedPatient(appointment.patientId);
@@ -610,9 +629,14 @@ let receiptUrl = "";
 
         {/* Payment Items */}
         <div>
-          <label className="block text-sm font-medium text-dark dark:text-white">Payment Items</label>
+          <label className="block text-sm font-medium text-dark dark:text-white">
+            Payment Items
+          </label>
           {paymentItems.map((item, index) => (
-            <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center mt-2">
+            <div
+              key={index}
+              className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center mt-2"
+            >
               <div className="sm:col-span-5">
                 <Input
                   type="text"
@@ -622,7 +646,9 @@ let receiptUrl = "";
                   labelPlacement="outside"
                   placeholder="Service description"
                   value={item.description}
-                  onChange={(e) => updatePaymentItem(index, "description", e.target.value)}
+                  onChange={(e) =>
+                    updatePaymentItem(index, "description", e.target.value)
+                  }
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
@@ -637,7 +663,13 @@ let receiptUrl = "";
                   placeholder="Qty"
                   min="1"
                   value={item.quantity.toString()}
-                  onChange={(e) => updatePaymentItem(index, "quantity", parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    updatePaymentItem(
+                      index,
+                      "quantity",
+                      parseInt(e.target.value) || 1,
+                    )
+                  }
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
@@ -652,7 +684,13 @@ let receiptUrl = "";
                   placeholder="Amount"
                   min="0"
                   value={item.amount.toString()}
-                  onChange={(e) => updatePaymentItem(index, "amount", parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    updatePaymentItem(
+                      index,
+                      "amount",
+                      parseFloat(e.target.value) || 0,
+                    )
+                  }
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
@@ -671,7 +709,11 @@ let receiptUrl = "";
               </div>
             </div>
           ))}
-          <Button onPress={addPaymentItem} className="mt-4" color={TOOL_TIP_COLORS.secondary}>
+          <Button
+            onPress={addPaymentItem}
+            className="mt-4"
+            color={TOOL_TIP_COLORS.secondary}
+          >
             + Add Payment Item
           </Button>
         </div>
@@ -690,7 +732,9 @@ let receiptUrl = "";
                 placeholder="Discount amount"
                 min="0"
                 value={discountAmount.toString()}
-                onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  setDiscountAmount(parseFloat(e.target.value) || 0)
+                }
                 className="w-full"
               />
             </div>
@@ -764,78 +808,155 @@ let receiptUrl = "";
             {(onClose) => (
               <>
                 <ModalHeader className="flex flex-col gap-1">
-                  <h1 className="text-xl md:text-2xl font-bold">Payment Preview</h1>
+                  <h1 className="text-xl md:text-2xl font-bold">
+                    Payment Preview
+                  </h1>
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-6 text-left p-4 bg-white dark:bg-gray-800 rounded-lg">
                     <div className="border-b pb-4">
-                      <h2 className="text-lg md:text-xl font-semibold">Payment Details</h2>
+                      <h2 className="text-lg md:text-xl font-semibold">
+                        Payment Details
+                      </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                         <div>
                           <p className="text-sm text-gray-500">Payment ID</p>
-                          <p className="font-medium">PAY-{new Date().getFullYear()}-{(new Date().getMonth() + 1).toString().padStart(2, '0')}-{Math.floor(Math.random() * 1000).toString().padStart(3, '0')}</p>
+                          <p className="font-medium">
+                            PAY-{new Date().getFullYear()}-
+                            {(new Date().getMonth() + 1)
+                              .toString()
+                              .padStart(2, "0")}
+                            -
+                            {Math.floor(Math.random() * 1000)
+                              .toString()
+                              .padStart(3, "0")}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Patient</p>
-                          <p className="font-medium">{patientDetails.name || "N/A"}</p>
+                          <p className="font-medium">
+                            {patientDetails.name || "N/A"}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Patient ID</p>
-                          <p className="font-medium">{patientDetails.id ? `${patientDetails.id}` : "N/A"}</p>
+                          <p className="font-medium">
+                            {patientDetails.id ? `${patientDetails.id}` : "N/A"}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Date</p>
-                          <p className="font-medium">{new Date().toLocaleDateString()}</p>
+                          <p className="font-medium">
+                            {new Date().toLocaleDateString()}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Payment Method</p>
-                          <p className="font-medium">{paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</p>
+                          <p className="text-sm text-gray-500">
+                            Payment Method
+                          </p>
+                          <p className="font-medium">
+                            {paymentMethod.charAt(0).toUpperCase() +
+                              paymentMethod.slice(1)}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Attending Doctor</p>
-                          <p className="font-medium">{selectedDoctor ? doctors.find(d => d.id === selectedDoctor)?.name || "N/A" : "N/A"}</p>
+                          <p className="text-sm text-gray-500">
+                            Attending Doctor
+                          </p>
+                          <p className="font-medium">
+                            {selectedDoctor
+                              ? doctors.find((d) => d.id === selectedDoctor)
+                                  ?.name || "N/A"
+                              : "N/A"}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h2 className="text-lg md:text-xl font-semibold mb-2">Payment Items</h2>
+                      <h2 className="text-lg md:text-xl font-semibold mb-2">
+                        Payment Items
+                      </h2>
                       <div className="overflow-x-auto">
                         <table className="min-w-full border">
                           <thead>
                             <tr className="bg-gray-100 dark:bg-gray-700">
-                              <th className="border px-4 py-2 text-left">Description</th>
-                              <th className="border px-4 py-2 text-center">Quantity</th>
-                              <th className="border px-4 py-2 text-right">Amount</th>
-                              <th className="border px-4 py-2 text-right">Total</th>
+                              <th className="border px-4 py-2 text-left">
+                                Description
+                              </th>
+                              <th className="border px-4 py-2 text-center">
+                                Quantity
+                              </th>
+                              <th className="border px-4 py-2 text-right">
+                                Amount
+                              </th>
+                              <th className="border px-4 py-2 text-right">
+                                Total
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
                             {paymentItems.map((item, index) => (
                               <tr key={index}>
-                                <td className="border px-4 py-2">{item.description || "N/A"}</td>
-                                <td className="border px-4 py-2 text-center">{item.quantity}</td>
-                                <td className="border px-4 py-2 text-right">₹{item.amount.toFixed(2)}</td>
-                                <td className="border px-4 py-2 text-right">₹{(item.amount * item.quantity).toFixed(2)}</td>
+                                <td className="border px-4 py-2">
+                                  {item.description || "N/A"}
+                                </td>
+                                <td className="border px-4 py-2 text-center">
+                                  {item.quantity}
+                                </td>
+                                <td className="border px-4 py-2 text-right">
+                                  ₹{item.amount.toFixed(2)}
+                                </td>
+                                <td className="border px-4 py-2 text-right">
+                                  ₹{(item.amount * item.quantity).toFixed(2)}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr>
-                              <td className="border px-4 py-2 text-right font-bold" colSpan={3}>Subtotal:</td>
-                              <td className="border px-4 py-2 text-right font-bold">₹{subtotal.toFixed(2)}</td>
+                              <td
+                                className="border px-4 py-2 text-right font-bold"
+                                colSpan={3}
+                              >
+                                Subtotal:
+                              </td>
+                              <td className="border px-4 py-2 text-right font-bold">
+                                ₹{subtotal.toFixed(2)}
+                              </td>
                             </tr>
                             <tr>
-                              <td className="border px-4 py-2 text-right font-bold" colSpan={3}>Discount:</td>
-                              <td className="border px-4 py-2 text-right font-bold">-₹{discountAmount.toFixed(2)}</td>
+                              <td
+                                className="border px-4 py-2 text-right font-bold"
+                                colSpan={3}
+                              >
+                                Discount:
+                              </td>
+                              <td className="border px-4 py-2 text-right font-bold">
+                                -₹{discountAmount.toFixed(2)}
+                              </td>
                             </tr>
                             <tr>
-                              <td className="border px-4 py-2 text-right font-bold" colSpan={3}>Tax:</td>
-                              <td className="border px-4 py-2 text-right font-bold">₹{taxAmount.toFixed(2)}</td>
+                              <td
+                                className="border px-4 py-2 text-right font-bold"
+                                colSpan={3}
+                              >
+                                Tax:
+                              </td>
+                              <td className="border px-4 py-2 text-right font-bold">
+                                ₹{taxAmount.toFixed(2)}
+                              </td>
                             </tr>
                             <tr>
-                              <td className="border px-4 py-2 text-right font-bold" colSpan={3}>Total:</td>
-                              <td className="border px-4 py-2 text-right font-bold">₹{total.toFixed(2)}</td>
+                              <td
+                                className="border px-4 py-2 text-right font-bold"
+                                colSpan={3}
+                              >
+                                Total:
+                              </td>
+                              <td className="border px-4 py-2 text-right font-bold">
+                                ₹{total.toFixed(2)}
+                              </td>
                             </tr>
                           </tfoot>
                         </table>
@@ -844,7 +965,9 @@ let receiptUrl = "";
 
                     {paymentNotes && (
                       <div className="mb-6">
-                        <h3 className="text-base md:text-lg font-medium mb-2">Payment Notes</h3>
+                        <h3 className="text-base md:text-lg font-medium mb-2">
+                          Payment Notes
+                        </h3>
                         <div className="p-3">
                           <p className="whitespace-pre-line text-sm md:text-base break-words overflow-auto max-h-40">
                             {paymentNotes}
@@ -854,7 +977,9 @@ let receiptUrl = "";
                     )}
 
                     <div className="flex justify-between items-center border-t pt-4">
-                      <span className="text-sm italic">Payment recorded by: {profile?.name || "N/A"}</span>
+                      <span className="text-sm italic">
+                        Payment recorded by: {profile?.name || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </ModalBody>
@@ -865,7 +990,11 @@ let receiptUrl = "";
                     onPress={handleSavePayment}
                   >
                     {`${savePaymentLoading ? `Processing Payment... ` : "Save Payment"}`}
-                    <p>{savePaymentLoading && <Spinner size="sm" color="white" />}</p>
+                    <p>
+                      {savePaymentLoading && (
+                        <Spinner size="sm" color="white" />
+                      )}
+                    </p>
                   </Button>
                   <Button
                     color={TOOL_TIP_COLORS.secondary}

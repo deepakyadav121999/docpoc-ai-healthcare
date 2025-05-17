@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export const WeekView: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate] = useState<Date>(new Date());
   const appointments = [
     { date: new Date(2023, 5, 15, 10, 0), title: "Doctor Appointment" },
     { date: new Date(2023, 5, 16, 14, 30), title: "Team Meeting" },

@@ -1,5 +1,5 @@
 import React from "react";
-import { Spacer, Card } from "@nextui-org/react";
+// import { Spacer, Card } from "@nextui-org/react";
 
 const CustomCard = () => {
   return (

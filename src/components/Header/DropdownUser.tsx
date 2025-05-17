@@ -4,7 +4,7 @@ import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
 import { Spinner } from "@nextui-org/spinner";
 import LogoutModal from "../common/Modal/LogoutModal";
 import { useDisclosure } from "@nextui-org/react";
@@ -26,7 +26,7 @@ const DropdownUser = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   // const [loadingOptions, setLoadingOptions] = useState<{ [key: string]: boolean }>({});
-  const defaultDelay = 1000;
+  // const defaultDelay = 1000;
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({
     viewProfile: false,
     settings: false,
@@ -101,7 +101,11 @@ const DropdownUser = () => {
               width={112}
               height={112}
               // src="/images/user/user-03.png"
-              src ={profile.profilePicture? profile?.profilePicture :`${AWS_URL}/docpoc-images/user-placeholder.jpg`}
+              src={
+                profile.profilePicture
+                  ? profile?.profilePicture
+                  : `${AWS_URL}/docpoc-images/user-placeholder.jpg`
+              }
               style={{
                 width: "auto",
                 height: "auto",
@@ -146,7 +150,11 @@ const DropdownUser = () => {
                   width={112}
                   height={112}
                   // src="/images/user/user-03.png"
-                  src ={profile.profilePicture? profile?.profilePicture :`${AWS_URL}/docpoc-images/user-placeholder.jpg`}
+                  src={
+                    profile.profilePicture
+                      ? profile?.profilePicture
+                      : `${AWS_URL}/docpoc-images/user-placeholder.jpg`
+                  }
                   style={{
                     width: "auto",
                     height: "auto",

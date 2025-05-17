@@ -11,7 +11,6 @@ import { today } from "@internationalized/date";
 import { useLocale, useDateFormatter } from "@react-aria/i18n";
 import {
   DateValue,
-  now,
   startOfWeek,
   startOfMonth,
   getLocalTimeZone,

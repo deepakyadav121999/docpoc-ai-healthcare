@@ -15,7 +15,7 @@ export enum ROUTES {
   PAYMENT_OVERVIRW = "/payment/overview",
   PAYMENT_ENTRY = "/payment/create-entry",
   PAYMENT_DETAILS = "/payment/details",
- 
-  GENERATE_REPORTS ="/reports",
+
+  GENERATE_REPORTS = "/reports",
   REPORTS_OVERVIEW = "/reports/reports-overview",
 }

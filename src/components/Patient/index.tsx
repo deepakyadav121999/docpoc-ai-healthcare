@@ -62,7 +62,7 @@ interface Patient {
   status: string;
   lastVisit: string;
   displayPicture: string;
-  gender:string;
+  gender: string;
 }
 const API_URL = process.env.API_URL;
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
@@ -71,7 +71,7 @@ export default function App() {
   const profile = useSelector((state: RootState) => state.profile.data);
   const [users, setUsers] = React.useState<Patient[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | null>(null);
+  // const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [totalPatient, setTotalPatient] = useState(0);
@@ -91,7 +91,7 @@ export default function App() {
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-     
+
       const fetchedBranchId = profile?.branchId;
 
       const initialPage = parseInt(localStorage.getItem("page") || "1", 10); // Default to 1 if not set
@@ -128,28 +128,29 @@ export default function App() {
       setUsers(response.data.rows || response.data);
       setTotalPatient(response.data.count || response.data.length);
     } catch (err) {
-      setError("Failed to fetch patients.");
+      // setError("Failed to fetch patients.");
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const extractTime = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // Convert to 12-hour format and handle midnight as 12
-    const formattedMinutes = minutes.toString().padStart(2, "0");
-    return `${hours}:${formattedMinutes} ${ampm}`;
-  };
-  const extractDate = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-based
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
-  };
+  // const extractTime = (timestamp: string): string => {
+  //   const date = new Date(timestamp);
+  //   let hours = date.getHours();
+  //   const minutes = date.getMinutes();
+  //   const ampm = hours >= 12 ? "PM" : "AM";
+  //   hours = hours % 12 || 12; // Convert to 12-hour format and handle midnight as 12
+  //   const formattedMinutes = minutes.toString().padStart(2, "0");
+  //   return `${hours}:${formattedMinutes} ${ampm}`;
+  // };
+  // const extractDate = (timestamp: string): string => {
+  //   const date = new Date(timestamp);
+  //   const day = date.getDate().toString().padStart(2, "0");
+  //   const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-based
+  //   const year = date.getFullYear();
+  //   return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
+  // };
 
   // http://127.0.0.1:3037/DocPOC/v1/patient/?status[]=Inactive
 
@@ -165,7 +166,7 @@ export default function App() {
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
-  const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
+  const [statusFilter] = React.useState<Selection>("all");
 
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "age",
@@ -222,7 +223,10 @@ export default function App() {
     switch (columnKey) {
       case "name":
         const gender = user.gender || "unknown"; // Directly access the gender property
-        const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+        const placeholderImage =
+          gender.toLowerCase() === "male"
+            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+            : `${AWS_URL}/docpoc-images/user-female.jpg`;
         const avatarSrc = user.displayPicture || placeholderImage;
         return (
           <User
@@ -310,12 +314,12 @@ export default function App() {
     setFilterValue("");
     setPage(1);
   }, []);
-  const onStatusFilterChange = (selected: Selection) => {
-    const selectedStatuses = Array.from(selected) as string[];
-    setStatusFilter(selected); // Update the filter state
-    setPage(1); // Reset pagination to the first page
-    fetchPatients(filterValue, selectedStatuses);
-  };
+  // const onStatusFilterChange = (selected: Selection) => {
+  //   const selectedStatuses = Array.from(selected) as string[];
+  //   setStatusFilter(selected); // Update the filter state
+  //   setPage(1); // Reset pagination to the first page
+  //   fetchPatients(filterValue, selectedStatuses);
+  // };
 
   const topContent = React.useMemo(() => {
     return (

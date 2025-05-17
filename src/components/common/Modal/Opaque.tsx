@@ -19,11 +19,10 @@ import { MODAL_TYPES } from "@/constants";
 import ModalForm from "@/components/ModalForms";
 import axios from "axios";
 import EnhancedModal from "./EnhancedModal";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { updateAccessToken } from "@/store/slices/profileSlice";
 import { RootState } from "@/store";
 import { AppDispatch } from "@/store";
-
 
 const API_URL = process.env.API_URL;
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
@@ -33,17 +32,16 @@ interface EmployeeData {
   id?: string;
   name?: string;
   profilePicture?: string;
-  dp?:string;
+  dp?: string;
   // Add other properties as needed
 }
-interface PatientData{
+interface PatientData {
   id?: string;
   name?: string;
   displayPicture?: string;
-  dp?:string;
-  document?:string;
+  dp?: string;
+  document?: string;
   documents?: Array<string>;
-
 }
 export default function OpaqueModal(props: {
   modalType: { view: MODAL_TYPES; edit: MODAL_TYPES; delete: MODAL_TYPES };
@@ -52,40 +50,47 @@ export default function OpaqueModal(props: {
   userId: string;
   onPatientDelete: () => void;
 }) {
-
- const profile = useSelector((state: RootState) => state.profile.data);
+  const profile = useSelector((state: RootState) => state.profile.data);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [title, setTitle] = React.useState(props.modalTitle);
+  // const [title, setTitle] = React.useState(props.modalTitle);
+  const title = props.modalTitle;
   const [formType, setFormType] = React.useState("");
-  const [message, setmessage] = useState("");
-  const [error, seterror] = useState("");
-  const [updatedPatientData, setUpdatedPatientData] =  useState<PatientData>({});
+  // const [message, setmessage] = useState("");
+  // const [error, seterror] = useState("");
+  const [updatedPatientData, setUpdatedPatientData] = useState<PatientData>({});
   // const [updatedEmployeeData, setUpdatedEmployeeData] = useState({});
-  const [updatedEmployeeData, setUpdatedEmployeeData] = useState<EmployeeData>({});
-  const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
+  const [updatedEmployeeData, setUpdatedEmployeeData] = useState<EmployeeData>(
+    {},
+  );
+  // const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [selectedFile, setSelectedFile] = useState(null);
-  const[profilePhotoUrl, setProfilePhotoUrl] =useState("")
-    const [accessToken, setAccessToken] = useState("");
+  // const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
+  const [accessToken, setAccessToken] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [fileUrls, setFileUrls] = useState<string[]>([]);
- const dispatch = useDispatch<AppDispatch>();
+  // const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleProfilePhotoChange = (file:any) => {
+  const handleProfilePhotoChange = (file: any) => {
     setSelectedFile(file); // Store the file in state
   };
 
-  const handleFileChange =(files:any)=>{
-    setSelectedFiles(files)
-  }
+  const handleFileChange = (files: any) => {
+    setSelectedFiles(files);
+  };
 
-
-  const uploadProfilePicture = async (file: File, foldername: string): Promise<string> => {
-    const token = localStorage.getItem("docPocAuth_token");
-    const sanitizedUsername = foldername.replace(/\s+/g, "").toLowerCase().slice(0, 9);
+  const uploadProfilePicture = async (
+    file: File,
+    foldername: string,
+  ): Promise<string> => {
+    // const token = localStorage.getItem("docPocAuth_token");
+    const sanitizedUsername = foldername
+      .replace(/\s+/g, "")
+      .toLowerCase()
+      .slice(0, 9);
     const folderName = `${sanitizedUsername}${props.userId.slice(-6)}`;
 
     try {
@@ -118,19 +123,25 @@ export default function OpaqueModal(props: {
     return "";
   };
 
-  const uploadFiles = async (files: File[], foldername: string): Promise<string[]> => {
-    const token = localStorage.getItem("docPocAuth_token");
-    const sanitizedUsername = foldername.replace(/\s+/g, "").toLowerCase().slice(0, 9);
+  const uploadFiles = async (
+    files: File[],
+    foldername: string,
+  ): Promise<string[]> => {
+    // const token = localStorage.getItem("docPocAuth_token");
+    const sanitizedUsername = foldername
+      .replace(/\s+/g, "")
+      .toLowerCase()
+      .slice(0, 9);
     const folderName = `${sanitizedUsername}${props.userId.slice(-6)}`;
     const uploadedFileUrls: string[] = [];
-  
+
     for (const file of files) {
       try {
         const data = new FormData();
         data.append("file", file);
         data.append("folder", folderName);
         data.append("contentDisposition", "inline");
-  
+
         const config = {
           method: "post",
           maxBodyLength: Infinity,
@@ -140,9 +151,9 @@ export default function OpaqueModal(props: {
           },
           data: data,
         };
-  
+
         const response = await axios.request(config);
-  
+
         if (response.data) {
           const fileUrl = `${AWS_URL}/${folderName}/${file.name}`;
           console.log("File uploaded successfully:", fileUrl);
@@ -153,28 +164,27 @@ export default function OpaqueModal(props: {
         throw new Error("Failed to upload the file. Please try again.");
       }
     }
-  
+
     return uploadedFileUrls;
   };
 
-
   const handleDelete = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/patient/${props.userId}`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/patient/${props.userId}`;
 
     try {
-      const response = await axios.delete(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.delete(endpoint, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       // Handle successful deletion
       onClose();
-    
+
       setModalMessage({ success: "Patient deleted successfully!", error: "" });
-     
+
       setNotificationOpen(true);
       setTimeout(() => {
         if (props.onPatientDelete) props.onPatientDelete();
@@ -186,7 +196,7 @@ export default function OpaqueModal(props: {
         success: "",
         error: "Failed to delete the patient. Please try",
       });
-     
+
       setNotificationOpen(true);
     } finally {
       setLoading(false);
@@ -289,113 +299,116 @@ export default function OpaqueModal(props: {
       } else if (formType === MODAL_TYPES.EDIT_PATIENT) {
         setUpdatedPatientData(data);
       } else if (formType === MODAL_TYPES.EDIT_APPOINTMENT) {
-        setUpdatedAppointmentData(data);
+        // setUpdatedAppointmentData(data);
       }
     }
   };
 
   const handleEdit = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/patient`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/patient`;
 
-   
     try {
-      let profilePictureUrl = updatedPatientData.displayPicture || "";
+      // let profilePictureUrl = updatedPatientData.displayPicture || "";
 
       if (selectedFile) {
-        profilePictureUrl = await uploadProfilePicture(selectedFile, updatedPatientData.name || "");
-        setProfilePhotoUrl(profilePictureUrl);
+        // profilePictureUrl = await uploadProfilePicture(
+        //   selectedFile,
+        //   updatedPatientData.name || "",
+        // );
+        // setProfilePhotoUrl(profilePictureUrl);
       }
-  // Parse existing documents
-  // let existingDocuments: Record<string, string> = {};
-  // if (updatedPatientData.document) {
-  //   try {
-  //     existingDocuments = JSON.parse(updatedPatientData.document);
-  //   } catch (error) {
-  //     console.error("Error parsing existing documents:", error);
-  //   }
-  // }
+      // Parse existing documents
+      // let existingDocuments: Record<string, string> = {};
+      // if (updatedPatientData.document) {
+      //   try {
+      //     existingDocuments = JSON.parse(updatedPatientData.document);
+      //   } catch (error) {
+      //     console.error("Error parsing existing documents:", error);
+      //   }
+      // }
 
-  // // Upload new files and get their URLs
-  // const documentsObject: Record<string, string> = { ...existingDocuments };
-  // if (selectedFiles.length > 0) {
-  //   const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
-  //   setFileUrls(uploadedFileUrls);
+      // // Upload new files and get their URLs
+      // const documentsObject: Record<string, string> = { ...existingDocuments };
+      // if (selectedFiles.length > 0) {
+      //   const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
+      //   setFileUrls(uploadedFileUrls);
 
-  //   // Append new documents to the existing ones
-  //   uploadedFileUrls.forEach((url, index) => {
-  //     const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
-  //     documentsObject[newKey] = url;
-  //   });
-  // }
+      //   // Append new documents to the existing ones
+      //   uploadedFileUrls.forEach((url, index) => {
+      //     const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
+      //     documentsObject[newKey] = url;
+      //   });
+      // }
 
-  // // Convert documentsObject to a JSON string
-  // const documentsPayload = JSON.stringify(documentsObject);
+      // // Convert documentsObject to a JSON string
+      // const documentsPayload = JSON.stringify(documentsObject);
 
-  // const requestData = {
-  //   id: props.userId,
-  //   displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
-  //   documents: documentsPayload ? documentsPayload : updatedPatientData.document,
-  //   ...updatedPatientData,
-  // };
-   
+      // const requestData = {
+      //   id: props.userId,
+      //   displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
+      //   documents: documentsPayload ? documentsPayload : updatedPatientData.document,
+      //   ...updatedPatientData,
+      // };
 
-
-  let existingDocuments: Record<string, string> = {};
-  if (updatedPatientData.document) {
-    if (typeof updatedPatientData.document === "string") {
-      try {
-        existingDocuments = JSON.parse(updatedPatientData.document);
-      } catch (error) {
-        console.error("Error parsing existing documents:", error);
-        existingDocuments = {}; // Fallback to empty object
+      let existingDocuments: Record<string, string> = {};
+      if (updatedPatientData.document) {
+        if (typeof updatedPatientData.document === "string") {
+          try {
+            existingDocuments = JSON.parse(updatedPatientData.document);
+          } catch (error) {
+            console.error("Error parsing existing documents:", error);
+            existingDocuments = {}; // Fallback to empty object
+          }
+        } else if (typeof updatedPatientData.document === "object") {
+          existingDocuments = updatedPatientData.document as Record<
+            string,
+            string
+          >;
+        }
       }
-    } else if (typeof updatedPatientData.document === "object") {
-      existingDocuments = updatedPatientData.document as Record<string, string>;
-    }
-  }
 
-  // Upload new files and get their URLs
-  const uploadedFileUrls = selectedFiles.length > 0
-    ? await uploadFiles(selectedFiles, updatedPatientData.name || "")
-    : [];
+      // Upload new files and get their URLs
+      const uploadedFileUrls =
+        selectedFiles.length > 0
+          ? await uploadFiles(selectedFiles, updatedPatientData.name || "")
+          : [];
 
-  // Append new files to existing documents
-  const mergedDocuments: Record<string, string> = { ...existingDocuments };
+      // Append new files to existing documents
+      const mergedDocuments: Record<string, string> = { ...existingDocuments };
 
-  // Find the next document index
-  let documentIndex = Object.keys(mergedDocuments).length;
+      // Find the next document index
+      let documentIndex = Object.keys(mergedDocuments).length;
 
-  // Add each uploaded file URL with a `date`
-  uploadedFileUrls.forEach((url) => {
-    documentIndex += 1; // Increment the index
-    const newDocumentKey = `document${documentIndex}`;
-    const documentData = {
-      url: url,
-      date: new Date().toISOString(), // Attach the current date in ISO format
-    };
-    mergedDocuments[newDocumentKey] = JSON.stringify(documentData);
-  });
-
-  // Prepare the request payload
-  const requestData = {
-    id: props.userId,
-    displayPicture: profilePictureUrl || updatedPatientData.dp,
-    documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
-    ...updatedPatientData, // Include other patient data
-  };
-
-
-      const response = await axios.patch(endpoint, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      // Add each uploaded file URL with a `date`
+      uploadedFileUrls.forEach((url) => {
+        documentIndex += 1; // Increment the index
+        const newDocumentKey = `document${documentIndex}`;
+        const documentData = {
+          url: url,
+          date: new Date().toISOString(), // Attach the current date in ISO format
+        };
+        mergedDocuments[newDocumentKey] = JSON.stringify(documentData);
       });
+
+      // Prepare the request payload
+      // const requestData = {
+      //   id: props.userId,
+      //   displayPicture: profilePictureUrl || updatedPatientData.dp,
+      //   documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
+      //   ...updatedPatientData, // Include other patient data
+      // };
+
+      // const response = await axios.patch(endpoint, requestData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       if (props.onPatientDelete) props.onPatientDelete();
 
-      setmessage("Patient updated successfully!");
+      // setmessage("Patient updated successfully!");
       setModalMessage({ success: "Patient updated successfully!", error: "" });
       setNotificationOpen(true);
       onClose();
@@ -405,7 +418,7 @@ export default function OpaqueModal(props: {
         success: "",
         error: "Failed to update the patient. Please try again.",
       });
-      seterror("Failed to update the patient. Please try again.");
+      // seterror("Failed to update the patient. Please try again.");
       // alert("Failed to update the patient. Please try again.");
       setNotificationOpen(true);
     } finally {
@@ -419,25 +432,25 @@ export default function OpaqueModal(props: {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
     const endpoint = `${API_URL}/user`;
-  
-     
-    try {
 
+    try {
       let profilePictureUrl = updatedEmployeeData.profilePicture || "";
 
       if (selectedFile) {
-       profilePictureUrl = await uploadProfilePicture(selectedFile, updatedEmployeeData.name || "");
-        setProfilePhotoUrl(profilePictureUrl);
+        profilePictureUrl = await uploadProfilePicture(
+          selectedFile,
+          updatedEmployeeData.name || "",
+        );
+        // setProfilePhotoUrl(profilePictureUrl);
       }
-     
-     
 
       const requestData = {
         id: props.userId,
-        profilePicture: profilePictureUrl ?profilePictureUrl:updatedPatientData.dp,
+        profilePicture: profilePictureUrl
+          ? profilePictureUrl
+          : updatedPatientData.dp,
         ...updatedEmployeeData,
-       
-      }
+      };
 
       const response = await axios.patch(endpoint, requestData, {
         headers: {
@@ -448,27 +461,23 @@ export default function OpaqueModal(props: {
       const newAccessToken = response.data.access_token;
 
       if (newAccessToken) {
-    
         setAccessToken(newAccessToken);
       }
 
       if (props.onPatientDelete) props.onPatientDelete();
-      setmessage("Employee updated successfully!");
+      // setmessage("Employee updated successfully!");
       setModalMessage({
         success: "Employee updated successfully!",
         error: " ",
       });
 
-
       setNotificationOpen(true);
       // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
-
-
     } catch (error) {
       console.error("Error updating Employee:", error);
       setModalMessage({ success: "", error: "Error updating Employee" });
-      seterror("Error updating Employee");
+      // seterror("Error updating Employee");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
     } finally {
@@ -480,23 +489,23 @@ export default function OpaqueModal(props: {
 
   const handleAppointmentEdit = async () => {
     setLoading(true);
-    const token = localStorage.getItem("docPocAuth_token");
-    const endpoint = `${API_URL}/appointment`;
+    // const token = localStorage.getItem("docPocAuth_token");
+    // const endpoint = `${API_URL}/appointment`;
 
-    const requestData = {
-      id: props.userId,
-      ...updatedAppointmentData,
-    };
+    // const requestData = {
+    //   id: props.userId,
+    //   ...updatedAppointmentData,
+    // };
 
     try {
-      const response = await axios.patch(endpoint, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.patch(endpoint, requestData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
       if (props.onPatientDelete) props.onPatientDelete();
-      setmessage("appointment updated successfully!");
+      // setmessage("appointment updated successfully!");
       setModalMessage({
         success: "appointment updated successfully!",
         error: " ",
@@ -507,7 +516,7 @@ export default function OpaqueModal(props: {
     } catch (error) {
       console.error("Error updating appointment:", error);
       setModalMessage({ success: "", error: "Error updating appointment" });
-      seterror("Error updating appointment");
+      // seterror("Error updating appointment");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
     } finally {
@@ -551,9 +560,9 @@ export default function OpaqueModal(props: {
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     setNotificationOpen(false);
-   if(profile.id === props.userId){
-    dispatch(updateAccessToken(accessToken));
-   }
+    if (profile.id === props.userId) {
+      dispatch(updateAccessToken(accessToken));
+    }
 
     // onClose();
   };
@@ -612,7 +621,15 @@ export default function OpaqueModal(props: {
                   Close
                 </Button>
                 <Button color="primary" onPress={handleSubmit}>
-                {loading ? <div className="flex"> <p>Saving</p><Spinner size="sm" color="white" /></div>  : (props.actionButtonName || "Submit")}
+                  {loading ? (
+                    <div className="flex">
+                      {" "}
+                      <p>Saving</p>
+                      <Spinner size="sm" color="white" />
+                    </div>
+                  ) : (
+                    props.actionButtonName || "Submit"
+                  )}
                 </Button>
               </ModalFooter>
             </>

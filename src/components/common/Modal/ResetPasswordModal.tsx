@@ -7,10 +7,8 @@ import {
   ModalFooter,
   Button,
   Input,
-  useDisclosure,
 } from "@nextui-org/react";
 import axios from "axios";
-import EnhancedModal from "./EnhancedModal";
 
 const API_URL = process.env.API_URL;
 interface ResetPasswordModalProps {

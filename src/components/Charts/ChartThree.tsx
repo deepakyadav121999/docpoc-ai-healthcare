@@ -155,20 +155,23 @@ interface ChartData {
   colors: string[];
 }
 
-const ChartThree: React.FC<ChartThreeProps> = ({ types = [], appointments = [] }) => {
+const ChartThree: React.FC<ChartThreeProps> = ({
+  types = [],
+  appointments = [],
+}) => {
   // Process the data to get visit type counts with proper TypeScript typing
   const getVisitTypeData = (): ChartData => {
     if (!types.length || !appointments.length) {
       return {
         series: [0],
-        labels: ['No Data'],
-        colors: ["#ADBCF2"]
+        labels: ["No Data"],
+        colors: ["#ADBCF2"],
       };
     }
 
     // Create a typed Map to count each visit type occurrence
     const visitTypeCounts: Map<string, number> = new Map<string, number>();
-    
+
     // Initialize counts for all known types with proper typing
     types.forEach((type: VisitType) => {
       visitTypeCounts.set(type.name, 0);
@@ -186,11 +189,16 @@ const ChartThree: React.FC<ChartThreeProps> = ({ types = [], appointments = [] }
     // Convert to arrays for the chart with explicit typing
     const labels: string[] = Array.from(visitTypeCounts.keys());
     const series: number[] = Array.from(visitTypeCounts.values());
-    
+
     // Default colors with fallbacks
-    const defaultColors: string[] = ["#5750F1", "#5475E5", "#8099EC", "#ADBCF2"];
-    const colors: string[] = labels.map((_, index) => 
-      defaultColors[index % defaultColors.length]
+    const defaultColors: string[] = [
+      "#5750F1",
+      "#5475E5",
+      "#8099EC",
+      "#ADBCF2",
+    ];
+    const colors: string[] = labels.map(
+      (_, index) => defaultColors[index % defaultColors.length],
     );
 
     return { series, labels, colors };
@@ -199,9 +207,12 @@ const ChartThree: React.FC<ChartThreeProps> = ({ types = [], appointments = [] }
   const { series, labels, colors }: ChartData = getVisitTypeData();
 
   // Calculate percentages with proper typing
-  const total: number = series.reduce((sum: number, value: number) => sum + value, 0);
-  const percentages: number[] = series.map((value: number) => 
-    total > 0 ? Math.round((value / total) * 100) : 0
+  const total: number = series.reduce(
+    (sum: number, value: number) => sum + value,
+    0,
+  );
+  const percentages: number[] = series.map((value: number) =>
+    total > 0 ? Math.round((value / total) * 100) : 0,
   );
 
   const options: ApexOptions = {
@@ -273,10 +284,10 @@ const ChartThree: React.FC<ChartThreeProps> = ({ types = [], appointments = [] }
 
       <div className="mb-8">
         <div className="mx-auto flex justify-center">
-          <ReactApexChart 
-            options={options} 
-            series={series} 
-            type="donut" 
+          <ReactApexChart
+            options={options}
+            series={series}
+            type="donut"
             height={350}
           />
         </div>
@@ -287,8 +298,8 @@ const ChartThree: React.FC<ChartThreeProps> = ({ types = [], appointments = [] }
           {labels.map((label: string, index: number) => (
             <div key={index} className="w-full px-7.5 sm:w-1/2">
               <div className="flex w-full items-center">
-                <span 
-                  className="mr-2 block h-3 w-full max-w-3 rounded-full" 
+                <span
+                  className="mr-2 block h-3 w-full max-w-3 rounded-full"
                   style={{ backgroundColor: colors[index] }}
                 ></span>
                 <p className="flex w-full justify-between text-body-sm font-medium text-dark dark:text-dark-6">

@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-} from "@nextui-org/react";
+import { Modal, ModalContent, ModalBody, ModalFooter } from "@nextui-org/react";
 import { Button } from "@nextui-org/react";
 import { useState } from "react";
 import { Spinner } from "@nextui-org/spinner";

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import DarkModeSwitcher from "./DarkModeSwitcher";
-import DropdownNotification from "./DropdownNotification";
+// import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
 import SearchForm from "@/components/Header/SearchForm";
@@ -11,10 +11,8 @@ const Header = (props: {
   setSidebarOpen: (arg0: boolean) => void;
   // profile:any;
 }) => {
-
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  
   useEffect(() => {
     const rootElement = document.documentElement;
 
@@ -23,7 +21,6 @@ const Header = (props: {
       setIsDarkMode(rootElement.classList.contains("dark"));
     };
 
-   
     updateDarkMode();
 
     // MutationObserver to watch for changes to the "class" attribute of the <html> tag
@@ -32,14 +29,17 @@ const Header = (props: {
     });
 
     // Observe the class attribute on the <html> element
-    observer.observe(rootElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(rootElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     // Cleanup observer on unmount
     return () => {
       observer.disconnect();
     };
   }, []);
-  
+
   return (
     <header className=" sticky top-0 z-999 flex w-full border-b border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark ">
       <div className="flex flex-grow items-center justify-between px-4 py-5 shadow-2 md:px-5 2xl:px-10">
@@ -93,9 +93,9 @@ const Header = (props: {
               width={40}
               height={40}
               src={
-                isDarkMode?
-                  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  
-                  :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  
+                isDarkMode
+                  ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"
+                  : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"
               }
               alt="Logo"
             />

@@ -36,12 +36,11 @@ const SidebarItem = ({
   //   }
   // }, [loading]);
 
-
   // const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
   //   if (item.children) {
   //     e.preventDefault();
-  //     const updatedPageName = pageName !== item.label.toLowerCase() 
-  //       ? item.label.toLowerCase() 
+  //     const updatedPageName = pageName !== item.label.toLowerCase()
+  //       ? item.label.toLowerCase()
   //       : "";
   //     setPageName(updatedPageName);
   //   } else {
@@ -59,8 +58,10 @@ const SidebarItem = ({
 
   useEffect(() => {
     // Clear loading state when the route changes to match the item's route
-    if (pathname === item.route || 
-        (item.children && item.children.some(child => pathname === child.route))) {
+    if (
+      pathname === item.route ||
+      (item.children && item.children.some((child) => pathname === child.route))
+    ) {
       setLocalLoading(false);
     }
   }, [pathname, item.route, item.children]);
@@ -68,9 +69,8 @@ const SidebarItem = ({
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (item.children) {
       e.preventDefault();
-      const updatedPageName = pageName !== item.label.toLowerCase() 
-        ? item.label.toLowerCase() 
-        : "";
+      const updatedPageName =
+        pageName !== item.label.toLowerCase() ? item.label.toLowerCase() : "";
       setPageName(updatedPageName);
     } else {
       // Only set loading if not already active

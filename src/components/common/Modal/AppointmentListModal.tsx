@@ -1,6 +1,6 @@
 // AppointmentListModal.tsx
 import React from "react";
-import AppointmentTable from "@/components/CalenderBox/Table";
+// import AppointmentTable from "@/components/CalenderBox/Table";
 import AppointmentListTable from "@/components/CalenderBox/AppointmentListTable";
 import {
   Modal,
@@ -9,9 +9,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  useDisclosure,
 } from "@nextui-org/react";
-import { useEffect } from "react";
 
 interface AppointmentListModalProps {
   isOpen: boolean;

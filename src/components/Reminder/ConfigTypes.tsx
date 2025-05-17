@@ -90,7 +90,7 @@ export default function ConfigTypes(props: {
   buttons?: string[];
 }) {
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
-    []
+    [],
   );
   const [enableForAll, setEnableForAll] = useState<boolean>(false);
   const [age, setAge] = useState<string>("");

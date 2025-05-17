@@ -21,10 +21,9 @@ import {
   ChipProps,
   SortDescriptor,
   DatePicker,
-  useDisclosure,
   Switch,
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
+// import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
 import { columns, statusOptions } from "./data";
@@ -35,11 +34,8 @@ import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import AddAppointment from "./AddAppointment";
 import { CalendarDate, parseDate } from "@internationalized/date";
 import debounce from "lodash.debounce";
-import { DateInput } from "@nextui-org/react";
-import { now, getLocalTimeZone } from "@internationalized/date";
-import { color } from "framer-motion";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+
+import { getLocalTimeZone } from "@internationalized/date";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
   visiting: "success",
@@ -95,22 +91,21 @@ interface FetchParams {
 
 export default function AppointmentTable({
   appointments,
-  loading,
-  error,
+
   totalAppointments,
   fetchAppointments,
   userId,
 }: AppointmentsProps) {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [page, setPage] = useState(1);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
@@ -127,11 +122,14 @@ export default function AppointmentTable({
         setSwitchLoading(false);
       });
     }, 500),
-    [fetchAppointments]
+    [fetchAppointments],
   );
 
   const handleToggle = useCallback(
-    (setter: React.Dispatch<React.SetStateAction<boolean>>, key: 'doctorId' | 'createdBy') => {
+    (
+      setter: React.Dispatch<React.SetStateAction<boolean>>,
+      key: "doctorId" | "createdBy",
+    ) => {
       if (switchLoading) return;
 
       setter((prev) => !prev);
@@ -141,13 +139,25 @@ export default function AppointmentTable({
       const payload: FetchParams = {
         page,
         pageSize: rowsPerPage,
-        doctorId: (key === 'doctorId' ? !assignedToMe : assignedToMe) ? userId : undefined,
-        createdBy: (key === 'createdBy' ? !createdByMe : createdByMe) ? userId : undefined,
+        doctorId: (key === "doctorId" ? !assignedToMe : assignedToMe)
+          ? userId
+          : undefined,
+        createdBy: (key === "createdBy" ? !createdByMe : createdByMe)
+          ? userId
+          : undefined,
       };
 
       debouncedFetchAppointments(payload);
     },
-    [switchLoading, debouncedFetchAppointments, page, rowsPerPage, userId, assignedToMe, createdByMe]
+    [
+      switchLoading,
+      debouncedFetchAppointments,
+      page,
+      rowsPerPage,
+      userId,
+      assignedToMe,
+      createdByMe,
+    ],
   );
 
   const getAgeFromDob = (dob: string): number => {
@@ -185,7 +195,7 @@ export default function AppointmentTable({
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -193,7 +203,7 @@ export default function AppointmentTable({
     let filteredUsers = [...appointments];
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (
@@ -201,7 +211,7 @@ export default function AppointmentTable({
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
     return filteredUsers;
@@ -231,7 +241,9 @@ export default function AppointmentTable({
           const userJson = JSON.parse(user.json);
           const dob = userJson.dob || "";
           age = getAgeFromDob(dob).toString();
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+        }
         return <p className="capitalize">{age}</p>;
       }
       if (columnKey === "time") {
@@ -245,7 +257,7 @@ export default function AppointmentTable({
       }
       if (columnKey === "date") {
         const startDate = extractDate(user.dateTime);
-        const endDate = extractDate(user.endDateTime);
+        // const endDate = extractDate(user.endDateTime);
         return <p>{startDate}</p>;
       }
       if (columnKey === "email") {
@@ -253,7 +265,9 @@ export default function AppointmentTable({
           const userJson = JSON.parse(user.json || "{}");
           const email = userJson.email || "N/A";
           return <p>{email}</p>;
-        } catch (error) {}
+        } catch (err) {
+          console.log(err);
+        }
       }
       switch (columnKey) {
         case "name":
@@ -303,7 +317,7 @@ export default function AppointmentTable({
           return cellValue;
       }
     },
-    [fetchAppointments, page, rowsPerPage]
+    [fetchAppointments, page, rowsPerPage],
   );
 
   const handlePageChange = useCallback(
@@ -311,7 +325,7 @@ export default function AppointmentTable({
       setPage(newPage);
       fetchAppointments({ page: newPage, pageSize: rowsPerPage });
     },
-    [fetchAppointments, rowsPerPage]
+    [fetchAppointments, rowsPerPage],
   );
 
   const onRowsPerPageChange = useCallback(
@@ -320,12 +334,12 @@ export default function AppointmentTable({
       setPage(1);
       fetchAppointments({ page: 1, pageSize: Number(e.target.value) });
     },
-    [fetchAppointments]
+    [fetchAppointments],
   );
 
-  const toggleAddAppointment = useCallback(() => {
-    // Logic for toggling add appointment modal
-  }, []);
+  // const toggleAddAppointment = useCallback(() => {
+  //   // Logic for toggling add appointment modal
+  // }, []);
 
   // const debouncedFetchUsers = useCallback(
   //   debounce((searchValue: string) => {
@@ -344,14 +358,17 @@ export default function AppointmentTable({
   //   [debouncedFetchUsers]
   // );
 
-
   const debouncedFetchUsers = useCallback(
     debounce((searchValue: string) => {
       setFilterValue(searchValue);
       setPage(1);
-      fetchAppointments({ page: 1, pageSize: rowsPerPage, search: searchValue });
+      fetchAppointments({
+        page: 1,
+        pageSize: rowsPerPage,
+        search: searchValue,
+      });
     }, 500),
-    [fetchAppointments, rowsPerPage]
+    [fetchAppointments, rowsPerPage],
   );
 
   const onSearchChange = React.useCallback(
@@ -359,9 +376,9 @@ export default function AppointmentTable({
       setFilterValue(value || "");
       debouncedFetchUsers(value || "");
     },
-    [debouncedFetchUsers]
+    [debouncedFetchUsers],
   );
-  
+
   const onClear = useCallback(() => {
     setFilterValue("");
     setPage(1);
@@ -373,18 +390,18 @@ export default function AppointmentTable({
       if (date) {
         const jsDate = date.toDate(getLocalTimeZone());
         const formattedDate = `${jsDate.getFullYear()}-${String(
-          jsDate.getMonth() + 1
+          jsDate.getMonth() + 1,
         ).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
-        setSelectedDate(formattedDate);
+        // setSelectedDate(formattedDate);
         setSelectedDateShow(formattedDate);
         fetchAppointments({ page, pageSize: rowsPerPage, date: formattedDate });
       } else {
-        setSelectedDate(null);
+        // setSelectedDate(null);
         setSelectedDateShow(null);
         fetchAppointments({ page, pageSize: rowsPerPage });
       }
     }, 500),
-    [fetchAppointments, page, rowsPerPage]
+    [fetchAppointments, page, rowsPerPage],
   );
 
   const handleDateChange = (date: CalendarDate | null) => {
@@ -396,9 +413,9 @@ export default function AppointmentTable({
       // <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
       //   <div className="flex flex-col gap-4 w-full">
       //     <div className="flex flex-wrap sm:flex-nowrap gap-3 justify-between sm:items-end w-full items-center">
-        <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col gap-4 w-full">
-           <div className="flex flex-wrap xl:flex-nowrap  gap-3 justify-between sm:items-end w-full items-center">
+          <div className="flex flex-wrap xl:flex-nowrap  gap-3 justify-between sm:items-end w-full items-center">
             <Input
               isClearable
               className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
@@ -419,9 +436,7 @@ export default function AppointmentTable({
               <div className="flex gap-2 justify-center items-center sm:items-center sm:justify-between w-full mt-2">
                 <div className="flex items-center gap-2">
                   <Switch
-                    onChange={() =>
-                      handleToggle(setAssignedToMe, "doctorId")
-                    }
+                    onChange={() => handleToggle(setAssignedToMe, "doctorId")}
                     className="text-sm"
                     size="lg"
                     color="secondary"
@@ -432,9 +447,7 @@ export default function AppointmentTable({
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
-                    onChange={() =>
-                      handleToggle(setCreatedByMe, "createdBy")
-                    }
+                    onChange={() => handleToggle(setCreatedByMe, "createdBy")}
                     className="text-sm"
                     size="lg"
                     color="secondary"

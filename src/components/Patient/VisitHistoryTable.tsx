@@ -566,11 +566,11 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
 }) => {
   const [page, setPage] = useState<number>(1);
   const [filterValue, setFilterValue] = useState<string>("");
-  const [rowsPerPage, setRowsPerPage] = useState<number>(3);
+  const [rowsPerPage] = useState<number>(3);
+
   const [visitData, setVisitData] = useState<VisitData[]>([]); // Ensure this is always an array
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
- 
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -656,8 +656,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     setPage(1);
   }, []);
 
-
-
   const handleViewReport = async () => {
     try {
       const token = localStorage.getItem("docPocAuth_token");
@@ -667,12 +665,12 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
-      
+
       // Get the first report (if available)
       const firstReport = response.data[0];
-      
+
       if (firstReport?.documentUrl) {
         try {
           const documentUrl = JSON.parse(firstReport.documentUrl).url;
@@ -691,7 +689,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
       console.error("Error fetching reports:", error);
     }
   };
-
 
   if (loading) {
     return (
@@ -720,7 +717,7 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   return (
     <>
       <div>{loading && <Spinner />}</div>
-      
+
       <div
         className="flex w-full justify-center px-2 sm:px-4"
         style={{ marginBottom: 5 }}
@@ -765,7 +762,6 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
             <TableColumn key="report">REPORT</TableColumn>
           </TableHeader>
 
-
           <TableBody items={items}>
             {(item: VisitData) => (
               <TableRow key={item.date + item.doctor}>
@@ -778,17 +774,15 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                       //   rel="noopener noreferrer"
                       //   onClick={() => handleViewReport(item.date)}
                       // >
-                         
+
                       //   <SVGIconProvider iconName="eye" />
                       // </a>
-                      <button 
-                       onClick={handleViewReport}
-                      className="text-blue-500 hover:text-blue-700 focus:outline-none"
-                    >
-                      <SVGIconProvider iconName="eye" />
-                    </button>
-                 
-             
+                      <button
+                        onClick={handleViewReport}
+                        className="text-blue-500 hover:text-blue-700 focus:outline-none"
+                      >
+                        <SVGIconProvider iconName="eye" />
+                      </button>
                     ) : (
                       getKeyValue(item, columnKey)
                     )}

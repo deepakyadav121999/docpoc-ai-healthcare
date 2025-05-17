@@ -10,35 +10,29 @@ import {
   TableCell,
   Input,
   Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
   Chip,
   User,
   Pagination,
   Selection,
   ChipProps,
   SortDescriptor,
-  DatePicker,
-  useDisclosure,
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
-import { ChevronDownIcon } from "./ChevronDownIcon";
+// import { PlusIcon } from "./PlusIcon";
+// import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
-import { columns, statusOptions } from "./data";
-import { capitalize } from "./utils";
+import { columns } from "./data";
+// import { capitalize } from "./utils";
 import OpaqueModal from "../common/Modal/OpaqueList";
 import { MODAL_TYPES } from "@/constants";
-import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
-import AddAppointment from "./AddAppointment";
+// import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+// import AddAppointment from "./AddAppointment";
 import axios from "axios";
-import Appointments from "@/app/appointment/page";
-import { CalendarDate, parseDate } from "@internationalized/date";
-import debounce from "lodash.debounce";
-import { DateInput } from "@nextui-org/react";
-import { now, getLocalTimeZone } from "@internationalized/date";
-import { color } from "framer-motion";
+// import Appointments from "@/app/appointment/page";
+// import { CalendarDate } from "@internationalized/date";
+// import debounce from "lodash.debounce";
+
+// import {  getLocalTimeZone } from "@internationalized/date";
+
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -93,33 +87,33 @@ export default function AppointmentListTable({
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
 
-  const [visibleColumns, setVisibleColumns] = useState<Selection>(
+  const [visibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
-  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [statusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [page, setPage] = useState(1);
-  const [tempDate, setTempDate] = useState<string | null>(null);
+  // const [tempDate, setTempDate] = useState<string | null>(null);
 
-  const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
-    useState(false);
+  // const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
+  //   useState(false);
 
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
-  const [currentPage, setCurrentPage] = useState(1);
+  // const [currentPage, setCurrentPage] = useState(1);
 
   const [appointments, setAppointments] = React.useState<appointments[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | null>(null);
+  // const [loading, setLoading] = React.useState<boolean>(true);
+  // const [error, setError] = React.useState<string | null>(null);
   const [totalappointments, setTotalappointments] = React.useState(0);
-  const [totalUsers, setTotalUsers] = React.useState(0);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
-  const [statusCache, setStatusCache] = React.useState<Record<string, string>>(
-    {},
-  );
+  // const [totalUsers, setTotalUsers] = React.useState(0);
+  const [selectedDate] = useState<string | null>(null);
+  // const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
+  // const [statusCache, setStatusCache] = React.useState<Record<string, string>>(
+  //   {},
+  // );
 
   useEffect(() => {
     localStorage.setItem("page", String(page));
@@ -147,32 +141,32 @@ export default function AppointmentListTable({
 
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
-  const convertLocalToUTC = (localTime: string): string => {
-    const localDate = new Date(localTime); // Parse the local time string
-    const utcTime = localDate.toISOString(); // Convert to UTC in ISO format
-    return utcTime;
-  };
+  // const convertLocalToUTC = (localTime: string): string => {
+  //   const localDate = new Date(localTime); // Parse the local time string
+  //   const utcTime = localDate.toISOString(); // Convert to UTC in ISO format
+  //   return utcTime;
+  // };
 
-  function extractTimeForSlot(dateTime: string): string {
-    const date = new Date(dateTime);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    // const amPm = hours >= 12 ? 'PM' : 'AM';
+  // function extractTimeForSlot(dateTime: string): string {
+  //   const date = new Date(dateTime);
+  //   let hours = date.getHours();
+  //   const minutes = date.getMinutes();
+  //   // const amPm = hours >= 12 ? 'PM' : 'AM';
 
-    // Convert to 12-hour format
-    hours = hours % 12 || 12;
+  //   // Convert to 12-hour format
+  //   hours = hours % 12 || 12;
 
-    // Add leading zero to minutes if needed
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  //   // Add leading zero to minutes if needed
+  //   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
 
-    return `${hours}:${formattedMinutes}`;
-  }
+  //   return `${hours}:${formattedMinutes}`;
+  // }
 
   const singleDate =
     appointments.length > 0 ? extractDate(appointments[0].startDateTime) : null;
 
   const fetchUsers = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
@@ -200,18 +194,18 @@ export default function AppointmentListTable({
       //   return;
       // }
       // const fetchedBranchId = branchResponse.data[0]?.id;
-      const userProfile = localStorage.getItem("userProfile");
+      // const userProfile = localStorage.getItem("userProfile");
 
       // Parse the JSON string if it exists
-      const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
+      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
 
       // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
       const endpoint = `${API_URL}/appointment/timeslot/${fetchedBranchId}`;
 
-      const utcStartTime = convertLocalToUTC(startTime);
-      const utcEndTime = convertLocalToUTC(endTime);
+      // const utcStartTime = convertLocalToUTC(startTime);
+      // const utcEndTime = convertLocalToUTC(endTime);
 
       const params: any = {
         page: page,
@@ -238,12 +232,13 @@ export default function AppointmentListTable({
       setAppointments(response.data.rows || response.data);
       const total = response.data.count || response.data.length;
       setTotalappointments(total);
-      setTotalUsers(total);
+      // setTotalUsers(total);
       // console.log(total)
     } catch (err) {
-      setError("Failed to fetch patients.");
+      // setError(`Failed to fetch patients., ${err}||""`);
+      console.log(err);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -270,7 +265,7 @@ export default function AppointmentListTable({
   };
 
   type User = (typeof appointments)[0];
-  const hasSearchFilter = Boolean(filterValue);
+  // const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -279,25 +274,25 @@ export default function AppointmentListTable({
     );
   }, [visibleColumns]);
 
-  const filteredItems = useMemo(() => {
-    let filteredUsers = [...appointments];
+  // const filteredItems = useMemo(() => {
+  //   let filteredUsers = [...appointments];
 
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase()),
-      );
-    }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status),
-      );
-    }
+  //   if (hasSearchFilter) {
+  //     filteredUsers = filteredUsers.filter((user) =>
+  //       user.name.toLowerCase().includes(filterValue.toLowerCase()),
+  //     );
+  //   }
+  //   if (
+  //     statusFilter !== "all" &&
+  //     Array.from(statusFilter).length !== statusOptions.length
+  //   ) {
+  //     filteredUsers = filteredUsers.filter((user) =>
+  //       Array.from(statusFilter).includes(user.status),
+  //     );
+  //   }
 
-    return filteredUsers;
-  }, [filterValue, statusFilter]);
+  //   return filteredUsers;
+  // }, [filterValue, statusFilter]);
 
   const pages =
     totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
@@ -328,7 +323,7 @@ export default function AppointmentListTable({
         age = getAgeFromDob(dob).toString();
         // console.log(age)
       } catch (error) {
-        // console.error("Error parsing JSON:", error);
+        console.error("Error parsing JSON:", error);
       }
 
       return <p className="text-xs sm:text-sm ">{age}</p>;
@@ -360,7 +355,7 @@ export default function AppointmentListTable({
         const email = userJson.email || "N/A"; // Fallback to "N/A" if email is missing
         return <p className="text-xs sm:text-sm ">{email}</p>;
       } catch (error) {
-        // console.error("Error parsing JSON:", error);
+        console.error("Error parsing JSON:", error);
       }
     }
 
@@ -435,22 +430,22 @@ export default function AppointmentListTable({
     [],
   );
 
-  const toggleAddAppointment = useCallback(() => {
-    setAddAppointmentModelToggle((prev) => !prev);
-  }, []);
+  // const toggleAddAppointment = useCallback(() => {
+  //   setAddAppointmentModelToggle((prev) => !prev);
+  // }, []);
 
   //  const debouncedFetchUser = React.useMemo(
   //      () => debounce((value: string) => searchAppointments(), 500),
   //      [fetchUsers]
   //    );
 
-  const debouncedFetchUsers = useCallback(
-    debounce((searchValue: string) => {
-      setFilterValue(searchValue);
-      fetchUsers();
-    }, 500), // Adjust debounce time as needed
-    [],
-  );
+  // const debouncedFetchUsers = useCallback(
+  //   debounce((searchValue: string) => {
+  //     setFilterValue(searchValue);
+  //     fetchUsers();
+  //   }, 500), // Adjust debounce time as needed
+  //   [],
+  // );
 
   const onSearchChange = React.useCallback((value?: string) => {
     setFilterValue(value || "");
@@ -465,30 +460,30 @@ export default function AppointmentListTable({
     setPage(1);
   }, []);
 
-  const handleDateChange = (date: CalendarDate | null) => {
-    if (date) {
-      const jsDate = date.toDate(getLocalTimeZone());
-      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
-      setSelectedDate(formattedDate);
-      setSelectedDateShow(formattedDate);
-    } else {
-      setSelectedDate(null);
-      setSelectedDateShow(null);
-    }
-  };
+  // const handleDateChange = (date: CalendarDate | null) => {
+  //   if (date) {
+  //     const jsDate = date.toDate(getLocalTimeZone());
+  //     const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
+  //     setSelectedDate(formattedDate);
+  //     setSelectedDateShow(formattedDate);
+  //   } else {
+  //     setSelectedDate(null);
+  //     setSelectedDateShow(null);
+  //   }
+  // };
 
-  const handleDateBlur = () => {
-    if (!selectedDateShow) {
-      setSelectedDate(null);
-      setSelectedDateShow(null);
-    } else {
-      setSelectedDate(selectedDateShow);
-      setPage(1);
-      fetchUsers();
-    }
-  };
+  // const handleDateBlur = () => {
+  //   if (!selectedDateShow) {
+  //     setSelectedDate(null);
+  //     setSelectedDateShow(null);
+  //   } else {
+  //     setSelectedDate(selectedDateShow);
+  //     setPage(1);
+  //     fetchUsers();
+  //   }
+  // };
 
-  const datePickerValueRef = React.useRef<string | null>(null);
+  // const datePickerValueRef = React.useRef<string | null>(null);
 
   const topContent = useMemo(() => {
     return (

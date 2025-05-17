@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, ReactNode } from "react";
+import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { useEffect } from "react";
-import axios from "axios";
+// import { useEffect } from "react";
+// import axios from "axios";
 
-const API_URL = process.env.API_URL;
+// const API_URL = process.env.API_URL;
 export default function DefaultLayout({
   children,
 }: {

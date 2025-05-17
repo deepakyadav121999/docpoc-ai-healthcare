@@ -2,22 +2,15 @@
 import {
   Autocomplete,
   AutocompleteItem,
-  Button,
   Checkbox,
   CheckboxGroup,
   Input,
   Switch,
   Textarea,
   TimeInput,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Spinner,
-  ModalFooter,
   useDisclosure,
 } from "@nextui-org/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TOOL_TIP_COLORS } from "@/constants";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Time } from "@internationalized/date";
@@ -108,22 +101,22 @@ const ClinicBranch = () => {
   const handleDetectLocation = async () => {
     try {
       locationDetact();
-      const hospitalData = {
-        name: clinicDetails.name,
-        phone: clinicDetails.phone,
-        email: clinicDetails.email,
-        ninId: "NA1092KU872882",
-        json: JSON.stringify({
-          state: clinicDetails.state,
-          pincode: clinicDetails.pincode,
-          address: clinicDetails.address,
-          shiftStart: clinicDetails.shiftStart,
-          shiftEnd: clinicDetails.shiftEnd,
-          workingDays: selectedWorkingDays,
-          multipleBranch: isMultipleBranch,
-          googleLocation: detectedLocation,
-        }),
-      };
+      // const hospitalData = {
+      //   name: clinicDetails.name,
+      //   phone: clinicDetails.phone,
+      //   email: clinicDetails.email,
+      //   ninId: "NA1092KU872882",
+      //   json: JSON.stringify({
+      //     state: clinicDetails.state,
+      //     pincode: clinicDetails.pincode,
+      //     address: clinicDetails.address,
+      //     shiftStart: clinicDetails.shiftStart,
+      //     shiftEnd: clinicDetails.shiftEnd,
+      //     workingDays: selectedWorkingDays,
+      //     multipleBranch: isMultipleBranch,
+      //     googleLocation: detectedLocation,
+      //   }),
+      // };
       const token = localStorage.getItem("docPocAuth_token");
       const response = await axios.get(`${API_URL}/hospital`, {
         headers: {

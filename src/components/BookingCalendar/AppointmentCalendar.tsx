@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import axios from "axios";
-import AddAppointment from "../CalenderBox/AddAppointment";
-import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
+// import AddAppointment from "../CalenderBox/AddAppointment";
+// import OpaqueDefaultModal from "../common/Modal/OpaqueDefaultModal";
 import NewAppointment from "./NewAppointment";
 import AppointmentList from "../common/Modal/AppointmentListModal";
 import { useSelector } from "react-redux";
@@ -21,24 +21,26 @@ import {
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(50);
-  const [loading, setLoading] = useState(false);
-  const [totalAppointments, setTotalAppointments] = useState(0);
+  // const [page, setPage] = useState(1);
+  const page = 1;
+  // const [rowsPerPage, setRowsPerPage] = useState(50);
+  const rowsPerPage = 500;
+  // const [loading, setLoading] = useState(false);
+  // const [totalAppointments, setTotalAppointments] = useState(0);
   const [appointmentsByDate, setAppointmentsByDate] = useState<{
     [key: string]: number;
   }>({});
 
   const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] =
     useState(false);
-  const [selectedAppointments, setSelectedAppointments] = useState<
-    Array<{
-      title: string;
-      startDateTime: string;
-      endDateTime: string;
-      description?: string;
-    }>
-  >([]);
+  // const [selectedAppointments, setSelectedAppointments] = useState<
+  //   Array<{
+  //     title: string;
+  //     startDateTime: string;
+  //     endDateTime: string;
+  //     description?: string;
+  //   }>
+  // >([]);
 
   const [appointments, setAppointments] = useState<
     Array<{
@@ -52,19 +54,17 @@ export const AppointmentCalendar: React.FC = () => {
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedEndTime, setSelectedEndTime] = useState<string>("");
 
-  const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
-  const [resulst, setResults] = useState([]);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const [resulst, setResults] = useState([]);
 
   const handleModalClose = () => {
     setIsAppointmentDetailsModalOpen(false);
     // onClose();
   };
   const fetchAppointments = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-
-    
 
       const fetchedBranchId = profile?.branchId;
 
@@ -73,8 +73,8 @@ export const AppointmentCalendar: React.FC = () => {
       const params: any = {
         page,
         pageSize: rowsPerPage,
-        from: "2024-12-01T00:00:00.000Z", // Start of the month
-        to: "2025-12-31T23:59:59.999Z", // End of the month
+        // from: "2024-12-01T00:00:00.000Z", // Start of the month
+        // to: "2025-12-31T23:59:59.999Z", // End of the month
         // status: ["visiting", "declind"],
       };
 
@@ -104,11 +104,11 @@ export const AppointmentCalendar: React.FC = () => {
 
       setAppointmentsByDate(grouped);
       setAppointments(appointmentList);
-      setTotalAppointments(response.data.count || response.data.rows.length);
+      // setTotalAppointments(response.data.count || response.data.rows.length);
     } catch (err) {
       console.error("Failed to fetch appointments:", err);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -132,7 +132,7 @@ export const AppointmentCalendar: React.FC = () => {
     if (profile) {
       fetchAppointments();
     }
-  }, []);
+  }, [profile, fetchAppointments]);
 
   //  if(loading===false){
   //   console.log(totalAppointments)
@@ -142,15 +142,15 @@ export const AppointmentCalendar: React.FC = () => {
   // console.log(abc)
   // console.log(resulst)
 
-  const router = useRouter();
+  // const router = useRouter();
   const [currentView, setCurrentView] = useState<"month" | "week" | "day">(
     "month",
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [AppointmentListModal, setAppointmentListModal] =
-    useState<boolean>(false);
+  // const [AppointmentListModal, setAppointmentListModal] =
+  //   useState<boolean>(false);
   const [modalData, setModalData] = useState<{
     date: Date;
     startTime: string; // Store the clicked start time
@@ -160,16 +160,15 @@ export const AppointmentCalendar: React.FC = () => {
 
   useEffect(() => {
     renderCalendar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView, selectedDate]);
 
   const changeView = (view: "month" | "week" | "day") => {
-    if(view=="month"){
-      setSelectedDate(new Date()); 
+    if (view == "month") {
+      setSelectedDate(new Date());
     }
-    if(view =="week"){
-   
-        setSelectedDate(new Date()); 
-   
+    if (view == "week") {
+      setSelectedDate(new Date());
     }
     setCurrentView(view);
   };
@@ -190,7 +189,7 @@ export const AppointmentCalendar: React.FC = () => {
       date.getDate() === today.getDate() &&
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear();
-  
+
     if (isToday) {
       return "Today";
     } else {
@@ -492,11 +491,11 @@ export const AppointmentCalendar: React.FC = () => {
     } else {
       // Find appointments for the selected time slot
       setIsAppointmentDetailsModalOpen(true);
-      const overlappingAppointments = appointments.filter(
-        (appt) =>
-          new Date(appt.startDateTime) < endTime &&
-          new Date(appt.endDateTime) > startTime,
-      );
+      // const overlappingAppointments = appointments.filter(
+      //   (appt) =>
+      //     new Date(appt.startDateTime) < endTime &&
+      //     new Date(appt.endDateTime) > startTime,
+      // );
 
       // Set the selected appointments and open the details modal
       // setSelectedAppointments(
@@ -509,35 +508,36 @@ export const AppointmentCalendar: React.FC = () => {
       // );
 
       // setIsAppointmentDetailsModalOpen(true);
-      setSelectedAppointments([]); // Clear previous appointments
+      // setSelectedAppointments([]); // Clear previous appointments
       // Pass the startTime and endTime to the modal
       setSelectedStartTime(startTime.toISOString());
       setSelectedEndTime(endTime.toISOString());
     }
   };
 
-  const closeModal = () => {
-    setModalVisible(false);
-  };
+  // const closeModal = () => {
+  //   setModalVisible(false);
+  // };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const title = (
-      form.elements.namedItem("appointmentTitle") as HTMLInputElement
-    ).value;
-    const dateTime = new Date(
-      (
-        form.elements.namedItem("appointmentDateTime") as HTMLInputElement
-      ).value,
-    );
-    const description = (
-      form.elements.namedItem("appointmentDescription") as HTMLTextAreaElement
-    ).value;
-    // setAppointments([...appointments, { date: dateTime, title, description }]);
-    setModalVisible(false);
-    renderCalendar();
-  };
+  // const handleFormSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   const form = e.target as HTMLFormElement;
+  //   // const title = (
+  //   //   form.elements.namedItem("appointmentTitle") as HTMLInputElement
+  //   // ).value;
+  //   // const dateTime = new Date(
+  //   //   (
+  //   //     form.elements.namedItem("appointmentDateTime") as HTMLInputElement
+  //   //   ).value,
+  //   // );
+  //   // const description = (
+  //   //   form.elements.namedItem("appointmentDescription") as HTMLTextAreaElement
+  //   // ).value;
+  //   // setAppointments([...appointments, { date: dateTime, title, description }]);
+  //   setModalVisible(false);
+  //   renderCalendar();
+  // };
 
   const getMonthYearString = () => {
     const options = { year: "numeric", month: "long" } as const;
@@ -566,7 +566,7 @@ export const AppointmentCalendar: React.FC = () => {
               className={`view-button ${currentView === "day" ? "active" : ""}`}
               onClick={() => changeView("day")}
             >
-              {selectedDate ? formatDate(selectedDate): "Today"}
+              {selectedDate ? formatDate(selectedDate) : "Today"}
             </button>
           </div>
           {currentView === "month" && (

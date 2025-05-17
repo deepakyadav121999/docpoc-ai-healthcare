@@ -1,13 +1,9 @@
-
-
-
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Button,
   Spinner,
 } from "@nextui-org/react";
 import { motion } from "framer-motion";
@@ -103,7 +99,7 @@ const EnhancedModal: React.FC<EnhancedModalProps> = ({
         onClose();
       }, 2000); // Automatically close after 2 seconds
 
-      return () => clearTimeout(timer); 
+      return () => clearTimeout(timer);
     }
   }, [isOpen, loading, onClose]);
 

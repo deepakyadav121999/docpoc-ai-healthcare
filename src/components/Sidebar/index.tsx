@@ -291,7 +291,6 @@ const menuGroups = [
         label: "Reminders",
         route: "/reminders",
       },
-     
     ],
   },
   {
@@ -329,8 +328,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [loadingItem, setLoadingItem] = useState<string | null>(null); // Track which menu item is loading
 
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  
+  // const [isNavigating, setIsNavigating] = useState(false);
+
   useEffect(() => {
     const rootElement = document.documentElement;
 
@@ -339,7 +338,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       setIsDarkMode(rootElement.classList.contains("dark"));
     };
 
-   
     updateDarkMode();
 
     // MutationObserver to watch for changes to the "class" attribute of the <html> tag
@@ -348,7 +346,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     });
 
     // Observe the class attribute on the <html> element
-    observer.observe(rootElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(rootElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     // Cleanup observer on unmount
     return () => {
@@ -373,16 +374,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   const handleMenuItemClick = async (route: string, label: string) => {
     if (pathname === route) return; // Don't navigate if already on the same route
-    
+
     setLoadingItem(label);
-    setIsNavigating(true);
-    
+    // setIsNavigating(true);
+
     try {
       await router.push(route);
     } catch (error) {
       console.error("Navigation error:", error);
       setLoadingItem(null);
-      setIsNavigating(false);
+      // setIsNavigating(false);
     }
   };
 
@@ -390,7 +391,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   useEffect(() => {
     // This will run when the pathname changes, indicating navigation completion
     setLoadingItem(null);
-    setIsNavigating(false);
+    // setIsNavigating(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -437,10 +438,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 width={65}
                 height={65}
                 src={
-                isDarkMode?
-                  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
-                  :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
-              }
+                  isDarkMode
+                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png" // Dark mode logo
+                    : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png" // Light mode logo
+                }
                 alt="Logo"
                 priority
                 className="dark:hidden"
@@ -450,9 +451,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 width={65}
                 height={65}
                 src={
-                  isDarkMode?
-                    "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png"  // Dark mode logo
-                    :"https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png"  // Light mode logo
+                  isDarkMode
+                    ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-dark.png" // Dark mode logo
+                    : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/logo-icon.png" // Light mode logo
                 }
                 alt="Logo"
                 priority

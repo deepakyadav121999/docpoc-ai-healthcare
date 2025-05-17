@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableHeader,
@@ -19,9 +19,8 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
-  DatePicker,
 } from "@nextui-org/react";
-import { PlusIcon } from "./PlusIcon";
+
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
 import { columns, users, statusOptions } from "./data";
@@ -64,7 +63,7 @@ interface Employee {
   profilePicture: string;
   isActive: string;
   json: string;
-  gender:string;
+  gender: string;
 }
 
 type User = (typeof users)[0];
@@ -88,44 +87,44 @@ export default function DataTable() {
 
   const [users, setUsers] = React.useState<Employee[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | null>(null);
+  // const [error, setError] = React.useState<string | null>(null);
   const [totalUsers, setTotalUsers] = React.useState(0);
-  const [branchId, setBranchId] = useState("");
+  // const [branchId, setBranchId] = useState("");
 
-  const fetchUsers = async (
-    searchName = "",
-    selectedStatuses: string[] = [],
-  ) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
+  const fetchUsers = async () =>
+    // searchName = "",
+    // selectedStatuses: string[] = [],
+    {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("docPocAuth_token");
 
-   
-      const fetchedBranchId = profile?.branchId;
+        const fetchedBranchId = profile?.branchId;
 
-      setBranchId(fetchedBranchId);
+        // setBranchId(fetchedBranchId);
 
-      const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-      const params: any = {};
-      params.page = page;
-      params.pageSize = rowsPerPage;
-      params.from = "2024-12-04T03:32:25.812Z";
-      params.to = "2024-12-11T03:32:25.815Z";
-      const response = await axios.get(endpoint, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      setUsers(response.data.rows || response.data);
-      setTotalUsers(response.data.count || response.data.length);
-    } catch (err) {
-      setError("Failed to fetch users.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+        const params: any = {};
+        params.page = page;
+        params.pageSize = rowsPerPage;
+        params.from = "2024-12-04T03:32:25.812Z";
+        params.to = "2024-12-11T03:32:25.815Z";
+        const response = await axios.get(endpoint, {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setUsers(response.data.rows || response.data);
+        setTotalUsers(response.data.count || response.data.length);
+      } catch (err) {
+        // setError("Failed to fetch users.");
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
   React.useEffect(() => {
     fetchUsers();
   }, [page, rowsPerPage]);
@@ -218,9 +217,11 @@ export default function DataTable() {
 
     switch (columnKey) {
       case "name":
-
         const gender = user.gender || "unknown"; // Directly access the gender property
-        const placeholderImage = gender.toLowerCase() === "male" ?  `${AWS_URL}/docpoc-images/user-male.jpg` : `${AWS_URL}/docpoc-images/user-female.jpg`
+        const placeholderImage =
+          gender.toLowerCase() === "male"
+            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+            : `${AWS_URL}/docpoc-images/user-female.jpg`;
         const avatarSrc = user.profilePicture || placeholderImage;
 
         return (
@@ -292,7 +293,7 @@ export default function DataTable() {
     [],
   );
   const debouncedFetchUser = React.useMemo(
-    () => debounce((value: string) => fetchUsers(value), 500),
+    () => debounce((_value: string) => fetchUsers(), 500),
     [fetchUsers],
   );
 

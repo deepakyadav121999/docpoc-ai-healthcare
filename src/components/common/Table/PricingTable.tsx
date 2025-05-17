@@ -9,15 +9,15 @@ import {
 } from "@nextui-org/react";
 import { GLOBAL_ACTION_ICON_COLOR, TOOL_TIP_COLORS } from "@/constants";
 
-interface Colors {
-  rowColor:
-    | "default"
-    | "primary"
-    | "secondary"
-    | "success"
-    | "warning"
-    | "danger";
-}
+// interface Colors {
+//   rowColor:
+//     | "default"
+//     | "primary"
+//     | "secondary"
+//     | "success"
+//     | "warning"
+//     | "danger";
+// }
 
 interface PricingTableProps {
   tableHeader: string[];
@@ -30,9 +30,11 @@ const PricingTable: React.FC<PricingTableProps> = ({
   tableData,
   tableFooterText,
 }) => {
-  const [selectedColor, setSelectedColor] = React.useState<TOOL_TIP_COLORS>(
-    TOOL_TIP_COLORS.success,
-  );
+  // const [selectedColor, setSelectedColor] = React.useState<TOOL_TIP_COLORS>(
+  //   TOOL_TIP_COLORS.success,
+  // );
+
+  const selectedColor = TOOL_TIP_COLORS.success;
   return (
     <div className="flex flex-col gap-3" style={{ marginTop: -30 }}>
       <Table
@@ -43,15 +45,15 @@ const PricingTable: React.FC<PricingTableProps> = ({
         style={{ minHeight: 200 }}
       >
         <TableHeader>
-          {tableHeader.map((header) => (
-            <TableColumn> {header}</TableColumn>
+          {tableHeader.map((header, index) => (
+            <TableColumn key={index}> {header}</TableColumn>
           ))}
         </TableHeader>
         <TableBody>
           {tableData.map((row, cellIndex) => (
             <TableRow key={cellIndex}>
-              {row.map((cell) => (
-                <TableCell>{cell}</TableCell>
+              {row.map((cell, index) => (
+                <TableCell key={index}>{cell}</TableCell>
               ))}
             </TableRow>
           ))}
