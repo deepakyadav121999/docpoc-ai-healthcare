@@ -236,14 +236,14 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
           workingHours,
         )
       ) {
-        setModalMessage({
-          success: "",
-          error:
-            "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
-        });
-        onOpen();
+        // setModalMessage({
+        //   success: "",
+        //   error:
+        //     "The selected appointment time is outside the doctor's working hours. Please choose a different time.",
+        // });
+        // onOpen();
         // setSavingData(false);
-        return;
+        // return;
       }
     }
 
