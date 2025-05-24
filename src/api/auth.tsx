@@ -112,8 +112,10 @@
 // require("dotenv").config();
 import axios from "axios";
 import { signOut } from "@/auth";
+import {store } from "@/store";
 
 import { authState } from "@/lib/auth-state";
+import { clearProfile } from "@/store/slices/profileSlice";
 const domain = process.env.DEVELOPMENT;
 const endPoint = process.env.API_URL;
 if (!domain) {
@@ -237,13 +239,22 @@ export async function UserSignIn(
 export async function SignOut() {
   try {
     // Set global sign-out state
+     store.dispatch(clearProfile());
     authState.isSigningOut = true;
 
     // Clear local storage
     localStorage.removeItem("docPocAuth_token");
     localStorage.removeItem("userProfile");
     localStorage.removeItem("profile");
-
+        localStorage.clear(); // Clear everything to be sure
+    
+    // 3. Clear all cookies aggressively
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+    }
     // Sign out from NextAuth
     await signOut({
       redirect: false,
@@ -251,9 +262,10 @@ export async function SignOut() {
 
     // Force redirect
     window.location.reload();
+        // window.location.href = "/auth/login";
   } catch (error) {
     console.error("Sign out failed:", error);
-    window.location.href = "/auth/login";
+    // window.location.href = "/auth/login";
   } finally {
     // Reset sign-out state after a delay
     setTimeout(() => {

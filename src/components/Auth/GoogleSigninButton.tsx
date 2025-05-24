@@ -20,7 +20,7 @@ export default function GoogleSigninButton({
     try {
       setLoading(true);
       const response = await fetch(
-        "http://127.0.0.1:3037/DocPOC/v1/auth/google",
+        `${process.env.API_URL}/auth/google`,
         {
           method: "POST",
           headers: {
@@ -46,15 +46,33 @@ export default function GoogleSigninButton({
     }
   };
 
-  useEffect(() => {
-    // Skip if signing out or already authenticated
-    if (authState.isSigningOut || localStorage.getItem("docPocAuth_token"))
-      return;
+  // useEffect(() => {
+  //   // Skip if signing out or already authenticated
+  //   if (authState.isSigningOut || localStorage.getItem("docPocAuth_token"))
+  //     return;
 
-    if (status === "authenticated" && session?.idToken) {
-      handleBackendAuth(session.idToken);
-    }
-  }, [status, session]);
+  //   if (status === "authenticated" && session?.idToken) {
+  //     handleBackendAuth(session.idToken);
+  //   }
+  // }, [status, session]);
+  // Add this to your useEffect in GoogleSigninButton
+useEffect(() => {
+  // Skip if signing out or already authenticated
+  if (authState.isSigningOut) {
+    // Clear any residual tokens
+    localStorage.removeItem("docPocAuth_token");
+    return;
+  }
+
+  if (localStorage.getItem("docPocAuth_token")) {
+    router.push("/");
+    return;
+  }
+
+  if (status === "authenticated" && session?.idToken) {
+    handleBackendAuth(session.idToken);
+  }
+}, [status, session]);
 
   const handleSignIn = async () => {
     await signIn("google", {
