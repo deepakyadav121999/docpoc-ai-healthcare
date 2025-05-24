@@ -19,16 +19,13 @@ export default function GoogleSigninButton({
   const handleBackendAuth = async (idToken: string) => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${process.env.API_URL}/auth/google`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${process.env.API_URL}/auth/google`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error("Failed to authenticate with backend");
@@ -56,23 +53,23 @@ export default function GoogleSigninButton({
   //   }
   // }, [status, session]);
   // Add this to your useEffect in GoogleSigninButton
-useEffect(() => {
-  // Skip if signing out or already authenticated
-  if (authState.isSigningOut) {
-    // Clear any residual tokens
-    localStorage.removeItem("docPocAuth_token");
-    return;
-  }
+  useEffect(() => {
+    // Skip if signing out or already authenticated
+    if (authState.isSigningOut) {
+      // Clear any residual tokens
+      localStorage.removeItem("docPocAuth_token");
+      return;
+    }
 
-  if (localStorage.getItem("docPocAuth_token")) {
-    router.push("/");
-    return;
-  }
+    if (localStorage.getItem("docPocAuth_token")) {
+      router.push("/");
+      return;
+    }
 
-  if (status === "authenticated" && session?.idToken) {
-    handleBackendAuth(session.idToken);
-  }
-}, [status, session]);
+    if (status === "authenticated" && session?.idToken) {
+      handleBackendAuth(session.idToken);
+    }
+  }, [status, session]);
 
   const handleSignIn = async () => {
     await signIn("google", {

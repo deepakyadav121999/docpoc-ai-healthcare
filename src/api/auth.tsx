@@ -112,7 +112,7 @@
 // require("dotenv").config();
 import axios from "axios";
 import { signOut } from "@/auth";
-import {store } from "@/store";
+import { store } from "@/store";
 
 import { authState } from "@/lib/auth-state";
 import { clearProfile } from "@/store/slices/profileSlice";
@@ -239,15 +239,15 @@ export async function UserSignIn(
 export async function SignOut() {
   try {
     // Set global sign-out state
-     store.dispatch(clearProfile());
+    store.dispatch(clearProfile());
     authState.isSigningOut = true;
 
     // Clear local storage
     localStorage.removeItem("docPocAuth_token");
     localStorage.removeItem("userProfile");
     localStorage.removeItem("profile");
-        localStorage.clear(); // Clear everything to be sure
-    
+    localStorage.clear(); // Clear everything to be sure
+
     // 3. Clear all cookies aggressively
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
@@ -262,7 +262,7 @@ export async function SignOut() {
 
     // Force redirect
     window.location.reload();
-        // window.location.href = "/auth/login";
+    // window.location.href = "/auth/login";
   } catch (error) {
     console.error("Sign out failed:", error);
     // window.location.href = "/auth/login";

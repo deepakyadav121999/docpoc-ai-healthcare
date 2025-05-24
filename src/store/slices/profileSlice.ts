@@ -47,12 +47,12 @@ export const updateAccessToken = createAsyncThunk(
   },
 );
 export const clrProfile = createAsyncThunk(
-  'profile/clearProfile',
+  "profile/clearProfile",
   async (_, { dispatch }) => {
     // Clear any pending requests
     await dispatch(profileSlice.actions.clearProfile());
     return null;
-  }
+  },
 );
 
 const profileSlice = createSlice({
@@ -69,7 +69,6 @@ const profileSlice = createSlice({
     },
   },
 
-  
   // In your profileSlice.js
   extraReducers: (builder) => {
     builder
@@ -86,10 +85,10 @@ const profileSlice = createSlice({
         state.error = action.error.message || "Failed to fetch profile";
       })
       .addCase(clrProfile.fulfilled, (state) => {
-  state.data = null;
-  state.loading = false;
-  state.error = null;
-})
+        state.data = null;
+        state.loading = false;
+        state.error = null;
+      });
     // .addCase(updateAccessToken.fulfilled, (state) => {
     //   // Optionally handle any state changes when the token is updated
     // });
