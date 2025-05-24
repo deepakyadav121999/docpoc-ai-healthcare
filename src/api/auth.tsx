@@ -111,7 +111,9 @@
 
 // require("dotenv").config();
 import axios from "axios";
+import { signOut } from "@/auth";
 
+import { authState } from "@/lib/auth-state";
 const domain = process.env.DEVELOPMENT;
 const endPoint = process.env.API_URL;
 if (!domain) {
@@ -213,14 +215,49 @@ export async function UserSignIn(
   }
 }
 
-export async function SignOut() {
-  console.log("SignOut called");
-  localStorage.removeItem("docPocAuth_token");
-  console.log("Token removed");
-  localStorage.removeItem("userProfile");
-  console.log("userProfile removed");
-  localStorage.removeItem("profile");
-  console.log("Profile removed");
+// export async function SignOut() {
+//  authState.isSigningOut = true;
 
-  window.location.reload();
+//   console.log("SignOut called");
+//   localStorage.removeItem("docPocAuth_token");
+//   console.log("Token removed");
+//   localStorage.removeItem("userProfile");
+//   console.log("userProfile removed");
+//   localStorage.removeItem("profile");
+//   console.log("Profile removed");
+
+//   window.location.reload();
+//    await signOut({
+//       redirect: false,
+
+//     });
+
+// }
+
+export async function SignOut() {
+  try {
+    // Set global sign-out state
+    authState.isSigningOut = true;
+
+    // Clear local storage
+    localStorage.removeItem("docPocAuth_token");
+    localStorage.removeItem("userProfile");
+    localStorage.removeItem("profile");
+
+    // Sign out from NextAuth
+    await signOut({
+      redirect: false,
+    });
+
+    // Force redirect
+    window.location.reload();
+  } catch (error) {
+    console.error("Sign out failed:", error);
+    window.location.href = "/auth/login";
+  } finally {
+    // Reset sign-out state after a delay
+    setTimeout(() => {
+      authState.isSigningOut = false;
+    }, 1000);
+  }
 }

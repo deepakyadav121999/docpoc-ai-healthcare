@@ -15,6 +15,9 @@ module.exports = {
   //   ignoreDuringBuilds: true,
   // },
   images: {
-    domains: ["docpoc-assets.s3.ap-south-1.amazonaws.com"],
+    domains: [
+      "lh3.googleusercontent.com",
+      "docpoc-assets.s3.ap-south-1.amazonaws.com",
+    ],
   },
 };
