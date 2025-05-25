@@ -104,10 +104,10 @@ function RootLayout({
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Provider store={store}>
-      <AuthProvider>
+    <AuthProvider>
+      <Provider store={store}>
         <RootLayout>{children}</RootLayout>
-      </AuthProvider>
-    </Provider>
+      </Provider>
+    </AuthProvider>
   );
 }
