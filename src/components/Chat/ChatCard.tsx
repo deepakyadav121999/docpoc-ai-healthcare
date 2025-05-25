@@ -238,7 +238,7 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
                 className="h-full w-full object-cover rounded-full"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = "/images/user/user-01.png";
+                  target.src = `${AWS_URL}/docpoc-images/user-male.jpg`;
                 }}
               />
               {chat.active !== null && (
