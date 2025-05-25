@@ -1,8 +1,87 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { authState } from "@/lib/auth-state";
 
-export default function GoogleSigninButton({ text }: { text: string }) {
+export default function GoogleSigninButton({
+  text,
+  onLogin,
+}: {
+  text: string;
+  onLogin: (token: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleBackendAuth = async (idToken: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.API_URL}/auth/google`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to authenticate with backend");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("docPocAuth_token", data.access_token);
+      onLogin(data.access_token);
+      router.push("/");
+    } catch (error) {
+      console.error("Backend auth error:", error);
+      alert("Failed to authenticate with backend");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect(() => {
+  //   // Skip if signing out or already authenticated
+  //   if (authState.isSigningOut || localStorage.getItem("docPocAuth_token"))
+  //     return;
+
+  //   if (status === "authenticated" && session?.idToken) {
+  //     handleBackendAuth(session.idToken);
+  //   }
+  // }, [status, session]);
+  // Add this to your useEffect in GoogleSigninButton
+  useEffect(() => {
+    // Skip if signing out or already authenticated
+    if (authState.isSigningOut) {
+      // Clear any residual tokens
+      localStorage.removeItem("docPocAuth_token");
+      return;
+    }
+
+    if (localStorage.getItem("docPocAuth_token")) {
+      router.push("/");
+      return;
+    }
+
+    if (status === "authenticated" && session?.idToken) {
+      handleBackendAuth(session.idToken);
+    }
+  }, [status, session]);
+
+  const handleSignIn = async () => {
+    await signIn("google", {
+      prompt: "select_account",
+    });
+  };
+
   return (
-    <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray-2 p-[15px] font-medium hover:bg-opacity-50 dark:border-dark-3 dark:bg-dark-2 dark:hover:bg-opacity-50">
+    <button
+      className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray-2 p-[15px] font-medium hover:bg-opacity-50 dark:border-dark-3 dark:bg-dark-2 dark:hover:bg-opacity-50"
+      onClick={handleSignIn}
+    >
       <span>
         <svg
           width="20"
@@ -36,7 +115,7 @@ export default function GoogleSigninButton({ text }: { text: string }) {
           </defs>
         </svg>
       </span>
-      {text} with Google
+      {loading ? "Processing..." : `${text} with Google`}
     </button>
   );
 }

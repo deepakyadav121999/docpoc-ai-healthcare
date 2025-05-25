@@ -30,6 +30,30 @@ import {
   updateAccessToken,
 } from "../../store/slices/profileSlice";
 
+export const appointmentStatuses = [
+  {
+    status: "Visiting",
+    json: JSON.stringify({ description: "Patient is currently visiting" }),
+  },
+  {
+    status: "Visited",
+    json: JSON.stringify({ description: "Patient has completed the visit" }),
+  },
+  {
+    status: "Declined",
+    json: JSON.stringify({ description: "Patient has completed the visit" }),
+  },
+];
+export const appointmentTypes = [
+  {
+    name: "Dental",
+    json: JSON.stringify({ description: "Default dental appointment type" }),
+  },
+  {
+    name: "Checkup",
+    json: JSON.stringify({ description: "Default Checkup consultation" }),
+  },
+];
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
@@ -345,7 +369,44 @@ const Clinic = () => {
           setAccessToken(newAccessToken);
         }
 
-        console.log("Profile updated successfully:", response.data);
+        await Promise.all(
+          appointmentStatuses.map((status) =>
+            axios.post(
+              `${API_URL}/appointment/status`,
+              {
+                status: status.status, // Here we're accessing the status property
+                branchId: fetchedBranchId,
+                json: status.json,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            ),
+          ),
+        );
+
+        await Promise.all(
+          appointmentTypes.map((type) =>
+            axios.post(
+              `${API_URL}/appointment/types`,
+              {
+                name: type.name,
+                branchId: fetchedBranchId,
+                json: type.json,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            ),
+          ),
+        );
+        // console.log("Profile updated successfully:", response.data);
       }
     } catch (error: any) {
       console.error("Error creating branch:", error);
