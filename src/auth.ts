@@ -16,6 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+   secret: process.env.AUTH_SECRET,
   callbacks: {
     async jwt({ token, account }) {
       // Only add tokens on initial sign-in
