@@ -259,8 +259,8 @@ export default function ReportDataTable() {
       }
 
       // Set default date range (adjust as needed)
-      const fromDate = "2025-01-01T05:19:15.544Z";
-      const toDate = "2025-05-02T05:19:15.545Z";
+      const fromDate = "2022-01-01T05:19:15.544Z";
+      const toDate = "3000-05-02T05:19:15.545Z";
 
       //  const endpoint = searchName
       //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`

@@ -102,7 +102,6 @@ export default function ModalForm(props: {
   const [editSelectedEmployeeEmail, setEditEmployeeEmail] = useState(false);
   const [editSelectedEmployeeDesignation, setEditEmployeeDesignation] =
     useState(false);
-
   const [editSelectedEmployeeShiftTime, setEditEmployeeShiftTime] =
     useState(false);
   const [editSelectedEmployeeJoiningDate] = useState(false);
@@ -120,14 +119,8 @@ export default function ModalForm(props: {
     { label: "Doctor", value: "doctor" },
     { label: "Nurse", value: "nurse" },
     { label: "Staff", value: "staff" },
+    { label: "Admin", value: "admin" },
   ];
-
-  // State to track selected designation and employee name
-  // const [selectedDesignation, setSelectedDesignation] =
-  //   useState<string>(employeeDesignation);
-
-  // const [tempDesignation, setTempDesignation] = useState(employeeDesignation);
-  // const [employeeId, setEmployeeId] = useState("");
   const [employeePhone, setEmployeePhone] = useState("");
   const [emloyeeBranch, setEmployeeBranch] = useState("");
   const [employeeShiftTime, setEmployeeShiftTime] = useState("");
@@ -135,6 +128,8 @@ export default function ModalForm(props: {
   const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
   const [employeePhoto, setEmployeePhoto] = useState("");
   const [employeeGender, setEmployeeGender] = useState(" ");
+  const [employeeBio, setEmployeeBio] = useState();
+
   const [editSelectedPatient, setEditPatient] = useState(false);
 
   const [patientName, setPatientName] = useState("");
@@ -431,10 +426,14 @@ export default function ModalForm(props: {
       setProfilePhoto(users.profilePicture);
       // setEmployeeId(users.id);
       setEmployeeGender(users.gender);
+      // setEmployeeJson(users?.json)
       console.log(users);
 
       const workingHours = parsedJson.workingHours; // e.g., "9:00 AM - 9:00 PM"
-
+      const bio = parsedJson?.bio;
+      if (bio) {
+        setEmployeeBio(bio);
+      }
       if (workingHours) {
         const [startTime, endTime] = workingHours.split(" - "); // Split into start and end times
 
@@ -685,6 +684,7 @@ export default function ModalForm(props: {
           dob: employeeDOB,
           designation: employeeDesignation,
           workingHours: employeeShiftTime,
+          bio: employeeBio,
         }),
       };
       props.onDataChange(updatedData);
@@ -718,6 +718,7 @@ export default function ModalForm(props: {
     employeeDOB,
     employeeGender,
     employeeDesignation,
+    employeeBio,
     employeeShiftTime,
     appointmentName,
     appointmentBranch,
