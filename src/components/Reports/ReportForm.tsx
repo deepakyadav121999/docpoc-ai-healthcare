@@ -27,6 +27,7 @@ import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import ShareLinkModal from "../common/Modal/ShareLinkModal";
 
 interface Appointment {
   id: string;
@@ -73,8 +74,7 @@ const AppointmentForm = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // const [reportName, setReportName] = useState("");
-  const [enableSharingWithPatient, setEnableSharingWithPatient] =
-    useState(true);
+  const [enableSharingWithPatient] = useState(true);
   const [isSharedWithPatient, setIsSharedWithPatient] = useState(true);
   const [appointmentMode, setAppointmentMode] = useState<
     "appointment" | "manual"
@@ -98,7 +98,8 @@ const AppointmentForm = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-
+  const [shareLink, setShareLink] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   // Vital Signs state (unchanged)
   // const [vitals, setVitals] = useState({
   //   bloodPressure: "0/0 mmHg",
@@ -194,6 +195,7 @@ const AppointmentForm = () => {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
       const branchId = profile?.branchId;
       const reportData = {
+        name: "abc",
         patientId: selectedPatient,
         branchId: branchId,
         patient: {
@@ -261,12 +263,25 @@ const AppointmentForm = () => {
 
       window.open(documentUrl, "_blank");
 
-      setModalMessage({
-        success: "Report saved successfully!",
-        error: "",
-      });
-      onOpen();
+      // setModalMessage({
+      //   success: "Report saved successfully!",
+      //   error: "",
+      // });
+
+      if (enableSharingWithPatient) {
+        setShareLink(documentUrl);
+        setIsShareModalOpen(true);
+      } else {
+        setModalMessage({
+          success: "Report saved successfully!",
+          error: "",
+        });
+        onOpen();
+      }
       closePreviewModal();
+
+      // onOpen();
+      // closePreviewModal();
     } catch (error) {
       console.error("Error saving report:", error);
       setModalMessage({
@@ -975,7 +990,7 @@ const AppointmentForm = () => {
 
         {/* Sharing options - made responsive */}
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <Checkbox
+          {/* <Checkbox
             color={TOOL_TIP_COLORS.secondary}
             isSelected={enableSharingWithPatient}
             onValueChange={setEnableSharingWithPatient}
@@ -987,7 +1002,7 @@ const AppointmentForm = () => {
             }}
           >
             Enable Sharing With Patient
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             color={TOOL_TIP_COLORS.secondary}
@@ -1452,6 +1467,11 @@ const AppointmentForm = () => {
         loading={isLoading}
         modalMessage={modalMessage}
         onClose={handleModalClose}
+      />
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        link={shareLink}
       />
     </div>
   );

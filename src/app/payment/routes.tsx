@@ -9,8 +9,8 @@ export const PAYMENT_TAB_KEY = {
     name: "Create Entry",
     screen: ROUTES.PAYMENT_ENTRY,
   },
-  Details: {
-    name: "Details",
-    screen: ROUTES.PAYMENT_DETAILS,
-  },
+  // Details: {
+  //   name: "Details",
+  //   screen: ROUTES.PAYMENT_DETAILS,
+  // },
 };
