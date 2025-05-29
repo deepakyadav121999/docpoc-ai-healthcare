@@ -16,22 +16,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-   secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
+  trustHost: true, // Important for production
+  cookies: {
+    sessionToken: {
+      // name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, account }) {
-      // Only add tokens on initial sign-in
       if (account) {
         return {
           ...token,
           accessToken: account.access_token,
           idToken: account.id_token,
-          backendToken: null, // Initialize backend token as null
+          backendToken: null,
         };
       }
       return token;
     },
     async session({ session, token }) {
-      // Only add tokens to session if they exist
       if (token.accessToken) {
         session.accessToken = token.accessToken;
         session.idToken = token.idToken;
