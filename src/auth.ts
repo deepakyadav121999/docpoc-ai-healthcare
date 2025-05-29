@@ -1,11 +1,11 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import GoogleProvider from "next-auth/providers/google";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions = {
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       authorization: {
         params: {
           prompt: "select_account",
@@ -17,31 +17,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   secret: process.env.AUTH_SECRET,
-  trustHost: true, // Important for production
-  cookies: {
-    sessionToken: {
-      // name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account }: { token: any; account: any }) {
       if (account) {
-        return {
-          ...token,
-          accessToken: account.access_token,
-          idToken: account.id_token,
-          backendToken: null,
-        };
+        token.accessToken = account.access_token;
+        token.idToken = account.id_token;
+        token.backendToken = null;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (token.accessToken) {
         session.accessToken = token.accessToken;
         session.idToken = token.idToken;
@@ -50,4 +35,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-});
+
+  cookies: {
+    sessionToken: {
+      name: "__Secure-next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true, // Must be true in production
+        domain: ".docpoc.app", // Main domain for subdomains
+      },
+    },
+  },
+  trustHost: true, // Required for production
+};
+
+export default NextAuth(authOptions);
