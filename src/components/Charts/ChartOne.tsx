@@ -2,17 +2,70 @@ import { ApexOptions } from "apexcharts";
 import React from "react";
 import ReactApexChart from "react-apexcharts";
 
-const ChartOne: React.FC = () => {
+interface ChartOneProps {
+  paymentData?: {
+    currentRevenue: number;
+    previousRevenue: number;
+    currentPayments?: any[]; // Using any to match your existing structure
+  };
+}
+
+const ChartOne: React.FC<ChartOneProps> = ({ paymentData }) => {
+  const processPaymentData = () => {
+    const receivedData = [0, 0, 0]; // Initialize for 3 months
+    const dueData = [0, 0, 0];
+
+    if (paymentData?.currentPayments) {
+      const now = new Date();
+      const currentMonth = now.getMonth(); // 0-11
+
+      paymentData.currentPayments.forEach((payment: any) => {
+        try {
+          const paymentDate = new Date(payment.date || payment.createdAt);
+          const monthIndex = currentMonth - paymentDate.getMonth();
+
+          // Only process data from last 3 months
+          if (monthIndex >= 0 && monthIndex < 3) {
+            const arrayIndex = 2 - monthIndex; // Reverse order (current month last)
+
+            if (payment.status === "COMPLETED") {
+              receivedData[arrayIndex] += payment.amount || 0;
+            } else if (payment.status === "PENDING") {
+              dueData[arrayIndex] += payment.amount || 0;
+            }
+          }
+        } catch (e) {
+          console.error("Error processing payment data:", e);
+        }
+      });
+    }
+
+    return { receivedData, dueData };
+  };
+
+  const { receivedData, dueData } = processPaymentData();
+
   const series = [
     {
       name: "Received Amount",
-      data: [0, 0, 0],
+      data: receivedData,
     },
     {
       name: "Due Amount",
-      data: [0, 0, 0],
+      data: dueData,
     },
   ];
+
+  const getMonthNames = () => {
+    const months = [];
+    const date = new Date();
+    for (let i = 2; i >= 0; i--) {
+      const tempDate = new Date(date);
+      tempDate.setMonth(tempDate.getMonth() - i);
+      months.push(tempDate.toLocaleString("default", { month: "short" }));
+    }
+    return months;
+  };
 
   const options: ApexOptions = {
     legend: {
@@ -96,7 +149,8 @@ const ChartOne: React.FC = () => {
     },
     xaxis: {
       type: "category",
-      categories: ["Jun", "Jul", "Aug"],
+      // categories: ["Jun", "Jul", "Aug"],
+      categories: getMonthNames(),
       axisBorder: {
         show: false,
       },
@@ -110,8 +164,15 @@ const ChartOne: React.FC = () => {
           fontSize: "0px",
         },
       },
+      labels: {
+        formatter: function (value) {
+          return "₹" + value.toLocaleString();
+        },
+      },
     },
   };
+  const totalReceived = receivedData.reduce((sum, amount) => sum + amount, 0);
+  const totalDue = dueData.reduce((sum, amount) => sum + amount, 0);
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-7 ">
@@ -143,13 +204,13 @@ const ChartOne: React.FC = () => {
         <div className="border-stroke dark:border-dark-3 xsm:w-1/2 xsm:border-r">
           <p className="font-medium">Received Amount</p>
           <h4 className="mt-1 text-xl font-bold text-dark dark:text-white">
-            ₹0.00
+            {totalReceived}
           </h4>
         </div>
         <div className="xsm:w-1/2">
           <p className="font-medium">Due Amount</p>
           <h4 className="mt-1 text-xl font-bold text-dark dark:text-white">
-            ₹0.00
+            {totalDue}
           </h4>
         </div>
       </div>

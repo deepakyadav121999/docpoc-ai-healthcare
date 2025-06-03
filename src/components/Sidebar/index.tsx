@@ -258,7 +258,7 @@ const menuGroups = [
       {
         icon: <SVGIconProvider iconName="rupee" />,
         label: "Payments",
-        route: "/payment/overview",
+        route: "/payment/create-entry",
       },
       {
         icon: <SVGIconProvider iconName="smalldocument" />,

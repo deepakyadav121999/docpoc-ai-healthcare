@@ -34,7 +34,7 @@ export default function GoogleSigninButton({
       const data = await response.json();
       localStorage.setItem("docPocAuth_token", data.access_token);
       onLogin(data.access_token);
-      router.push("/");
+      // router.push("/");
     } catch (error) {
       console.error("Backend auth error:", error);
       alert("Failed to authenticate with backend");
@@ -72,9 +72,7 @@ export default function GoogleSigninButton({
   }, [status, session]);
 
   const handleSignIn = async () => {
-    await signIn("google", {
-      prompt: "select_account",
-    });
+    await signIn("google", { callbackUrl: "/" });
   };
 
   return (
