@@ -330,45 +330,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-
-      // Step 1: Fetch Hospital
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-      //   throw new Error("No hospital data found.");
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-
-      // // Step 2: Fetch Branch
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   throw new Error("No branch data found.");
-      // }
-
-      // const fetchedBranchId = branchResponse.data[0].id;
-
-      // const userProfile = localStorage.getItem("userProfile");
-
-      // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-      // const userId = profile?.id;
-      // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
-
       // Step 3: Fetch Appointment Types
       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
       const response = await axios.get(appointmentTypeEndpoint, {
@@ -409,7 +371,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       const params: any = {};
       params.page = 1;
       params.pageSize = 50;
-      params.from = "2024-12-04T03:32:25.812Z";
+      params.from = "2021-12-04T03:32:25.812Z";
       params.to = "2024-12-11T03:32:25.815Z";
       params.notificationStatus = [
         "Whatsapp notifications paused",
@@ -603,6 +565,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 <Input
                   label="Appointment Date"
                   labelPlacement="outside"
+                  autoFocus={false}
                   variant="bordered"
                   color={TOOL_TIP_COLORS.secondary}
                   isDisabled={!edit}
@@ -621,6 +584,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   label="Appointment Start Time"
                   labelPlacement="outside"
                   variant="bordered"
+                  autoFocus={false}
                   // defaultValue={new Time(8, 30)}
                   defaultValue={
                     formData.startDateTime
@@ -637,6 +601,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment End Time"
+                  autoFocus={false}
                   labelPlacement="outside"
                   variant="bordered"
                   // defaultValue={new Time(9)}
@@ -665,6 +630,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 <Textarea
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
+                  autoFocus={false}
                   labelPlacement="outside"
                   variant="bordered"
                   label="Remarks"
@@ -686,6 +652,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
+                  autoFocus={false}
                   variant="bordered"
                   isDisabled={!edit}
                   defaultItems={appointmentTypeList}
@@ -697,6 +664,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 >
                   {(item) => (
                     <AutocompleteItem
+                      autoFocus={false}
                       key={item.value}
                       variant="shadow"
                       color={TOOL_TIP_COLORS.secondary}
@@ -712,6 +680,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -725,6 +694,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 >
                   {(item) => (
                     <AutocompleteItem
+                      autoFocus={false}
                       key={item.value}
                       variant="shadow"
                       color={TOOL_TIP_COLORS.secondary}
@@ -740,6 +710,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -753,6 +724,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 >
                   {(item) => (
                     <AutocompleteItem
+                      autoFocus={false}
                       key={item.value}
                       variant="shadow"
                       color={TOOL_TIP_COLORS.secondary}
@@ -762,6 +734,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   )}
                 </Autocomplete>
                 <Autocomplete
+                  autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"

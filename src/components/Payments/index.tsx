@@ -140,7 +140,7 @@ const App: React.FC = () => {
             api.get(`${process.env.API_URL}/patient/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: previousFrom,
                 to: previousTo,
               },
@@ -152,7 +152,7 @@ const App: React.FC = () => {
             api.get(`${process.env.API_URL}/appointment/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: currentFrom,
                 to: currentTo,
               },
@@ -164,7 +164,7 @@ const App: React.FC = () => {
             api.get(`${process.env.API_URL}/appointment/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: previousFrom,
                 to: previousTo,
               },
