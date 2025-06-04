@@ -71,12 +71,18 @@ interface DashboardData {
     patients: { current: number; previous: number };
     bookings: { current: number; previous: number };
     revenue: { current: number; previous: number };
-    campaigns: { current: number; previous: number };
+    // campaigns: { current: number; previous: number };
   };
   visitTypes: {
     types?: { id: string; name: string }[];
     appointments?: Appointment[];
   };
+  paymentRecords?: {
+    date: string;
+    amount: number;
+    status: "COMPLETED" | "PENDING";
+    paymentMethod: "CASH" | "CARD";
+  }[];
 }
 
 // Throttle function to limit API calls
@@ -184,7 +190,7 @@ const ECommerce: React.FC = () => {
             api.get(`${API_URL}/patient/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: currentFrom,
                 to: currentTo,
               },
@@ -196,7 +202,7 @@ const ECommerce: React.FC = () => {
             api.get(`${API_URL}/patient/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: previousFrom,
                 to: previousTo,
               },
@@ -208,7 +214,7 @@ const ECommerce: React.FC = () => {
             api.get(`${API_URL}/appointment/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: currentFrom,
                 to: currentTo,
               },
@@ -220,7 +226,7 @@ const ECommerce: React.FC = () => {
             api.get(`${API_URL}/appointment/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: previousFrom,
                 to: previousTo,
               },
@@ -233,59 +239,62 @@ const ECommerce: React.FC = () => {
       const [
         currentRevenue,
         previousRevenue,
-        currentCampaigns,
-        previousCampaigns,
+
+        // currentCampaigns,
+        // previousCampaigns,
       ] = await Promise.all([
         fetchDataWithFallback(
           () =>
-            api.get(`${API_URL}/payment/list/${branchId}`, {
+            api.get(`${API_URL}/payments/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
+                pageSize: 1000,
                 from: currentFrom,
                 to: currentTo,
-                status: "Completed",
+                paymentMethod: ["CASH", "CARD"],
+                status: ["COMPLETED", "PENDING"],
               },
             }),
           { data: { rows: [] } },
         ),
         fetchDataWithFallback(
           () =>
-            api.get(`${API_URL}/payment/list/${branchId}`, {
+            api.get(`${API_URL}/payments/list/${branchId}`, {
               params: {
                 page: 1,
-                pageSize: 1,
-                from: previousFrom,
-                to: previousTo,
-                status: "Completed",
+                pageSize: 1000,
+                from: currentFrom,
+                to: currentTo,
+                paymentMethod: ["CASH", "CARD"],
+                status: ["COMPLETED", "PENDING"],
               },
             }),
           { data: { rows: [] } },
         ),
-        fetchDataWithFallback(
-          () =>
-            api.get(`${API_URL}/campaign/list/${branchId}`, {
-              params: {
-                page: 1,
-                pageSize: 1,
-                from: currentFrom,
-                to: currentTo,
-              },
-            }),
-          { data: { count: 0 } },
-        ),
-        fetchDataWithFallback(
-          () =>
-            api.get(`${API_URL}/campaign/list/${branchId}`, {
-              params: {
-                page: 1,
-                pageSize: 1,
-                from: previousFrom,
-                to: previousTo,
-              },
-            }),
-          { data: { count: 0 } },
-        ),
+        // fetchDataWithFallback(
+        //   () =>
+        //     api.get(`${API_URL}/campaign/list/${branchId}`, {
+        //       params: {
+        //         page: 1,
+        //         pageSize: 1,
+        //         from: currentFrom,
+        //         to: currentTo,
+        //       },
+        //     }),
+        //   { data: { count: 0 } },
+        // ),
+        // fetchDataWithFallback(
+        //   () =>
+        //     api.get(`${API_URL}/campaign/list/${branchId}`, {
+        //       params: {
+        //         page: 1,
+        //         pageSize: 1,
+        //         from: previousFrom,
+        //         to: previousTo,
+        //       },
+        //     }),
+        //   { data: { count: 0 } },
+        // ),
       ]);
 
       setData({
@@ -310,15 +319,17 @@ const ECommerce: React.FC = () => {
                 0,
               ) || 0,
           },
-          campaigns: {
-            current: currentCampaigns.data.count,
-            previous: previousCampaigns.data.count,
-          },
+
+          // campaigns: {
+          //   current: currentCampaigns.data.count,
+          //   previous: previousCampaigns.data.count,
+          // },
         },
         visitTypes: {
           types: typesResponse.data,
           appointments: appointmentsResponse.data.rows,
         },
+        paymentRecords: currentRevenue.data.rows,
       });
     } catch (err) {
       setError(
@@ -359,7 +370,14 @@ const ECommerce: React.FC = () => {
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
         <div className="col-span-12">
-          <ChartOne />
+          {/* <ChartOne /> */}
+          <ChartOne
+            paymentData={{
+              currentRevenue: data.stats.revenue.current,
+              previousRevenue: data.stats.revenue.previous,
+              currentPayments: data.paymentRecords,
+            }}
+          />
         </div>
         {/* <ChartOne /> */}
         {/* <ChartTwo /> */}

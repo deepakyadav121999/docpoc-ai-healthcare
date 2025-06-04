@@ -39,7 +39,8 @@ const PricingTable: React.FC<PricingTableProps> = ({
     <div className="flex flex-col gap-3" style={{ marginTop: -30 }}>
       <Table
         color={selectedColor}
-        selectionMode="single"
+        // selectionMode="single"
+        selectionMode="none"
         defaultSelectedKeys={["1"]}
         aria-label="Example static collection table"
         style={{ minHeight: 200 }}

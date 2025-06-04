@@ -14,6 +14,7 @@ import { fetchProfile, clearProfile } from "../store/slices/profileSlice";
 import { RootState } from "../store";
 import { AppDispatch } from "../store";
 import { AuthProvider } from "@/components/auth-provider";
+
 function RootLayout({
   children,
 }: Readonly<{
@@ -35,6 +36,26 @@ function RootLayout({
     }
   }, [dispatch]);
 
+  // useEffect(() => {
+  //   if (isLoading) return;
+
+  //   if (!isAuthenticated) {
+  //     if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
+  //       router.push("/auth/signin");
+  //     }
+  //   } else {
+  //     if (profile && !profile.branchId) {
+  //       if (pathname !== "/settings") {
+  //         router.push("/settings");
+  //       }
+  //     } else {
+  //       if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+  //         router.push("/");
+  //       }
+  //     }
+  //   }
+  // }, [isAuthenticated, isLoading, pathname, router, profile]);
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -43,13 +64,31 @@ function RootLayout({
         router.push("/auth/signin");
       }
     } else {
-      if (profile && !profile.branchId) {
-        if (pathname !== "/settings") {
-          router.push("/settings");
+      try {
+        const profileJson = profile?.json ? JSON.parse(profile.json) : {};
+        const hasDesignation = !!profileJson?.designation;
+
+        if (!hasDesignation) {
+          // FIRST check - Redirect to profile settings if designation is missing
+          if (pathname !== "/pages/settings") {
+            router.push("/pages/settings");
+          }
+        } else if (!profile?.branchId) {
+          // THEN check - Redirect to hospital setup if branchId is missing
+          if (pathname !== "/settings") {
+            router.push("/settings");
+          }
+        } else {
+          // Only when both exist, allow access to main app
+          if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+            router.push("/");
+          }
         }
-      } else {
-        if (pathname === "/auth/signin" || pathname === "/auth/signup") {
-          router.push("/");
+      } catch (error) {
+        console.error("Error parsing profile JSON", error);
+        // If JSON parsing fails, treat it as missing designation
+        if (pathname !== "/pages/settings") {
+          router.push("/pages/settings");
         }
       }
     }

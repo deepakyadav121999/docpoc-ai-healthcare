@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 // import { useRouter } from "next/navigation";
-import { signOut } from "@/auth";
+import { signOut } from "next-auth/react";
 import { store } from "@/store";
 
 import { authState } from "@/lib/auth-state";
@@ -38,7 +38,7 @@ const SignoutPage = () => {
       });
 
       // Force redirect
-      window.location.reload();
+      // window.location.reload();
       // window.location.href = "/auth/login";
     } catch (error) {
       console.error("Sign out failed:", error);

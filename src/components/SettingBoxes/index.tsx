@@ -562,11 +562,14 @@ const SettingBoxes = () => {
 
     try {
       const token = localStorage.getItem("docPocAuth_token");
-      const passwordEndpoint = `${API_URL}/auth/change-password`;
+      const passwordEndpoint = `${process.env.API_URL}/password/change`;
 
       const payload = {
+        email: userProfile?.email || "",
+        phone: userProfile?.phone || null,
+        currentPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword,
-        // ...(!isSocialLogin && { oldPassword: passwordForm.oldPassword })
+        // username: userProfile?.username || ""
       };
 
       await axios.post(passwordEndpoint, payload, {

@@ -25,6 +25,7 @@
     "@nextui-org/tooltip": "^2.0.35",
     "@react-aria/i18n": "^3.11.1",
     "@reduxjs/toolkit": "^2.6.0",
+    "@types/next-auth": "^3.15.0",
     "apexcharts": "^3.45.2",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",

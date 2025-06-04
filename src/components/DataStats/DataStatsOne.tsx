@@ -196,7 +196,7 @@ interface StatsProps {
   patients?: { current: number; previous: number };
   bookings?: { current: number; previous: number };
   revenue?: { current: number; previous: number };
-  campaigns?: { current: number; previous: number };
+  // campaigns?: { current: number; previous: number };
 }
 
 const calculateGrowthRate = (
