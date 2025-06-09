@@ -517,7 +517,7 @@ export default function AppointmentTable() {
   const handleToggle = useCallback(
     (
       setter: React.Dispatch<React.SetStateAction<boolean>>,
-    //  key: "doctorId" | "createdBy"
+      //  key: "doctorId" | "createdBy"
     ) => {
       if (switchLoading || loading) return; // Prevent toggling if already loading
 
@@ -568,9 +568,12 @@ export default function AppointmentTable() {
                 <div className="flex items-center gap-2">
                   <Switch
                     // onChange={() => setAssignedToMe((prev) => !prev)}
-                    onChange={() => handleToggle(setAssignedToMe,
-                      //  "doctorId"
-                      )}
+                    onChange={() =>
+                      handleToggle(
+                        setAssignedToMe,
+                        //  "doctorId"
+                      )
+                    }
                     className="text-sm"
                     size="lg"
                     color="secondary"
@@ -582,9 +585,12 @@ export default function AppointmentTable() {
                 <div className="flex items-center gap-2">
                   <Switch
                     // onChange={() => setCreatedByMe((prev) => !prev)}
-                    onChange={() => handleToggle(setCreatedByMe,
-                      //  "createdBy"
-                      )}
+                    onChange={() =>
+                      handleToggle(
+                        setCreatedByMe,
+                        //  "createdBy"
+                      )
+                    }
                     className="text-sm"
                     size="lg"
                     color="secondary"

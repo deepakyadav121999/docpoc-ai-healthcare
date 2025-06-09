@@ -525,8 +525,8 @@
 //     // <div className="  grid grid-cols-1 gap-9  ">
 //     <div className="appointment-container">
 //        <style jsx global>{`
-     
-//    .nextui-input, 
+
+//    .nextui-input,
 //   .nextui-input-wrapper input,
 //   .nextui-textarea,
 //   .nextui-textarea-wrapper textarea,
@@ -540,19 +540,19 @@
 //     .nextui-autocomplete-input {
 //     font-size: 16px !important;
 //   }
-        
+
 //         /* Disable text size adjustment */
 //         html {
 //           -webkit-text-size-adjust: 100%;
 //         }
-        
+
 //         /* Container styles */
 //         .appointment-container {
 //           max-width: 100vw;
 //           overflow-x: hidden;
 //           padding: 0 1rem;
 //         }
-        
+
 //         /* Form container */
 //         .form-card {
 //           border-radius: 15px;
@@ -562,33 +562,30 @@
 //           max-width: 100%;
 //           overflow: hidden;
 //         }
-        
+
 //         /* Input group styles */
-       
-        
+
 //         /* Time inputs container */
 //         .time-inputs-container {
 //           display: flex;
 //           flex-direction: column;
 //           gap: 1rem;
 //         }
-        
+
 //         /* Full width inputs */
 //         .full-width-input {
 //           width: 100% !important;
 //           max-width: 100% !important;
 //         }
-        
+
 //         /* NextUI component overrides */
-//         .nextui-input-wrapper, 
+//         .nextui-input-wrapper,
 //         .nextui-autocomplete-wrapper,
 //         .nextui-time-input-wrapper {
 //           width: 100% !important;
 //           max-width: 100% !important;
 //         }
-        
-     
-        
+
 //         /* iOS specific fixes */
 //         @supports (-webkit-touch-callout: none) {
 //           input, textarea {
@@ -597,7 +594,6 @@
 //             min-height: auto !important;
 //           }
 //         }
-        
 
 //       `}</style>
 //       <div className="flex flex-col w-full ">
@@ -849,7 +845,7 @@
 //   /* <Modal isOpen={isOpen} onClose={handleModalClose}>
 //                 <ModalContent>
 //                   <ModalHeader>{loading ?(<div className="flex justify-center">
-                        
+
 //                       </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
 //                   <ModalBody>
 //                     {loading ? (
@@ -1012,7 +1008,6 @@
 // //     setLoading(false);
 // //   }
 // // };
-
 
 "use client";
 import {
@@ -1539,35 +1534,34 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   return (
     <div className="  grid grid-cols-1 gap-9  ">
-  <style jsx global>{`
-     
-   .nextui-input, 
-  .nextui-input-wrapper input,
-  .nextui-textarea,
-  .nextui-textarea-wrapper textarea,
-  .nextui-select-wrapper select {
-    font-size: 16px !important;
-    touch-action: manipulation;
-  }
-    .nextui-time-input-input {
-    font-size: 16px !important;
-  }
-    .nextui-autocomplete-input {
-    font-size: 16px !important;
-  }
-        
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
         /* Disable text size adjustment */
         html {
           -webkit-text-size-adjust: 100%;
         }
-        
+
         /* Container styles */
         .appointment-container {
           max-width: 100vw;
           overflow-x: hidden;
           padding: 0 1rem;
         }
-        
+
         /* Form container */
         .form-card {
           border-radius: 15px;
@@ -1577,43 +1571,39 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           max-width: 100%;
           overflow: hidden;
         }
-        
+
         /* Input group styles */
-       
-        
+
         /* Time inputs container */
         .time-inputs-container {
           display: flex;
           flex-direction: column;
           gap: 1rem;
         }
-        
+
         /* Full width inputs */
         .full-width-input {
           width: 100% !important;
           max-width: 100% !important;
         }
-        
+
         /* NextUI component overrides */
-        .nextui-input-wrapper, 
+        .nextui-input-wrapper,
         .nextui-autocomplete-wrapper,
         .nextui-time-input-wrapper {
           width: 100% !important;
           max-width: 100% !important;
         }
-        
-     
-        
+
         /* iOS specific fixes */
         @supports (-webkit-touch-callout: none) {
-          input, textarea {
+          input,
+          textarea {
             -webkit-user-select: auto !important;
             font-size: 16px !important;
             min-height: auto !important;
           }
         }
-        
-
       `}</style>
 
       <div className="flex flex-col w-full ">

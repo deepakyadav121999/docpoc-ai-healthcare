@@ -804,7 +804,6 @@
 
 // export default NewAppointment;
 
-
 // "use client";
 // import { useEffect, useState } from "react";
 // import axios from "axios";
@@ -842,7 +841,7 @@
 //   const [loading, setLoading] = useState(false);
 //   const [timeWarning, setTimeWarning] = useState("");
 //   const [modal, setModal] = useState({ isOpen: false, success: "", error: "" });
-  
+
 //   const inputDate = new Date(date);
 //   const correctedDate = new Date(
 //     inputDate.getTime() - inputDate.getTimezoneOffset() * 60000,
@@ -1052,7 +1051,7 @@
 //     try {
 //       const token = localStorage.getItem("docPocAuth_token");
 //       const fetchedBranchId = profile?.branchId;
-      
+
 //       // Fetch appointment types
 //       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
 //       const response = await axios.get(appointmentTypeEndpoint, {
@@ -1389,9 +1388,6 @@
 // };
 
 // export default NewAppointment;
-
-
-
 
 "use client";
 import {
@@ -1937,34 +1933,33 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   return (
     <div className="appointment-container">
       <style jsx global>{`
-     
-   .nextui-input, 
-  .nextui-input-wrapper input,
-  .nextui-textarea,
-  .nextui-textarea-wrapper textarea,
-  .nextui-select-wrapper select {
-    font-size: 16px !important;
-    touch-action: manipulation;
-  }
-    .nextui-time-input-input {
-    font-size: 16px !important;
-  }
-    .nextui-autocomplete-input {
-    font-size: 16px !important;
-  }
-        
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
         /* Disable text size adjustment */
         html {
           -webkit-text-size-adjust: 100%;
         }
-        
+
         /* Container styles */
         .appointment-container {
           max-width: 100vw;
           overflow-x: hidden;
           padding: 0 1rem;
         }
-        
+
         /* Form container */
         .form-card {
           border-radius: 15px;
@@ -1974,49 +1969,45 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
           max-width: 100%;
           overflow: hidden;
         }
-        
+
         /* Input group styles */
-       
-        
+
         /* Time inputs container */
         .time-inputs-container {
           display: flex;
           flex-direction: column;
           gap: 1rem;
         }
-        
+
         /* Full width inputs */
         .full-width-input {
           width: 100% !important;
           max-width: 100% !important;
         }
-        
+
         /* NextUI component overrides */
-        .nextui-input-wrapper, 
+        .nextui-input-wrapper,
         .nextui-autocomplete-wrapper,
         .nextui-time-input-wrapper {
           width: 100% !important;
           max-width: 100% !important;
         }
-        
-     
-        
+
         /* iOS specific fixes */
         @supports (-webkit-touch-callout: none) {
-          input, textarea {
+          input,
+          textarea {
             -webkit-user-select: auto !important;
             font-size: 16px !important;
             min-height: auto !important;
           }
         }
-        
-
       `}</style>
 
       <div className="flex flex-col w-full">
         <div className="form-card  rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
           <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-              {/* <div>
+            {/* <div>
               <Switch
                 defaultSelected
                 color="secondary"
@@ -2026,12 +2017,15 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 Edit
               </Switch>
             </div> */}
-            </div>
-          
+          </div>
+
           <form onSubmit={handleSubmit}>
             <div className="p-6.5">
               {/* Date Input */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
+                style={{ marginTop: 20 }}
+              >
                 <Input
                   className="full-width-input"
                   label="Appointment Date"
@@ -2047,7 +2041,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Time Inputs */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row time-inputs-container" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row time-inputs-container"
+                style={{ marginTop: 20 }}
+              >
                 <TimeInput
                   className="full-width-input"
                   color={TOOL_TIP_COLORS.secondary}
@@ -2120,7 +2117,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Appointment Type */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   className="full-width-input"
                   color={TOOL_TIP_COLORS.secondary}
@@ -2149,7 +2149,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Appointment Status */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
@@ -2177,7 +2180,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Patient and Doctor Selection */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row" style={{ marginTop: 20 }}>
+              <div
+                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
+                style={{ marginTop: 20 }}
+              >
                 <Autocomplete
                   autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
