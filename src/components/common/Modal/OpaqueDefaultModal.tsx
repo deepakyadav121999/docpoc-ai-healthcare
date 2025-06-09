@@ -106,7 +106,7 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   // background: white;
   border-radius: 15px;
   padding-top:10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
 }
 
 /* Ensure the modal is scrollable */

@@ -545,8 +545,8 @@ export const AppointmentCalendar: React.FC = () => {
   };
 
   return (
-    <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-      <div className="calendar-container">
+    <div className="py-2 flex flex-col justify-center items-center w-full">
+      <div className="calendar-container ">
         <h2>{getMonthYearString()}</h2>
         <div className="calendar-header">
           <div className="view-selector">
@@ -589,7 +589,7 @@ export const AppointmentCalendar: React.FC = () => {
         <div id="calendar-view">{renderCalendar()}</div>
 
         <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-          <div className="calendar-container">
+          <div className="calendar-container1">
             {modalVisible && (
               <Modal
                 backdrop="blur"
@@ -768,7 +768,7 @@ export const AppointmentCalendar: React.FC = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 10px;
-            min-width: 270px;
+            min-width: 200px;
         }
 
         .calendar-cell {
@@ -919,20 +919,20 @@ export const AppointmentCalendar: React.FC = () => {
           gap: 15px;
         }
 
-        button[type="submit"] {
-          padding: 10px 15px;
-          border: none;
-          border-radius: 10px;
-          background-color: var(--primary-color);
-          color: white;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
+        // button[type="submit"] {
+        //   padding: 10px 15px;
+        //   border: none;
+        //   border-radius: 10px;
+        //   background-color: var(--primary-color);
+        //   color: white;
+        //   font-weight: bold;
+        //   cursor: pointer;
+        //   transition: all 0.3s ease;
+        // }
 
-        button[type="submit"]:hover {
-          background-color: #2980b9;
-        }
+        // button[type="submit"]:hover {
+        //   background-color: #2980b9;
+        // }
 
 .time-slot.partially-booking {
  
@@ -1092,15 +1092,20 @@ export const AppointmentCalendar: React.FC = () => {
 
 @media (max-width: 480px) {
   .calendar-container {
+    overflow-x: auto;
     padding: 5px; /* Minimal padding */
+  
   }
 
   .calendar-grid {
+ 
     gap: 2px; /* Minimal gap */
+
+  
   }
 
   .calendar-cell {
-    font-size: 10px; /* Smallest font size */
+    font-size: 8px; /* Smallest font size */
     padding: 2px; /* Minimal padding */
   }
 
@@ -1118,6 +1123,16 @@ export const AppointmentCalendar: React.FC = () => {
     font-size: 8px; /* Smallest font size for appointment text */
   }
 }
+@media (max-width: 380px) {
+.calendar-grid {
+ 
+    gap: 0.3px; /* Minimal gap */
+
+  
+  }
+}
+
+
 
       `}</style>
       </div>

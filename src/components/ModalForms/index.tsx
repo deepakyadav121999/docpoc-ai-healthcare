@@ -181,6 +181,7 @@ export default function ModalForm(props: {
   const [appointmentName, setAppointmentName] = useState("");
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [doctorId, setDoctorId] = useState("");
+  const[appointmentType,setAppointmentType]=useState("")
   // const [startDateTimeDisp, setStartDateTimeDisp] = useState<string>("");
   // const [endDateTime, setEndDateTime] = useState<string>("");
 
@@ -569,6 +570,7 @@ export default function ModalForm(props: {
       setPatientId(appointment.patient?.id);
       // const startTimeObject = extractTimeAsObject(users.startDateTime);
       setEmployeeName(appointment.doctor?.name);
+      setAppointmentType(appointment?.type)
       // const endTimeObject = extractTimeAsObject(users.endDateTime);
       // setShiftStartTime(startTimeObject)
 
@@ -696,7 +698,7 @@ export default function ModalForm(props: {
         // patientId: appointmentPatientId,
         startDateTime: startDateTime,
         endDateTime: endDateTime,
-        type: "0151308b-6419-437b-9b41-53c7de566724",
+        type: appointmentType,
       };
       props.onDataChange(updatedData);
     }

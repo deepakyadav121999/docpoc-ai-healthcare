@@ -248,6 +248,83 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   return (
     <div className="grid grid-cols-1 gap-9">
+
+        <style jsx global>{`
+     
+   .nextui-input, 
+  .nextui-input-wrapper input,
+  .nextui-textarea,
+  .nextui-textarea-wrapper textarea,
+  .nextui-select-wrapper select {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+    .nextui-time-input-input {
+    font-size: 16px !important;
+  }
+    .nextui-autocomplete-input {
+    font-size: 16px !important;
+  }
+        
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+        
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+        
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+        
+        /* Input group styles */
+       
+        
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        
+        /* NextUI component overrides */
+        .nextui-input-wrapper, 
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        
+     
+        
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input, textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+        
+
+      `}</style>
       <div className="flex flex-col w-full">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <form onSubmit={handleSubmit}>

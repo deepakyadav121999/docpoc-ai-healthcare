@@ -285,12 +285,12 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
               )}
             </div>
 
-            <div className="flex flex-1 items-center justify-between">
-              <div>
-                <h5 className="font-medium text-dark dark:text-white truncate">
+            <div className="flex flex-1 items-center justify-between overflow-hidden">
+              <div className="min-w-0">
+                <h5 className="font-medium text-dark dark:text-white truncate truncate max-w-[120px]">
                   {chat.name}
                 </h5>
-                <p className="truncate">
+                <p className="truncate  max-w-[180px]">
                   <span
                     className={`mb-px text-body-sm font-medium ${chat.seen ? "dark:text-dark-3" : "text-dark-3 dark:text-dark-6"}`}
                   >
