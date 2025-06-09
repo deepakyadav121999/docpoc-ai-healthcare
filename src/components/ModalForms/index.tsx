@@ -916,7 +916,78 @@ export default function ModalForm(props: {
   const [viewMode, setViewMode] = useState("history");
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1038,13 +1109,84 @@ export default function ModalForm(props: {
             </div>
           </CardBody>
         </Card>
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.EDIT_APPOINTMENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1235,13 +1377,84 @@ export default function ModalForm(props: {
             </div>
           </CardBody>
         </Card>
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.DELETE_APPOINTMENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1283,14 +1496,85 @@ export default function ModalForm(props: {
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   }
   // const [showLastVisit, setShowLastVisit] = useState(false);
 
   if (props.type === MODAL_TYPES.VIEW_PATIENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1458,13 +1742,84 @@ export default function ModalForm(props: {
             </div>
           </CardBody>
         </Card>
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.EDIT_PATIENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1912,13 +2267,84 @@ export default function ModalForm(props: {
             </div>
           </CardBody>
         </Card>
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.DELETE_PATIENT) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <div>
           {loading && (
             <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
@@ -1953,13 +2379,84 @@ export default function ModalForm(props: {
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.VIEW_EMPLOYEE) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         {loading ? (
           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
             <Spinner size="lg" />
@@ -2071,13 +2568,84 @@ export default function ModalForm(props: {
             </CardBody>
           </Card>
         )}
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         {loading ? (
           <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
             <Spinner size="lg" />
@@ -2589,13 +3157,84 @@ export default function ModalForm(props: {
             </CardBody>
           </Card>
         )}
-      </>
+      </div>
     );
   }
 
   if (props.type === MODAL_TYPES.DELETE_EMPLOYEE) {
     return (
-      <>
+      <div>
+        <style jsx global>{`
+          .nextui-input,
+          .nextui-input-wrapper input,
+          .nextui-textarea,
+          .nextui-textarea-wrapper textarea,
+          .nextui-select-wrapper select {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
+          .nextui-time-input-input {
+            font-size: 16px !important;
+          }
+          .nextui-autocomplete-input {
+            font-size: 16px !important;
+          }
+
+          /* Disable text size adjustment */
+          html {
+            -webkit-text-size-adjust: 100%;
+          }
+
+          /* Container styles */
+          .appointment-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0 1rem;
+          }
+
+          /* Form container */
+          .form-card {
+            border-radius: 15px;
+            border: 1px solid var(--stroke-color);
+            background: white;
+            box-shadow: var(--shadow-1);
+            max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Input group styles */
+
+          /* Time inputs container */
+          .time-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          /* Full width inputs */
+          .full-width-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* NextUI component overrides */
+          .nextui-input-wrapper,
+          .nextui-autocomplete-wrapper,
+          .nextui-time-input-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* iOS specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            input,
+            textarea {
+              -webkit-user-select: auto !important;
+              font-size: 16px !important;
+              min-height: auto !important;
+            }
+          }
+        `}</style>
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
           Are you sure you want to delete this employee?
         </h2>
@@ -2670,7 +3309,7 @@ export default function ModalForm(props: {
             </div>
           </div>
         )}
-      </>
+      </div>
     );
     if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
       return (
