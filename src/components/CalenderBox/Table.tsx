@@ -322,7 +322,19 @@ export default function AppointmentTable() {
 
           return (
             <User
-              avatarProps={{ radius: "lg", src: avatarSrc }}
+              // avatarProps={{ radius: "lg", src: avatarSrc }}
+              avatarProps={{
+                radius: "lg",
+                src: avatarSrc,
+                className: "w-10 h-10", // Fixed size
+                imgProps: {
+                  style: {
+                    objectFit: "cover", // Ensures image covers the space without distortion
+                    width: "100%",
+                    height: "100%",
+                  },
+                },
+              }}
               description={user.email}
               name={cellValue}
             />
