@@ -1374,9 +1374,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
       const params: any = {};
       params.page = 1;
-      params.pageSize = 50;
-      params.from = "2024-12-04T03:32:25.812Z";
-      params.to = "2024-12-11T03:32:25.815Z";
+      params.pageSize = 100;
+      // params.from = "2024-12-04T03:32:25.812Z";
+      // params.to = "2024-12-11T03:32:25.815Z";
       params.notificationStatus = [
         "Whatsapp notifications paused",
         "SMS notifications paused",
@@ -1405,7 +1405,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // const params: any = {};
 
       params.page = 1;
-      params.pageSize = 50;
+      params.pageSize = 100;
       // params.from = '2024-12-04T03:32:25.812Z';
       // params.to = '2024-12-11T03:32:25.815Z';
 

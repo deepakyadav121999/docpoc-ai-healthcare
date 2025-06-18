@@ -13,9 +13,14 @@ import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
 interface ParentComponentProps {
   child: React.ReactNode;
   headingName: string;
+  onClose?: () => void;
 }
 
-const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
+const App: React.FC<ParentComponentProps> = ({
+  child,
+  headingName,
+  onClose,
+}) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   useEffect(() => {
@@ -31,6 +36,12 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
       }
     }
   }, [isOpen]);
+
+  //  useEffect(() => {
+  //   if (!isOpen && modalClose) {
+  //     modalClose();
+  //   }
+  // }, [isOpen, modalClose]);
 
   return (
     <div>
@@ -59,6 +70,7 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
           backdrop:
             "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
+        onClose={onClose}
       >
         <ModalContent className="modal-content">
           {(onClose) => (
