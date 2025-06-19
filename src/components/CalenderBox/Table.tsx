@@ -22,7 +22,7 @@ import {
   ChipProps,
   SortDescriptor,
   DatePicker,
-  // useDisclosure,
+  useDisclosure,
 } from "@nextui-org/react";
 // import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -79,7 +79,7 @@ const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 export default function AppointmentTable() {
   const dispatch = useDispatch<AppDispatch>();
-  // const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { onClose } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
@@ -163,7 +163,7 @@ export default function AppointmentTable() {
       page,
       pageSize: rowsPerPage,
       from: "2024-12-01T00:00:00.000Z",
-      to: "2025-12-31T23:59:59.999Z",
+      to: "2040-12-31T23:59:59.999Z",
       branchId: profile.branchId,
     };
 
@@ -459,6 +459,10 @@ export default function AppointmentTable() {
     }
   };
 
+  const handleModalClose = () => {
+    onClose();
+  };
+
   // const handleDateBlur = () => {
   //   if (!selectedDateShow) {
   //     setSelectedDate(null);
@@ -661,6 +665,7 @@ export default function AppointmentTable() {
                 <OpaqueDefaultModal
                   headingName="Add New Appointment"
                   child={<AddAppointment onUsersAdded={fetchUsers} />}
+                  onClose={handleModalClose}
                 />
               </div>
             </div>

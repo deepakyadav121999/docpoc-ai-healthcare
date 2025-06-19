@@ -1006,7 +1006,7 @@ const AppointmentForm = () => {
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
-              <div className="sm:col-span-2">
+              {/* <div className="sm:col-span-2">
                 <Input
                   type="number"
                   variant="bordered"
@@ -1024,6 +1024,44 @@ const AppointmentForm = () => {
                     )
                   }
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                />
+              </div> */}
+              <div className="sm:col-span-2">
+                <Input
+                  type="number"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  label="Quantity"
+                  labelPlacement="outside"
+                  value={med.quantity.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+
+                    // Allow empty input during typing
+                    if (inputValue === "") {
+                      updateMedication(index, "quantity", 0); // Temporary 0 (will validate on blur)
+                      return;
+                    }
+
+                    const newValue = parseInt(inputValue);
+
+                    // Only update if valid number and ≥1
+                    if (!isNaN(newValue) && newValue >= 1) {
+                      updateMedication(index, "quantity", newValue);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.value || parseInt(target.value) < 1) {
+                      updateMedication(index, "quantity", 1);
+                    }
+                  }}
+                  onFocus={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.select();
+                  }}
+                  min="1"
+                  className="w-full"
                 />
               </div>
 

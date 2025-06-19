@@ -16,6 +16,7 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
+  Spinner,
 } from "@nextui-org/react";
 // import { PlusIcon } from "./PlusIcon";
 // import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -73,12 +74,14 @@ interface appointments {
 const API_URL = process.env.API_URL;
 interface AppointmentListTableProps {
   startTime: string; // Add startTime prop
-  endTime: string; // Add endTime prop
+  endTime: string;
+  onRefresh: () => void; // Add endTime prop
 }
 
 export default function AppointmentListTable({
   startTime,
   endTime,
+  onRefresh,
 }: AppointmentListTableProps) {
   // const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -93,6 +96,7 @@ export default function AppointmentListTable({
   const [statusFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = React.useState<boolean>(true);
   // const [tempDate, setTempDate] = useState<string | null>(null);
 
   // const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
@@ -141,65 +145,15 @@ export default function AppointmentListTable({
 
     return `${hours}:${formattedMinutes} ${amPm}`;
   }
-  // const convertLocalToUTC = (localTime: string): string => {
-  //   const localDate = new Date(localTime); // Parse the local time string
-  //   const utcTime = localDate.toISOString(); // Convert to UTC in ISO format
-  //   return utcTime;
-  // };
-
-  // function extractTimeForSlot(dateTime: string): string {
-  //   const date = new Date(dateTime);
-  //   let hours = date.getHours();
-  //   const minutes = date.getMinutes();
-  //   // const amPm = hours >= 12 ? 'PM' : 'AM';
-
-  //   // Convert to 12-hour format
-  //   hours = hours % 12 || 12;
-
-  //   // Add leading zero to minutes if needed
-  //   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
-  //   return `${hours}:${formattedMinutes}`;
-  // }
 
   const singleDate =
     appointments.length > 0 ? extractDate(appointments[0].startDateTime) : null;
 
   const fetchUsers = async () => {
-    // setLoading(true);
+    setLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
-      // const hospitalEndpoint = `${API_URL}/hospital`;
-      // const hospitalResponse = await axios.get(hospitalEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-      //   return;
-      // }
-
-      // const fetchedHospitalId = hospitalResponse.data[0].id;
-      // const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      // const branchResponse = await axios.get(branchEndpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // if (!branchResponse.data || branchResponse.data.length === 0) {
-      //   return;
-      // }
-      // const fetchedBranchId = branchResponse.data[0]?.id;
-      // const userProfile = localStorage.getItem("userProfile");
-
-      // Parse the JSON string if it exists
-      // const parsedUserProfile = userProfile ? JSON.parse(userProfile) : null;
-
-      // Extract the branchId from the user profile
       const fetchedBranchId = profile?.branchId;
 
       const endpoint = `${API_URL}/appointment/timeslot/${fetchedBranchId}`;
@@ -238,7 +192,7 @@ export default function AppointmentListTable({
       // setError(`Failed to fetch patients., ${err}||""`);
       console.log(err);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -273,26 +227,6 @@ export default function AppointmentListTable({
       Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
-
-  // const filteredItems = useMemo(() => {
-  //   let filteredUsers = [...appointments];
-
-  //   if (hasSearchFilter) {
-  //     filteredUsers = filteredUsers.filter((user) =>
-  //       user.name.toLowerCase().includes(filterValue.toLowerCase()),
-  //     );
-  //   }
-  //   if (
-  //     statusFilter !== "all" &&
-  //     Array.from(statusFilter).length !== statusOptions.length
-  //   ) {
-  //     filteredUsers = filteredUsers.filter((user) =>
-  //       Array.from(statusFilter).includes(user.status),
-  //     );
-  //   }
-
-  //   return filteredUsers;
-  // }, [filterValue, statusFilter]);
 
   const pages =
     totalappointments > 0 ? Math.ceil(totalappointments / rowsPerPage) : 1;
@@ -410,7 +344,11 @@ export default function AppointmentListTable({
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId={user.id}
-            onPatientDelete={fetchUsers}
+            // onPatientDelete={fetchUsers}
+            onPatientDelete={() => {
+              fetchUsers(); // Refresh local data
+              onRefresh(); // Refresh parent data
+            }}
           />
         );
       default:
@@ -557,8 +495,18 @@ export default function AppointmentListTable({
           )}
         </TableHeader>
         <TableBody
-          emptyContent={"No Appointment Available"}
-          items={sortedItems}
+          // emptyContent={"No Appointment Available"}
+          // items={sortedItems}
+          emptyContent={
+            loading ? (
+              <div className="flex justify-center items-center py-8">
+                <Spinner size="lg" color="primary" />
+              </div>
+            ) : (
+              "No Appointment Available"
+            )
+          }
+          items={loading ? [] : sortedItems}
         >
           {(item: User) => (
             <TableRow key={item.id}>
