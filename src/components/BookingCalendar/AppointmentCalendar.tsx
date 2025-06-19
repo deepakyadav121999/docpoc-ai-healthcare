@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // import { useRouter } from "next/navigation";
 import axios from "axios";
 // import AddAppointment from "../CalenderBox/AddAppointment";
@@ -113,6 +113,10 @@ export const AppointmentCalendar: React.FC = () => {
   //     // setLoading(false);
   //   }
   // };
+
+  const handleRefreshAppointments = useCallback(() => {
+    fetchAppointments(); // This will refetch all appointments
+  }, []);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -759,7 +763,8 @@ export const AppointmentCalendar: React.FC = () => {
               isOpen={isAppointmentDetailsModalOpen}
               onClose={handleModalClose}
               startTime={selectedStartTime} // Pass startTime
-              endTime={selectedEndTime} // Pass endTime
+              endTime={selectedEndTime}
+              onRefresh={handleRefreshAppointments} // Pass endTime
             />
           </div>
         </div>

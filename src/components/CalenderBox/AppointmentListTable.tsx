@@ -74,12 +74,14 @@ interface appointments {
 const API_URL = process.env.API_URL;
 interface AppointmentListTableProps {
   startTime: string; // Add startTime prop
-  endTime: string; // Add endTime prop
+  endTime: string;
+  onRefresh: () => void; // Add endTime prop
 }
 
 export default function AppointmentListTable({
   startTime,
   endTime,
+  onRefresh,
 }: AppointmentListTableProps) {
   // const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -342,7 +344,11 @@ export default function AppointmentListTable({
             actionButtonName={"Ok"}
             modalTitle={"Appointment"}
             userId={user.id}
-            onPatientDelete={fetchUsers}
+            // onPatientDelete={fetchUsers}
+            onPatientDelete={() => {
+              fetchUsers(); // Refresh local data
+              onRefresh(); // Refresh parent data
+            }}
           />
         );
       default:
