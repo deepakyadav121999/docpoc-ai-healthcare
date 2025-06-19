@@ -35,7 +35,7 @@ export default function OpaqueList(props: {
   // const [error, seterror] = useState("");
   // const [updatedPatientData, setUpdatedPatientData] = useState({});
   // const [updatedEmployeeData, setUpdatedEmployeeData] = useState({});
-  // const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
+  const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -164,14 +164,14 @@ export default function OpaqueList(props: {
     setFormType(type);
     onOpen();
   };
-  const handleDataChange = () => {
+  const handleDataChange = (data: any) => {
     if (props.modalType.edit) {
       if (formType === MODAL_TYPES.EDIT_EMPLOYEE) {
         // setUpdatedEmployeeData(data);
       } else if (formType === MODAL_TYPES.EDIT_PATIENT) {
         // setUpdatedPatientData(data);
       } else if (formType === MODAL_TYPES.EDIT_APPOINTMENT) {
-        // setUpdatedAppointmentData(data);
+        setUpdatedAppointmentData(data);
       }
     }
   };
@@ -256,21 +256,21 @@ export default function OpaqueList(props: {
 
   const handleAppointmentEdit = async () => {
     setLoading(true);
-    // const token = localStorage.getItem("docPocAuth_token");
-    // const endpoint = `${API_URL}/appointment`;
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `${API_URL}/appointment`;
 
-    // const requestData = {
-    //   id: props.userId,
-    //   ...updatedAppointmentData,
-    // };
+    const requestData = {
+      id: props.userId,
+      ...updatedAppointmentData,
+    };
 
     try {
-      // const response = await axios.patch(endpoint, requestData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+      await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (props.onPatientDelete) props.onPatientDelete();
       // setmessage("appointment updated successfully!");
       setModalMessage({
