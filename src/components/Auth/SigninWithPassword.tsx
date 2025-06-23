@@ -98,8 +98,11 @@ const SigninWithPassword: React.FC<SignInProps> = ({
       } else {
         throw new Error("Invalid token received");
       }
-    } catch (err) {
-      setError(`Invalid email, phone, or password!${err}`);
+    } catch (err: any) {
+      // setError(`Invalid email, phone, or password!${err}`);
+      setError(
+        err.response?.data?.message || "Invalid email, phone, or password!",
+      );
       setTimeout(() => setError(""), 8000);
     } finally {
       setLoading(false);
@@ -130,8 +133,10 @@ const SigninWithPassword: React.FC<SignInProps> = ({
 
       setTimer(timerCount);
       setIsOtpFieldVisible(true);
-    } catch (err) {
-      setError(`Failed to send OTP. Please try again.${err}`);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Failed to send OTP. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -171,8 +176,11 @@ const SigninWithPassword: React.FC<SignInProps> = ({
       } else {
         setError("Invalid or expired OTP.");
       }
-    } catch (err) {
-      setError(`OTP verification failed. Please try again.${err}`);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          "OTP verification failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
