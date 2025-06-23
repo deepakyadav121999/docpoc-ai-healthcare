@@ -1393,8 +1393,14 @@
 import {
   Autocomplete,
   AutocompleteItem,
+  Button,
   Checkbox,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Textarea,
   TimeInput,
   useDisclosure,
@@ -1408,6 +1414,7 @@ import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import AddPatient from "../Patient/AddPatient";
 
 interface AutocompleteItem {
   value: string;
@@ -1489,7 +1496,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     status: "",
   });
   const [loading, setLoading] = useState(false);
-
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   // function extractTime(dateTime: string): string {
   //   const date = new Date(dateTime);
   //   let hours = date.getHours();
@@ -1534,7 +1541,29 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     setFormData({ ...formData, [field]: isoTime });
   };
 
+  // const handlePatientSelection = (patientId: string) => {
+  //   const selectedPatient = patientList.find(
+  //     (patient) => patient.value === patientId,
+  //   );
+  //   if (selectedPatient) {
+  //     setFormData({
+  //       ...formData,
+  //       patientId,
+  //       name: selectedPatient.label,
+  //       json: JSON.stringify({
+  //         dob: selectedPatient.dob,
+  //         email: selectedPatient.description?.split(" | ")[1] || "",
+  //       }),
+  //     });
+  //   }
+  // };
+
   const handlePatientSelection = (patientId: string) => {
+    if (patientId === "create-new-patient") {
+      setShowAddPatientModal(true);
+      return;
+    }
+
     const selectedPatient = patientList.find(
       (patient) => patient.value === patientId,
     );
@@ -1784,7 +1813,17 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
           dob: patient.dob, // Include DOB
         }),
       );
-      setPatientList(transformedPatients);
+      // setPatientList(transformedPatients);
+      setPatientList([
+        {
+          label: "Create New Patient...",
+          value: "create-new-patient",
+          description: "Click to add a new patient",
+          dob: "",
+          workingHours: "",
+        },
+        ...transformedPatients,
+      ]);
 
       // Step 6: Fetch  Doctors
       const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
@@ -1930,6 +1969,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     }
   }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
 
+  const handleNewPatientCreated = () => {
+    setShowAddPatientModal(false);
+    fetchAppointmentTypes();
+  };
   return (
     <div className="appointment-container">
       <style jsx global>{`
@@ -2184,7 +2227,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
                 style={{ marginTop: 20 }}
               >
-                <Autocomplete
+                {/* <Autocomplete
                   autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -2203,6 +2246,36 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                       key={item.value}
                       variant="shadow"
                       color={TOOL_TIP_COLORS.secondary}
+                    >
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete> */}
+
+                <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  defaultItems={patientList}
+                  label="Select Patient"
+                  placeholder="Search a Patient"
+                  onSelectionChange={(key) =>
+                    handlePatientSelection(key as string)
+                  }
+                >
+                  {(item) => (
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={
+                        item.value === "create-new-patient"
+                          ? "primary"
+                          : TOOL_TIP_COLORS.secondary
+                      }
+                      className={
+                        item.value === "create-new-patient" ? "font-bold" : ""
+                      }
                     >
                       {item.label}
                     </AutocompleteItem>
@@ -2279,6 +2352,91 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         modalMessage={modalMessage}
         onClose={handleModalClose}
       />
+
+      <div>
+        <style>
+          {" "}
+          {`
+              /* Base styling for the button */
+              .responsive-button {
+                min-height: 55px;
+                font-size: 1rem;
+                padding: 0.8rem 1.5rem;
+              }
+      
+              /* Adjustments for smaller screens */
+              @media (max-width: 768px) {
+                .responsive-button {
+                  font-size: 0.9rem; /* Smaller font size */
+                  padding: 0.7rem 1.2rem; /* Reduced padding */
+                  min-height: 50px; /* Smaller height */
+                }
+      .modal-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-height: 90vh; /* Adjust as needed */
+        overflow-y: auto;
+        width: 97%; /* Adjust as needed */
+        max-width: 800px; /* Adjust as needed */
+        // background: white;
+        border-radius: 15px;
+        padding-top:10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
+      }
+      
+      /* Ensure the modal is scrollable */
+      .modal-body {
+        max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+        overflow-y: auto;
+      }
+              }
+      
+              @media (max-width: 480px) {
+                .responsive-button {
+                  font-size: 0.7rem; /* Further reduce font size */
+                  padding: 0.5rem 0.9rem; /* Further reduce padding */
+                  min-height: 40px; /* Smaller height */
+                } 
+              }
+      
+      
+      
+            `}
+        </style>
+        <Modal
+          isOpen={showAddPatientModal}
+          onClose={() => setShowAddPatientModal(false)}
+          style={{
+            maxWidth: 800,
+            maxHeight: 600,
+            overflowY: "scroll",
+            marginTop: "10%",
+          }}
+          className="max-w-[95%] sm:max-w-[800px] mx-auto debug-border"
+          classNames={{
+            backdrop:
+              "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+          }}
+        >
+          <ModalContent className="modal-content">
+            <ModalHeader>Create New Patient</ModalHeader>
+            <ModalBody>
+              <AddPatient onPatientAdded={handleNewPatientCreated} />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="danger"
+                variant="light"
+                onPress={() => setShowAddPatientModal(false)}
+              >
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 };

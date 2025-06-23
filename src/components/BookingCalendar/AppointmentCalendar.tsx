@@ -20,6 +20,15 @@ import {
 
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
   const profile = useSelector((state: RootState) => state.profile.data);
   // const [page, setPage] = useState(1);
   const page = 1;
@@ -590,12 +599,38 @@ export const AppointmentCalendar: React.FC = () => {
     changeView("day");
   };
 
+  const isPastDate = (date: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+    return date < today;
+  };
+
+  const isPastTimeSlot = (timeSlot: Date): boolean => {
+    const now = new Date();
+    return timeSlot < now;
+  };
+
   const openModal = (
     timestamp: number,
     hasBooking: boolean,
     startTime: Date,
     endTime: Date,
   ) => {
+    const selectedDate = new Date(timestamp);
+
+    if (
+      isPastDate(selectedDate) ||
+      (isToday(selectedDate) && isPastTimeSlot(startTime))
+    ) {
+      // Only show existing appointments if they exist
+      if (hasBooking) {
+        setIsAppointmentDetailsModalOpen(true);
+        setSelectedStartTime(startTime.toISOString());
+        setSelectedEndTime(endTime.toISOString());
+      }
+      return; // Block new appointments
+    }
+
     if (!hasBooking) {
       setModalVisible(true);
       setModalData({
