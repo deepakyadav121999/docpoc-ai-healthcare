@@ -27,6 +27,7 @@ import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import ShareLinkModal from "../common/Modal/ShareLinkModal";
 
 interface Appointment {
   id: string;
@@ -73,8 +74,7 @@ const AppointmentForm = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // const [reportName, setReportName] = useState("");
-  const [enableSharingWithPatient, setEnableSharingWithPatient] =
-    useState(true);
+  const [enableSharingWithPatient] = useState(true);
   const [isSharedWithPatient, setIsSharedWithPatient] = useState(true);
   const [appointmentMode, setAppointmentMode] = useState<
     "appointment" | "manual"
@@ -98,7 +98,8 @@ const AppointmentForm = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-
+  const [shareLink, setShareLink] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   // Vital Signs state (unchanged)
   // const [vitals, setVitals] = useState({
   //   bloodPressure: "0/0 mmHg",
@@ -194,6 +195,7 @@ const AppointmentForm = () => {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
       const branchId = profile?.branchId;
       const reportData = {
+        name: "abc",
         patientId: selectedPatient,
         branchId: branchId,
         patient: {
@@ -261,12 +263,25 @@ const AppointmentForm = () => {
 
       window.open(documentUrl, "_blank");
 
-      setModalMessage({
-        success: "Report saved successfully!",
-        error: "",
-      });
-      onOpen();
+      // setModalMessage({
+      //   success: "Report saved successfully!",
+      //   error: "",
+      // });
+
+      if (enableSharingWithPatient) {
+        setShareLink(documentUrl);
+        setIsShareModalOpen(true);
+      } else {
+        setModalMessage({
+          success: "Report saved successfully!",
+          error: "",
+        });
+        onOpen();
+      }
       closePreviewModal();
+
+      // onOpen();
+      // closePreviewModal();
     } catch (error) {
       console.error("Error saving report:", error);
       setModalMessage({
@@ -541,6 +556,77 @@ const AppointmentForm = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-8  text-black dark:text-white">
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        /* Input group styles */
+
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* NextUI component overrides */
+        .nextui-input-wrapper,
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input,
+          textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">
           Appointment Report Form
@@ -920,7 +1006,7 @@ const AppointmentForm = () => {
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
-              <div className="sm:col-span-2">
+              {/* <div className="sm:col-span-2">
                 <Input
                   type="number"
                   variant="bordered"
@@ -938,6 +1024,44 @@ const AppointmentForm = () => {
                     )
                   }
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                />
+              </div> */}
+              <div className="sm:col-span-2">
+                <Input
+                  type="number"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  label="Quantity"
+                  labelPlacement="outside"
+                  value={med.quantity.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+
+                    // Allow empty input during typing
+                    if (inputValue === "") {
+                      updateMedication(index, "quantity", 0); // Temporary 0 (will validate on blur)
+                      return;
+                    }
+
+                    const newValue = parseInt(inputValue);
+
+                    // Only update if valid number and ≥1
+                    if (!isNaN(newValue) && newValue >= 1) {
+                      updateMedication(index, "quantity", newValue);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.value || parseInt(target.value) < 1) {
+                      updateMedication(index, "quantity", 1);
+                    }
+                  }}
+                  onFocus={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.select();
+                  }}
+                  min="1"
+                  className="w-full"
                 />
               </div>
 
@@ -975,7 +1099,7 @@ const AppointmentForm = () => {
 
         {/* Sharing options - made responsive */}
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <Checkbox
+          {/* <Checkbox
             color={TOOL_TIP_COLORS.secondary}
             isSelected={enableSharingWithPatient}
             onValueChange={setEnableSharingWithPatient}
@@ -987,7 +1111,7 @@ const AppointmentForm = () => {
             }}
           >
             Enable Sharing With Patient
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             color={TOOL_TIP_COLORS.secondary}
@@ -1452,6 +1576,11 @@ const AppointmentForm = () => {
         loading={isLoading}
         modalMessage={modalMessage}
         onClose={handleModalClose}
+      />
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        link={shareLink}
       />
     </div>
   );

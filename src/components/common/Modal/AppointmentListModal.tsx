@@ -14,8 +14,9 @@ import {
 interface AppointmentListModalProps {
   isOpen: boolean;
   onClose: () => void;
-  startTime: string; // Add startTime prop
-  endTime: string; // Add endTime prop
+  startTime: string;
+  endTime: string;
+  onRefresh: () => void;
 }
 
 const AppointmentListModal: React.FC<AppointmentListModalProps> = ({
@@ -23,6 +24,7 @@ const AppointmentListModal: React.FC<AppointmentListModalProps> = ({
   onClose,
   startTime,
   endTime,
+  onRefresh,
 }) => {
   return (
     <Modal
@@ -43,7 +45,11 @@ const AppointmentListModal: React.FC<AppointmentListModalProps> = ({
       <ModalContent>
         <ModalHeader>Appointment Details</ModalHeader>
         <ModalBody>
-          <AppointmentListTable startTime={startTime} endTime={endTime} />
+          <AppointmentListTable
+            startTime={startTime}
+            endTime={endTime}
+            onRefresh={onRefresh}
+          />
         </ModalBody>
         <ModalFooter>
           <Button color="danger" variant="light" onPress={onClose}>

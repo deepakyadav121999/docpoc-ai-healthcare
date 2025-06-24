@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // import { useRouter } from "next/navigation";
 import axios from "axios";
 // import AddAppointment from "../CalenderBox/AddAppointment";
@@ -20,11 +20,20 @@ import {
 
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
   const profile = useSelector((state: RootState) => state.profile.data);
   // const [page, setPage] = useState(1);
   const page = 1;
   // const [rowsPerPage, setRowsPerPage] = useState(50);
-  const rowsPerPage = 500;
+  const rowsPerPage = 10000000;
   // const [loading, setLoading] = useState(false);
   // const [totalAppointments, setTotalAppointments] = useState(0);
   const [appointmentsByDate, setAppointmentsByDate] = useState<{
@@ -61,56 +70,62 @@ export const AppointmentCalendar: React.FC = () => {
     setIsAppointmentDetailsModalOpen(false);
     // onClose();
   };
-  const fetchAppointments = async () => {
-    // setLoading(true);
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
 
-      const fetchedBranchId = profile?.branchId;
+  // const fetchAppointments = async () => {
 
-      const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
+  //   // setLoading(true);
+  //   try {
+  //     const token = localStorage.getItem("docPocAuth_token");
 
-      const params: any = {
-        page,
-        pageSize: rowsPerPage,
-        // from: "2024-12-01T00:00:00.000Z", // Start of the month
-        // to: "2025-12-31T23:59:59.999Z", // End of the month
-        // status: ["visiting", "declind"],
-      };
+  //     const fetchedBranchId = profile?.branchId;
 
-      const response = await axios.get(endpoint, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  //     const endpoint = `${API_URL}/appointment/list/${fetchedBranchId}`;
 
-      const grouped: { [key: string]: number } = {};
-      const appointmentList = response.data.rows.map((appointment: any) => {
-        const startDateTime = appointment.startDateTime;
-        const endDateTime = appointment.endDateTime;
-        console.log(startDateTime);
+  //     const params: any = {
+  //       page,
+  //       pageSize: rowsPerPage,
+  //       // from: "2024-12-01T00:00:00.000Z", // Start of the month
+  //       // to: "2025-12-31T23:59:59.999Z", // End of the month
+  //       // status: ["visiting", "declind"],
+  //     };
 
-        const date = startDateTime.split("T")[0]; // Extract UTC date
-        grouped[date] = (grouped[date] || 0) + 1;
-        console.log(date);
-        return {
-          startDateTime,
-          endDateTime,
-          title: appointment.name || "Appointment",
-        };
-      });
+  //     const response = await axios.get(endpoint, {
+  //       params,
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
 
-      setAppointmentsByDate(grouped);
-      setAppointments(appointmentList);
-      // setTotalAppointments(response.data.count || response.data.rows.length);
-    } catch (err) {
-      console.error("Failed to fetch appointments:", err);
-    } finally {
-      // setLoading(false);
-    }
-  };
+  //     const grouped: { [key: string]: number } = {};
+  //     const appointmentList = response.data.rows.map((appointment: any) => {
+  //       const startDateTime = appointment.startDateTime;
+  //       const endDateTime = appointment.endDateTime;
+  //       console.log(startDateTime);
+
+  //       const date = startDateTime.split("T")[0]; // Extract UTC date
+  //       grouped[date] = (grouped[date] || 0) + 1;
+  //       console.log(date);
+  //       return {
+  //         startDateTime,
+  //         endDateTime,
+  //         title: appointment.name || "Appointment",
+  //       };
+  //     });
+
+  //     setAppointmentsByDate(grouped);
+  //     setAppointments(appointmentList);
+  //     // setTotalAppointments(response.data.count || response.data.rows.length);
+  //   } catch (err) {
+  //     console.error("Failed to fetch appointments:", err);
+  //   } finally {
+  //     // setLoading(false);
+  //   }
+  // };
+
+  const handleRefreshAppointments = useCallback(() => {
+    fetchAppointments(); // This will refetch all appointments
+  }, []);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -128,21 +143,132 @@ export const AppointmentCalendar: React.FC = () => {
     }
   }, [isOpen, isAppointmentDetailsModalOpen]);
 
-  useEffect(() => {
-    if (profile) {
-      fetchAppointments();
+  // useEffect(() => {
+  //   if (profile) {
+  //     fetchAppointments();
+  //   }
+  // }, [profile, fetchAppointments]);
+
+  // 1. First, add these utility functions at the top of your component
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  // 2. Update your fetchAppointments function with retry logic and rate limiting
+  const fetchAppointments = React.useCallback(async () => {
+    if (!profile?.branchId) return;
+
+    const MAX_RETRIES = 3;
+    const INITIAL_DELAY = 1000; // 1 second
+    let retries = 0;
+    let delayTime = INITIAL_DELAY;
+
+    while (retries < MAX_RETRIES) {
+      try {
+        const token = localStorage.getItem("docPocAuth_token");
+        const endpoint = `${API_URL}/appointment/list/${profile.branchId}`;
+
+        const response = await axios.get(endpoint, {
+          params: { page, pageSize: rowsPerPage },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const grouped: { [key: string]: number } = {};
+        const appointmentList = response.data.rows.map((appointment: any) => {
+          const startDateTime = appointment.startDateTime;
+          const endDateTime = appointment.endDateTime;
+          const date = startDateTime.split("T")[0];
+          grouped[date] = (grouped[date] || 0) + 1;
+          return {
+            startDateTime,
+            endDateTime,
+            title: appointment.name || "Appointment",
+          };
+        });
+
+        setAppointmentsByDate(grouped);
+        setAppointments(appointmentList);
+        return; // Success - exit the retry loop
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          if (err.response?.status === 429) {
+            retries++;
+            if (retries < MAX_RETRIES) {
+              await delay(delayTime);
+              delayTime *= 2; // Exponential backoff
+              continue;
+            }
+          }
+        }
+        console.error("Failed to fetch appointments:", err);
+        break; // Exit the retry loop on other errors
+      }
     }
-  }, [profile, fetchAppointments]);
+  }, [profile?.branchId, page, rowsPerPage]); // Proper dependencies
 
-  //  if(loading===false){
-  //   console.log(totalAppointments)
-  //  }
-  // console.log(appointments);
-  // let abc = resulst && resulst.map((item: any) => { return (item.startDateTime) })
-  // console.log(abc)
-  // console.log(resulst)
+  // 3. Update your useEffect to prevent unnecessary calls
+  React.useEffect(() => {
+    let isMounted = true;
 
-  // const router = useRouter();
+    const fetchData = async () => {
+      await delay(300); // Initial delay to prevent rapid successive calls
+      if (isMounted && profile?.branchId) {
+        await fetchAppointments();
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchAppointments, profile?.branchId]); // Only re-run when these change
+
+  // 4. Add caching to prevent duplicate requests
+  // const [lastFetched, setLastFetched] = React.useState<number | null>(null);
+  // const [cache, setCache] = React.useState<{
+  //   data: any;
+  //   timestamp: number;
+  // } | null>(null);
+  const [cache] = React.useState<{
+    data: any;
+    timestamp: number;
+  } | null>(null);
+
+  const fetchWithCache = React.useCallback(async () => {
+    const now = Date.now();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
+    if (cache && now - cache.timestamp < CACHE_DURATION) {
+      setAppointmentsByDate(cache.data.grouped);
+      setAppointments(cache.data.appointmentList);
+      return;
+    }
+
+    await fetchAppointments();
+    // setLastFetched(now);
+  }, [fetchAppointments, cache]);
+
+  // Update your main useEffect to use fetchWithCache
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      await delay(300);
+      if (isMounted && profile?.branchId) {
+        await fetchWithCache();
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchWithCache, profile?.branchId]);
+
   const [currentView, setCurrentView] = useState<"month" | "week" | "day">(
     "month",
   );
@@ -473,12 +599,38 @@ export const AppointmentCalendar: React.FC = () => {
     changeView("day");
   };
 
+  const isPastDate = (date: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+    return date < today;
+  };
+
+  const isPastTimeSlot = (timeSlot: Date): boolean => {
+    const now = new Date();
+    return timeSlot < now;
+  };
+
   const openModal = (
     timestamp: number,
     hasBooking: boolean,
     startTime: Date,
     endTime: Date,
   ) => {
+    const selectedDate = new Date(timestamp);
+
+    if (
+      isPastDate(selectedDate) ||
+      (isToday(selectedDate) && isPastTimeSlot(startTime))
+    ) {
+      // Only show existing appointments if they exist
+      if (hasBooking) {
+        setIsAppointmentDetailsModalOpen(true);
+        setSelectedStartTime(startTime.toISOString());
+        setSelectedEndTime(endTime.toISOString());
+      }
+      return; // Block new appointments
+    }
+
     if (!hasBooking) {
       setModalVisible(true);
       setModalData({
@@ -545,8 +697,8 @@ export const AppointmentCalendar: React.FC = () => {
   };
 
   return (
-    <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-      <div className="calendar-container">
+    <div className="py-2 flex flex-col justify-center items-center w-full">
+      <div className="calendar-container ">
         <h2>{getMonthYearString()}</h2>
         <div className="calendar-header">
           <div className="view-selector">
@@ -589,7 +741,7 @@ export const AppointmentCalendar: React.FC = () => {
         <div id="calendar-view">{renderCalendar()}</div>
 
         <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
-          <div className="calendar-container">
+          <div className="calendar-container1">
             {modalVisible && (
               <Modal
                 backdrop="blur"
@@ -646,7 +798,8 @@ export const AppointmentCalendar: React.FC = () => {
               isOpen={isAppointmentDetailsModalOpen}
               onClose={handleModalClose}
               startTime={selectedStartTime} // Pass startTime
-              endTime={selectedEndTime} // Pass endTime
+              endTime={selectedEndTime}
+              onRefresh={handleRefreshAppointments} // Pass endTime
             />
           </div>
         </div>
@@ -768,7 +921,7 @@ export const AppointmentCalendar: React.FC = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 10px;
-            min-width: 270px;
+            min-width: 200px;
         }
 
         .calendar-cell {
@@ -919,20 +1072,20 @@ export const AppointmentCalendar: React.FC = () => {
           gap: 15px;
         }
 
-        button[type="submit"] {
-          padding: 10px 15px;
-          border: none;
-          border-radius: 10px;
-          background-color: var(--primary-color);
-          color: white;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
+        // button[type="submit"] {
+        //   padding: 10px 15px;
+        //   border: none;
+        //   border-radius: 10px;
+        //   background-color: var(--primary-color);
+        //   color: white;
+        //   font-weight: bold;
+        //   cursor: pointer;
+        //   transition: all 0.3s ease;
+        // }
 
-        button[type="submit"]:hover {
-          background-color: #2980b9;
-        }
+        // button[type="submit"]:hover {
+        //   background-color: #2980b9;
+        // }
 
 .time-slot.partially-booking {
  
@@ -1092,15 +1245,20 @@ export const AppointmentCalendar: React.FC = () => {
 
 @media (max-width: 480px) {
   .calendar-container {
+    overflow-x: auto;
     padding: 5px; /* Minimal padding */
+  
   }
 
   .calendar-grid {
+ 
     gap: 2px; /* Minimal gap */
+
+  
   }
 
   .calendar-cell {
-    font-size: 10px; /* Smallest font size */
+    font-size: 8px; /* Smallest font size */
     padding: 2px; /* Minimal padding */
   }
 
@@ -1118,6 +1276,16 @@ export const AppointmentCalendar: React.FC = () => {
     font-size: 8px; /* Smallest font size for appointment text */
   }
 }
+@media (max-width: 380px) {
+.calendar-grid {
+ 
+    gap: 0.3px; /* Minimal gap */
+
+  
+  }
+}
+
+
 
       `}</style>
       </div>

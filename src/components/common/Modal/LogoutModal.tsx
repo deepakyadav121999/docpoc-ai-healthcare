@@ -29,8 +29,8 @@ const LogoutModal = ({
         <ModalBody>
           {/* <h2 style={{ color: "#FF0000" }}>Are you sure you want to Signout ?</h2> */}
 
-          <div className="flex w-full rounded-[10px] border-l-6 border-[#fb2424] bg-[#FEF5DE] px-6 py-7 dark:bg-[#2c2c38] dark:bg-opacity-30 md:p-9 mt-5">
-            <div className="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-[#fb2424]">
+          <div className="flex w-full rounded-[10px] border-l-6 border-[#6366f1] bg-[#e0e7ff] dark:bg-[#2c2c38] dark:bg-opacity-30 px-6 py-7 md:p-9 mt-5">
+            <div className="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-[#6366f1]">
               <svg
                 width="20"
                 height="20"
@@ -47,11 +47,11 @@ const LogoutModal = ({
               </svg>
             </div>
             <div className="w-full">
-              <h5 className="mb-3.5 text-lg font-bold leading-[22px] text-[#fb2424]">
-                Attention needed
+              <h5 className="mb-3.5 text-lg font-bold leading-[22px] text-[#6366f1]">
+                Confirm Sign Out
               </h5>
-              <p className="w-full max-w-[740px] text-[#fb2424] text-medium">
-                Are you sure you want to Signout ?
+              <p className="w-full max-w-[740px] text-[#6366f1] text-medium">
+                Are you sure you want to sign out?
               </p>
             </div>
           </div>
@@ -60,7 +60,7 @@ const LogoutModal = ({
           <Button
             color="default"
             onPress={onClose}
-            className="hover:bg-red-500"
+            className="hover:bg-red-900 hover:text-white"
           >
             Cancel
           </Button>

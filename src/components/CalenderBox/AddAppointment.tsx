@@ -2,8 +2,14 @@
 import {
   Autocomplete,
   AutocompleteItem,
+  Button,
   Checkbox,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Textarea,
   TimeInput,
   useDisclosure,
@@ -17,6 +23,7 @@ import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import AddPatient from "../Patient/AddPatient";
 
 interface AutocompleteItem {
   value: string;
@@ -73,6 +80,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false);
 
   // function extractTime(dateTime: string): string {
   //   const date = new Date(dateTime);
@@ -118,7 +126,50 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     setFormData({ ...formData, [field]: isoTime });
   };
 
+  // const handlePatientSelection = (patientId: string) => {
+  //   const selectedPatient = patientList.find(
+  //     (patient) => patient.value === patientId,
+  //   );
+  //   if (selectedPatient) {
+  //     setFormData({
+  //       ...formData,
+  //       patientId,
+  //       name: selectedPatient.label,
+  //       json: JSON.stringify({
+  //         dob: selectedPatient.dob,
+  //         email: selectedPatient.description?.split(" | ")[1] || "",
+  //       }),
+  //     });
+  //   }
+  // };
+  //  const handlePatientSelection = (patientId: string) => {
+  //   if (patientId === "create-new-patient") {
+  //     setShowAddPatientModal(true);
+  //     return;
+  //   }
+
+  //   const selectedPatient = patientList.find(
+  //     (patient) => patient.value === patientId,
+  //   );
+  //   if (selectedPatient) {
+  //     setFormData({
+  //       ...formData,
+  //       patientId,
+  //       name: selectedPatient.label,
+  //       json: JSON.stringify({
+  //         dob: selectedPatient.dob,
+  //         email: selectedPatient.description?.split(" | ")[1] || "",
+  //       }),
+  //     });
+  //   }
+  // };
+
   const handlePatientSelection = (patientId: string) => {
+    if (patientId === "create-new-patient") {
+      setShowAddPatientModal(true);
+      return;
+    }
+
     const selectedPatient = patientList.find(
       (patient) => patient.value === patientId,
     );
@@ -134,7 +185,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
     }
   };
-
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
@@ -363,9 +413,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
       const params: any = {};
       params.page = 1;
-      params.pageSize = 50;
-      params.from = "2024-12-04T03:32:25.812Z";
-      params.to = "2024-12-11T03:32:25.815Z";
+      params.pageSize = 100;
+      // params.from = "2024-12-04T03:32:25.812Z";
+      // params.to = "2024-12-11T03:32:25.815Z";
       params.notificationStatus = [
         "Whatsapp notifications paused",
         "SMS notifications paused",
@@ -386,7 +436,17 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           dob: patient.dob, // Include DOB
         }),
       );
-      setPatientList(transformedPatients);
+      // setPatientList(transformedPatients);
+      setPatientList([
+        {
+          label: "Create New Patient...",
+          value: "create-new-patient",
+          description: "Click to add a new patient",
+          dob: "",
+          workingHours: "",
+        },
+        ...transformedPatients,
+      ]);
 
       // Step 6: Fetch  Doctors
       const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
@@ -394,7 +454,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // const params: any = {};
 
       params.page = 1;
-      params.pageSize = 50;
+      params.pageSize = 100;
       // params.from = '2024-12-04T03:32:25.812Z';
       // params.to = '2024-12-11T03:32:25.815Z';
 
@@ -521,8 +581,93 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
   }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
 
+  //   const handleNewPatientCreated = () => {
+  //   setShowAddPatientModal(false);
+  //   fetchAppointmentTypes(); // This will refetch patients including the new one
+  //   setModalMessage({
+  //     success: "Patient created successfully! Now select the new patient from the dropdown.",
+  //     error: "",
+  //   });
+  //   onOpen();
+  // };
+  const handleNewPatientCreated = () => {
+    setShowAddPatientModal(false);
+    fetchAppointmentTypes();
+  };
   return (
     <div className="  grid grid-cols-1 gap-9  ">
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        /* Input group styles */
+
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* NextUI component overrides */
+        .nextui-input-wrapper,
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input,
+          textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+      `}</style>
+
       <div className="flex flex-col w-full ">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
@@ -673,7 +818,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
-                <Autocomplete
+                {/* <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -694,7 +839,38 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                       {item.label}
                     </AutocompleteItem>
                   )}
+                </Autocomplete> */}
+
+                <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  defaultItems={patientList}
+                  label="Select Patient"
+                  placeholder="Search a Patient"
+                  onSelectionChange={(key) =>
+                    handlePatientSelection(key as string)
+                  }
+                >
+                  {(item) => (
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={
+                        item.value === "create-new-patient"
+                          ? "primary"
+                          : TOOL_TIP_COLORS.secondary
+                      }
+                      className={
+                        item.value === "create-new-patient" ? "font-bold" : ""
+                      }
+                    >
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
                 </Autocomplete>
+
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -763,175 +939,91 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           </form>
         </div>
       </div>
+      <div>
+        <style>
+          {" "}
+          {`
+        /* Base styling for the button */
+        .responsive-button {
+          min-height: 55px;
+          font-size: 1rem;
+          padding: 0.8rem 1.5rem;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+          .responsive-button {
+            font-size: 0.9rem; /* Smaller font size */
+            padding: 0.7rem 1.2rem; /* Reduced padding */
+            min-height: 50px; /* Smaller height */
+          }
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh; /* Adjust as needed */
+  overflow-y: auto;
+  width: 97%; /* Adjust as needed */
+  max-width: 800px; /* Adjust as needed */
+  // background: white;
+  border-radius: 15px;
+  padding-top:10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
+}
+
+/* Ensure the modal is scrollable */
+.modal-body {
+  max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+  overflow-y: auto;
+}
+        }
+
+        @media (max-width: 480px) {
+          .responsive-button {
+            font-size: 0.7rem; /* Further reduce font size */
+            padding: 0.5rem 0.9rem; /* Further reduce padding */
+            min-height: 40px; /* Smaller height */
+          } 
+        }
+
+
+
+      `}
+        </style>
+        <Modal
+          isOpen={showAddPatientModal}
+          onClose={() => setShowAddPatientModal(false)}
+          style={{
+            maxWidth: 800,
+            maxHeight: 600,
+            overflowY: "scroll",
+            marginTop: "10%",
+          }}
+          className="max-w-[95%] sm:max-w-[800px] mx-auto debug-border"
+          classNames={{
+            backdrop:
+              "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+          }}
+        >
+          <ModalContent className="modal-content">
+            <ModalHeader>Create New Patient</ModalHeader>
+            <ModalBody>
+              <AddPatient onPatientAdded={handleNewPatientCreated} />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="danger"
+                variant="light"
+                onPress={() => setShowAddPatientModal(false)}
+              >
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 };
 export default AddAppointment;
-
-{
-  /* <Modal isOpen={isOpen} onClose={handleModalClose}>
-                <ModalContent>
-                  <ModalHeader>{loading ?(<div className="flex justify-center">
-                        
-                      </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
-                  <ModalBody>
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <Spinner size="lg" />
-                      </div>
-                    ) : modalMessage.success ? (
-                      <p className="text-green-600">{modalMessage.success}</p>
-                    ) : (
-                      <p className="text-red-600">{modalMessage.error}</p>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    {!loading && (
-                      <Button color="primary" onPress={handleModalClose}>
-                        Ok
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </ModalContent>
-              </Modal> */
-}
-
-// const fetchPatients = async () => {
-//   setLoading(true);
-//   try {
-//     const token = localStorage.getItem("docPocAuth_token");
-
-//     const hospitalEndpoint = `${API_URL}/hospital`;
-//     const hospitalResponse = await axios.get(hospitalEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedHospitalId = hospitalResponse.data[0].id;
-//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-//     const branchResponse = await axios.get(branchEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     if (!branchResponse.data || branchResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedBranchId = branchResponse.data[0]?.id;
-
-//     const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
-
-//     const params: any = {};
-
-//     params.page = 1;
-//     params.pageSize = 50;
-//     params.from = '2024-12-04T03:32:25.812Z';
-//     params.to = '2024-12-11T03:32:25.815Z';
-//     params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
-
-//     const response = await axios.get(endpoint, {
-//       params,
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     console.log(response.data.rows)
-//     const transformedPatients: AutocompleteItem[] = response.data.rows.map((patient: any) => ({
-//       label: patient.name,
-//       value: patient.id,
-//       description: `${patient.phone} | ${patient.email}`,
-//       dob: patient.dob, // Include DOB
-//     }));
-//     setPatientList(transformedPatients);
-//     // setTotalPatient(response.data.count || response.data.length);
-
-//   } catch (err) {
-//     // setError("Failed to fetch patients.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-// const fetchDoctors = async () => {
-//   setLoading(true);
-//   try {
-//     const token = localStorage.getItem("docPocAuth_token");
-//     const hospitalEndpoint = `${API_URL}/hospital`;
-//     const hospitalResponse = await axios.get(hospitalEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedHospitalId = hospitalResponse.data[0].id;
-//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-//     const branchResponse = await axios.get(branchEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     if (!branchResponse.data || branchResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedBranchId = branchResponse.data[0]?.id;
-
-//     const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-
-//     const params: any = {};
-
-//     params.page = 1;
-//     params.pageSize = 50;
-//     // params.from = '2024-12-04T03:32:25.812Z';
-//     // params.to = '2024-12-11T03:32:25.815Z';
-
-//     const response = await axios.get(endpoint, {
-//       params,
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     const allUsers = response.data.rows;
-
-//     // Filter and transform only doctors
-//     const doctors = allUsers.filter((user: any) => {
-//       try {
-//         const userJson = JSON.parse(user.json);
-//         return userJson.designation === "Doctor"; // Check if designation is "Doctor"
-//       } catch (err) {
-//         console.error("Error parsing JSON for user:", user, err);
-//         return false;
-//       }
-//     });
-
-//     const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
-//       label: doctor.name,
-//       value: doctor.id,
-//       description: `${doctor.phone} | ${doctor.email}`,
-//     }));
-//     setDoctorList(transformedDoctors)
-//     // setUsers(response.data.rows || response.data);
-//     // setTotalUsers(response.data.count || response.data.length);
-
-//   } catch (err) {
-//     // setError("Failed to fetch patients.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };

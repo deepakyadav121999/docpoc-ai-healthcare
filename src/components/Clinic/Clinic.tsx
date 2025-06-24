@@ -32,6 +32,27 @@ import {
 
 export const appointmentStatuses = [
   {
+    status: "Scheduled",
+    json: JSON.stringify({
+      description: "Appointment is scheduled in advance",
+    }),
+  },
+  {
+    status: "Walk-In",
+    json: JSON.stringify({
+      description: "Patient walked in without appointment",
+    }),
+  },
+  {
+    status: "Emergency",
+    json: JSON.stringify({ description: "Emergency appointment" }),
+  },
+  {
+    status: "Follow-Up",
+    json: JSON.stringify({ description: "Follow-up appointment" }),
+  },
+
+  {
     status: "Visiting",
     json: JSON.stringify({ description: "Patient is currently visiting" }),
   },
@@ -45,6 +66,40 @@ export const appointmentStatuses = [
   },
 ];
 export const appointmentTypes = [
+  {
+    name: "General Consultation",
+    json: JSON.stringify({
+      description: "General health checkup or consultation",
+    }),
+  },
+  {
+    name: "Specialist Consultation",
+    json: JSON.stringify({
+      description: "Consultation with a medical specialist",
+    }),
+  },
+  {
+    name: "Diagnostic/Test Booking",
+    json: JSON.stringify({
+      description: "Booking for diagnostic tests or lab work",
+    }),
+  },
+  {
+    name: "Preventive Care",
+    json: JSON.stringify({
+      description: "Preventive health services and screenings",
+    }),
+  },
+  {
+    name: "Therapy/Procedure Booking",
+    json: JSON.stringify({
+      description: "Booking for therapies or medical procedures",
+    }),
+  },
+  {
+    name: "Virtual/Telehealth Appointment",
+    json: JSON.stringify({ description: "Remote consultation via telehealth" }),
+  },
   {
     name: "Dental",
     json: JSON.stringify({ description: "Default dental appointment type" }),

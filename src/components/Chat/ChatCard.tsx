@@ -159,7 +159,7 @@ const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
   // Transform API data to chat format
   const transformAppointmentsToChats = (): Chat[] => {
-    if (!appointments.length) {
+    if (!appointments.length || appointments.length === 0) {
       return [
         {
           active: null,
@@ -174,25 +174,50 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
     }
 
     return appointments.map((appointment) => {
+      const patientName = appointment.patient?.name || "Unknown Patient";
+      const visitType = appointment.visitType?.name || "Appointment";
+      const appointmentName = appointment.name || "No details provided";
+
       // Determine status color
       let active: boolean | null = null;
       if (appointment.statusName === "Visiting") active = true;
       if (appointment.statusName === "Cancelled") active = false;
 
       // Format time
-      const date = new Date(appointment.startDateTime);
-      const now = new Date();
-      const timeDiff = now.getTime() - date.getTime();
-      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      // const date = new Date(appointment.startDateTime);
+      // const now = new Date();
+      // const timeDiff = now.getTime() - date.getTime();
+      // const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-      let timeDisplay: string;
-      if (hoursDiff < 24) {
-        timeDisplay = date.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      } else {
-        timeDisplay = date.toLocaleDateString([], { weekday: "short" });
+      // let timeDisplay: string;
+      // if (hoursDiff < 24) {
+      //   timeDisplay = date.toLocaleTimeString([], {
+      //     hour: "2-digit",
+      //     minute: "2-digit",
+      //   });
+      // } else {
+      //   timeDisplay = date.toLocaleDateString([], { weekday: "short" });
+      // }
+
+      let timeDisplay = "";
+      try {
+        if (appointment.startDateTime) {
+          const date = new Date(appointment.startDateTime);
+          const now = new Date();
+          const timeDiff = now.getTime() - date.getTime();
+          const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+          if (hoursDiff < 24) {
+            timeDisplay = date.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          } else {
+            timeDisplay = date.toLocaleDateString([], { weekday: "short" });
+          }
+        }
+      } catch (e) {
+        console.error("Error formatting date:", e);
       }
 
       const placeholderImage =
@@ -204,8 +229,8 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
       return {
         active,
         avatar: avatarSrc,
-        name: appointment.patient?.name,
-        text: `${appointment?.visitType?.name}: ${appointment?.name}`,
+        name: patientName,
+        text: `${visitType}: ${appointmentName}`,
         time: timeDisplay,
         textCount: 0,
         dot: 3,
@@ -214,14 +239,20 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
   };
 
   const chatData = transformAppointmentsToChats();
-
+  const hasScroll = chatData.length > 5;
   return (
     <div className="col-span-12 rounded-[10px] bg-white py-6 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-4">
       <h4 className="mb-5.5 px-7.5 text-body-2xlg font-bold text-dark dark:text-white">
         Upcoming Appointments
       </h4>
 
-      <div style={{ overflowY: "scroll", maxHeight: 450 }}>
+      <div
+        style={{
+          maxHeight: 450,
+          overflowY: hasScroll ? "auto" : "visible",
+          paddingRight: hasScroll ? "4px" : "0",
+        }}
+      >
         {chatData.map((chat, key) => (
           <Link
             href="/"
@@ -229,7 +260,7 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
             key={key}
           >
             {/* Avatar Image with Status Indicator */}
-            <div className="relative h-14 w-14 rounded-full">
+            <div className="relative h-14 w-14 rounded-full min-w-[56px]">
               <Image
                 width={56}
                 height={56}
@@ -254,18 +285,23 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
               )}
             </div>
 
-            <div className="flex flex-1 items-center justify-between">
-              <div>
-                <h5 className="font-medium text-dark dark:text-white">
+            <div className="flex flex-1 items-center justify-between overflow-hidden">
+              <div className="min-w-0">
+                <h5 className="font-medium text-dark dark:text-white truncate truncate max-w-[120px]">
                   {chat.name}
                 </h5>
-                <p>
+                <p className="truncate  max-w-[180px]">
                   <span
                     className={`mb-px text-body-sm font-medium ${chat.seen ? "dark:text-dark-3" : "text-dark-3 dark:text-dark-6"}`}
                   >
                     {chat.text}
                   </span>
-                  {chat.time && <span className="text-xs"> . {chat.time}</span>}
+                  {chat.time && (
+                    <span className="text-xs  whitespace-nowrap">
+                      {" "}
+                      . {chat.time}
+                    </span>
+                  )}
                 </p>
               </div>
               {chat.textCount !== 0 && (
