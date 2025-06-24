@@ -116,7 +116,8 @@ export const authOptions = {
       },
     }),
   ],
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   callbacks: {
     async jwt({ token, account }: { token: any; account: any }) {
       if (account) {
@@ -154,4 +155,4 @@ export const authOptions = {
   },
 };
 
-export default NextAuth(authOptions);
+// export default NextAuth(authOptions);
