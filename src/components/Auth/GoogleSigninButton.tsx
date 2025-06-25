@@ -72,7 +72,7 @@ export default function GoogleSigninButton({
   }, [status, session]);
 
   const handleSignIn = async () => {
-    await signIn("google", { callbackUrl: "/" });
+    await signIn("google");
   };
 
   return (
