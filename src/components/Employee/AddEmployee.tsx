@@ -26,12 +26,21 @@ import { useEffect } from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
 interface AddUsersProps {
   onUsersAdded: () => void;
+  onClose?: () => void;
+  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
-const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+const AddUsers: React.FC<AddUsersProps> = ({
+  onUsersAdded,
+  onClose,
+  onMessage,
+}) => {
   const profile = useSelector((state: RootState) => state.profile.data);
   // const [edit, setEdit] = useState(true);
   const edit = true;
@@ -61,7 +70,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     editCreateReminders: false,
     editCreatePayments: true,
   });
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: internalClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
   const handleJsonUpdate = (key: string, value: string) => {
@@ -84,7 +93,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
-    onClose();
+    internalClose();
   };
   const handleDobChange = (value: string) => {
     const updatedJson = JSON.parse(formData.json);
@@ -209,6 +218,11 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         editCreatePayments: true,
       });
       onUsersAdded();
+      onMessage({ success: "User  created successfully!" });
+
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 2000);
     } catch (error: any) {
       if (error.response) {
         // Extract and display the error message from the response

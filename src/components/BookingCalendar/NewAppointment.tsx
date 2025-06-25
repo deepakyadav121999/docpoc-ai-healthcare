@@ -1414,7 +1414,7 @@ import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import AddPatient from "../Patient/AddPatient";
+import AddNewPatient from "../Patient/AddNewPatient";
 
 interface AutocompleteItem {
   value: string;
@@ -2455,7 +2455,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
           <ModalContent className="modal-content">
             <ModalHeader>Create New Patient</ModalHeader>
             <ModalBody>
-              <AddPatient onPatientAdded={handleNewPatientCreated} />
+              <AddNewPatient onPatientAdded={handleNewPatientCreated} />
             </ModalBody>
             <ModalFooter>
               <Button
