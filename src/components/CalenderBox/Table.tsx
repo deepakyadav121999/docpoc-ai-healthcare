@@ -466,6 +466,7 @@ export default function AppointmentTable() {
 
   const handleModalClose = () => {
     onClose();
+
     // alert("modal is closed")
   };
 

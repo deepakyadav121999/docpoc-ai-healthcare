@@ -12,22 +12,13 @@ import axios from "axios";
 import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
-interface ModalMessage {
-  success?: string;
-  error?: string;
-}
+
 interface AddPatientProps {
   onPatientAdded: () => void;
-  onClose?: () => void;
-  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
 
-const AddPatient: React.FC<AddPatientProps> = ({
-  onPatientAdded,
-  onMessage,
-  onClose,
-}) => {
+const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   const [edit] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -157,11 +148,6 @@ const AddPatient: React.FC<AddPatientProps> = ({
         notificationStatus: '{"allergies":["Peanut","Dust"]}',
       });
       onPatientAdded();
-      onMessage({ success: "patient  created successfully!" });
-
-      setTimeout(() => {
-        if (onClose) onClose();
-      }, 2000);
     } catch (error: any) {
       if (error.response) {
         // Extract and display the error message from the response
@@ -462,4 +448,4 @@ const AddPatient: React.FC<AddPatientProps> = ({
   );
 };
 
-export default AddPatient;
+export default AddNewPatient;

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableHeader,
@@ -19,6 +19,7 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
+  useDisclosure,
 } from "@nextui-org/react";
 
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -90,6 +91,18 @@ export default function DataTable() {
   // const [error, setError] = React.useState<string | null>(null);
   const [totalUsers, setTotalUsers] = React.useState(0);
   // const [branchId, setBranchId] = useState("");
+  const { onClose } = useDisclosure();
+  const [appointmentMessage, setAppointmentMessage] = useState<{
+    success?: string;
+    error?: string;
+  }>({});
+
+  console.log(appointmentMessage);
+  const handleModalClose = () => {
+    onClose();
+    setAppointmentMessage({});
+    // alert("modal is closed")
+  };
 
   const fetchUsers = async () =>
     // searchName = "",
@@ -387,7 +400,19 @@ export default function DataTable() {
             {/* <Calendar /> */}
             <OpaqueDefaultModal
               headingName="Add New Employee"
-              child={<AddEmployee onUsersAdded={fetchUsers} />}
+              child={
+                <AddEmployee
+                  onUsersAdded={fetchUsers}
+                  onClose={handleModalClose}
+                  onMessage={(message) => {
+                    setAppointmentMessage(message);
+                    if (message.success) {
+                      setTimeout(() => handleModalClose(), 2000);
+                    }
+                  }}
+                />
+              }
+              onClose={handleModalClose}
             />
           </div>
         </div>

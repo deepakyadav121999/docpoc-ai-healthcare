@@ -20,6 +20,7 @@ import {
   ChipProps,
   SortDescriptor,
   Button,
+  useDisclosure,
 } from "@nextui-org/react";
 
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -68,6 +69,13 @@ const API_URL = process.env.API_URL;
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 export default function App() {
+  const [appointmentMessage, setAppointmentMessage] = useState<{
+    success?: string;
+    error?: string;
+  }>({});
+
+  console.log(appointmentMessage);
+
   const profile = useSelector((state: RootState) => state.profile.data);
   const [users, setUsers] = React.useState<Patient[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -75,6 +83,13 @@ export default function App() {
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [totalPatient, setTotalPatient] = useState(0);
+  const { onClose } = useDisclosure();
+
+  const handleModalClose = () => {
+    onClose();
+    setAppointmentMessage({});
+    // alert("modal is closed")
+  };
 
   useEffect(() => {
     localStorage.setItem("page", String(page));
@@ -110,7 +125,7 @@ export default function App() {
         params.page = initialPage;
         params.pageSize = initialRowsPerPage;
         params.from = "2024-12-04T03:32:25.812Z";
-        params.to = "2024-12-11T03:32:25.815Z";
+        params.to = "2090-12-11T03:32:25.815Z";
         params.notificationStatus = [
           "Whatsapp notifications paused",
           "SMS notifications paused",
@@ -389,7 +404,19 @@ export default function App() {
             {/* <Calendar /> */}
             <OpaqueDefaultModal
               headingName="Add New Patient"
-              child={<AddPatient onPatientAdded={fetchPatients} />}
+              child={
+                <AddPatient
+                  onPatientAdded={fetchPatients}
+                  onClose={handleModalClose}
+                  onMessage={(message) => {
+                    setAppointmentMessage(message);
+                    if (message.success) {
+                      setTimeout(() => handleModalClose(), 2000);
+                    }
+                  }}
+                />
+              }
+              onClose={handleModalClose}
             />
           </div>
         </div>
