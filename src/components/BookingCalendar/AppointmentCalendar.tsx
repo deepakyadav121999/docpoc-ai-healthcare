@@ -17,6 +17,7 @@ import {
   Button,
   useDisclosure,
 } from "@nextui-org/react";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 
 const API_URL = process.env.API_URL;
 export const AppointmentCalendar: React.FC = () => {
@@ -42,6 +43,7 @@ export const AppointmentCalendar: React.FC = () => {
 
   const [isAppointmentDetailsModalOpen, setIsAppointmentDetailsModalOpen] =
     useState(false);
+  const [loading] = useState(false);
   // const [selectedAppointments, setSelectedAppointments] = useState<
   //   Array<{
   //     title: string;
@@ -62,13 +64,29 @@ export const AppointmentCalendar: React.FC = () => {
   >([]);
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedEndTime, setSelectedEndTime] = useState<string>("");
+  const [isEnhancedModalOpen, setIsEnhancedModalOpen] = useState(false);
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const { isOpen, onOpen, onOpenChange,onClose } = useDisclosure();
+  const {
+    isOpen: isMainModalOpen,
+    onOpen: onMainModalOpen,
+    onOpenChange: onMainModalOpenChange,
+    onClose: onMainModalClose,
+  } = useDisclosure();
   // const [resulst, setResults] = useState([]);
+
+  const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+
+  const handleModalClosew = () => {
+    onMainModalClose();
+    // alert("modal is closed")
+  };
 
   const handleModalClose = () => {
     setIsAppointmentDetailsModalOpen(false);
-    // onClose();
+    setModalMessage({ success: "", error: "" });
+    setIsEnhancedModalOpen(false);
+    onMainModalClose();
   };
 
   // const fetchAppointments = async () => {
@@ -129,7 +147,11 @@ export const AppointmentCalendar: React.FC = () => {
 
   useEffect(() => {
     const header = document.querySelector("header");
-    if (isOpen || isAppointmentDetailsModalOpen) {
+    if (
+      isMainModalOpen ||
+      isAppointmentDetailsModalOpen ||
+      isEnhancedModalOpen
+    ) {
       header?.classList.remove("z-999");
       header?.classList.add("z-0");
     }
@@ -141,7 +163,7 @@ export const AppointmentCalendar: React.FC = () => {
       header?.classList.remove("z-0");
       header?.classList.add("z-999");
     }
-  }, [isOpen, isAppointmentDetailsModalOpen]);
+  }, [isMainModalOpen, isAppointmentDetailsModalOpen, isEnhancedModalOpen]);
 
   // useEffect(() => {
   //   if (profile) {
@@ -275,6 +297,7 @@ export const AppointmentCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+
   // const [AppointmentListModal, setAppointmentListModal] =
   //   useState<boolean>(false);
   const [modalData, setModalData] = useState<{
@@ -618,19 +641,42 @@ export const AppointmentCalendar: React.FC = () => {
   ) => {
     const selectedDate = new Date(timestamp);
 
-    if (
+    // if (
+    //   isPastDate(selectedDate) ||
+    //   (isToday(selectedDate) && isPastTimeSlot(startTime))
+    // ) {
+
+    //   // Only show existing appointments if they exist
+    //   if (hasBooking) {
+    //     setIsAppointmentDetailsModalOpen(true);
+    //     setSelectedStartTime(startTime.toISOString());
+    //     setSelectedEndTime(endTime.toISOString());
+    //   }
+    //   return; // Block new appointments
+    // }
+    // const selectedDate = new Date(timestamp);
+    const isPast =
       isPastDate(selectedDate) ||
-      (isToday(selectedDate) && isPastTimeSlot(startTime))
-    ) {
-      // Only show existing appointments if they exist
-      if (hasBooking) {
-        setIsAppointmentDetailsModalOpen(true);
-        setSelectedStartTime(startTime.toISOString());
-        setSelectedEndTime(endTime.toISOString());
-      }
-      return; // Block new appointments
+      (isToday(selectedDate) && isPastTimeSlot(startTime));
+
+    // Always allow viewing existing appointments
+    if (hasBooking) {
+      setIsAppointmentDetailsModalOpen(true);
+      setSelectedStartTime(startTime.toISOString());
+      setSelectedEndTime(endTime.toISOString());
+      return;
     }
 
+    // Only show error for NEW appointments in the past
+    if (isPast) {
+      setModalMessage({
+        success: "",
+        error:
+          "Cannot book appointments in the past. Please select a current or future date/time.",
+      });
+      setIsEnhancedModalOpen(true); // Use EnhancedModal's own state
+      return;
+    }
     if (!hasBooking) {
       setModalVisible(true);
       setModalData({
@@ -639,7 +685,8 @@ export const AppointmentCalendar: React.FC = () => {
         endTime: endTime.toISOString(),
         hasBooking,
       });
-      onOpen();
+      // onOpen();
+      onMainModalOpen();
     } else {
       // Find appointments for the selected time slot
       setIsAppointmentDetailsModalOpen(true);
@@ -745,8 +792,8 @@ export const AppointmentCalendar: React.FC = () => {
             {modalVisible && (
               <Modal
                 backdrop="blur"
-                isOpen={isOpen}
-                onOpenChange={onOpenChange}
+                isOpen={isMainModalOpen}
+                onOpenChange={onMainModalOpenChange}
                 style={{
                   maxWidth: 800,
                   maxHeight: 600,
@@ -770,6 +817,7 @@ export const AppointmentCalendar: React.FC = () => {
                           startDateTime={modalData.startTime}
                           endDateTime={modalData.endTime}
                           date={modalData.date}
+                          onClose={handleModalClosew}
                         />
                       </ModalBody>
                       <ModalFooter>
@@ -800,6 +848,13 @@ export const AppointmentCalendar: React.FC = () => {
               startTime={selectedStartTime} // Pass startTime
               endTime={selectedEndTime}
               onRefresh={handleRefreshAppointments} // Pass endTime
+            />
+
+            <EnhancedModal
+              isOpen={isEnhancedModalOpen}
+              loading={loading}
+              modalMessage={modalMessage}
+              onClose={handleModalClose}
             />
           </div>
         </div>

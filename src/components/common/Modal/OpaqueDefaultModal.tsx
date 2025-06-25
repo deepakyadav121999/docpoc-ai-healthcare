@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -10,10 +10,21 @@ import {
 } from "@nextui-org/react";
 import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
 
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
+
 interface ParentComponentProps {
   child: React.ReactNode;
   headingName: string;
   onClose?: () => void;
+  onMessage?: (message: ModalMessage) => void;
+}
+interface ChildComponentProps {
+  onClose?: () => void;
+  onMessage?: (message: ModalMessage) => void;
+  // Add other props your child component might need
 }
 
 const App: React.FC<ParentComponentProps> = ({
@@ -22,6 +33,33 @@ const App: React.FC<ParentComponentProps> = ({
   onClose,
 }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [modalMessage, setModalMessage] = useState<ModalMessage>({});
+  // const handleClose = () => {
+  //   // This closes the modal (toggles isOpen)
+  //    onOpenChange();
+  //   if (onClose) {
+  //     onClose(); // Call parent's onClose
+  //   }
+  // };
+  const handleMessage = (message: ModalMessage) => {
+    setModalMessage(message);
+    // Auto-close only on success after 3 seconds
+    if (message.success) {
+      setTimeout(() => {
+        handleClose();
+      }, 3000);
+    }
+  };
+
+  const handleClose = () => {
+    // Only allow closing if it's a success message or manual close
+    if (modalMessage.success) {
+      onOpenChange();
+    }
+    if (onClose) {
+      onClose();
+    }
+  };
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -73,14 +111,33 @@ const App: React.FC<ParentComponentProps> = ({
         onClose={onClose}
       >
         <ModalContent className="modal-content">
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className="flex flex-col gap-0.5">
                 {headingName}
               </ModalHeader>
-              <ModalBody className="modal-body">{child}</ModalBody>
+              {/* <ModalBody className="modal-body">{child}</ModalBody> */}
+              {/* <ModalBody>
+                {React.isValidElement(child)
+                  ? React.cloneElement(child, { onClose: handleClose })
+                  : child}
+              </ModalBody> */}
+              {/* <ModalBody>
+                {React.isValidElement<ChildComponentProps>(child)
+                  ? React.cloneElement(child, { onClose: handleClose } as ChildComponentProps)
+                  : child}
+              </ModalBody> */}
+              <ModalBody>
+                {React.isValidElement<ChildComponentProps>(child)
+                  ? React.cloneElement(child, {
+                      onClose: handleClose,
+                      onMessage: handleMessage,
+                    })
+                  : child}
+              </ModalBody>
+
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
+                <Button color="danger" variant="light" onPress={handleClose}>
                   Close
                 </Button>
               </ModalFooter>

@@ -32,21 +32,40 @@ interface AutocompleteItem {
   dob?: string;
   workingHours: string;
 }
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
 interface AddUsersProps {
   onUsersAdded: () => void;
+  onClose?: () => void;
+  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
-const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+const AddAppointment: React.FC<AddUsersProps> = ({
+  onUsersAdded,
+  onClose,
+  onMessage,
+}) => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // const [edit, setEdit] = useState(true);
   const edit = true;
-  const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  // const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  const [patientList, setPatientList] = useState<AutocompleteItem[]>([
+    {
+      label: "Create New Patient...",
+      value: "create-new-patient",
+      description: "Click to add a new patient",
+      dob: "",
+      workingHours: "",
+    },
+  ]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [appointmentTypeList, setAppointmentTypeList] = useState<
     AutocompleteItem[]
   >([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: internalClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [appointmentStatusList, setAppointmentStatusList] = useState<
     AutocompleteItem[]
@@ -187,7 +206,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
-    onClose();
+    internalClose();
+    if (onClose) {
+      onClose();
+    }
   };
 
   function isWithinWorkingHours(
@@ -323,6 +345,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
       onOpen();
       onUsersAdded();
+      //          setTimeout(() => {
+      //   if (onClose) onClose(); // Close main modal after 3s
+      // }, 3000);
+
+      onMessage({ success: "Appointment created successfully!" });
+
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 3000);
     } catch (error: any) {
       console.error(
         "Error creating appointment:",
@@ -413,7 +444,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
       const params: any = {};
       params.page = 1;
-      params.pageSize = 100;
+      params.pageSize = 1000;
       // params.from = "2024-12-04T03:32:25.812Z";
       // params.to = "2024-12-11T03:32:25.815Z";
       params.notificationStatus = [
@@ -437,14 +468,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         }),
       );
       // setPatientList(transformedPatients);
-      setPatientList([
-        {
-          label: "Create New Patient...",
-          value: "create-new-patient",
-          description: "Click to add a new patient",
-          dob: "",
-          workingHours: "",
-        },
+      // setPatientList([
+      //   {
+      //     label: "Create New Patient...",
+      //     value: "create-new-patient",
+      //     description: "Click to add a new patient",
+      //     dob: "",
+      //     workingHours: "",
+      //   },
+      //   ...transformedPatients,
+      // ]);
+      setPatientList((prev) => [
+        prev[0], // Keep the first item (Create New Patient)
         ...transformedPatients,
       ]);
 
@@ -852,6 +887,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onSelectionChange={(key) =>
                     handlePatientSelection(key as string)
                   }
+                  defaultFilter={(textValue, inputValue) => {
+                    // Always show "Create New Patient" option regardless of search
+                    if (textValue === "Create New Patient...") {
+                      return true;
+                    }
+                    // Filter other patients based on search input
+                    return textValue
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase());
+                  }}
                 >
                   {(item) => (
                     <AutocompleteItem

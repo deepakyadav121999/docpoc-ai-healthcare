@@ -1423,11 +1423,13 @@ interface AutocompleteItem {
   dob?: string;
   workingHours: string;
 }
+
 interface NewAppointmentProps {
   onUsersAdded: () => void;
   startDateTime: string; // ISO string for start time
   endDateTime: string; // ISO string for end time
   date: any; // ISO string for the selected date
+  onClose?: () => void;
 }
 
 const API_URL = process.env.API_URL;
@@ -1436,15 +1438,27 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   startDateTime,
   endDateTime,
   date,
+  onClose,
 }) => {
   // const [edit, setEdit] = useState(true);
   const edit = true;
-  const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  // const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  const [patientList, setPatientList] = useState<AutocompleteItem[]>([
+    {
+      label: "Create New Patient...",
+      value: "create-new-patient",
+      description: "Click to add a new patient",
+      dob: "",
+      workingHours: "",
+    },
+    // ... other patients will be added here
+  ]);
+
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [appointmentTypeList, setAppointmentTypeList] = useState<
     AutocompleteItem[]
   >([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: internalOnClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [appointmentStatusList, setAppointmentStatusList] = useState<
     AutocompleteItem[]
@@ -1581,7 +1595,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
-    onClose();
+    internalOnClose();
   };
 
   function isWithinWorkingHours(
@@ -1722,8 +1736,12 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         success: "Appointment created successfully!",
         error: "",
       });
+
+      if (onClose) onClose();
+
       onOpen();
       onUsersAdded();
+      internalOnClose();
     } catch (error: any) {
       console.error(
         "Error creating appointment:",
@@ -1791,8 +1809,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       const params: any = {};
       params.page = 1;
       params.pageSize = 1000;
-      params.from = "2021-12-04T03:32:25.812Z";
-      params.to = "2060-12-11T03:32:25.815Z";
+      // params.from = "2021-12-04T03:32:25.812Z";
+      // params.to = "2060-12-11T03:32:25.815Z";
       params.notificationStatus = [
         "Whatsapp notifications paused",
         "SMS notifications paused",
@@ -1814,14 +1832,18 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         }),
       );
       // setPatientList(transformedPatients);
-      setPatientList([
-        {
-          label: "Create New Patient...",
-          value: "create-new-patient",
-          description: "Click to add a new patient",
-          dob: "",
-          workingHours: "",
-        },
+      // setPatientList([
+      //   {
+      //     label: "Create New Patient...",
+      //     value: "create-new-patient",
+      //     description: "Click to add a new patient",
+      //     dob: "",
+      //     workingHours: "",
+      //   },
+      //   ...transformedPatients,
+      // ]);
+      setPatientList((prev) => [
+        prev[0], // Keep the first item (Create New Patient)
         ...transformedPatients,
       ]);
 
@@ -2263,6 +2285,16 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   onSelectionChange={(key) =>
                     handlePatientSelection(key as string)
                   }
+                  defaultFilter={(textValue, inputValue) => {
+                    // Always show "Create New Patient" option regardless of search
+                    if (textValue === "Create New Patient...") {
+                      return true;
+                    }
+                    // Filter other patients based on search input
+                    return textValue
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase());
+                  }}
                 >
                   {(item) => (
                     <AutocompleteItem

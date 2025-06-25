@@ -78,6 +78,10 @@ const INITIAL_VISIBLE_COLUMNS = [
 const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 
 export default function AppointmentTable() {
+  const [appointmentMessage, setAppointmentMessage] = useState<{
+    success?: string;
+    error?: string;
+  }>({});
   const dispatch = useDispatch<AppDispatch>();
   const { onClose } = useDisclosure();
   const [filterValue, setFilterValue] = useState("");
@@ -100,6 +104,7 @@ export default function AppointmentTable() {
   });
   // const [addAppointmentModelToggle, setAddAppointmentModelToggle] =
   //   useState(false);
+  console.log(appointmentMessage);
 
   const profile = useSelector((state: RootState) => state.profile.data);
   const appointments = useSelector(
@@ -162,7 +167,7 @@ export default function AppointmentTable() {
     const params: any = {
       page,
       pageSize: rowsPerPage,
-      from: "2020-12-01T00:00:00.000Z",
+      from: "2024-12-01T00:00:00.000Z",
       to: "2040-12-31T23:59:59.999Z",
       branchId: profile.branchId,
     };
@@ -461,6 +466,7 @@ export default function AppointmentTable() {
 
   const handleModalClose = () => {
     onClose();
+    // alert("modal is closed")
   };
 
   // const handleDateBlur = () => {
@@ -664,7 +670,19 @@ export default function AppointmentTable() {
                 </Dropdown>
                 <OpaqueDefaultModal
                   headingName="Add New Appointment"
-                  child={<AddAppointment onUsersAdded={fetchUsers} />}
+                  child={
+                    <AddAppointment
+                      onUsersAdded={fetchUsers}
+                      onClose={handleModalClose}
+                      onMessage={(message) => {
+                        setAppointmentMessage(message);
+                        // Auto-close only on success after 3 seconds
+                        if (message.success) {
+                          setTimeout(() => handleModalClose(), 3000);
+                        }
+                      }}
+                    />
+                  }
                   onClose={handleModalClose}
                 />
               </div>
