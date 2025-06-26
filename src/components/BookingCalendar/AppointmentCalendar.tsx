@@ -976,7 +976,7 @@ export const AppointmentCalendar: React.FC = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 10px;
-            min-width: 230px;
+            min-width: 250px;
         }
 
         .calendar-cell {
@@ -1334,7 +1334,7 @@ export const AppointmentCalendar: React.FC = () => {
 @media (max-width: 380px) {
 .calendar-grid {
  
-    gap: 0.4px; /* Minimal gap */
+    gap: 0.3px; /* Minimal gap */
 
   
   }
@@ -1350,24 +1350,9 @@ export const AppointmentCalendar: React.FC = () => {
   and (max-device-width: 736px) 
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
-      aspect-ratio: 1;
-      min-height: 0;
-      height: auto;
-      padding-bottom: 100%; /* This maintains square aspect ratio */
-      position: relative;
+      aspect-ratio: unset;
+      height: 50px;
       font-size: 12px;
-    }
-    
-    .calendar-cell > div {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
     }
 }
 
@@ -1377,26 +1362,10 @@ export const AppointmentCalendar: React.FC = () => {
   and (max-device-width: 812px) 
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
-      aspect-ratio: 1;
-      min-height: 0;
-      height: auto;
-      padding-bottom: 100%;
-      position: relative;
+      aspect-ratio: unset;
+      height: 50px;
       font-size: 11px;
     }
-    
-    .calendar-cell > div {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    
     .calendar-cell.has-booking p {
       font-size: 9px;
     }
@@ -1408,26 +1377,10 @@ export const AppointmentCalendar: React.FC = () => {
   and (max-device-width: 780px) 
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
-      aspect-ratio: 1;
-      min-height: 0;
-      height: auto;
-      padding-bottom: 100%;
-      position: relative;
+      aspect-ratio: unset;
+      height: 45px;
       font-size: 10px;
     }
-    
-    .calendar-cell > div {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    
     .calendar-cell.has-booking p {
       font-size: 8px;
     }
