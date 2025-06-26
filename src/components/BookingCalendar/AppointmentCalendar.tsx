@@ -1334,7 +1334,7 @@ export const AppointmentCalendar: React.FC = () => {
 @media (max-width: 380px) {
 .calendar-grid {
  
-    gap: 0.9px; /* Minimal gap */
+    gap: 0.4px; /* Minimal gap */
 
   
   }
