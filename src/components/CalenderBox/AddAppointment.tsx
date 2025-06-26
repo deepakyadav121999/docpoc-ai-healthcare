@@ -100,7 +100,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
-
+  const [dateTimeErrors, setDateTimeErrors] = useState({
+    pastDate: false,
+    pastTime: false,
+  });
   // function extractTime(dateTime: string): string {
   //   const date = new Date(dateTime);
   //   let hours = date.getHours();
@@ -116,6 +119,63 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   //   return `${hours}:${formattedMinutes} ${amPm}`;
   // }
 
+  const validateDateTime = () => {
+    const now = new Date();
+    const errors = {
+      pastDate: false,
+      pastTime: false,
+    };
+
+    // Validate date
+    if (formData.dateTime) {
+      const selectedDate = new Date(formData.dateTime);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Compare just the date part
+
+      errors.pastDate = selectedDate < today;
+    }
+
+    // Validate time
+    if (formData.startDateTime) {
+      const startTime = new Date(formData.startDateTime);
+      errors.pastTime = startTime < now;
+
+      // Also validate end time
+      if (formData.endDateTime) {
+        const endTime = new Date(formData.endDateTime);
+        if (endTime < now) {
+          errors.pastTime = true;
+        }
+
+        // Ensure end time is after start time
+        if (endTime <= startTime) {
+          setTimeWarning("End time must be after start time");
+          return false;
+        }
+      }
+    }
+
+    setDateTimeErrors(errors);
+    return !errors.pastDate && !errors.pastTime;
+  };
+  // const handleDateChange = (date: string) => {
+  //   setFormData({ ...formData, dateTime: date });
+  // };
+
+  const handleDateChange = (date: string) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setDateTimeErrors((prev) => ({ ...prev, pastDate: true }));
+    } else {
+      setDateTimeErrors((prev) => ({ ...prev, pastDate: false }));
+    }
+
+    setFormData({ ...formData, dateTime: date });
+  };
+
   const generateDateTime = (baseDate: string, time: Time) => {
     const currentDate = new Date(baseDate); // Use the current date
     return new Date(
@@ -127,6 +187,50 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       0,
     ); // Convert to ISO format
   };
+
+  // const handleTimeChange = (
+  //   time: Time,
+  //   field: "startDateTime" | "endDateTime",
+  // ) => {
+  //   if (!formData.dateTime) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Please select a date before setting the time.",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
+  //   setFormData({ ...formData, [field]: isoTime });
+  // };
+
+  //   const handleTimeChange = (time: Time, field: "startDateTime" | "endDateTime") => {
+  //   if (!formData.dateTime) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Please select a date before setting the time.",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   const isoTime = generateDateTime(formData.dateTime, time);
+  //   const now = new Date();
+
+  //   // Check if selected date is today and time is in past
+  //   const selectedDate = new Date(formData.dateTime);
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   if (selectedDate.getTime() === today.getTime() && isoTime < now) {
+  //     setDateTimeErrors(prev => ({ ...prev, pastTime: true }));
+  //   } else {
+  //     setDateTimeErrors(prev => ({ ...prev, pastTime: false }));
+  //   }
+
+  //   setFormData({ ...formData, [field]: isoTime });
+  // };
 
   const handleTimeChange = (
     time: Time,
@@ -141,7 +245,29 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       return;
     }
 
-    const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
+    const isoTime = generateDateTime(formData.dateTime, time);
+    const now = new Date();
+
+    // For start time, ensure it's not in the past
+    if (field === "startDateTime" && isoTime < now) {
+      setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+    }
+    // For end time, ensure it's after start time and not in the past
+    else if (field === "endDateTime") {
+      const startTime = new Date(formData.startDateTime);
+      if (isoTime <= startTime) {
+        setTimeWarning("End time must be after start time");
+      } else if (isoTime < now) {
+        setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+      } else {
+        setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+        setTimeWarning("");
+      }
+    } else {
+      setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+      setTimeWarning("");
+    }
+
     setFormData({ ...formData, [field]: isoTime });
   };
 
@@ -271,6 +397,28 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       (doctor) => doctor.value === doctorId,
     );
 
+    if (!validateDateTime()) {
+      if (dateTimeErrors.pastDate) {
+        setModalMessage({
+          success: "",
+          error: "Cannot book appointment on a past date",
+        });
+      } else if (dateTimeErrors.pastTime) {
+        setModalMessage({
+          success: "",
+          error: "Cannot book appointment at a past time",
+        });
+      } else if (timeWarning) {
+        setModalMessage({
+          success: "",
+          error: timeWarning,
+        });
+      }
+      setSavingData(false);
+      setLoading(false);
+      onOpen();
+      return;
+    }
     if (selectedDoctor) {
       const workingHours = selectedDoctor.workingHours;
 
@@ -305,6 +453,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
       onOpen();
+      setSavingData(false);
+      setLoading(false);
       return;
     }
     setLoading(true);
@@ -355,6 +505,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
         if (onClose) onClose();
       }, 3000);
     } catch (error: any) {
+      setSavingData(false);
+      setLoading(false);
       console.error(
         "Error creating appointment:",
         error.response?.data || error.message,
@@ -579,10 +731,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   const maxDate = new Date();
   maxDate.setMonth(minDate.getMonth() + 1);
 
-  const handleDateChange = (date: string) => {
-    setFormData({ ...formData, dateTime: date });
-  };
-
   // Function to check if the selected times are within the doctor's working hours
   const validateWorkingHours = () => {
     const { startDateTime, endDateTime, doctorId } = formData;
@@ -739,6 +887,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   type="date"
                   value={formData.dateTime || ""}
                   onChange={(e) => handleDateChange(e.target.value)}
+                  isInvalid={dateTimeErrors.pastDate}
+                  errorMessage={
+                    dateTimeErrors.pastDate ? "Cannot select a past date" : ""
+                  }
                 />
               </div>
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
@@ -761,6 +913,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "startDateTime")}
+                  isInvalid={dateTimeErrors.pastTime}
+                  errorMessage={
+                    dateTimeErrors.pastTime ? "Cannot select a past time" : ""
+                  }
                 />
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}

@@ -976,7 +976,7 @@ export const AppointmentCalendar: React.FC = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 10px;
-            min-width: 200px;
+            min-width: 250px;
         }
 
         .calendar-cell {
@@ -1271,7 +1271,7 @@ export const AppointmentCalendar: React.FC = () => {
 }
 @media (max-width: 768px) {
   .calendar-container {
-    padding: 10px; /* Reduce padding */
+    padding: 8px; /* Reduce padding */
   }
 
   .calendar-grid {
@@ -1287,7 +1287,7 @@ export const AppointmentCalendar: React.FC = () => {
     font-size: 10px; /* Smaller font size for appointment text */
   }
      .time-slot {
-    padding: 3px; /* Reduce padding */
+    padding: 2px; /* Reduce padding */
     font-size: 12px; /* Smaller font size */
     min-height: 30px; /* Reduce height */
   }
@@ -1307,7 +1307,7 @@ export const AppointmentCalendar: React.FC = () => {
 
   .calendar-grid {
  
-    gap: 2px; /* Minimal gap */
+    gap: 1px; /* Minimal gap */
 
   
   }
@@ -1318,7 +1318,7 @@ export const AppointmentCalendar: React.FC = () => {
   }
 
   .calendar-cell.has-booking p {
-    font-size: 8px; /* Smallest font size for appointment text */
+    font-size: 7px; /* Smallest font size for appointment text */
   }
      .time-slot {
     padding: 5px; /* Minimal padding */
@@ -1328,7 +1328,7 @@ export const AppointmentCalendar: React.FC = () => {
 
   .time-slot.has-booking p,
   .time-slot.partially-booking p {
-    font-size: 8px; /* Smallest font size for appointment text */
+    font-size: 7px; /* Smallest font size for appointment text */
   }
 }
 @media (max-width: 380px) {
@@ -1338,6 +1338,49 @@ export const AppointmentCalendar: React.FC = () => {
 
   
   }
+
+}
+
+/* iPhone 6/7/8 Plus and similar */
+@media only screen 
+  and (min-device-width: 414px) 
+  and (max-device-width: 736px) 
+  and (-webkit-min-device-pixel-ratio: 3) {
+    .calendar-cell {
+      aspect-ratio: unset;
+      height: 40px;
+      font-size: 12px;
+    }
+}
+
+/* iPhone X/XS/11 Pro and similar */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) {
+    .calendar-cell {
+      aspect-ratio: unset;
+      height: 35px;
+      font-size: 11px;
+    }
+    .calendar-cell.has-booking p {
+      font-size: 9px;
+    }
+}
+
+/* iPhone 12/13 Mini */
+@media only screen 
+  and (min-device-width: 360px) 
+  and (max-device-width: 780px) 
+  and (-webkit-min-device-pixel-ratio: 3) {
+    .calendar-cell {
+      aspect-ratio: unset;
+      height: 30px;
+      font-size: 10px;
+    }
+    .calendar-cell.has-booking p {
+      font-size: 8px;
+    }
 }
 
 

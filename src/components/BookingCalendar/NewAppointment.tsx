@@ -1737,11 +1737,13 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         error: "",
       });
 
-      if (onClose) onClose();
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 2000);
 
       onOpen();
       onUsersAdded();
-      internalOnClose();
+      // internalOnClose();
     } catch (error: any) {
       console.error(
         "Error creating appointment:",
@@ -1992,7 +1994,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
 
   const handleNewPatientCreated = () => {
-    setShowAddPatientModal(false);
+    setTimeout(() => {
+      setShowAddPatientModal(false);
+    }, 3000);
+
     fetchAppointmentTypes();
   };
   return (
