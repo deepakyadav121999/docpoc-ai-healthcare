@@ -23,6 +23,7 @@ import {
   SortDescriptor,
   DatePicker,
   useDisclosure,
+  Spinner,
 } from "@nextui-org/react";
 // import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
@@ -762,9 +763,30 @@ export default function AppointmentTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody
+        {/* <TableBody
           emptyContent={"No Appointment Available"}
           items={sortedItems}
+        >
+          {(item: User) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody> */}
+
+        <TableBody
+          emptyContent={
+            loading ? (
+              <div className="flex justify-center items-center h-[200px]">
+                <Spinner size="sm" label="Loading..." color="secondary" />
+              </div>
+            ) : (
+              "No Appointment Available"
+            )
+          }
+          items={loading ? [] : sortedItems} // Show empty table when loading
         >
           {(item: User) => (
             <TableRow key={item.id}>
