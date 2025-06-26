@@ -1351,7 +1351,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 50px;
+      height: 55px;
       font-size: 12px;
     }
 }
@@ -1363,7 +1363,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 50px;
+      height: 55px;
       font-size: 11px;
     }
     .calendar-cell.has-booking p {
@@ -1378,7 +1378,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 45px;
+      height: 51px;
       font-size: 10px;
     }
     .calendar-cell.has-booking p {
