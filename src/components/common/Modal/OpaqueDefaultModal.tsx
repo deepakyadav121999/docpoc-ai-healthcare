@@ -127,7 +127,7 @@ const App: React.FC<ParentComponentProps> = ({
                   ? React.cloneElement(child, { onClose: handleClose } as ChildComponentProps)
                   : child}
               </ModalBody> */}
-              <ModalBody>
+              <ModalBody className="modal-body">
                 {React.isValidElement<ChildComponentProps>(child)
                   ? React.cloneElement(child, {
                       onClose: handleClose,
@@ -170,7 +170,7 @@ const App: React.FC<ParentComponentProps> = ({
   transform: translate(-50%, -50%);
   max-height: 90vh; /* Adjust as needed */
   overflow-y: auto;
-  width: 97%; /* Adjust as needed */
+  width: 99%; /* Adjust as needed */
   max-width: 800px; /* Adjust as needed */
   // background: white;
   border-radius: 15px;

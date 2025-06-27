@@ -65,6 +65,26 @@ interface Medication {
   quantity: number;
 }
 
+interface VitalSigns {
+  bloodPressure: {
+    systolic: string;
+    diastolic: string;
+    enabled: boolean;
+  };
+  heartRate: {
+    value: string;
+    enabled: boolean;
+  };
+  temperature: {
+    value: string;
+    enabled: boolean;
+  };
+  respiratoryRate: {
+    value: string;
+    enabled: boolean;
+  };
+}
+
 const API_URL = process.env.API_URL;
 // const AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
 const BASE_URL = API_URL;
@@ -109,11 +129,18 @@ const AppointmentForm = () => {
   // });
 
   // Update the vitals state initialization
-  const [vitals, setVitals] = useState({
-    bloodPressure: { value: "0/0 mmHg", enabled: false },
-    heartRate: { value: "0 bpm", enabled: false },
-    temperature: { value: "0.0 °F", enabled: false },
-    respiratoryRate: { value: "0 rpm", enabled: false },
+  // const [vitals, setVitals] = useState({
+  //   bloodPressure: { value: "0/0 mmHg", enabled: false },
+  //   heartRate: { value: "0 bpm", enabled: false },
+  //   temperature: { value: "0.0 °F", enabled: false },
+  //   respiratoryRate: { value: "0 rpm", enabled: false },
+  // });
+
+  const [vitals, setVitals] = useState<VitalSigns>({
+    bloodPressure: { systolic: "0", diastolic: "0", enabled: false },
+    heartRate: { value: "0", enabled: false },
+    temperature: { value: "0.0", enabled: false },
+    respiratoryRate: { value: "0", enabled: false },
   });
 
   // Patient details state (unchanged)
@@ -151,32 +178,90 @@ const AppointmentForm = () => {
     medicationNote: 70,
   };
 
-  const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
-    setVitals((prev) => ({
-      ...prev,
-      [field]: { ...prev[field], value },
-    }));
-  };
+  // const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
+  //   setVitals((prev) => ({
+  //     ...prev,
+  //     [field]: { ...prev[field], value },
+  //   }));
+  // };
 
+  // const toggleVitalField = (field: keyof typeof vitals) => {
+  //   setVitals((prev) => ({
+  //     ...prev,
+  //     [field]: {
+  //       ...prev[field],
+  //       enabled: !prev[field].enabled,
+  //       value: !prev[field].enabled
+  //         ? prev[field].value
+  //         : "0" +
+  //           (field === "bloodPressure"
+  //             ? "/0 mmHg"
+  //             : field === "heartRate"
+  //               ? " bpm"
+  //               : field === "temperature"
+  //                 ? " °F"
+  //                 : " rpm"),
+  //     },
+  //   }));
+  // };
   const toggleVitalField = (field: keyof typeof vitals) => {
     setVitals((prev) => ({
       ...prev,
       [field]: {
         ...prev[field],
         enabled: !prev[field].enabled,
-        value: !prev[field].enabled
-          ? prev[field].value
-          : "0" +
-            (field === "bloodPressure"
-              ? "/0 mmHg"
-              : field === "heartRate"
-                ? " bpm"
-                : field === "temperature"
-                  ? " °F"
-                  : " rpm"),
+        ...(field === "bloodPressure"
+          ? {
+              systolic: "0",
+              diastolic: "0",
+            }
+          : {
+              value: field === "temperature" ? "0.0" : "0",
+            }),
       },
     }));
   };
+  const handleVitalChange = (
+    field: "heartRate" | "temperature" | "respiratoryRate",
+    value: string,
+  ) => {
+    // Different validation for different fields
+    let isValid = false;
+
+    if (field === "temperature") {
+      // Allow numbers with optional decimal point
+      isValid = /^\d*\.?\d*$/.test(value);
+    } else {
+      // Only allow whole numbers
+      isValid = /^\d*$/.test(value);
+    }
+
+    if (isValid) {
+      setVitals((prev) => ({
+        ...prev,
+        [field]: {
+          ...prev[field],
+          value,
+        },
+      }));
+    }
+  };
+  const handleBloodPressureChange = (
+    part: "systolic" | "diastolic",
+    value: string,
+  ) => {
+    // Only allow numbers
+    if (/^\d*$/.test(value)) {
+      setVitals((prev) => ({
+        ...prev,
+        bloodPressure: {
+          ...prev.bloodPressure,
+          [part]: value,
+        },
+      }));
+    }
+  };
+
   const handleSaveReport = async () => {
     try {
       setIsLoading(true);
@@ -218,18 +303,33 @@ const AppointmentForm = () => {
         // name: reportName,
         // vitals,
 
+        // vitals: {
+        //   ...(vitals.bloodPressure.enabled && {
+        //     bloodPressure: vitals.bloodPressure.value,
+        //   }),
+        //   ...(vitals.heartRate.enabled && {
+        //     heartRate: vitals.heartRate.value,
+        //   }),
+        //   ...(vitals.temperature.enabled && {
+        //     temperature: vitals.temperature.value,
+        //   }),
+        //   ...(vitals.respiratoryRate.enabled && {
+        //     respiratoryRate: vitals.respiratoryRate.value,
+        //   }),
+        // },
+
         vitals: {
           ...(vitals.bloodPressure.enabled && {
-            bloodPressure: vitals.bloodPressure.value,
+            bloodPressure: `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`,
           }),
           ...(vitals.heartRate.enabled && {
-            heartRate: vitals.heartRate.value,
+            heartRate: `${vitals.heartRate.value} bpm`,
           }),
           ...(vitals.temperature.enabled && {
-            temperature: vitals.temperature.value,
+            temperature: `${vitals.temperature.value} °F`,
           }),
           ...(vitals.respiratoryRate.enabled && {
-            respiratoryRate: vitals.respiratoryRate.value,
+            respiratoryRate: `${vitals.respiratoryRate.value} rpm`,
           }),
         },
 
@@ -818,7 +918,7 @@ const AppointmentForm = () => {
           </div>
         </div> */}
 
-        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+        {/* <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Vital Signs</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -931,6 +1031,150 @@ const AppointmentForm = () => {
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
+        </div> */}
+
+        {/* // Update the JSX for vital signs section */}
+        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Vital Signs</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Leave fields disabled to exclude from report
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Blood Pressure */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.bloodPressure.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Blood Pressure</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.bloodPressure.enabled}
+                  onValueChange={() => toggleVitalField("bloodPressure")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.bloodPressure.systolic}
+                  onChange={(e) =>
+                    handleBloodPressureChange("systolic", e.target.value)
+                  }
+                  placeholder="120"
+                  className="w-20"
+                  isDisabled={!vitals.bloodPressure.enabled}
+                />
+                <span>/</span>
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.bloodPressure.diastolic}
+                  onChange={(e) =>
+                    handleBloodPressureChange("diastolic", e.target.value)
+                  }
+                  placeholder="80"
+                  className="w-20"
+                  isDisabled={!vitals.bloodPressure.enabled}
+                />
+                <span className="ml-2">mmHg</span>
+              </div>
+            </div>
+
+            {/* Heart Rate */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.heartRate.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Heart Rate</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.heartRate.enabled}
+                  onValueChange={() => toggleVitalField("heartRate")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.heartRate.value}
+                  onChange={(e) =>
+                    handleVitalChange("heartRate", e.target.value)
+                  }
+                  placeholder="72"
+                  className="w-20"
+                  isDisabled={!vitals.heartRate.enabled}
+                />
+                <span>bpm</span>
+              </div>
+            </div>
+
+            {/* Temperature */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.temperature.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Temperature</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.temperature.enabled}
+                  onValueChange={() => toggleVitalField("temperature")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.temperature.value}
+                  onChange={(e) =>
+                    handleVitalChange("temperature", e.target.value)
+                  }
+                  placeholder="98.6"
+                  className="w-20"
+                  isDisabled={!vitals.temperature.enabled}
+                />
+                <span>°F</span>
+              </div>
+            </div>
+
+            {/* Respiratory Rate */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.respiratoryRate.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Respiratory Rate</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.respiratoryRate.enabled}
+                  onValueChange={() => toggleVitalField("respiratoryRate")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.respiratoryRate.value}
+                  onChange={(e) =>
+                    handleVitalChange("respiratoryRate", e.target.value)
+                  }
+                  placeholder="16"
+                  className="w-20"
+                  isDisabled={!vitals.respiratoryRate.enabled}
+                />
+                <span>rpm</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Observations and Notes - made responsive */}
@@ -1382,7 +1626,7 @@ const AppointmentForm = () => {
                       </div> */}
 
                       {/* In the preview modal's vital signs section */}
-                      <div className="mb-6">
+                      {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">
                           Vital Signs
                         </h3>
@@ -1432,6 +1676,64 @@ const AppointmentForm = () => {
                                 {vitals.respiratoryRate.enabled && (
                                   <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
                                     {vitals.respiratoryRate.value}
+                                  </td>
+                                )}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div> */}
+                      {/* In the preview modal's vital signs section */}
+                      <div className="mb-6">
+                        <h3 className="text-base md:text-lg font-medium mb-2">
+                          Vital Signs
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border">
+                            <thead>
+                              <tr className="bg-gray-100 dark:bg-gray-700">
+                                {vitals.bloodPressure.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Blood Pressure
+                                  </th>
+                                )}
+                                {vitals.heartRate.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Heart Rate
+                                  </th>
+                                )}
+                                {vitals.temperature.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Temperature
+                                  </th>
+                                )}
+                                {vitals.respiratoryRate.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Respiratory Rate
+                                  </th>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                {vitals.bloodPressure.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`}
+                                  </td>
+                                )}
+                                {vitals.heartRate.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.heartRate.value} bpm`}
+                                  </td>
+                                )}
+                                {vitals.temperature.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.temperature.value} °F`}
+                                  </td>
+                                )}
+                                {vitals.respiratoryRate.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.respiratoryRate.value} rpm`}
                                   </td>
                                 )}
                               </tr>

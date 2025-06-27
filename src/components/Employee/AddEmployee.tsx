@@ -336,12 +336,13 @@ const AddUsers: React.FC<AddUsersProps> = ({
       <div className="flex flex-col w-full">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <form onSubmit={handleSubmit}>
-            <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5">
+            <div className="p-2.5 sm:p-4.5">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Input
                   label="Name"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Name"
                   value={formData.name}
                   color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
@@ -425,6 +426,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   label="Phone"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Phone"
                   value={formData.phone}
                   color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
@@ -451,6 +453,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   label="Email"
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
+                  placeholder="Email"
                   variant="bordered"
                   value={formData.email}
                   onChange={(e) =>
@@ -461,7 +464,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                 />
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Input
                   color={TOOL_TIP_COLORS.secondary}
                   label="Date of Birth"
@@ -473,7 +476,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   isDisabled={!edit}
                 />
               </div>
-              <div className="mb-4.5 flex flex-col gap-4.5">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Autocomplete
                   label="Gender"
                   labelPlacement="outside"
@@ -498,7 +501,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                 </Autocomplete>
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 {/* username */}
                 <Input
                   label="Username"
@@ -515,7 +518,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
               </div>
 
               {/*password */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Input
                   color={TOOL_TIP_COLORS.secondary}
                   label="Password"
@@ -607,7 +610,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
               <button
                 type="submit"
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
-                style={{ minWidth: 280, marginBottom: 20 }}
+                style={{ minWidth: 250, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>

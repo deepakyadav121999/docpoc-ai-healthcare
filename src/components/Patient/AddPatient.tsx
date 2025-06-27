@@ -12,6 +12,7 @@ import axios from "axios";
 import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import { TOOL_TIP_COLORS } from "@/constants";
 interface ModalMessage {
   success?: string;
   error?: string;
@@ -66,15 +67,31 @@ const AddPatient: React.FC<AddPatientProps> = ({
     e.preventDefault();
     const missingFields: string[] = [];
 
-    for (const key in formData) {
-      if (
-        !formData[key as keyof typeof formData] &&
-        key !== "branchId" &&
-        key !== "isActive"
-      ) {
+    // for (const key in formData) {
+    //   if (
+    //     !formData[key as keyof typeof formData] &&
+    //     key !== "branchId" &&
+    //     key !== "isActive"
+    //   ) {
+    //     missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
+    //   }
+    // }
+
+    // if (missingFields.length > 0) {
+    //   setModalMessage({
+    //     success: "",
+    //     error: `The following fields are required: ${missingFields.join(", ")}`,
+    //   });
+    //   onOpen();
+    //   return;
+    // }
+    const requiredFields = ["name", "phone", "gender", "dob", "address"];
+
+    requiredFields.forEach((key) => {
+      if (!formData[key as keyof typeof formData]) {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
-    }
+    });
 
     if (missingFields.length > 0) {
       setModalMessage({
@@ -127,10 +144,29 @@ const AddPatient: React.FC<AddPatientProps> = ({
 
       const fetchedBranchId = branchResponse.data[0]?.id;
 
+      // const payload = {
+      //   ...formData,
+      //   branchId: fetchedBranchId,
+
+      // };
+
       const payload = {
-        ...formData,
         branchId: fetchedBranchId,
+        name: formData.name,
+        phone: formData.phone,
+        gender: formData.gender,
+        dob: formData.dob,
+        address: formData.address,
+        isActive: formData.isActive,
+        json: formData.json,
+        documents: formData.documents,
+        lastVisit: formData.lastVisit,
+        status: formData.status,
+        notificationStatus: formData.notificationStatus,
+        ...(formData.email ? { email: formData.email } : {}),
+        ...(formData.bloodGroup ? { bloodGroup: formData.bloodGroup } : {}),
       };
+
       await axios.post(`${API_URL}/patient`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -273,13 +309,15 @@ const AddPatient: React.FC<AddPatientProps> = ({
       <div className="flex flex-col w-full">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
           <form onSubmit={handleSubmit}>
-            <div className=" p-4.5 sm:p-6.5">
+            <div className=" p-2.5 sm:p-6.5">
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5  sm:gap-4.5">
                 <Input
                   label="Patient Name"
                   labelPlacement="outside"
+                  placeholder="Patient Name"
                   variant="bordered"
                   value={formData.name}
+                  color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
                     if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
                       setFormData({ ...formData, name: e.target.value });
@@ -305,6 +343,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   labelPlacement="outside"
                   variant="bordered"
                   placeholder="Select Gender"
+                  color={TOOL_TIP_COLORS.secondary}
                   defaultItems={[
                     { label: "Male" },
                     { label: "Female" },
@@ -324,7 +363,9 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 <Input
                   label="Phone"
                   labelPlacement="outside"
+                  placeholder="Phone"
                   variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
                   value={formData.phone}
                   onChange={(e) => {
                     if (/^\d*$/.test(e.target.value)) {
@@ -350,6 +391,8 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   label="Email"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Email(Optional)"
+                  color={TOOL_TIP_COLORS.secondary}
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -366,6 +409,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
 
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
                   label="Blood Group"
                   labelPlacement="outside"
                   variant="bordered"
@@ -392,6 +436,8 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   type="date"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Date Of Birth"
+                  color={TOOL_TIP_COLORS.secondary}
                   value={formData.dob}
                   onChange={(e) =>
                     setFormData({ ...formData, dob: e.target.value })
@@ -405,6 +451,8 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 labelPlacement="outside"
                 variant="bordered"
                 value={formData.address}
+                placeholder="Address"
+                color={TOOL_TIP_COLORS.secondary}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }

@@ -17,7 +17,7 @@ const Overview = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="Payment" />
+        <Breadcrumb pageName="Payment-Overview" />
         <TabDefaultWithRoute
           current={current}
           options={PAYMENT_TAB_KEY}

@@ -853,8 +853,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
 
       <div className="flex flex-col w-full ">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
-          <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-            {/* <div>
+          {/* <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
+             <div>
               <Switch
                 defaultSelected
                 color="secondary"
@@ -863,20 +863,20 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               >
                 Edit
               </Switch>
-            </div> */}
-          </div>
+            </div> 
+          </div> */}
           <form onSubmit={handleSubmit}>
             {/* {warningMessage && (
               <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
                 {warningMessage}
               </div>
             )} */}
-            <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
-              <div className="flex flex-col w-full"></div>
+            <div className="p-2.5 sm:4.5">
+              {/* <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div> */}
+              {/* <div className="flex flex-col w-full"></div> */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Input
                   label="Appointment Date"
@@ -893,16 +893,19 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   }
                 />
               </div>
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div className="flex flex-col w-full">
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
-                    {timeWarning}
+                    <p className=" text-xs sm:text-sm md:text-lg">
+                      {" "}
+                      {timeWarning}
+                    </p>
                   </div>
                 )}
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <TimeInput
                   color={TOOL_TIP_COLORS.secondary}
@@ -932,7 +935,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                    <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
                 )} */}
               </div>
-              <div style={{ marginTop: 20 }}>
+              <div
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
+              >
                 <Textarea
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
@@ -951,8 +957,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 />
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
@@ -979,8 +985,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               </div>
 
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
@@ -1006,8 +1012,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 </Autocomplete>
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 {/* <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
@@ -1099,12 +1105,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
-                    {timeWarning}
+                    <p className=" text-xs sm:text-sm md:text-lg  ">
+                      {" "}
+                      {timeWarning}
+                    </p>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col w-full"
+                // style={{ marginTop: 20 }}
+              >
                 <label>
                   Mark uncheck if no notification has to be sent for
                   appointment.
@@ -1124,8 +1136,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // onPress={onOpen}
                 // isDisabled={!edit || loading}
                 // color={TOOL_TIP_COLORS.secondary}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
-                style={{ minWidth: 290, marginBottom: 20 }}
+                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500  "
+                style={{ minWidth: 230, marginBottom: 20 }}
               >
                 {savingData ? "Saving..." : "Save Changes"}
               </button>

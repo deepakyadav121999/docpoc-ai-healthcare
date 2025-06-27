@@ -39,7 +39,7 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import IconButton from "../Buttons/IconButton";
 
 import { VisitHistoryTable } from "../Patient/VisitHistoryTable";
-import AddAppointment from "../CalenderBox/AddAppointment";
+// import AddAppointment from "../CalenderBox/AddAppointment";
 import axios from "axios";
 import { Time } from "@internationalized/date";
 import { useDropzone } from "react-dropzone";
@@ -3311,13 +3311,13 @@ export default function ModalForm(props: {
         )}
       </div>
     );
-    if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
-      return (
-        <>
-          <AddAppointment onUsersAdded={() => {}} />
-        </>
-      );
-    }
+    // if (props.type == MODAL_TYPES.ADD_APPOINTMENT) {
+    //   return (
+    //     <>
+    //       <AddAppointment onUsersAdded={() => {}} />
+    //     </>
+    //   );
+    // }
   }
   return null;
 }

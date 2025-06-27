@@ -11,7 +11,7 @@ const Loading = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="employee" />
+        <Breadcrumb pageName="Employee" />
 
         <div className="flex justify-center items-center w-full h-full">
           <Spinner size="lg" />

@@ -2076,8 +2076,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
       <div className="flex flex-col w-full">
         <div className="form-card  rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
-          <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-            {/* <div>
+          {/* <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
+            <div>
               <Switch
                 defaultSelected
                 color="secondary"
@@ -2086,14 +2086,14 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               >
                 Edit
               </Switch>
-            </div> */}
-          </div>
+            </div>
+          </div> */}
 
           <form onSubmit={handleSubmit}>
-            <div className="p-6.5">
+            <div className="p-0.5 sm:4.5">
               {/* Date Input */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
                 <Input
@@ -2112,8 +2112,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Time Inputs */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row time-inputs-container"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <TimeInput
                   className="full-width-input"
@@ -2165,7 +2165,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Remarks */}
-              <div style={{ marginTop: 20 }}>
+              <div
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
+              >
                 <Textarea
                   className="full-width-input"
                   color={TOOL_TIP_COLORS.secondary}
@@ -2188,8 +2191,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Appointment Type */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
                   className="full-width-input"
@@ -2220,8 +2223,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Appointment Status */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
                   autoFocus={false}
@@ -2251,8 +2254,8 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Patient and Doctor Selection */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row responsive-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 {/* <Autocomplete
                   autoFocus={false}
@@ -2353,7 +2356,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Notification Checkbox */}
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div className="flex flex-col w-full">
                 <label>
                   Mark uncheck if no notification has to be sent for
                   appointment.
@@ -2372,7 +2375,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
             <div className="flex justify-center mt-4">
               <button
                 type="submit"
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white bg-purple-500"
+                className="rounded-[15px] p-[13px] font-medium hover:bg-opacity-90 text-white bg-purple-500"
                 style={{ minWidth: 290, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}

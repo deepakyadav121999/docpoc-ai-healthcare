@@ -17,7 +17,7 @@ const Appointments = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="appointments" />
+        <Breadcrumb pageName="Appointments" />
         <TabDefaultWithRoute
           current={current}
           color={TOOL_TIP_COLORS.primary}

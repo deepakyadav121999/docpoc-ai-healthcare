@@ -18,7 +18,7 @@ const Breadcrumb = ({ pageName }: BreadcrumbProps) => {
         <ol className="flex items-center gap-2">
           <li>
             <Link className="font-medium" href="/">
-              dashboard /
+              Dashboard /
             </Link>
           </li>
           {isNested ? (

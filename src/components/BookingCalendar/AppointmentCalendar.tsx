@@ -787,7 +787,7 @@ export const AppointmentCalendar: React.FC = () => {
         </div>
         <div id="calendar-view">{renderCalendar()}</div>
 
-        <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+        <div className="py-1 px-1 flex flex-col justify-center items-center w-full">
           <div className="calendar-container1">
             {modalVisible && (
               <Modal
@@ -1351,7 +1351,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 55px;
+      height: 50px;
       font-size: 12px;
     }
 }
@@ -1363,7 +1363,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 55px;
+      height: 50px;
       font-size: 11px;
     }
     .calendar-cell.has-booking p {
@@ -1378,7 +1378,7 @@ export const AppointmentCalendar: React.FC = () => {
   and (-webkit-min-device-pixel-ratio: 3) {
     .calendar-cell {
       aspect-ratio: unset;
-      height: 51px;
+      height: 50px;
       font-size: 10px;
     }
     .calendar-cell.has-booking p {
