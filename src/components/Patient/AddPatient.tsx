@@ -116,39 +116,18 @@ const AddPatient: React.FC<AddPatientProps> = ({
     }
 
     try {
-      const token = localStorage.getItem("docPocAuth_token");
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+      const fetchedBranchId = tokenPayload.branchId;
 
-      const hospitalEndpoint = `${API_URL}/hospital`;
-      const hospitalResponse = await axios.get(hospitalEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
+      if (!fetchedBranchId) {
+        setModalMessage({
+          success: "",
+          error: "Branch ID not found in your profile. Please contact support.",
+        });
+        onOpen();
+        setLoading(false);
         return;
       }
-
-      const fetchedHospitalId = hospitalResponse.data[0].id;
-      const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-      const branchResponse = await axios.get(branchEndpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!branchResponse.data || branchResponse.data.length === 0) {
-        return;
-      }
-
-      const fetchedBranchId = branchResponse.data[0]?.id;
-
-      // const payload = {
-      //   ...formData,
-      //   branchId: fetchedBranchId,
-
-      // };
 
       const payload = {
         branchId: fetchedBranchId,
