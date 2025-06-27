@@ -376,7 +376,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   label="Email"
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Email"
+                  placeholder="Email  (Optional)"
                   color={TOOL_TIP_COLORS.secondary}
                   value={formData.email}
                   onChange={(e) =>
@@ -398,7 +398,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   labelPlacement="outside"
                   variant="bordered"
                   color={TOOL_TIP_COLORS.secondary}
-                  placeholder="Select Blood Group"
+                  placeholder="Select Blood Group  (Optional)"
                   defaultItems={[
                     { label: "A+" },
                     { label: "O+" },

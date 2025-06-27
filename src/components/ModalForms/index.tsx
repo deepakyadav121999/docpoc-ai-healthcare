@@ -1,5 +1,5 @@
 "use client";
-import { Spinner } from "@nextui-org/react";
+import { DatePicker, Spinner } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -43,6 +43,7 @@ import { VisitHistoryTable } from "../Patient/VisitHistoryTable";
 import axios from "axios";
 import { Time } from "@internationalized/date";
 import { useDropzone } from "react-dropzone";
+import { parseDate } from "@internationalized/date";
 // import DocumentList from "../Patient/DocumentList";
 
 type FileWithPreview = File & { preview?: string };
@@ -180,19 +181,59 @@ export default function ModalForm(props: {
   const [appointmentBranch, setAppointmentBranch] = useState("");
   const [appointmentName, setAppointmentName] = useState("");
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
+
   const [doctorId, setDoctorId] = useState("");
   const [appointmentType, setAppointmentType] = useState("");
   // const [startDateTimeDisp, setStartDateTimeDisp] = useState<string>("");
   // const [endDateTime, setEndDateTime] = useState<string>("");
 
+  const [appointmentDate, setAppointmentDate] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
-
+  const [editAppointmentDate, setEditAppointmentDate] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date(appointmentDate));
   //   const [shiftStartTime, setShiftStartTime] = useState<Time>(new Time(7, 38));  // Default time
   // const [shiftEndTime, setShiftEndTime] = useState<Time>(new Time(8, 45));
   // Default time
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
+
+  // Convert ISO string to Date object
+  const parseAppointmentDate = (dateString: string) => {
+    return dateString ? new Date(dateString) : new Date();
+  };
+
+  // Format date for display
+  const formatDisplayDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  // Update date while preserving time
+  const updateDatePreservingTime = (
+    newDate: Date,
+    originalDateTime: string,
+  ) => {
+    if (!originalDateTime) return newDate.toISOString();
+
+    const original = new Date(originalDateTime);
+    const updated = new Date(newDate);
+
+    // Preserve the original time components
+    updated.setHours(original.getHours());
+    updated.setMinutes(original.getMinutes());
+    updated.setSeconds(original.getSeconds());
+
+    return updated.toISOString();
+  };
+  useEffect(() => {
+    if (appointmentDate) {
+      setTempDate(parseAppointmentDate(appointmentDate));
+    }
+  }, [appointmentDate]);
 
   const formatDateToDDMMYYYY = (dateTimeString: string): string => {
     const dateObj = new Date(dateTimeString);
@@ -235,8 +276,6 @@ export default function ModalForm(props: {
 
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
-
-  const [appointmentDate, setAppointmentDate] = useState("");
 
   const handleTimeChange = (key: "start" | "end", value: string) => {
     const [hour, minute] = value.split(":").map(Number); // Parse hour and minute
@@ -1290,12 +1329,82 @@ export default function ModalForm(props: {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center">
+                  {/* <div className="flex items-center">
                     <SVGIconProvider iconName="calendar" />
                     <p className=" text-sm sm:text-medium ml-2">
                       <strong>Date: </strong>
                       {extractDate(appointmentDate)}
                     </p>
+                  </div> */}
+                  <div className="flex items-center">
+                    <SVGIconProvider iconName="calendar" />
+
+                    {/* Display mode */}
+                    {!editAppointmentDate && (
+                      <div className="flex items-center">
+                        <p className="text-sm sm:text-medium ml-2">
+                          <strong>Date: </strong>
+                          {formatDisplayDate(tempDate)}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Edit mode */}
+                    {editAppointmentDate && (
+                      <div className="ml-2 w-full max-w-[200px]">
+                        <DatePicker
+                          showMonthAndYearPickers
+                          color={TOOL_TIP_COLORS.secondary}
+                          label="Appointment Date"
+                          labelPlacement="outside"
+                          variant="bordered"
+                          value={parseDate(
+                            tempDate.toISOString().split("T")[0],
+                          )}
+                          onChange={(date) => {
+                            const newDate = new Date(date.toString());
+                            setTempDate(newDate);
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+
+                    {/* Edit/Save buttons */}
+                    <div className="flex items-center ml-2">
+                      {!editAppointmentDate ? (
+                        <IconButton
+                          iconName="edit"
+                          color={GLOBAL_DANGER_COLOR}
+                          clickEvent={() => setEditAppointmentDate(true)}
+                        />
+                      ) : (
+                        <>
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={() => {
+                              const newAppointmentDate = tempDate.toISOString();
+                              setAppointmentDate(newAppointmentDate);
+
+                              // Update start and end datetimes with new date but same times
+                              setStartDateTime(
+                                updateDatePreservingTime(
+                                  tempDate,
+                                  startDateTime,
+                                ),
+                              );
+                              setEndDateTime(
+                                updateDatePreservingTime(tempDate, endDateTime),
+                              );
+
+                              setEditAppointmentDate(false);
+                            }}
+                            // className="mr-1"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center">

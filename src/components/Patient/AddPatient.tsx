@@ -388,10 +388,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   isDisabled={!edit}
                 />
                 <Input
-                  label="Email"
+                  label="Email "
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Email(Optional)"
+                  placeholder="Email (Optional)"
                   color={TOOL_TIP_COLORS.secondary}
                   value={formData.email}
                   onChange={(e) =>
@@ -410,10 +410,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
-                  label="Blood Group"
+                  label="Blood Group "
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Select Blood Group"
+                  placeholder="Select Blood Group (Optional)"
                   defaultItems={[
                     { label: "A+" },
                     { label: "O+" },

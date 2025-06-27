@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -98,30 +98,83 @@ export default function DataTable() {
   }>({});
 
   console.log(appointmentMessage);
+  // const [isSearching, setIsSearching] = useState(false);
+
+  const debouncedFetchRef = useRef<ReturnType<typeof debounce>>();
+
+  // Initialize the debounced function on mount
+  useEffect(() => {
+    debouncedFetchRef.current = debounce((searchValue: string) => {
+      fetchUsers(searchValue);
+    }, 500);
+
+    return () => {
+      debouncedFetchRef.current?.cancel();
+    };
+  }, []);
+
   const handleModalClose = () => {
     onClose();
     setAppointmentMessage({});
     // alert("modal is closed")
   };
 
-  const fetchUsers = async () =>
-    // searchName = "",
-    // selectedStatuses: string[] = [],
-    {
+  // const fetchUsers = async () =>
+  //   // searchName = "",
+  //   // selectedStatuses: string[] = [],
+  //   {
+  //     setLoading(true);
+  //     try {
+  //       const token = localStorage.getItem("docPocAuth_token");
+
+  //       const fetchedBranchId = profile?.branchId;
+
+  //       // setBranchId(fetchedBranchId);
+
+  //       const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+  //       const params: any = {};
+  //       params.page = page;
+  //       params.pageSize = rowsPerPage;
+  //       // params.from = "2024-12-04T03:32:25.812Z";
+  //       // params.to = "2024-12-11T03:32:25.815Z";
+  //       const response = await axios.get(endpoint, {
+  //         params,
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       setUsers(response.data.rows || response.data);
+  //       setTotalUsers(response.data.count || response.data.length);
+  //     } catch (err) {
+  //       // setError("Failed to fetch users.");
+  //       console.log(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  const fetchUsers = useCallback(
+    async (searchValue = "") => {
       setLoading(true);
+      // setIsSearching(!!searchValue);
       try {
         const token = localStorage.getItem("docPocAuth_token");
-
         const fetchedBranchId = profile?.branchId;
 
-        // setBranchId(fetchedBranchId);
+        if (!fetchedBranchId) return;
 
         const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-        const params: any = {};
-        params.page = page;
-        params.pageSize = rowsPerPage;
-        params.from = "2024-12-04T03:32:25.812Z";
-        params.to = "2024-12-11T03:32:25.815Z";
+        const params: any = {
+          page,
+          pageSize: rowsPerPage,
+        };
+
+        // Only add search filter if searchValue is not empty
+        if (searchValue) {
+          params.name = searchValue;
+        }
+
         const response = await axios.get(endpoint, {
           params,
           headers: {
@@ -129,20 +182,28 @@ export default function DataTable() {
             "Content-Type": "application/json",
           },
         });
+
         setUsers(response.data.rows || response.data);
         setTotalUsers(response.data.count || response.data.length);
       } catch (err) {
-        // setError("Failed to fetch users.");
-        console.log(err);
+        console.error("Failed to fetch users:", err);
       } finally {
         setLoading(false);
+        // setIsSearching(false);
       }
-    };
+    },
+    [page, rowsPerPage, profile?.branchId],
+  );
+
   React.useEffect(() => {
     fetchUsers();
-  }, [page, rowsPerPage]);
-  console.log(users);
-  console.log(totalUsers);
+  }, [page, rowsPerPage, fetchUsers]);
+
+  // React.useEffect(() => {
+  //   fetchUsers();
+  // }, [page, rowsPerPage]);
+  // console.log(users);
+  // console.log(totalUsers);
 
   const getAgeFromDob = (dob: string): number => {
     const birthDate = new Date(dob);
@@ -305,19 +366,25 @@ export default function DataTable() {
     },
     [],
   );
-  const debouncedFetchUser = React.useMemo(
-    () => debounce((_value: string) => fetchUsers(), 500),
-    [fetchUsers],
-  );
+  // const debouncedFetchUser = React.useMemo(
+  //   () => debounce((_value: string) => fetchUsers(), 500),
+  //   [fetchUsers],
+  // );
 
-  const onSearchChange = React.useCallback(
-    (value?: string) => {
-      setFilterValue(value || "");
-      setPage(1);
-      debouncedFetchUser(value || "");
-    },
-    [debouncedFetchUser],
-  );
+  // const onSearchChange = React.useCallback(
+  //   (value?: string) => {
+  //     setFilterValue(value || "");
+  //     setPage(1);
+  //     debouncedFetchUser(value || "");
+  //   },
+  //   [debouncedFetchUser],
+  // );
+
+  const onSearchChange = useCallback((value: string = "") => {
+    setFilterValue(value);
+    setPage(1); // Reset to first page on search
+    debouncedFetchRef.current?.(value);
+  }, []);
 
   // const onSearchChange = React.useCallback((value?: string) => {
   //   if (value) {
@@ -328,10 +395,15 @@ export default function DataTable() {
   //   }
   // }, []);
 
-  const onClear = React.useCallback(() => {
+  // const onClear = React.useCallback(() => {
+  //   setFilterValue("");
+  //   setPage(1);
+  // }, []);
+  const onClear = useCallback(() => {
     setFilterValue("");
     setPage(1);
-  }, []);
+    fetchUsers(""); // Fetch without search filter immediately
+  }, [fetchUsers]);
 
   const topContent = React.useMemo(() => {
     return (

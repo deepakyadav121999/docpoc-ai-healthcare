@@ -30,85 +30,86 @@ import {
   updateAccessToken,
 } from "../../store/slices/profileSlice";
 
-export const appointmentStatuses = [
-  {
-    status: "Scheduled",
-    json: JSON.stringify({
-      description: "Appointment is scheduled in advance",
-    }),
-  },
-  {
-    status: "Walk-In",
-    json: JSON.stringify({
-      description: "Patient walked in without appointment",
-    }),
-  },
-  {
-    status: "Emergency",
-    json: JSON.stringify({ description: "Emergency appointment" }),
-  },
-  {
-    status: "Follow-Up",
-    json: JSON.stringify({ description: "Follow-up appointment" }),
-  },
+// export const appointmentStatuses = [
+//   {
+//     status: "Scheduled",
+//     json: JSON.stringify({
+//       description: "Appointment is scheduled in advance",
+//     }),
+//   },
+//   {
+//     status: "Walk-In",
+//     json: JSON.stringify({
+//       description: "Patient walked in without appointment",
+//     }),
+//   },
+//   {
+//     status: "Emergency",
+//     json: JSON.stringify({ description: "Emergency appointment" }),
+//   },
+//   {
+//     status: "Follow-Up",
+//     json: JSON.stringify({ description: "Follow-up appointment" }),
+//   },
 
-  {
-    status: "Visiting",
-    json: JSON.stringify({ description: "Patient is currently visiting" }),
-  },
-  {
-    status: "Visited",
-    json: JSON.stringify({ description: "Patient has completed the visit" }),
-  },
-  {
-    status: "Declined",
-    json: JSON.stringify({ description: "Patient has completed the visit" }),
-  },
-];
-export const appointmentTypes = [
-  {
-    name: "General Consultation",
-    json: JSON.stringify({
-      description: "General health checkup or consultation",
-    }),
-  },
-  {
-    name: "Specialist Consultation",
-    json: JSON.stringify({
-      description: "Consultation with a medical specialist",
-    }),
-  },
-  {
-    name: "Diagnostic/Test Booking",
-    json: JSON.stringify({
-      description: "Booking for diagnostic tests or lab work",
-    }),
-  },
-  {
-    name: "Preventive Care",
-    json: JSON.stringify({
-      description: "Preventive health services and screenings",
-    }),
-  },
-  {
-    name: "Therapy/Procedure Booking",
-    json: JSON.stringify({
-      description: "Booking for therapies or medical procedures",
-    }),
-  },
-  {
-    name: "Virtual/Telehealth Appointment",
-    json: JSON.stringify({ description: "Remote consultation via telehealth" }),
-  },
-  {
-    name: "Dental",
-    json: JSON.stringify({ description: "Default dental appointment type" }),
-  },
-  {
-    name: "Checkup",
-    json: JSON.stringify({ description: "Default Checkup consultation" }),
-  },
-];
+//   {
+//     status: "Visiting",
+//     json: JSON.stringify({ description: "Patient is currently visiting" }),
+//   },
+//   {
+//     status: "Visited",
+//     json: JSON.stringify({ description: "Patient has completed the visit" }),
+//   },
+//   {
+//     status: "Declined",
+//     json: JSON.stringify({ description: "Patient has completed the visit" }),
+//   },
+// ];
+// export const appointmentTypes = [
+//   {
+//     name: "General Consultation",
+//     json: JSON.stringify({
+//       description: "General health checkup or consultation",
+//     }),
+//   },
+//   {
+//     name: "Specialist Consultation",
+//     json: JSON.stringify({
+//       description: "Consultation with a medical specialist",
+//     }),
+//   },
+//   {
+//     name: "Diagnostic/Test Booking",
+//     json: JSON.stringify({
+//       description: "Booking for diagnostic tests or lab work",
+//     }),
+//   },
+//   {
+//     name: "Preventive Care",
+//     json: JSON.stringify({
+//       description: "Preventive health services and screenings",
+//     }),
+//   },
+//   {
+//     name: "Therapy/Procedure Booking",
+//     json: JSON.stringify({
+//       description: "Booking for therapies or medical procedures",
+//     }),
+//   },
+//   {
+//     name: "Virtual/Telehealth Appointment",
+//     json: JSON.stringify({ description: "Remote consultation via telehealth" }),
+//   },
+//   {
+//     name: "Dental",
+//     json: JSON.stringify({ description: "Default dental appointment type" }),
+//   },
+//   {
+//     name: "Checkup",
+//     json: JSON.stringify({ description: "Default Checkup consultation" }),
+//   },
+// ];
+
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
@@ -424,43 +425,43 @@ const Clinic = () => {
           setAccessToken(newAccessToken);
         }
 
-        await Promise.all(
-          appointmentStatuses.map((status) =>
-            axios.post(
-              `${API_URL}/appointment/status`,
-              {
-                status: status.status, // Here we're accessing the status property
-                branchId: fetchedBranchId,
-                json: status.json,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              },
-            ),
-          ),
-        );
+        // await Promise.all(
+        //   appointmentStatuses.map((status) =>
+        //     axios.post(
+        //       `${API_URL}/appointment/status`,
+        //       {
+        //         status: status.status, // Here we're accessing the status property
+        //         branchId: fetchedBranchId,
+        //         json: status.json,
+        //       },
+        //       {
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       },
+        //     ),
+        //   ),
+        // );
 
-        await Promise.all(
-          appointmentTypes.map((type) =>
-            axios.post(
-              `${API_URL}/appointment/types`,
-              {
-                name: type.name,
-                branchId: fetchedBranchId,
-                json: type.json,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              },
-            ),
-          ),
-        );
+        // await Promise.all(
+        //   appointmentTypes.map((type) =>
+        //     axios.post(
+        //       `${API_URL}/appointment/types`,
+        //       {
+        //         name: type.name,
+        //         branchId: fetchedBranchId,
+        //         json: type.json,
+        //       },
+        //       {
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       },
+        //     ),
+        //   ),
+        // );
         // console.log("Profile updated successfully:", response.data);
       }
     } catch (error: any) {

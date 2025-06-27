@@ -168,8 +168,8 @@ export default function AppointmentTable() {
     const params: any = {
       page,
       pageSize: rowsPerPage,
-      from: "2024-12-01T00:00:00.000Z",
-      to: "2040-12-31T23:59:59.999Z",
+      // from: "2024-12-01T00:00:00.000Z",
+      // to: "2040-12-31T23:59:59.999Z",
       branchId: profile.branchId,
     };
 
