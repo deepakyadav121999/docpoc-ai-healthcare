@@ -171,8 +171,9 @@ const SignUp: React.FC<SignUpProps> = ({
           email,
           user_type: "SUPER_ADMIN",
           password,
-          accessType:
-            '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+          // accessType:
+          //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+          accessType: `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`,
           json: JSON.stringify({ clinicSize: dropdownOption }),
           userName: email,
         });
@@ -334,8 +335,9 @@ const SignUp: React.FC<SignUpProps> = ({
               password,
               name: email.split("@")[0],
               user_type: "SUPER_ADMIN",
-              accessType:
-                '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+              // accessType:
+              //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+              accessType: `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`,
               json: JSON.stringify({ clinicSize: dropdownOption }),
             } // Use email if detected as email
           : {
@@ -345,8 +347,9 @@ const SignUp: React.FC<SignUpProps> = ({
               password,
               name: "public user",
               user_type: "SUPER_ADMIN",
-              accessType:
-                '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+              // accessType:
+              //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+              accessType: `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`,
               json: JSON.stringify({ clinicSize: dropdownOption }),
             };
 
