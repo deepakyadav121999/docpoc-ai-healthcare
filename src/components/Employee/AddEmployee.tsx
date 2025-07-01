@@ -55,7 +55,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
       workingHours: "",
     }),
     userName: "",
-    password: "",
+    password: "defaultPassword123",
     gender: "",
   });
 
@@ -63,11 +63,11 @@ const AddUsers: React.FC<AddUsersProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [accessTypes, setAccessTypes] = useState({
-    setAppointments: false,
+    setAppointments: true,
     editDoctor: true,
     editCreatePatients: true,
     editCreateStaffs: true,
-    editCreateReminders: false,
+    editCreateReminders: true,
     editCreatePayments: true,
   });
   const { isOpen, onOpen, onClose: internalClose } = useDisclosure();
@@ -138,7 +138,12 @@ const AddUsers: React.FC<AddUsersProps> = ({
 
     const missingFields: string[] = [];
     for (const key in formData) {
-      if (!formData[key as keyof typeof formData] && key !== "branchId") {
+      if (
+        !formData[key as keyof typeof formData] &&
+        key !== "branchId" &&
+        key !== "email" &&
+        key !== "userName"
+      ) {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
@@ -182,8 +187,14 @@ const AddUsers: React.FC<AddUsersProps> = ({
 
       const fetchedBranchId = profile?.branchId;
 
+      const finalEmail = formData.email
+        ? formData.email
+        : `${formData.phone}@docpoc.placeholder`;
+
       const payload = {
         ...formData,
+        userName: formData.phone,
+        email: finalEmail,
         branchId: fetchedBranchId,
         accessType: JSON.stringify(accessTypes),
       };
@@ -215,7 +226,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
         editCreatePatients: false,
         editCreateStaffs: false,
         editCreateReminders: false,
-        editCreatePayments: true,
+        editCreatePayments: false,
       });
       onUsersAdded();
       onMessage({ success: "User  created successfully!" });
@@ -453,7 +464,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   label="Email"
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
-                  placeholder="Email"
+                  placeholder="Email(Optional)"
                   variant="bordered"
                   value={formData.email}
                   onChange={(e) =>
@@ -501,8 +512,8 @@ const AddUsers: React.FC<AddUsersProps> = ({
                 </Autocomplete>
               </div>
 
-              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
-                {/* username */}
+              {/* <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
+                // username 
                 <Input
                   label="Username"
                   color={TOOL_TIP_COLORS.secondary}
@@ -515,10 +526,10 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   onBlur={() => {}}
                   isDisabled={!edit}
                 />
-              </div>
+              </div>  */}
 
-              {/*password */}
-              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
+              {/* password  */}
+              {/* <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Input
                   color={TOOL_TIP_COLORS.secondary}
                   label="Password"
@@ -531,7 +542,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   }
                   isDisabled={!edit}
                 />
-              </div>
+              </div> */}
 
               <div className="mb-4.5 flex ">
                 <p className="text-sm font-medium mb-2">Access Types:</p>

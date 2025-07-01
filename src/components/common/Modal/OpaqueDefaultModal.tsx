@@ -32,7 +32,12 @@ const App: React.FC<ParentComponentProps> = ({
   headingName,
   onClose,
 }) => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const {
+    isOpen,
+    onOpen,
+    onOpenChange,
+    onClose: internalClose,
+  } = useDisclosure();
   const [modalMessage, setModalMessage] = useState<ModalMessage>({});
   // const handleClose = () => {
   //   // This closes the modal (toggles isOpen)
@@ -61,6 +66,15 @@ const App: React.FC<ParentComponentProps> = ({
     }
   };
 
+  const handlecloseButton = () => {
+    if (modalMessage.success) {
+      onOpenChange();
+    }
+    if (onClose) {
+      onClose();
+    }
+    internalClose();
+  };
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -137,7 +151,11 @@ const App: React.FC<ParentComponentProps> = ({
               </ModalBody>
 
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={handleClose}>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={handlecloseButton}
+                >
                   Close
                 </Button>
               </ModalFooter>

@@ -474,9 +474,19 @@ export default function OpaqueModal(props: {
       setNotificationOpen(true);
       // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating Employee:", error);
-      setModalMessage({ success: "", error: "Error updating Employee" });
+      // setModalMessage({ success: "", error: "Error updating Employee" });
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to update employee";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
       // seterror("Error updating Employee");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
@@ -558,11 +568,15 @@ export default function OpaqueModal(props: {
     }
   };
   const handleModalClose = () => {
-    setModalMessage({ success: "", error: "" });
-    setNotificationOpen(false);
-    if (profile.id === props.userId) {
+    if (modalMessage.success && accessToken && profile.id === props.userId) {
       dispatch(updateAccessToken(accessToken));
     }
+
+    setModalMessage({ success: "", error: "" });
+    setNotificationOpen(false);
+    // if (profile.id === props.userId  ) {
+    //   dispatch(updateAccessToken(accessToken));
+    // }
 
     // onClose();
   };

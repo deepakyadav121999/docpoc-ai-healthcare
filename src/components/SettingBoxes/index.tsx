@@ -28,6 +28,8 @@ import {
 // import IconButton from "../Buttons/IconButton";
 
 const API_URL = process.env.API_URL;
+const NEXT_PUBLIC_AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+const NEXT_PUBLIC_S3_BUCKET_URL = process.env.NEXT_PUBLIC_S3_BUCKET_URL;
 
 interface UserProfile {
   id: string;
@@ -58,11 +60,11 @@ interface UserJsonData {
   bio?: string;
   [key: string]: any;
 }
-interface PasswordFormData {
-  oldPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+// interface PasswordFormData {
+//   oldPassword: string;
+//   newPassword: string;
+//   confirmPassword: string;
+// }
 
 const SettingBoxes = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -91,18 +93,18 @@ const SettingBoxes = () => {
   const [editBio, setEditBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
 
-  const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [passwordErrors, setPasswordErrors] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  // const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
+  //   oldPassword: "",
+  //   newPassword: "",
+  //   confirmPassword: "",
+  // });
+  // const [passwordErrors, setPasswordErrors] = useState({
+  //   newPassword: "",
+  //   confirmPassword: "",
+  // });
+  // const [isChangingPassword, setIsChangingPassword] = useState(false);
   // const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [isSocialLogin] = useState(false);
+  // const [isSocialLogin] = useState(false);
 
   // Parse the JSON field
   const userJsonData: UserJsonData = formData.json
@@ -262,103 +264,6 @@ const SettingBoxes = () => {
     };
   }, [isOpen, tempPhotoUrl, profilePhotoUrl]);
 
-  // const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-
-  //   setPhotoLoading(true);
-
-  //   // Construct the folder name based on the user's name and ID
-  //   const sanitizedUsername = profile.name
-  //     .replace(/\s+/g, "")
-  //     .toLowerCase()
-  //     .slice(0, 9);
-  //   const folderName = `${sanitizedUsername}${profile.id.slice(-6)}`;
-  //   // const uniqueFileName = `${Date.now()}${file.name}`;
-
-  //   try {
-  //     const data = new FormData();
-  //     data.append("file", file);
-  //     data.append("folder", folderName);
-  //     data.append("contentDisposition", "inline");
-
-  //     const config = {
-  //       method: "post",
-  //       maxBodyLength: Infinity,
-  //       url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //       data: data,
-  //     };
-
-  //     const response = await axios.request(config);
-
-  //     // if (response.data) {
-
-  //     //   const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-  //     //   console.log("File uploaded successfully:", fileUrl);
-
-  //     //   const token = localStorage.getItem("docPocAuth_token");
-  //     //   const metadataFormData = new FormData();
-  //     //   metadataFormData.append("userId", profile.id);
-  //     //   metadataFormData.append("urlRelation", "profilePhotoUrl");
-  //     //   metadataFormData.append("url", fileUrl);
-  //     //   metadataFormData.append("branchId", profile.branchId || "");
-  //     //   metadataFormData.append("file",file)
-  //     //   const metadataResponse = await axios.post(`${API_URL}/user/upload`, metadataFormData, {
-  //     //     headers: {
-  //     //       Authorization: `Bearer ${token}`,
-  //     //       "Content-Type": "multipart/form-data",
-  //     //     },
-  //     //   });
-
-  //     //   console.log("Photo metadata updated successfully:", metadataResponse.data);
-  //     // }
-
-  //     if (response.data) {
-  //       const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-  //       console.log("File uploaded successfully:", fileUrl);
-
-  //       // Update the user's profile with the new profile picture URL
-  //       const token = localStorage.getItem("docPocAuth_token");
-  //       const userEndpoint = `${API_URL}/user`;
-
-  //       // Prepare the updated user data
-  //       const updatedUserData = {
-  //         ...userProfile,
-  //         profilePicture: fileUrl,
-  //       };
-
-  //       const updateResponse = await axios.patch(
-  //         userEndpoint,
-  //         updatedUserData,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "Content-Type": "application/json",
-  //           },
-  //         },
-  //       );
-
-  //       console.log(
-  //         "Profile picture updated successfully:",
-  //         updateResponse.data,
-  //       );
-
-  //       // Update the local state with the new profile picture URL
-  //       setProfilePhotoUrl(fileUrl);
-  //       setUserProfile(updateResponse.data);
-  //     } else {
-  //       throw new Error("File upload failed: URL not returned");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating photo:", error);
-  //   } finally {
-  //     setPhotoLoading(false);
-  //   }
-  // };
-
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -406,7 +311,7 @@ const SettingBoxes = () => {
       const config = {
         method: "post",
         maxBodyLength: Infinity,
-        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
+        url: `${NEXT_PUBLIC_S3_BUCKET_URL}`,
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -416,7 +321,7 @@ const SettingBoxes = () => {
       const response = await axios.request(config);
 
       if (response.data) {
-        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${photoFile.name}`;
+        const fileUrl = `${NEXT_PUBLIC_AWS_URL}/${folderName}/${photoFile.name}`;
 
         // Update the user's profile with the new profile picture URL
         const token = localStorage.getItem("docPocAuth_token");
@@ -514,89 +419,89 @@ const SettingBoxes = () => {
   // };
 
   // Password change functions
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+  // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setPasswordForm((prev) => ({ ...prev, [name]: value }));
 
-    // Validate passwords
-    if (name === "newPassword") {
-      if (value.length < 8) {
-        setPasswordErrors((prev) => ({
-          ...prev,
-          newPassword: "Password must be at least 8 characters",
-        }));
-      } else {
-        setPasswordErrors((prev) => ({ ...prev, newPassword: "" }));
-      }
-    }
+  //   // Validate passwords
+  //   if (name === "newPassword") {
+  //     if (value.length < 8) {
+  //       setPasswordErrors((prev) => ({
+  //         ...prev,
+  //         newPassword: "Password must be at least 8 characters",
+  //       }));
+  //     } else {
+  //       setPasswordErrors((prev) => ({ ...prev, newPassword: "" }));
+  //     }
+  //   }
 
-    if (name === "confirmPassword") {
-      if (value !== passwordForm.newPassword) {
-        setPasswordErrors((prev) => ({
-          ...prev,
-          confirmPassword: "Passwords do not match",
-        }));
-      } else {
-        setPasswordErrors((prev) => ({ ...prev, confirmPassword: "" }));
-      }
-    }
-  };
+  //   if (name === "confirmPassword") {
+  //     if (value !== passwordForm.newPassword) {
+  //       setPasswordErrors((prev) => ({
+  //         ...prev,
+  //         confirmPassword: "Passwords do not match",
+  //       }));
+  //     } else {
+  //       setPasswordErrors((prev) => ({ ...prev, confirmPassword: "" }));
+  //     }
+  //   }
+  // };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handlePasswordSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    // Validate form
-    if (passwordErrors.newPassword || passwordErrors.confirmPassword) {
-      return;
-    }
+  //   // Validate form
+  //   if (passwordErrors.newPassword || passwordErrors.confirmPassword) {
+  //     return;
+  //   }
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordErrors((prev) => ({
-        ...prev,
-        confirmPassword: "Passwords do not match",
-      }));
-      return;
-    }
+  //   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+  //     setPasswordErrors((prev) => ({
+  //       ...prev,
+  //       confirmPassword: "Passwords do not match",
+  //     }));
+  //     return;
+  //   }
 
-    setIsChangingPassword(true);
+  //   setIsChangingPassword(true);
 
-    try {
-      const token = localStorage.getItem("docPocAuth_token");
-      const passwordEndpoint = `${process.env.API_URL}/password/change`;
+  //   try {
+  //     const token = localStorage.getItem("docPocAuth_token");
+  //     const passwordEndpoint = `${process.env.API_URL}/password/change`;
 
-      const payload = {
-        email: userProfile?.email || "",
-        phone: userProfile?.phone || null,
-        currentPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword,
-        // username: userProfile?.username || ""
-      };
+  //     const payload = {
+  //       email: userProfile?.email || "",
+  //       phone: userProfile?.phone || null,
+  //       currentPassword: passwordForm.oldPassword,
+  //       newPassword: passwordForm.newPassword,
+  //       // username: userProfile?.username || ""
+  //     };
 
-      await axios.post(passwordEndpoint, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  //     await axios.post(passwordEndpoint, payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
 
-      setModalMessage({ success: "Password changed successfully", error: "" });
-      onOpen();
-      setPasswordForm({
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      // setShowPasswordForm(false);
-    } catch (error: any) {
-      console.error("Error changing password:", error);
-      const errorMsg =
-        error.response?.data?.message || "Error changing password";
-      setModalMessage({ success: "", error: errorMsg });
-      onOpen();
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
+  //     setModalMessage({ success: "Password changed successfully", error: "" });
+  //     onOpen();
+  //     setPasswordForm({
+  //       oldPassword: "",
+  //       newPassword: "",
+  //       confirmPassword: "",
+  //     });
+  //     // setShowPasswordForm(false);
+  //   } catch (error: any) {
+  //     console.error("Error changing password:", error);
+  //     const errorMsg =
+  //       error.response?.data?.message || "Error changing password";
+  //     setModalMessage({ success: "", error: errorMsg });
+  //     onOpen();
+  //   } finally {
+  //     setIsChangingPassword(false);
+  //   }
+  // };
 
   return (
     <>
@@ -896,7 +801,7 @@ const SettingBoxes = () => {
                       {!editBio ? (
                         <>
                           <textarea
-                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-5 pl-13 pr-5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
+                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2 pl-2 pr-2 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                             name="bio"
                             id="bio"
                             rows={6}
@@ -946,7 +851,7 @@ const SettingBoxes = () => {
                       ) : (
                         <div className="relative">
                           <textarea
-                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-5 pl-13 pr-5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
+                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2 pl-2 pr-2 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                             name="bio"
                             id="bio"
                             rows={6}
@@ -1126,7 +1031,7 @@ const SettingBoxes = () => {
             </div>
           </div>
 
-          <div className="mt-8 rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+          {/* <div className="mt-8 rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
             <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
               <h3 className="font-medium text-dark dark:text-white">
                 Change Password
@@ -1224,7 +1129,7 @@ const SettingBoxes = () => {
                 </div>
               </form>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
