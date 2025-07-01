@@ -412,14 +412,13 @@ export default function OpaqueModal(props: {
       setModalMessage({ success: "Patient updated successfully!", error: "" });
       setNotificationOpen(true);
       onClose();
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error updating patient:", error);
       // setModalMessage({
       //   success: "",
       //   error: "Failed to update the patient. Please try again.",
       // });
 
-      
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -534,11 +533,10 @@ export default function OpaqueModal(props: {
       setNotificationOpen(true);
       // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error updating appointment:", error);
       // setModalMessage({ success: "", error: "Error updating appointment" });
 
-      
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||

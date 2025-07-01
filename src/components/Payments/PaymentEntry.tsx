@@ -407,7 +407,7 @@ const PaymentEntry = () => {
       });
       onOpen();
       closePreviewModal();
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error saving payment:", error);
 
       // setModalMessage({

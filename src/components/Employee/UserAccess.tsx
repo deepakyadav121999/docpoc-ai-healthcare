@@ -90,7 +90,7 @@ export default function UserAccess() {
       setModalMessage({ success: "User updated successfully!" });
 
       // alert("User updated successfully:")
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Failed to update user:", error);
 
       // alert("Failed to update user")
