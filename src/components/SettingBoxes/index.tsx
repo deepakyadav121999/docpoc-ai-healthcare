@@ -176,6 +176,7 @@ const SettingBoxes = () => {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      
     }
   };
 
@@ -225,9 +226,18 @@ const SettingBoxes = () => {
 
           setAccessToken(newAccessToken);
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error updating profile:", error);
-        setModalMessage({ success: "", error: "Error updating profile" });
+        // setModalMessage({ success: "", error: "Error updating profile" });
+        const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error updating profile";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
         setLoading(false);
       } finally {
         // Ensure loading is set to false in both success and error cases

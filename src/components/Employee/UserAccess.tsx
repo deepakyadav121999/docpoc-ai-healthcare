@@ -46,7 +46,7 @@ export default function UserAccess() {
 
       const params = {
         page: 1,
-        pageSize: 50,
+        pageSize: 100,
       };
 
       const response = await axios.get(endpoint, {
@@ -90,11 +90,21 @@ export default function UserAccess() {
       setModalMessage({ success: "User updated successfully!" });
 
       // alert("User updated successfully:")
-    } catch (err) {
-      console.error("Failed to update user:", err);
+    } catch (error:any) {
+      console.error("Failed to update user:", error);
+
       // alert("Failed to update user")
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to update user";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
       onOpen();
-      setModalMessage({ error: "Failed to update user." });
+      // setModalMessage({ error: "Failed to update user." });
     }
   };
 

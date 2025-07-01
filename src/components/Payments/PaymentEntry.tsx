@@ -157,7 +157,7 @@ const PaymentEntry = () => {
       const token = getAuthToken();
       const branchId = profile?.branchId;
       const response = await fetch(
-        `${BASE_URL}/appointment/list/${branchId}?page=${page}&pageSize=10`,
+        `${BASE_URL}/appointment/list/${branchId}?page=${page}&pageSize=100`,
         {
           headers: {
             accept: "*/*",
@@ -190,7 +190,7 @@ const PaymentEntry = () => {
       const token = getAuthToken();
       const branchId = profile?.branchId;
       const response = await fetch(
-        `${BASE_URL}/patient/list/${branchId}?page=${page}&pageSize=10`,
+        `${BASE_URL}/patient/list/${branchId}?page=${page}&pageSize=100`,
         {
           headers: {
             accept: "*/*",
@@ -252,7 +252,7 @@ const PaymentEntry = () => {
       const token = getAuthToken();
       const branchId = profile?.branchId;
       const response = await fetch(
-        `${BASE_URL}/user/list/${branchId}?page=${page}&pageSize=10`,
+        `${BASE_URL}/user/list/${branchId}?page=${page}&pageSize=100`,
         {
           headers: {
             accept: "*/*",
@@ -407,11 +407,21 @@ const PaymentEntry = () => {
       });
       onOpen();
       closePreviewModal();
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error saving payment:", error);
+
+      // setModalMessage({
+      //   success: "",
+      //   error: "Error saving payment. Please try again.",
+      // });
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error saving payment. Please try again";
+
       setModalMessage({
         success: "",
-        error: "Error saving payment. Please try again.",
+        error: errorMessage,
       });
       onOpen();
     } finally {
