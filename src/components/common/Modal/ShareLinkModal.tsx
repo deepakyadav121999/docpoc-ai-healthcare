@@ -6,6 +6,7 @@ import {
   ModalFooter,
   Button,
   Input,
+  useDisclosure,
 } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -23,6 +24,18 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [countdown, setCountdown] = useState(20); // 20 seconds countdown
+  const { isOpen: internalOpen } = useDisclosure();
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (internalOpen || isOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0");
+    } else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999");
+    }
+  }, [internalOpen, isOpen]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(link);
@@ -48,7 +61,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       return () => clearInterval(timer);
     } else {
       // Reset countdown when modal closes
-      setCountdown(5);
+      setCountdown(10);
     }
   }, [isOpen, onClose]);
 
@@ -92,7 +105,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
           </motion.div>
         </ModalBody>
         <ModalFooter>
-          <Button color="default" variant="light" onPress={onClose}>
+          <Button color="danger" variant="light" onPress={onClose}>
             Close
           </Button>
         </ModalFooter>

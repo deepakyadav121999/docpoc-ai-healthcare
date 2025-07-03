@@ -356,6 +356,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   placeholder="Name"
                   value={formData.name}
                   color={TOOL_TIP_COLORS.secondary}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   onChange={(e) => {
                     if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
                       setFormData({ ...formData, name: e.target.value });
@@ -388,6 +398,14 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete> */}
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   label="Designation"
                   labelPlacement="outside"
                   variant="bordered"
@@ -420,6 +438,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("start", e.toString())}
                     isDisabled={!edit}
+                    classNames={{
+                      input: [
+                        "text-black", // Light mode text color
+                        "dark:text-white", // Dark mode text color
+                      ],
+                      inputWrapper: [
+                        "group-data-[has-value=true]:text-black", // Light mode with value
+                        "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      ],
+                    }}
                   />
                   <TimeInput
                     color={TOOL_TIP_COLORS.secondary}
@@ -430,6 +458,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("end", e.toString())}
                     isDisabled={!edit}
+                    classNames={{
+                      input: [
+                        "text-black", // Light mode text color
+                        "dark:text-white", // Dark mode text color
+                      ],
+                      inputWrapper: [
+                        "group-data-[has-value=true]:text-black", // Light mode with value
+                        "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      ],
+                    }}
                   />
                 </div>
 
@@ -459,6 +497,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   }}
                   maxLength={10}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
                 <Input
                   label="Email"
@@ -472,6 +520,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   }
                   onBlur={() => {}}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
               </div>
 
@@ -485,10 +543,28 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   // value={JSON.parse(formData.json.dob)}
                   onChange={(e) => handleDobChange(e.target.value)}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
               </div>
               <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   label="Gender"
                   labelPlacement="outside"
                   variant="bordered"

@@ -63,6 +63,7 @@ interface Medication {
   name: string;
   note: string;
   quantity: number;
+  days: number;
 }
 
 interface VitalSigns {
@@ -120,22 +121,6 @@ const AppointmentForm = () => {
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [shareLink, setShareLink] = useState("");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  // Vital Signs state (unchanged)
-  // const [vitals, setVitals] = useState({
-  //   bloodPressure: "0/0 mmHg",
-  //   heartRate: "0 bpm",
-  //   temperature: "0.0 °F",
-  //   respiratoryRate: "0 rpm"
-  // });
-
-  // Update the vitals state initialization
-  // const [vitals, setVitals] = useState({
-  //   bloodPressure: { value: "0/0 mmHg", enabled: false },
-  //   heartRate: { value: "0 bpm", enabled: false },
-  //   temperature: { value: "0.0 °F", enabled: false },
-  //   respiratoryRate: { value: "0 rpm", enabled: false },
-  // });
-
   const [vitals, setVitals] = useState<VitalSigns>({
     bloodPressure: { systolic: "0", diastolic: "0", enabled: false },
     heartRate: { value: "0", enabled: false },
@@ -160,13 +145,6 @@ const AppointmentForm = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  // const [appointmentPage, setAppointmentPage] = useState(1);
-  // const [patientPage, setPatientPage] = useState(1);
-  // const [doctorPage, setDoctorPage] = useState(1);
-  // const [hasMoreAppointments, setHasMoreAppointments] = useState(true);
-  // const [hasMorePatients, setHasMorePatients] = useState(true);
-  // const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
-
   // Constants (unchanged)
   const times = ["Morning", "Afternoon", "Evening", "Night"];
   // const reportTypes = ["Normal", "Serious", "Critical"];
@@ -178,32 +156,6 @@ const AppointmentForm = () => {
     medicationNote: 70,
   };
 
-  // const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
-  //   setVitals((prev) => ({
-  //     ...prev,
-  //     [field]: { ...prev[field], value },
-  //   }));
-  // };
-
-  // const toggleVitalField = (field: keyof typeof vitals) => {
-  //   setVitals((prev) => ({
-  //     ...prev,
-  //     [field]: {
-  //       ...prev[field],
-  //       enabled: !prev[field].enabled,
-  //       value: !prev[field].enabled
-  //         ? prev[field].value
-  //         : "0" +
-  //           (field === "bloodPressure"
-  //             ? "/0 mmHg"
-  //             : field === "heartRate"
-  //               ? " bpm"
-  //               : field === "temperature"
-  //                 ? " °F"
-  //                 : " rpm"),
-  //     },
-  //   }));
-  // };
   const toggleVitalField = (field: keyof typeof vitals) => {
     setVitals((prev) => ({
       ...prev,
@@ -546,7 +498,7 @@ const AppointmentForm = () => {
   const addMedication = () => {
     setMedications([
       ...medications,
-      { time: "", name: "", note: "", quantity: 1 },
+      { time: "", name: "", note: "", quantity: 1, days: 1 },
     ]);
   };
 
@@ -655,7 +607,7 @@ const AppointmentForm = () => {
   }, [isPreviewModalOpen]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8  text-black dark:text-white">
+    <div className="min-h-screen p-4 md:p-8  text-black dark:text-white ">
       <style jsx global>{`
         .nextui-input,
         .nextui-input-wrapper input,
@@ -1177,7 +1129,7 @@ const AppointmentForm = () => {
           </div>
         </div>
 
-        {/* Observations and Notes - made responsive */}
+        {/* Observations and Notes - made responsive  */}
         <div>
           <Textarea
             value={observations}
@@ -1205,7 +1157,7 @@ const AppointmentForm = () => {
         </div>
 
         {/* Medications - made responsive */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-dark dark:text-white">
             Medications
           </label>
@@ -1250,26 +1202,7 @@ const AppointmentForm = () => {
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
-              {/* <div className="sm:col-span-2">
-                <Input
-                  type="number"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  label="X"
-                  labelPlacement="outside"
-                  placeholder="X"
-                  min="1"
-                  value={med.quantity as unknown as string}
-                  onChange={(e) =>
-                    updateMedication(
-                      index,
-                      "quantity",
-                      parseInt(e.target.value) || 1,
-                    )
-                  }
-                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
-                />
-              </div> */}
+           
               <div className="sm:col-span-2">
                 <Input
                   type="number"
@@ -1308,6 +1241,36 @@ const AppointmentForm = () => {
                   className="w-full"
                 />
               </div>
+           
+              <div className="sm:col-span-1">
+                <Input
+                  type="number"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  label="Days"
+                  labelPlacement="outside"
+                  value={med.days.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+                    if (inputValue === "") {
+                      updateMedication(index, "days", 0);
+                      return;
+                    }
+                    const newValue = parseInt(inputValue);
+                    if (!isNaN(newValue)) {
+                      updateMedication(index, "days", Math.max(1, newValue));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.value || parseInt(target.value) < 1) {
+                      updateMedication(index, "days", 1);
+                    }
+                  }}
+                  min="1"
+                  className="w-full"
+                />
+              </div>
 
               <div className="sm:col-span-4">
                 <Input
@@ -1330,6 +1293,34 @@ const AppointmentForm = () => {
                   className="w-full  rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
+              <div className="sm:col-span-2 flex justify-center pt-6">
+                <Button
+                  isIconOnly
+                  color="danger"
+                  variant="light"
+                  aria-label="Delete medication"
+                  onClick={() => {
+                    const updatedMedications = [...medications];
+                    updatedMedications.splice(index, 1);
+                    setMedications(updatedMedications);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </Button>
+              </div>
             </div>
           ))}
           <Button
@@ -1338,6 +1329,174 @@ const AppointmentForm = () => {
             color={TOOL_TIP_COLORS.secondary}
           >
             + Add Medication
+          </Button>
+        </div> */}
+
+        {/* Medications Section - Optimized Layout */}
+
+        {/* Medications Section - Optimized Layout */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-dark dark:text-white">
+            Medications
+          </label>
+
+          <div className="overflow-x-auto">
+            {medications.length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 dark:text-gray-400">
+                    <th className="pb-2">Time</th>
+                    <th className="pb-2">Medication Name</th>
+                    <th className="pb-2 w-20">Quantity</th>
+                    <th className="pb-2 w-20">Days</th>
+                    <th className="pb-2">Note</th>
+                    <th className="pb-2 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="space-y-2">
+                  {medications.map((med, index) => (
+                    <tr key={index} className="align-top">
+                      {/* Time */}
+                      <td className="pr-2 py-2">
+                        <Autocomplete
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Select"
+                          defaultItems={timeItems}
+                          selectedKey={med.time}
+                          onSelectionChange={(key) =>
+                            updateMedication(index, "time", key as string)
+                          }
+                          size="sm"
+                          className="min-w-[100px]"
+                        >
+                          {(item) => (
+                            <AutocompleteItem key={item.id}>
+                              {item.label}
+                            </AutocompleteItem>
+                          )}
+                        </Autocomplete>
+                      </td>
+
+                      {/* Medication Name */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="text"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Enter name"
+                          value={med.name}
+                          onChange={(e) =>
+                            updateMedication(index, "name", e.target.value)
+                          }
+                          size="sm"
+                        />
+                      </td>
+
+                      {/* Quantity */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="number"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          value={med.quantity.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            if (val >= 0)
+                              updateMedication(index, "quantity", val);
+                          }}
+                          min="1"
+                          size="sm"
+                          className="w-full"
+                        />
+                      </td>
+
+                      {/* Days */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="number"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          value={med.days.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            if (val >= 0) updateMedication(index, "days", val);
+                          }}
+                          min="1"
+                          size="sm"
+                          className="w-full"
+                        />
+                      </td>
+
+                      {/* Note */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="text"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Note (optional)"
+                          value={med.note}
+                          onChange={(e) => {
+                            if (
+                              e.target.value.length <=
+                              CHARACTER_LIMITS.medicationNote
+                            ) {
+                              updateMedication(index, "note", e.target.value);
+                            }
+                          }}
+                          size="sm"
+                        />
+                      </td>
+
+                      {/* Delete Button */}
+                      <td className="py-2">
+                        <Button
+                          isIconOnly
+                          color="danger"
+                          variant="light"
+                          aria-label="Delete medication"
+                          size="sm"
+                          onClick={() => {
+                            const updated = [...medications];
+                            updated.splice(index, 1);
+                            setMedications(updated);
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
+                No medications added yet
+              </div>
+            )}
+          </div>
+
+          <Button
+            onPress={addMedication}
+            className="mt-2"
+            color={TOOL_TIP_COLORS.secondary}
+            size="sm"
+            startContent={<span>+</span>}
+          >
+            Add Medication
           </Button>
         </div>
 
@@ -1794,8 +1953,9 @@ const AppointmentForm = () => {
                                   {med.quantity} x{" "}
                                   {med.name || "Unnamed medication"}
                                 </strong>{" "}
-                                ({med.time || "No time specified"}) -{" "}
-                                {med.note || "No notes"}
+                                ({med.time || "No time specified"}) - {med.days}{" "}
+                                day(s) - {med.note || "No notes"}
+                                {/* {med.note || "No notes"} */}
                               </li>
                             ))}
                           </ul>

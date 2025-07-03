@@ -57,11 +57,7 @@ const LogoutModal = ({
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button
-            color="default"
-            onPress={onClose}
-            className="hover:bg-red-900 hover:text-white"
-          >
+          <Button onPress={onClose} color="danger" variant="light">
             Cancel
           </Button>
           <Button

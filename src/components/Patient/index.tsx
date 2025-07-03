@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -246,10 +246,10 @@ export default function App() {
         return (
           <User
             avatarProps={{ radius: "lg", src: avatarSrc }}
-            description={user.email}
+            // description={user.email}
             name={cellValue}
           >
-            {user.email}
+            {/* {user.email} */}
           </User>
         );
       case "lastVisit":
@@ -286,6 +286,17 @@ export default function App() {
             onPatientDelete={fetchPatients}
           />
         );
+      case "bloodGroup":
+        // First convert to string and check for '{}'
+        const strValue = String(cellValue);
+        if (strValue === "{}" || !strValue.trim()) {
+          return "N/A";
+        }
+        return cellValue;
+
+        return cellValue || "N/A";
+      case "email":
+        return cellValue || "N/A";
       default:
         return cellValue;
     }
@@ -311,24 +322,56 @@ export default function App() {
     [],
   );
 
-  const debouncedFetchPatients = React.useMemo(
-    () => debounce((value: string) => fetchPatients(value), 500),
-    [fetchPatients],
-  );
+  // const debouncedFetchPatients = React.useMemo(
+  //   () => debounce((value: string) => fetchPatients(value), 500),
+  //   [fetchPatients],
+  // );
 
-  const onSearchChange = React.useCallback(
-    (value?: string) => {
-      setFilterValue(value || "");
+  // const onSearchChange = React.useCallback(
+  //   (value?: string) => {
+  //     setFilterValue(value || "");
+  //     setPage(1);
+  //     debouncedFetchPatients(value || "");
+  //   },
+  //   [debouncedFetchPatients],
+  // );
+
+  // const onClear = React.useCallback(() => {
+  //   setFilterValue("");
+  //   setPage(1);
+  // }, []);
+
+  const debouncedApiCall = useRef(
+    debounce((searchValue: string) => {
       setPage(1);
-      debouncedFetchPatients(value || "");
-    },
-    [debouncedFetchPatients],
-  );
+      fetchPatients(searchValue);
+    }, 500), // 500ms delay for API calls
+  ).current;
 
-  const onClear = React.useCallback(() => {
+  const onSearchChange = (value?: string) => {
+    const searchValue = value || "";
+    // Update UI immediately
+    setFilterValue(searchValue);
+    // Debounce the API call
+    debouncedApiCall(searchValue);
+  };
+
+  const onClear = () => {
+    // Cancel any pending API calls
+    debouncedApiCall.cancel();
+    // Clear immediately
     setFilterValue("");
     setPage(1);
-  }, []);
+    fetchPatients();
+  };
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      debouncedApiCall.cancel();
+    };
+  }, [debouncedApiCall]);
+
   // const onStatusFilterChange = (selected: Selection) => {
   //   const selectedStatuses = Array.from(selected) as string[];
   //   setStatusFilter(selected); // Update the filter state
@@ -516,7 +559,27 @@ export default function App() {
           )}
         </TableHeader>
 
-        <TableBody emptyContent={"No Patient Available"} items={sortedItems}>
+        {/* <TableBody emptyContent={"No Patient Available"} items={sortedItems}>
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody> */}
+        <TableBody
+          emptyContent={
+            loading ? (
+              <div className="flex justify-center items-center h-[200px]">
+                <Spinner size="sm" label="Loading..." color="primary" />
+              </div>
+            ) : (
+              "No Patient Available"
+            )
+          }
+          items={loading ? [] : sortedItems}
+        >
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
@@ -526,13 +589,13 @@ export default function App() {
           )}
         </TableBody>
       </Table>
-      <div>
+      {/* <div>
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center  z-50">
             <Spinner />
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

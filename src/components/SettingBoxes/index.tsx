@@ -6,6 +6,7 @@ import EnhancedModal from "../common/Modal/EnhancedModal";
 import {
   Autocomplete,
   AutocompleteItem,
+  Button,
   useDisclosure,
 } from "@nextui-org/react";
 import { useSelector } from "react-redux";
@@ -103,6 +104,7 @@ const SettingBoxes = () => {
   const [tempDesignation, setTempDesignation] = useState("");
   const [editBio, setEditBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
   //   oldPassword: "",
@@ -269,7 +271,7 @@ const SettingBoxes = () => {
 
     if (header) {
       // Only modify z-index when modal is open
-      if (isOpen) {
+      if (isOpen || showCropper || isDeleteModalOpen) {
         header.classList.remove("z-999");
         header.classList.add("z-0");
       } else {
@@ -282,7 +284,7 @@ const SettingBoxes = () => {
         URL.revokeObjectURL(tempPhotoUrl);
       }
     };
-  }, [isOpen, tempPhotoUrl, profilePhotoUrl]);
+  }, [isOpen, tempPhotoUrl, profilePhotoUrl, showCropper, isDeleteModalOpen]);
 
   // const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const file = e.target.files?.[0];
@@ -570,6 +572,34 @@ const SettingBoxes = () => {
   };
 
   // Update the photo change handler
+  // const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   // Check file type and size
+  //   if (!file.type.match("image.*")) {
+  //     setModalMessage({ success: "", error: "Please select an image file" });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   if (file.size > 2 * 1024 * 1024) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Image size should be less than 2MB",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   // Create preview URL
+  //   const previewUrl = URL.createObjectURL(file);
+  //   setTempPhotoUrl(previewUrl);
+  //   setPhotoFile(file);
+  //   setShowSaveButton(true);
+  //   setShowUploadSection(false);
+  // };
+
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -590,41 +620,59 @@ const SettingBoxes = () => {
       return;
     }
 
-    // Create preview URL
+    // Create preview URL and show cropper
     const previewUrl = URL.createObjectURL(file);
     setTempPhotoUrl(previewUrl);
     setPhotoFile(file);
-    setShowSaveButton(true);
-    setShowUploadSection(false);
+    setShowCropper(true); // Show cropper immediately
+    setShowUploadSection(false); // Hide upload section
   };
 
   // Update the delete handler - now only works with temp data
-  const handleDeletePhoto = () => {
-    if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
-      URL.revokeObjectURL(tempPhotoUrl);
-    }
-    setTempPhotoUrl(DEFAULT_PROFILE_IMAGE);
-    setPhotoFile(null);
-    setShowSaveButton(true);
-    setShowUploadSection(false);
+  // const handleDeletePhoto = () => {
+  //   if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+  //     URL.revokeObjectURL(tempPhotoUrl);
+  //   }
+  //   setTempPhotoUrl(DEFAULT_PROFILE_IMAGE);
+  //   setPhotoFile(null);
+  //   setShowSaveButton(true);
+  //   setShowUploadSection(false);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
 
   const handleUpdatePhoto = () => {
     setShowUploadSection(true);
   };
 
-  const handleImageClick = () => {
-    if (tempPhotoUrl || profilePhotoUrl) {
-      setShowCropper(true);
-    }
-  };
+  // const handleImageClick = () => {
+  //   if (tempPhotoUrl || profilePhotoUrl) {
+  //     setShowCropper(true);
+  //   }
+  // };
+
+  // const handleImageClick = () => {
+  //   // Don't open cropper if it's the default image or existing profile photo
+  //   if (
+  //     (!tempPhotoUrl && profilePhotoUrl === DEFAULT_PROFILE_IMAGE) ||
+  //     (!tempPhotoUrl && !showUploadSection)
+  //   ) {
+  //     return;
+  //   }
+  //   setShowCropper(true);
+  // };
 
   const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const generateUniqueFilename = (originalName: string): string => {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const extension = originalName.split(".").pop();
+    return `profile-${timestamp}-${randomString}.${extension || "jpg"}`;
   };
 
   const handleSaveCroppedImage = async () => {
@@ -638,7 +686,7 @@ const SettingBoxes = () => {
 
       if (croppedBlob) {
         // Create a new file from the blob
-        const fileName = "cropped-profile.jpg";
+        const fileName = generateUniqueFilename("profile.jpg");
         const croppedFile = new File([croppedBlob], fileName, {
           type: "image/jpeg",
         });
@@ -727,16 +775,48 @@ const SettingBoxes = () => {
         error: "",
       });
       onOpen();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating photo:", error);
+      // setModalMessage({
+      //   success: "",
+      //   error: "Error updating profile picture",
+      // });
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error updating profile";
+
       setModalMessage({
         success: "",
-        error: "Error updating profile picture",
+        error: errorMessage,
       });
       onOpen();
     } finally {
       setPhotoLoading(false);
     }
+  };
+
+  const handleDeletePhoto = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePhoto = () => {
+    if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+      URL.revokeObjectURL(tempPhotoUrl);
+    }
+    setTempPhotoUrl(DEFAULT_PROFILE_IMAGE);
+    setPhotoFile(null);
+    setShowSaveButton(true);
+    setShowUploadSection(false);
+    setIsDeleteModalOpen(false);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const cancelDeletePhoto = () => {
+    setIsDeleteModalOpen(false);
   };
 
   return (
@@ -1378,7 +1458,7 @@ const SettingBoxes = () => {
               <div className="mb-4 flex items-center gap-3">
                 <div
                   className="relative h-14 w-14 rounded-full overflow-hidden border-2 cursor-pointer"
-                  onClick={handleImageClick}
+                  // onClick={handleImageClick}
                 >
                   <Image
                     src={
@@ -1395,7 +1475,7 @@ const SettingBoxes = () => {
                 </div>
                 <div>
                   <span className="mb-1.5 font-medium text-dark dark:text-white">
-                    Edit your photo
+                    Upload your photo
                   </span>
                   <span className="flex gap-3">
                     {/* <button
@@ -1431,32 +1511,6 @@ const SettingBoxes = () => {
               </div>
 
               {showUploadSection && (
-                // <div
-                //   id="FileUpload"
-                //   className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
-                // >
-                //   <input
-                //     ref={fileInputRef}
-                //     type="file"
-                //     name="profilePhoto"
-                //     id="profilePhoto"
-                //     accept="image/png, image/jpg, image/jpeg"
-                //     className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
-                //     onChange={handlePhotoChange}
-                //   />
-                //   <div className="flex flex-col items-center justify-center">
-                //     <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
-                //       {/* Upload icon SVG */}
-                //     </span>
-                //     <p className="mt-2.5 text-body-sm font-medium">
-                //       <span className="text-primary">Click to upload</span> or
-                //       drag and drop
-                //     </p>
-                //     <p className="mt-1 text-body-xs">
-                //       SVG, PNG, JPG or GIF (max, 800 X 800px)
-                //     </p>
-                //   </div>
-                // </div>
                 <div
                   id="FileUpload"
                   className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
@@ -1526,10 +1580,13 @@ const SettingBoxes = () => {
 
               {showCropper && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white p-4 rounded-lg max-w-md w-full">
+                  <div className="bg-white dark:bg-dark-2 p-4 rounded-lg max-w-md w-full border border-stroke dark:border-dark-3 shadow-1 dark:shadow-card">
+                    <h3 className="text-lg font-medium text-dark dark:text-white mb-4">
+                      Crop your profile picture
+                    </h3>
                     <div className="relative h-64 w-full">
                       <Cropper
-                        image={tempPhotoUrl || profilePhotoUrl || ""}
+                        image={tempPhotoUrl || ""}
                         crop={crop}
                         zoom={zoom}
                         aspect={1}
@@ -1539,6 +1596,9 @@ const SettingBoxes = () => {
                       />
                     </div>
                     <div className="mt-4">
+                      <label className="block text-sm mb-2 text-dark dark:text-white">
+                        Zoom:
+                      </label>
                       <input
                         type="range"
                         value={zoom}
@@ -1550,19 +1610,61 @@ const SettingBoxes = () => {
                       />
                     </div>
                     <div className="flex justify-end gap-2 mt-4">
-                      <button
-                        onClick={() => setShowCropper(false)}
-                        className="px-4 py-2 border rounded"
+                      <Button
+                        color="danger"
+                        onPress={() => {
+                          setShowCropper(false);
+                          setTempPhotoUrl(profilePhotoUrl);
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = "";
+                        }}
+                        variant="light"
                       >
                         Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveCroppedImage}
-                        className="px-4 py-2 bg-primary text-white rounded"
+                      </Button>
+                      <Button
+                        color="primary"
+                        onPress={async () => {
+                          await handleSaveCroppedImage();
+                          setShowCropper(false);
+                        }}
+                        // className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
                         disabled={photoLoading}
                       >
-                        {photoLoading ? "Processing..." : "Save Crop"}
-                      </button>
+                        {photoLoading ? (
+                          <>
+                            <Spinner size="sm" color="white" className="mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Photo"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white dark:bg-dark-2 p-6 rounded-lg max-w-md w-full border border-stroke dark:border-dark-3 shadow-1 dark:shadow-card">
+                    <h3 className="ttext-lg font-medium text-dark dark:text-white mb-4">
+                      Delete Profile Photo
+                    </h3>
+                    <p className="mb-6 text-dark dark:text-white">
+                      Are you sure you want to delete your profile photo?
+                    </p>
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        onPress={cancelDeletePhoto}
+                        // className="px-4 py-2 border rounded hover:bg-gray-100"
+                        color="danger"
+                        variant="light"
+                      >
+                        Cancel
+                      </Button>
+                      <Button onPress={confirmDeletePhoto} color="primary">
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </div>

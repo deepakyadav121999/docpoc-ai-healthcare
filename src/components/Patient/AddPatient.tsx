@@ -291,6 +291,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
             <div className=" p-2.5 sm:p-6.5">
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5  sm:gap-4.5">
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Patient Name"
                   labelPlacement="outside"
                   placeholder="Patient Name"
@@ -318,6 +328,14 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 />
 
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   label="Gender"
                   labelPlacement="outside"
                   variant="bordered"
@@ -340,6 +358,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   )}
                 </Autocomplete>
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Phone"
                   labelPlacement="outside"
                   placeholder="Phone"
@@ -367,6 +395,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   isDisabled={!edit}
                 />
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Email "
                   labelPlacement="outside"
                   variant="bordered"
@@ -388,6 +426,14 @@ const AddPatient: React.FC<AddPatientProps> = ({
 
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Blood Group "
                   labelPlacement="outside"
@@ -411,6 +457,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   )}
                 </Autocomplete>
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Date of Birth"
                   type="date"
                   labelPlacement="outside"
@@ -426,6 +482,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
               </div>
 
               <Textarea
+                classNames={{
+                  input: [
+                    "text-black", // Light mode text color
+                    "dark:text-white", // Dark mode text color
+                  ],
+                  inputWrapper: [
+                    "group-data-[has-value=true]:text-black", // Light mode with value
+                    "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                  ],
+                }}
                 label="Address"
                 labelPlacement="outside"
                 variant="bordered"
