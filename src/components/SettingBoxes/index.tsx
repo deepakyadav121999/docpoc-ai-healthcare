@@ -645,7 +645,7 @@ const SettingBoxes = () => {
 
   const handleUpdatePhoto = () => {
     setShowUploadSection(true);
-      setShowSaveButton(true);
+    setShowSaveButton(true);
   };
 
   // const handleImageClick = () => {

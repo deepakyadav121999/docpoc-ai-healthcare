@@ -326,7 +326,7 @@ const SignUp: React.FC<SignUpProps> = ({
   async function handlePasswordSetup() {
     try {
       setLoading(true);
-         const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
+      const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
       const payload =
         inputType === "email"
           ? {
@@ -350,7 +350,7 @@ const SignUp: React.FC<SignUpProps> = ({
               user_type: "SUPER_ADMIN",
               // accessType:
               //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
-              accessType:accessType,
+              accessType: accessType,
               json: JSON.stringify({ clinicSize: dropdownOption }),
             };
 

@@ -154,11 +154,13 @@ const Clinic = () => {
   });
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
   const [userId, setUserId] = useState("");
-   const [autocompleteValue, setAutocompleteValue] = useState("");
+  const [autocompleteValue, setAutocompleteValue] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
-    if (field === 'state') {
-      const selectedState = IndianStatesList.find(item => item.label === value);
+    if (field === "state") {
+      const selectedState = IndianStatesList.find(
+        (item) => item.label === value,
+      );
       setSelectedStateKey(selectedState?.value || null);
     }
 
@@ -272,13 +274,12 @@ const Clinic = () => {
     setLoading(false);
   };
 
-
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     const errors: Record<string, string> = {};
-  if (!selectedStateKey || !clinicDetails.state.trim()) {
+    if (!selectedStateKey || !clinicDetails.state.trim()) {
       errors.state = "Please select a state from the dropdown";
     }
     if (!clinicDetails.name.trim()) {
@@ -484,12 +485,15 @@ const Clinic = () => {
       console.error("Error creating branch:", error);
 
       // Handle duplicate email error specifically
-      if (error.response?.status === 400 &&
+      if (
+        error.response?.status === 400 &&
         error.response?.data?.message?.[0]?.path === "email" &&
-        error.response?.data?.message?.[0]?.message === "email must be unique") {
+        error.response?.data?.message?.[0]?.message === "email must be unique"
+      ) {
         setModalMessage({
           success: "",
-          error: "This email is already registered. Please use a different email address.",
+          error:
+            "This email is already registered. Please use a different email address.",
         });
       } else {
         setModalMessage({
@@ -523,9 +527,8 @@ const Clinic = () => {
     }
   }, [isOpen]);
 
-
-console.log('Selected State Key:', selectedStateKey);
-console.log('Clinic Details State:', clinicDetails.state);
+  console.log("Selected State Key:", selectedStateKey);
+  console.log("Clinic Details State:", clinicDetails.state);
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
@@ -595,7 +598,7 @@ console.log('Clinic Details State:', clinicDetails.state);
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   isDisabled={!edit}
-                // errorMessage={errors.name}
+                  // errorMessage={errors.name}
                 />
                 <Input
                   key="clinic-phone"
@@ -730,48 +733,48 @@ console.log('Clinic Details State:', clinicDetails.state);
                     </AutocompleteItem>
                   )}
                 </Autocomplete> */}
-  <Autocomplete
-    color={TOOL_TIP_COLORS.secondary}
-    labelPlacement="outside"
-    variant="bordered"
-    isDisabled={!edit}
-    selectedKey={selectedStateKey}
-    inputValue={autocompleteValue}
-    defaultItems={IndianStatesList}
-    label="Select State"
-    placeholder="Search a state"
-    onSelectionChange={(key) => {
-      const selectedState = IndianStatesList.find(item => item.value === key);
-      if (selectedState) {
-        // Update both state values in a single synchronous operation
-        setClinicDetails(prev => ({
-          ...prev,
-          state: selectedState.label
-        }));
-        setSelectedStateKey(key as string);
-        setAutocompleteValue(selectedState.label);
-      } else {
-        setClinicDetails(prev => ({ ...prev, state: "" }));
-        setSelectedStateKey(null);
-        setAutocompleteValue("");
-      }
-    }}
-    onInputChange={(value) => {
-      setAutocompleteValue(value);
-      if (!value) {
-        setClinicDetails(prev => ({ ...prev, state: "" }));
-        setSelectedStateKey(null);
-      }
-    }}
-  >
-    {(state) => (
-      <AutocompleteItem key={state.value} textValue={state.label}>
-        {state.label}
-      </AutocompleteItem>
-    )}
-  </Autocomplete>
-
-               
+                <Autocomplete
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  selectedKey={selectedStateKey}
+                  inputValue={autocompleteValue}
+                  defaultItems={IndianStatesList}
+                  label="Select State"
+                  placeholder="Search a state"
+                  onSelectionChange={(key) => {
+                    const selectedState = IndianStatesList.find(
+                      (item) => item.value === key,
+                    );
+                    if (selectedState) {
+                      // Update both state values in a single synchronous operation
+                      setClinicDetails((prev) => ({
+                        ...prev,
+                        state: selectedState.label,
+                      }));
+                      setSelectedStateKey(key as string);
+                      setAutocompleteValue(selectedState.label);
+                    } else {
+                      setClinicDetails((prev) => ({ ...prev, state: "" }));
+                      setSelectedStateKey(null);
+                      setAutocompleteValue("");
+                    }
+                  }}
+                  onInputChange={(value) => {
+                    setAutocompleteValue(value);
+                    if (!value) {
+                      setClinicDetails((prev) => ({ ...prev, state: "" }));
+                      setSelectedStateKey(null);
+                    }
+                  }}
+                >
+                  {(state) => (
+                    <AutocompleteItem key={state.value} textValue={state.label}>
+                      {state.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
 
                 <Input
                   key="clinic-pincode"
@@ -850,7 +853,7 @@ console.log('Clinic Details State:', clinicDetails.state);
                 color={TOOL_TIP_COLORS.secondary}
                 className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
                 style={{ minWidth: 280, marginBottom: 20 }}
-              // onPress={onOpen}
+                // onPress={onOpen}
               >
                 Save Changes
               </button>

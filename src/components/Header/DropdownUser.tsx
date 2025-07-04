@@ -185,7 +185,9 @@ const DropdownUser = () => {
                   {profile?.userName || "New User"}
                 </span>
               </span> */}
-              <div className="min-w-0"> {/* Changed from span to div and added min-w-0 */}
+              <div className="min-w-0">
+                {" "}
+                {/* Changed from span to div and added min-w-0 */}
                 <span className="block text-sm font-medium text-dark dark:text-white truncate">
                   {profile?.name || "New User"}
                 </span>
