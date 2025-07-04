@@ -96,7 +96,7 @@ const DropdownUser = () => {
           className="flex items-center gap-4"
           href="#"
         >
-          <span className="relative h-12 w-12 rounded-full overflow-hidden border-2 bg-white">
+          {/* <span className="relative h-12 w-12 rounded-full overflow-hidden border-2 bg-white">
             <Image
               width={112}
               height={112}
@@ -113,6 +113,20 @@ const DropdownUser = () => {
               alt="User"
               // className="overflow-hidden rounded-full"
               className="object-cover  w-full h-full rounded-full"
+            />
+          </span> */}
+          <span className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-stroke bg-white">
+            <Image
+              width={48}
+              height={48}
+              src={
+                profile.profilePicture
+                  ? profile?.profilePicture
+                  : `${AWS_URL}/docpoc-images/user-placeholder.jpg`
+              }
+              alt="User"
+              className="w-full h-full object-cover"
+              priority
             />
           </span>
 
@@ -146,36 +160,39 @@ const DropdownUser = () => {
             className={`absolute right-0 mt-7.5 flex w-[280px] flex-col rounded-lg border-[0.5px] border-stroke bg-white shadow-default dark:border-dark-3 dark:bg-gray-dark`}
           >
             <div className="flex items-center gap-2.5 px-5 pb-5.5 pt-3.5">
-              <span className="relative h-12 w-12 rounded-full overflow-hidden border-2 bg-white">
+              <div className="relative h-12 w-12 min-w-[48px] rounded-full overflow-hidden border-2 border-stroke bg-white flex-shrink-0">
                 <Image
-                  width={112}
-                  height={112}
-                  // src="/images/user/user-03.png"
+                  width={50}
+                  height={50}
                   src={
                     profile.profilePicture
                       ? profile?.profilePicture
                       : `${AWS_URL}/docpoc-images/user-placeholder.jpg`
                   }
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                  }}
                   alt="User"
-                  // className="overflow-hidden rounded-full"
-                  className="object-cover  w-full h-full rounded-full"
+                  className="w-full h-full object-cover"
+                  priority
                 />
 
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green dark:border-gray-dark"></span>
-              </span>
+                <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 border-white bg-green dark:border-gray-dark"></span>
+              </div>
 
-              <span className="block">
-                <span className="block font-medium text-dark dark:text-white">
+              {/* <span className="block">
+                <span className="block font-small text-dark dark:text-white  truncate">
                   {profile?.name || "New User"}
                 </span>
-                <span className="block font-medium text-dark-5 dark:text-dark-6">
+                <span className="block font-small text-dark-5 dark:text-dark-6  truncate">
                   {profile?.userName || "New User"}
                 </span>
-              </span>
+              </span> */}
+              <div className="min-w-0"> {/* Changed from span to div and added min-w-0 */}
+                <span className="block text-sm font-medium text-dark dark:text-white truncate">
+                  {profile?.name || "New User"}
+                </span>
+                <span className="block text-xs font-medium text-dark-5 dark:text-dark-6 truncate">
+                  {profile?.userName || "New User"}
+                </span>
+              </div>
             </div>
             <ul className="flex flex-col gap-1 border-y-[0.5px] border-stroke p-2.5 dark:border-dark-3">
               {/* <li>

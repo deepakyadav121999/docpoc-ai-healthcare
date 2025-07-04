@@ -645,6 +645,7 @@ const SettingBoxes = () => {
 
   const handleUpdatePhoto = () => {
     setShowUploadSection(true);
+      setShowSaveButton(true);
   };
 
   // const handleImageClick = () => {
@@ -1501,8 +1502,8 @@ const SettingBoxes = () => {
                     <button
                       type="button"
                       onClick={handleUpdatePhoto}
-                      disabled={!profilePhotoUrl && !tempPhotoUrl}
-                      className={`text-body-sm ${profilePhotoUrl || tempPhotoUrl ? "hover:text-primary" : "text-gray-400 cursor-not-allowed"}`}
+                      // disabled={!profilePhotoUrl && !tempPhotoUrl}
+                      // className={`text-body-sm ${profilePhotoUrl || tempPhotoUrl ? "hover:text-primary" : "text-gray-400 cursor-not-allowed"}`}
                     >
                       Update
                     </button>
