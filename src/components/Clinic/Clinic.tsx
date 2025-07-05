@@ -590,6 +590,16 @@ const Clinic = () => {
             <div className=" p-3 sm:p-6.5">
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2  sm:gap-4.5 xl:flex-row">
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"
@@ -601,6 +611,16 @@ const Clinic = () => {
                   // errorMessage={errors.name}
                 />
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-phone"
                   variant="bordered"
                   type="text"
@@ -613,6 +633,16 @@ const Clinic = () => {
                   isDisabled={!edit}
                 />
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-email"
                   variant="bordered"
                   type="email"
@@ -645,6 +675,16 @@ const Clinic = () => {
                 style={{ marginTop: 20 }}
               >
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Shift Start Time"
                   labelPlacement="outside"
@@ -660,6 +700,16 @@ const Clinic = () => {
                   }}
                 />
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Shift End Time"
                   labelPlacement="outside"
@@ -676,6 +726,16 @@ const Clinic = () => {
               </div>
               <div style={{ marginTop: 20 }}>
                 <Textarea
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   isDisabled={!edit}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
@@ -734,6 +794,14 @@ const Clinic = () => {
                   )}
                 </Autocomplete> */}
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -777,6 +845,16 @@ const Clinic = () => {
                 </Autocomplete>
 
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-pincode"
                   variant="bordered"
                   type="text"
@@ -794,6 +872,16 @@ const Clinic = () => {
                 style={{ marginTop: 20 }}
               >
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="location"
                   variant="bordered"
                   type="text"
