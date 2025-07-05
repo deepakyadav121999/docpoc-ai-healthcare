@@ -96,7 +96,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
     if (missingFields.length > 0) {
       setModalMessage({
         success: "",
-        error: `The following fields are required: ${missingFields.join(", ")}`,
+        error: `Please fill in the required fields: ${missingFields.join(", ")}`,
       });
       onOpen();
       return;
@@ -122,7 +122,8 @@ const AddPatient: React.FC<AddPatientProps> = ({
       if (!fetchedBranchId) {
         setModalMessage({
           success: "",
-          error: "Branch ID not found in your profile. Please contact support.",
+          error:
+            "Unable to identify your clinic location/ branch ID. Please contact support.",
         });
         onOpen();
         setLoading(false);
@@ -153,7 +154,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
         },
       });
 
-      setModalMessage({ success: "Patient added successfully!", error: "" });
+      setModalMessage({
+        success: "Patient registered successfully!",
+        error: "",
+      });
       onOpen();
 
       setFormData({
@@ -180,16 +184,70 @@ const AddPatient: React.FC<AddPatientProps> = ({
     } catch (error: any) {
       if (error.response) {
         // Extract and display the error message from the response
-        const apiErrorMessage =
-          error.response.data.message &&
-          Array.isArray(error.response.data.message)
-            ? error.response.data.message[0].message
-            : error.response.data.message || "Unknown error occurred";
+        // const apiErrorMessage =
+        //   error.response.data.message &&
+        //   Array.isArray(error.response.data.message)
+        //     ? error.response.data.message[0].message
+        //     : error.response.data.message || "Unknown error occurred";
+
+        // setModalMessage({
+        //   success: "",
+        //   error: apiErrorMessage,
+        // });
+        let errorMessage = "";
+
+        if (error.response) {
+          // Handle phone number already registered
+          if (
+            error.response.data.message &&
+            Array.isArray(error.response.data.message)
+          ) {
+            const errorItem = error.response.data.message.find(
+              (item: any) => item.validatorKey === "not_unique",
+            );
+
+            if (errorItem) {
+              if (errorItem.path === "phone") {
+                errorMessage =
+                  "This phone number is already registered. Please use a different number.";
+              } else if (errorItem.path === "email") {
+                errorMessage =
+                  "This email address is already registered. Please use a different email.";
+              } else {
+                // For other unique violations, show the original message
+                errorMessage =
+                  errorItem.message ||
+                  "This information is already registered. Please check your details.";
+              }
+            } else {
+              // If no not_unique error, show the first error message from API
+              errorMessage =
+                typeof error.response.data.message === "string"
+                  ? error.response.data.message
+                  : error.response.data.message[0]?.message ||
+                    "Failed to register patient.";
+            }
+          } else if (typeof error.response.data.message === "string") {
+            // For string error messages from API
+            errorMessage = error.response.data.message;
+          } else {
+            // Fallback for other API errors
+            errorMessage =
+              "Failed to register patient. Please check your information and try again.";
+          }
+        } else if (error.message) {
+          // Handle network errors
+          errorMessage = error.message;
+        } else {
+          // Generic error fallback
+          errorMessage = "An unexpected error occurred. Please try again.";
+        }
 
         setModalMessage({
           success: "",
-          error: apiErrorMessage,
+          error: errorMessage,
         });
+
         onOpen();
       } else {
         // Handle network errors or unexpected errors

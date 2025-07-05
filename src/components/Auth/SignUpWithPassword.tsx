@@ -6,7 +6,7 @@ import "react-phone-input-2/lib/style.css";
 import { useRouter } from "next/navigation";
 // import { AuthData, UserSignIn, UserSignUp } from "@/api/auth";
 import axios from "axios";
-import { useDisclosure } from "@nextui-org/react";
+import { Progress, useDisclosure } from "@nextui-org/react";
 import {
   Modal,
   ModalContent,
@@ -15,6 +15,7 @@ import {
   ModalFooter,
 } from "@nextui-org/react";
 import { Spinner, Button, Input } from "@nextui-org/react";
+import StyledButton from "../common/Button/StyledButton";
 
 const placeholderOptions = ["1 to 3 members", "4 to 10 members", "11+ members"];
 const API_URL = process.env.API_URL;
@@ -23,6 +24,15 @@ interface SignUpProps {
   // setAuthPage: () => void;
   // Function to switch to the sign-in page
   onLogin: (token: string) => void; // Function to handle login after sign-up
+}
+
+interface LoadingStates {
+  signUp: boolean;
+  otpGeneration: boolean;
+  otpVerification: boolean;
+  passwordSetup: boolean;
+  resendOtp: boolean;
+  userCheck: boolean;
 }
 
 const SignUp: React.FC<SignUpProps> = ({
@@ -50,10 +60,10 @@ const SignUp: React.FC<SignUpProps> = ({
 
   const [timer, setTimer] = useState(0);
   // const [isSigningUp, setIsSigningUp] = useState(false);
-  const [isSigningUp] = useState(false);
+  // const [isSigningUp] = useState(false);
 
   // const [buttonText, setButtonText] = useState("Sign Up");
-  const [buttonText] = useState("Sign Up");
+  // const [buttonText] = useState("Sign Up");
   const [loading, setLoading] = useState(false);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -61,6 +71,19 @@ const SignUp: React.FC<SignUpProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
   const router = useRouter();
   const timerCount = 30;
+
+  const [loadingStates, setLoadingStates] = useState<LoadingStates>({
+    signUp: false,
+    otpGeneration: false,
+    otpVerification: false,
+    passwordSetup: false,
+    resendOtp: false,
+    userCheck: false,
+  });
+
+  const setLoadingState = (key: keyof LoadingStates, value: boolean) => {
+    setLoadingStates((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
@@ -98,7 +121,26 @@ const SignUp: React.FC<SignUpProps> = ({
     return () => clearInterval(interval);
   }, [timer]);
 
+  const checkUserExists = async (
+    userInput: string,
+    inputType: "email" | "phone",
+  ) => {
+    try {
+      setLoadingState("userCheck", true);
+      const response = await axios.post(`${API_URL}/auth/findByUsername`, {
+        [inputType]: userInput.trim(),
+      });
+      return response.data.exists;
+    } catch (error) {
+      console.error("Error checking user existence:", error);
+      return false; // Assume user doesn't exist if there's an error
+    } finally {
+      setLoadingState("userCheck", false);
+    }
+  };
+
   async function handleSignUp(event: { preventDefault: () => void }) {
+    setLoading(true);
     event.preventDefault();
     setError("");
     console.log("Sign-up function triggered");
@@ -106,7 +148,7 @@ const SignUp: React.FC<SignUpProps> = ({
     if (data.signUpMethod === "phone") {
       if (!userInput) {
         setError("Please enter a valid phone number or email.");
-        console.log("Validation failed: No user input");
+        // console.log("Validation failed: No user input");
         return;
       }
     }
@@ -115,12 +157,12 @@ const SignUp: React.FC<SignUpProps> = ({
     if (data.signUpMethod === "email") {
       if (!email) {
         setError("Please enter a valid email address.");
-        console.log("Validation failed: No email");
+        // console.log("Validation failed: No email");
         return;
       }
       if (!password) {
         setError("Please enter a valid password.");
-        console.log("Validation failed: No password");
+        // console.log("Validation failed: No password");
         return;
       }
     }
@@ -134,12 +176,22 @@ const SignUp: React.FC<SignUpProps> = ({
       try {
         setLoading(true);
         // Handle signUpMethod "phone" or "email"
+        setLoadingState("otpGeneration", true);
+
+        // Call API for OTP generation
+        const userExists = await checkUserExists(userInput, inputType);
+        if (userExists) {
+          setError("User is already registered. Please log in.");
+          setShowErrors(true);
+          setLoading(false);
+          setLoadingState("otpGeneration", false);
+          return;
+        }
+
         const payload =
           inputType === "email"
             ? { email: userInput.trim(), username: userInput.trim() } // If user input is email
             : { phone: userInput.trim(), username: userInput.trim() }; // If user input is phone
-
-        // Call API for OTP generation
         const response = await axios.post(
           `${API_URL}/auth/otp/generate`,
           payload,
@@ -161,11 +213,24 @@ const SignUp: React.FC<SignUpProps> = ({
         setShowErrors(true);
       } finally {
         setLoading(false);
+        setLoadingState("otpGeneration", false);
       }
     }
     if (data.signUpMethod === "email") {
+      setLoadingState("signUp", true);
+      setLoadingState("userCheck", true);
+
       try {
         setLoading(true);
+        const userExists = await checkUserExists(email, "email");
+        if (userExists) {
+          setError(
+            "This email is already registered. Please log in or use a different email.",
+          );
+          setShowErrors(true);
+          setLoading(false);
+          return;
+        }
         const response = await axios.post(`${API_URL}/user`, {
           name: email.split("@")[0],
           email,
@@ -249,13 +314,16 @@ const SignUp: React.FC<SignUpProps> = ({
         // onOpen();
       } finally {
         setLoading(false);
+        setLoadingState("signUp", false);
+        setLoadingState("userCheck", false);
       }
     }
   }
 
   async function handleResendOtp() {
     try {
-      setLoading(true); // Start loading state
+      // setLoading(true); // Start loading state
+      setLoadingState("resendOtp", true);
       setError(""); // Clear any previous errors
 
       // Prepare payload for OTP resend API
@@ -286,13 +354,15 @@ const SignUp: React.FC<SignUpProps> = ({
           "Failed to resend OTP. Please try again later.",
       );
     } finally {
-      setLoading(false); // End loading state
+      // setLoading(false); // End loading state
+      setLoadingState("resendOtp", false);
     }
   }
 
   async function handleOtpVerification() {
     try {
-      setLoading(true);
+      // setLoading(true);
+      setLoadingState("otpVerification", true);
       const payload =
         inputType === "email"
           ? { email: userInput, otp, username: userInput } // Use email if detected as email
@@ -319,13 +389,15 @@ const SignUp: React.FC<SignUpProps> = ({
       setModalMessage({ success: "", error: "Invalid or expired OTP." });
       onOpen();
     } finally {
-      setLoading(false);
+      // setLoading(false);
+      setLoadingState("otpVerification", false);
     }
   }
 
   async function handlePasswordSetup() {
     try {
-      setLoading(true);
+      // setLoading(true);
+      setLoadingState("passwordSetup", true);
       const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
       const payload =
         inputType === "email"
@@ -378,7 +450,8 @@ const SignUp: React.FC<SignUpProps> = ({
       });
       onOpen();
     } finally {
-      setLoading(false);
+      // setLoading(false);
+      setLoadingState("passwordSetup", false);
     }
   }
 
@@ -400,7 +473,20 @@ const SignUp: React.FC<SignUpProps> = ({
 
   return (
     <>
-      <form method="post" onSubmit={handleSignUp}>
+      <form method="post" onSubmit={handleSignUp} autoComplete="off">
+        <input
+          type="text"
+          name="fakeusername"
+          className="hidden"
+          autoComplete="new-username"
+        />
+        <input
+          type="password"
+          name="fakepassword"
+          className="hidden"
+          autoComplete="new-password"
+        />
+
         <div className="mb-4">
           <label className="mb-2.5 block font-medium text-dark dark:text-white">
             Sign Up Method
@@ -423,7 +509,6 @@ const SignUp: React.FC<SignUpProps> = ({
             </button>
           </div>
         </div>
-
         {data.signUpMethod === "email" && (
           <div>
             <div className="mb-4">
@@ -604,10 +689,10 @@ const SignUp: React.FC<SignUpProps> = ({
         </div>
 
         <div className="mb-4">
-          <button
+          {/* <button 
             type="submit"
             // disabled={timer > 0}
-            className="w-full font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary rounded-lg bg-primary py-4 px-6  text-gray hover:bg-opacity-90"
+            className="w-full font-medium outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary rounded-lg bg-primary py-4 px-6  text-gray hover:bg-opacity-90"
           >
             {isSigningUp && data.signUpMethod === "email" ? (
               <div className="flex justify-center items-center">
@@ -616,7 +701,28 @@ const SignUp: React.FC<SignUpProps> = ({
             ) : (
               buttonText
             )}
-          </button>
+          </button> */}
+          <StyledButton
+            label={
+              loadingStates.signUp
+                ? "Creating Account..."
+                : loadingStates.otpGeneration
+                  ? "Sending OTP..."
+                  : "Sign Up"
+            }
+            type="submit"
+            style={{ width: "100%" }}
+            loading={
+              loadingStates.signUp ||
+              loadingStates.otpGeneration ||
+              loadingStates.userCheck
+            }
+            // disabled={
+            //   loadingStates.signUp ||
+            //   loadingStates.otpGeneration ||
+            //   loadingStates.userCheck
+            // }
+          />
         </div>
       </form>
 
@@ -650,12 +756,25 @@ const SignUp: React.FC<SignUpProps> = ({
         </ModalContent>
       </Modal> */}
 
-      <Modal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+      <Modal
+        isOpen={isOtpModalOpen}
+        onClose={() => setIsOtpModalOpen(false)}
+        isDismissable={false}
+        isKeyboardDismissDisabled={true}
+      >
         <ModalContent>
           <ModalHeader>
             <h4>Enter OTP</h4>
           </ModalHeader>
           <ModalBody>
+            {loadingStates.otpGeneration && (
+              <Progress
+                size="sm"
+                isIndeterminate
+                aria-label="Sending OTP..."
+                className="w-full"
+              />
+            )}
             <Input
               label="Enter OTP"
               placeholder="6-digit OTP"
@@ -676,17 +795,29 @@ const SignUp: React.FC<SignUpProps> = ({
                 onClick={handleResendOtp}
                 className="text-blue underline"
               >
-                Resend OTP
+                {loadingStates.resendOtp ? (
+                  <>
+                    <Spinner size="sm" /> Sending...
+                  </>
+                ) : (
+                  "Resend OTP"
+                )}
               </button>
             </div>
           </ModalBody>
           <ModalFooter>
             <Button
-              disabled={loading}
+              disabled={loadingStates.otpVerification}
               onPress={handleOtpVerification}
               color="primary"
             >
-              {loading ? <Spinner size="lg" /> : "Verify OTP"}
+              {loadingStates.otpVerification ? (
+                <div className="flex gap-2 items-center">
+                  <Spinner size="sm" /> Verifying...
+                </div>
+              ) : (
+                "Verify OTP"
+              )}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -702,22 +833,85 @@ const SignUp: React.FC<SignUpProps> = ({
             <h4>Set Your Password</h4>
           </ModalHeader>
           <ModalBody>
-            <Input
+            {loadingStates.passwordSetup && (
+              <Progress
+                size="sm"
+                isIndeterminate
+                aria-label="Setting up password..."
+                className="w-full"
+              />
+            )}
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? "password" : "text"}
+                placeholder="Enter a secure password"
+                fullWidth
+                onChange={(e) => setPassword(e.target.value)}
+                endContent={
+                  <button
+                    type="button"
+                    className="focus:outline-none"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-default-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-default-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                          clipRule="evenodd"
+                        />
+                        <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                      </svg>
+                    )}
+                  </button>
+                }
+              />
+            </div>
+
+            {/* <Input
               // bordered
               label="Password"
+              type="password"
               placeholder="Enter a secure password"
               fullWidth
               onChange={(e) => setPassword(e.target.value)}
-            />
+            /> */}
           </ModalBody>
           <ModalFooter>
             <Button
               // auto
-              disabled={loading}
+              disabled={loadingStates.passwordSetup}
               onPress={handlePasswordSetup}
               color="primary"
             >
-              {loading ? <Spinner size="lg" /> : "Set Password"}
+              {/* {loading ? <Spinner size="lg" /> : "Set Password"} */}
+              {loadingStates.passwordSetup ? (
+                <div className="flex gap-2 items-center">
+                  <Spinner size="sm" /> Setting up...
+                </div>
+              ) : (
+                "Set Password"
+              )}
             </Button>
           </ModalFooter>
         </ModalContent>
