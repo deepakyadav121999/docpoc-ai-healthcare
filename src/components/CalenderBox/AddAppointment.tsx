@@ -879,6 +879,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Appointment Date"
                   labelPlacement="outside"
                   variant="bordered"
@@ -908,6 +918,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment Start Time"
                   labelPlacement="outside"
@@ -922,6 +942,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   }
                 />
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment End Time"
                   labelPlacement="outside"
@@ -940,6 +970,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Textarea
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
                   labelPlacement="outside"
@@ -961,6 +1001,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -989,6 +1037,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -1039,6 +1095,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 </Autocomplete> */}
 
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -1079,6 +1143,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 </Autocomplete>
 
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"

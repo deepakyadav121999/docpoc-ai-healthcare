@@ -2098,6 +2098,16 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               >
                 <Input
                   className="full-width-input"
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Appointment Date"
                   labelPlacement="outside"
                   autoFocus={false}
@@ -2171,6 +2181,16 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               >
                 <Textarea
                   className="full-width-input"
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
                   autoFocus={false}
@@ -2195,7 +2215,15 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
-                  className="full-width-input"
+                  // className="full-width-input"
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white full-width-input"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   autoFocus={false}
@@ -2227,6 +2255,14 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
@@ -2283,6 +2319,14 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                 </Autocomplete> */}
 
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -2322,6 +2366,14 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
                   )}
                 </Autocomplete>
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   autoFocus={false}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
