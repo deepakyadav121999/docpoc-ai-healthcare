@@ -154,7 +154,7 @@ const Clinic = () => {
   });
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
   const [userId, setUserId] = useState("");
-  const [autocompleteValue, setAutocompleteValue] = useState("");
+  // const [autocompleteValue, setAutocompleteValue] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
     if (field === "state") {
@@ -751,7 +751,15 @@ const Clinic = () => {
                 className="mb-2 sm:mb-4.5 flex flex-col gap-2 sm:gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
-                {/* <Autocomplete
+                <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -761,27 +769,25 @@ const Clinic = () => {
                   defaultItems={IndianStatesList}
                   label="Select State"
                   placeholder="Search a state"
-                  // onSelectionChange={(key) => {
-                  //   const selectedState = IndianStatesList.find(
-                  //     (item) => item.value === key,
-                  //   );
-
-                  //   handleInputChange("state", selectedState?.label || "");
-                  //   setSelectedStateKey(key ? (key as string) : null);
-
-                  // }}
                   onSelectionChange={(key) => {
-                    const selectedState = IndianStatesList.find(item => item.value === key);
-                    if (selectedState) {
-                      // Update both state values in a single synchronous operation
-                      setClinicDetails(prev => ({
-                        ...prev,
-                        state: selectedState.label
-                      }));
-                      setSelectedStateKey(key as string);
-                    }
-                  }}
+                    const selectedState = IndianStatesList.find(
+                      (item) => item.value === key,
+                    );
 
+                    handleInputChange("state", selectedState?.label || "");
+                    setSelectedStateKey(key ? (key as string) : null);
+                  }}
+                  // onSelectionChange={(key) => {
+                  //   const selectedState = IndianStatesList.find(item => item.value === key);
+                  //   if (selectedState) {
+                  //     // Update both state values in a single synchronous operation
+                  //     setClinicDetails(prev => ({
+                  //       ...prev,
+                  //       state: selectedState.label
+                  //     }));
+                  //     setSelectedStateKey(key as string);
+                  //   }
+                  // }}
                 >
                   {(IndianStatesList) => (
                     <AutocompleteItem
@@ -792,8 +798,8 @@ const Clinic = () => {
                       {IndianStatesList.label}
                     </AutocompleteItem>
                   )}
-                </Autocomplete> */}
-                <Autocomplete
+                </Autocomplete>
+                {/* <Autocomplete
                   className="[&_.nextui-autocomplete-selector-button]:text-black 
              [&_.nextui-autocomplete-selector-button]:dark:text-white
              [&_[data-has-value=true]]:text-black
@@ -842,7 +848,7 @@ const Clinic = () => {
                       {state.label}
                     </AutocompleteItem>
                   )}
-                </Autocomplete>
+                </Autocomplete> */}
 
                 <Input
                   classNames={{

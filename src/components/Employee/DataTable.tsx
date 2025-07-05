@@ -205,22 +205,48 @@ export default function DataTable() {
   // console.log(users);
   // console.log(totalUsers);
 
-  const getAgeFromDob = (dob: string): number => {
-    const birthDate = new Date(dob);
-    const currentDate = new Date();
+  // const getAgeFromDob = (dob: string): number => {
+  //   const birthDate = new Date(dob);
+  //   const currentDate = new Date();
 
-    let age = currentDate.getFullYear() - birthDate.getFullYear();
-    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+  //   let age = currentDate.getFullYear() - birthDate.getFullYear();
+  //   const monthDifference = currentDate.getMonth() - birthDate.getMonth();
 
-    // Adjust age if the birthday hasn't occurred yet this year
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
-    ) {
-      age--;
+  //   // Adjust age if the birthday hasn't occurred yet this year
+  //   if (
+  //     monthDifference < 0 ||
+  //     (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+  //   ) {
+  //     age--;
+  //   }
+
+  //   return age;
+  // };
+
+  const getAgeFromDob = (dob: string): string => {
+    if (!dob) return "N/A";
+
+    try {
+      const birthDate = new Date(dob);
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) return "N/A";
+
+      const currentDate = new Date();
+      let age = currentDate.getFullYear() - birthDate.getFullYear();
+      const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+
+      if (
+        monthDifference < 0 ||
+        (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      return age.toString();
+    } catch (error) {
+      console.error("Error calculating age:", error);
+      return "N/A";
     }
-
-    return age;
   };
 
   type User = (typeof users)[0];
@@ -276,12 +302,27 @@ export default function DataTable() {
   const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
     const cellValue = user[columnKey as keyof User];
 
+    // if (columnKey === "age") {
+    //   let age = "";
+    //   try {
+    //     const userJson = JSON.parse(user.json);
+    //     const dob = userJson.dob || "";
+    //     age = getAgeFromDob(dob).toString();
+    //   } catch (error) {
+    //     console.error("Error parsing JSON:", error);
+    //   }
+
+    //   return <p className="capitalize">{age}</p>;
+    // }
+
     if (columnKey === "age") {
-      let age = "";
+      let age = "N/A";
       try {
-        const userJson = JSON.parse(user.json);
-        const dob = userJson.dob || "";
-        age = getAgeFromDob(dob).toString();
+        if (user.json) {
+          const userJson = JSON.parse(user.json);
+          const dob = userJson.dob || "";
+          age = getAgeFromDob(dob).toString();
+        }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
@@ -301,10 +342,10 @@ export default function DataTable() {
         return (
           <User
             avatarProps={{ radius: "lg", src: avatarSrc }}
-            description={user.email}
+            // description={user.email}
             name={cellValue}
           >
-            {user.email}
+            {/* {user.email} */}
           </User>
         );
       case "lastVisit":
@@ -316,6 +357,11 @@ export default function DataTable() {
             </p>
           </div>
         );
+      case "phone":
+        return <p className="capitalize">{cellValue || "N/A"}</p>;
+      case "email":
+        return <p className="capitalize">{cellValue || "N/A"}</p>;
+
       case "status":
         const status = user.isActive ? "Active" : "Inactive";
         return (
