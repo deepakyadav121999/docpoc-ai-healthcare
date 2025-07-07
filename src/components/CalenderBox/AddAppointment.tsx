@@ -658,7 +658,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       const doctors = allUsers.filter((user: any) => {
         try {
           const userJson = JSON.parse(user.json);
-          return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+          // return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+          return (
+            userJson.designation &&
+            (userJson.designation.toLowerCase() === "doctor" ||
+              userJson.designation === "Doctor")
+          );
         } catch (err) {
           console.error("Error parsing JSON for user:", user, err);
           return false;
@@ -985,8 +990,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   labelPlacement="outside"
                   variant="bordered"
                   label="Remarks"
-                  defaultValue="Patient is having chronic neck pain."
-                  errorMessage="The address should be at max 255 characters long."
+                  defaultValue=""
+                  errorMessage="The remarks should be at max 255 characters long."
                   isDisabled={!edit}
                   onChange={(e) =>
                     setFormData({

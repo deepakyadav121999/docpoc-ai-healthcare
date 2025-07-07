@@ -844,7 +844,7 @@ const SignUp: React.FC<SignUpProps> = ({
             <div className="relative">
               <Input
                 label="Password"
-                type={showPassword ? "password" : "text"}
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter a secure password"
                 fullWidth
                 onChange={(e) => setPassword(e.target.value)}
