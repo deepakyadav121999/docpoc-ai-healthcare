@@ -51,6 +51,7 @@ const App: React.FC<ParentComponentProps> = ({
     // Auto-close only on success after 3 seconds
     if (message.success) {
       setTimeout(() => {
+        onOpenChange();
         handleClose();
       }, 3000);
     }

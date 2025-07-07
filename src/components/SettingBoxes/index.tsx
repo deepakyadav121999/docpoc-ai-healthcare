@@ -95,10 +95,10 @@ const SettingBoxes = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const designations: Designation[] = [
-    { label: "Doctor", value: "doctor" },
-    { label: "Nurse", value: "nurse" },
-    { label: "Staff", value: "staff" },
-    { label: "Admin", value: "admin" },
+    { label: "Doctor", value: "Doctor" },
+    { label: "Nurse", value: "Nurse" },
+    { label: "Staff", value: "Staff" },
+    { label: "Admin", value: "Admin" },
   ];
   const [editDesignation, setEditDesignation] = useState(false);
   const [tempDesignation, setTempDesignation] = useState("");
