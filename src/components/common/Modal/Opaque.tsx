@@ -63,12 +63,12 @@ export default function OpaqueModal(props: {
   const [updatedEmployeeData, setUpdatedEmployeeData] = useState<EmployeeData>(
     {},
   );
-  // const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
+  const [updatedAppointmentData, setUpdatedAppointmentData] = useState({});
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [selectedFile, setSelectedFile] = useState(null);
-  // const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
+  // const [_profilePhotoUrl, setProfilePhotoUrl] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   // const [fileUrls, setFileUrls] = useState<string[]>([]);
@@ -170,16 +170,16 @@ export default function OpaqueModal(props: {
 
   const handleDelete = async () => {
     setLoading(true);
-    // const token = localStorage.getItem("docPocAuth_token");
-    // const endpoint = `${API_URL}/patient/${props.userId}`;
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `${API_URL}/patient/${props.userId}`;
 
     try {
-      // const response = await axios.delete(endpoint, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+      await axios.delete(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       // Handle successful deletion
       onClose();
 
@@ -299,24 +299,24 @@ export default function OpaqueModal(props: {
       } else if (formType === MODAL_TYPES.EDIT_PATIENT) {
         setUpdatedPatientData(data);
       } else if (formType === MODAL_TYPES.EDIT_APPOINTMENT) {
-        // setUpdatedAppointmentData(data);
+        setUpdatedAppointmentData(data);
       }
     }
   };
 
   const handleEdit = async () => {
     setLoading(true);
-    // const token = localStorage.getItem("docPocAuth_token");
-    // const endpoint = `${API_URL}/patient`;
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `${API_URL}/patient`;
 
     try {
-      // let profilePictureUrl = updatedPatientData.displayPicture || "";
+      let profilePictureUrl = updatedPatientData.displayPicture || "";
 
       if (selectedFile) {
-        // profilePictureUrl = await uploadProfilePicture(
-        //   selectedFile,
-        //   updatedPatientData.name || "",
-        // );
+        profilePictureUrl = await uploadProfilePicture(
+          selectedFile,
+          updatedPatientData.name || "",
+        );
         // setProfilePhotoUrl(profilePictureUrl);
       }
       // Parse existing documents
@@ -393,30 +393,40 @@ export default function OpaqueModal(props: {
       });
 
       // Prepare the request payload
-      // const requestData = {
-      //   id: props.userId,
-      //   displayPicture: profilePictureUrl || updatedPatientData.dp,
-      //   documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
-      //   ...updatedPatientData, // Include other patient data
-      // };
+      const requestData = {
+        id: props.userId,
+        displayPicture: profilePictureUrl || updatedPatientData.dp,
+        documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
+        ...updatedPatientData, // Include other patient data
+      };
 
-      // const response = await axios.patch(endpoint, requestData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+      await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (props.onPatientDelete) props.onPatientDelete();
 
       // setmessage("Patient updated successfully!");
       setModalMessage({ success: "Patient updated successfully!", error: "" });
       setNotificationOpen(true);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating patient:", error);
+      // setModalMessage({
+      //   success: "",
+      //   error: "Failed to update the patient. Please try again.",
+      // });
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "ailed to update the patient. Please try again.";
+
       setModalMessage({
         success: "",
-        error: "Failed to update the patient. Please try again.",
+        error: errorMessage,
       });
       // seterror("Failed to update the patient. Please try again.");
       // alert("Failed to update the patient. Please try again.");
@@ -474,9 +484,19 @@ export default function OpaqueModal(props: {
       setNotificationOpen(true);
       // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating Employee:", error);
-      setModalMessage({ success: "", error: "Error updating Employee" });
+      // setModalMessage({ success: "", error: "Error updating Employee" });
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to update employee";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
       // seterror("Error updating Employee");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
@@ -489,21 +509,21 @@ export default function OpaqueModal(props: {
 
   const handleAppointmentEdit = async () => {
     setLoading(true);
-    // const token = localStorage.getItem("docPocAuth_token");
-    // const endpoint = `${API_URL}/appointment`;
+    const token = localStorage.getItem("docPocAuth_token");
+    const endpoint = `${API_URL}/appointment`;
 
-    // const requestData = {
-    //   id: props.userId,
-    //   ...updatedAppointmentData,
-    // };
+    const requestData = {
+      id: props.userId,
+      ...updatedAppointmentData,
+    };
 
     try {
-      // const response = await axios.patch(endpoint, requestData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+      await axios.patch(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (props.onPatientDelete) props.onPatientDelete();
       // setmessage("appointment updated successfully!");
       setModalMessage({
@@ -513,9 +533,19 @@ export default function OpaqueModal(props: {
       setNotificationOpen(true);
       // alert("Patient updated successfully!");
       onClose(); // Close the modal after successful update
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating appointment:", error);
-      setModalMessage({ success: "", error: "Error updating appointment" });
+      // setModalMessage({ success: "", error: "Error updating appointment" });
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error updating appointment";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
       // seterror("Error updating appointment");
       setNotificationOpen(true);
       // alert("Failed to update the patient. Please try again.");
@@ -558,11 +588,15 @@ export default function OpaqueModal(props: {
     }
   };
   const handleModalClose = () => {
-    setModalMessage({ success: "", error: "" });
-    setNotificationOpen(false);
-    if (profile.id === props.userId) {
+    if (modalMessage.success && accessToken && profile.id === props.userId) {
       dispatch(updateAccessToken(accessToken));
     }
+
+    setModalMessage({ success: "", error: "" });
+    setNotificationOpen(false);
+    // if (profile.id === props.userId  ) {
+    //   dispatch(updateAccessToken(accessToken));
+    // }
 
     // onClose();
   };

@@ -19,7 +19,7 @@ const GenerateReports = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
-        <Breadcrumb pageName="Reports" />
+        <Breadcrumb pageName="Reports-Overview" />
         <TabDefaultWithRoute
           current={current}
           options={REPORTS_TAB_KEYS}

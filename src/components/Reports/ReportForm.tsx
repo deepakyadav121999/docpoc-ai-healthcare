@@ -27,6 +27,7 @@ import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import ShareLinkModal from "../common/Modal/ShareLinkModal";
 
 interface Appointment {
   id: string;
@@ -62,6 +63,27 @@ interface Medication {
   name: string;
   note: string;
   quantity: number;
+  days: number;
+}
+
+interface VitalSigns {
+  bloodPressure: {
+    systolic: string;
+    diastolic: string;
+    enabled: boolean;
+  };
+  heartRate: {
+    value: string;
+    enabled: boolean;
+  };
+  temperature: {
+    value: string;
+    enabled: boolean;
+  };
+  respiratoryRate: {
+    value: string;
+    enabled: boolean;
+  };
 }
 
 const API_URL = process.env.API_URL;
@@ -73,8 +95,7 @@ const AppointmentForm = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // const [reportName, setReportName] = useState("");
-  const [enableSharingWithPatient, setEnableSharingWithPatient] =
-    useState(true);
+  const [enableSharingWithPatient] = useState(true);
   const [isSharedWithPatient, setIsSharedWithPatient] = useState(true);
   const [appointmentMode, setAppointmentMode] = useState<
     "appointment" | "manual"
@@ -98,21 +119,13 @@ const AppointmentForm = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
-
-  // Vital Signs state (unchanged)
-  // const [vitals, setVitals] = useState({
-  //   bloodPressure: "0/0 mmHg",
-  //   heartRate: "0 bpm",
-  //   temperature: "0.0 °F",
-  //   respiratoryRate: "0 rpm"
-  // });
-
-  // Update the vitals state initialization
-  const [vitals, setVitals] = useState({
-    bloodPressure: { value: "0/0 mmHg", enabled: false },
-    heartRate: { value: "0 bpm", enabled: false },
-    temperature: { value: "0.0 °F", enabled: false },
-    respiratoryRate: { value: "0 rpm", enabled: false },
+  const [shareLink, setShareLink] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [vitals, setVitals] = useState<VitalSigns>({
+    bloodPressure: { systolic: "0", diastolic: "0", enabled: false },
+    heartRate: { value: "0", enabled: false },
+    temperature: { value: "0.0", enabled: false },
+    respiratoryRate: { value: "0", enabled: false },
   });
 
   // Patient details state (unchanged)
@@ -132,13 +145,6 @@ const AppointmentForm = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  // const [appointmentPage, setAppointmentPage] = useState(1);
-  // const [patientPage, setPatientPage] = useState(1);
-  // const [doctorPage, setDoctorPage] = useState(1);
-  // const [hasMoreAppointments, setHasMoreAppointments] = useState(true);
-  // const [hasMorePatients, setHasMorePatients] = useState(true);
-  // const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
-
   // Constants (unchanged)
   const times = ["Morning", "Afternoon", "Evening", "Night"];
   // const reportTypes = ["Normal", "Serious", "Critical"];
@@ -150,32 +156,64 @@ const AppointmentForm = () => {
     medicationNote: 70,
   };
 
-  const handleVitalsChange = (field: keyof typeof vitals, value: string) => {
-    setVitals((prev) => ({
-      ...prev,
-      [field]: { ...prev[field], value },
-    }));
-  };
-
   const toggleVitalField = (field: keyof typeof vitals) => {
     setVitals((prev) => ({
       ...prev,
       [field]: {
         ...prev[field],
         enabled: !prev[field].enabled,
-        value: !prev[field].enabled
-          ? prev[field].value
-          : "0" +
-            (field === "bloodPressure"
-              ? "/0 mmHg"
-              : field === "heartRate"
-                ? " bpm"
-                : field === "temperature"
-                  ? " °F"
-                  : " rpm"),
+        ...(field === "bloodPressure"
+          ? {
+              systolic: "0",
+              diastolic: "0",
+            }
+          : {
+              value: field === "temperature" ? "0.0" : "0",
+            }),
       },
     }));
   };
+  const handleVitalChange = (
+    field: "heartRate" | "temperature" | "respiratoryRate",
+    value: string,
+  ) => {
+    // Different validation for different fields
+    let isValid = false;
+
+    if (field === "temperature") {
+      // Allow numbers with optional decimal point
+      isValid = /^\d*\.?\d*$/.test(value);
+    } else {
+      // Only allow whole numbers
+      isValid = /^\d*$/.test(value);
+    }
+
+    if (isValid) {
+      setVitals((prev) => ({
+        ...prev,
+        [field]: {
+          ...prev[field],
+          value,
+        },
+      }));
+    }
+  };
+  const handleBloodPressureChange = (
+    part: "systolic" | "diastolic",
+    value: string,
+  ) => {
+    // Only allow numbers
+    if (/^\d*$/.test(value)) {
+      setVitals((prev) => ({
+        ...prev,
+        bloodPressure: {
+          ...prev.bloodPressure,
+          [part]: value,
+        },
+      }));
+    }
+  };
+
   const handleSaveReport = async () => {
     try {
       setIsLoading(true);
@@ -194,6 +232,7 @@ const AppointmentForm = () => {
       const doctor = doctors.find((d) => d.id === selectedDoctor);
       const branchId = profile?.branchId;
       const reportData = {
+        name: "abc",
         patientId: selectedPatient,
         branchId: branchId,
         patient: {
@@ -216,18 +255,33 @@ const AppointmentForm = () => {
         // name: reportName,
         // vitals,
 
+        // vitals: {
+        //   ...(vitals.bloodPressure.enabled && {
+        //     bloodPressure: vitals.bloodPressure.value,
+        //   }),
+        //   ...(vitals.heartRate.enabled && {
+        //     heartRate: vitals.heartRate.value,
+        //   }),
+        //   ...(vitals.temperature.enabled && {
+        //     temperature: vitals.temperature.value,
+        //   }),
+        //   ...(vitals.respiratoryRate.enabled && {
+        //     respiratoryRate: vitals.respiratoryRate.value,
+        //   }),
+        // },
+
         vitals: {
           ...(vitals.bloodPressure.enabled && {
-            bloodPressure: vitals.bloodPressure.value,
+            bloodPressure: `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`,
           }),
           ...(vitals.heartRate.enabled && {
-            heartRate: vitals.heartRate.value,
+            heartRate: `${vitals.heartRate.value} bpm`,
           }),
           ...(vitals.temperature.enabled && {
-            temperature: vitals.temperature.value,
+            temperature: `${vitals.temperature.value} °F`,
           }),
           ...(vitals.respiratoryRate.enabled && {
-            respiratoryRate: vitals.respiratoryRate.value,
+            respiratoryRate: `${vitals.respiratoryRate.value} rpm`,
           }),
         },
 
@@ -261,12 +315,25 @@ const AppointmentForm = () => {
 
       window.open(documentUrl, "_blank");
 
-      setModalMessage({
-        success: "Report saved successfully!",
-        error: "",
-      });
-      onOpen();
+      // setModalMessage({
+      //   success: "Report saved successfully!",
+      //   error: "",
+      // });
+
+      if (enableSharingWithPatient) {
+        setShareLink(documentUrl);
+        setIsShareModalOpen(true);
+      } else {
+        setModalMessage({
+          success: "Report saved successfully!",
+          error: "",
+        });
+        onOpen();
+      }
       closePreviewModal();
+
+      // onOpen();
+      // closePreviewModal();
     } catch (error) {
       console.error("Error saving report:", error);
       setModalMessage({
@@ -431,7 +498,7 @@ const AppointmentForm = () => {
   const addMedication = () => {
     setMedications([
       ...medications,
-      { time: "", name: "", note: "", quantity: 1 },
+      { time: "", name: "", note: "", quantity: 1, days: 1 },
     ]);
   };
 
@@ -540,7 +607,78 @@ const AppointmentForm = () => {
   }, [isPreviewModalOpen]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8  text-black dark:text-white">
+    <div className="min-h-screen p-4 md:p-8  text-black dark:text-white ">
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        /* Input group styles */
+
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* NextUI component overrides */
+        .nextui-input-wrapper,
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input,
+          textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">
           Appointment Report Form
@@ -732,7 +870,7 @@ const AppointmentForm = () => {
           </div>
         </div> */}
 
-        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+        {/* <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Vital Signs</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -845,9 +983,153 @@ const AppointmentForm = () => {
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
+        </div> */}
+
+        {/* // Update the JSX for vital signs section */}
+        <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Vital Signs</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Leave fields disabled to exclude from report
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Blood Pressure */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.bloodPressure.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Blood Pressure</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.bloodPressure.enabled}
+                  onValueChange={() => toggleVitalField("bloodPressure")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.bloodPressure.systolic}
+                  onChange={(e) =>
+                    handleBloodPressureChange("systolic", e.target.value)
+                  }
+                  placeholder="120"
+                  className="w-20"
+                  isDisabled={!vitals.bloodPressure.enabled}
+                />
+                <span>/</span>
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.bloodPressure.diastolic}
+                  onChange={(e) =>
+                    handleBloodPressureChange("diastolic", e.target.value)
+                  }
+                  placeholder="80"
+                  className="w-20"
+                  isDisabled={!vitals.bloodPressure.enabled}
+                />
+                <span className="ml-2">mmHg</span>
+              </div>
+            </div>
+
+            {/* Heart Rate */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.heartRate.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Heart Rate</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.heartRate.enabled}
+                  onValueChange={() => toggleVitalField("heartRate")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.heartRate.value}
+                  onChange={(e) =>
+                    handleVitalChange("heartRate", e.target.value)
+                  }
+                  placeholder="72"
+                  className="w-20"
+                  isDisabled={!vitals.heartRate.enabled}
+                />
+                <span>bpm</span>
+              </div>
+            </div>
+
+            {/* Temperature */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.temperature.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Temperature</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.temperature.enabled}
+                  onValueChange={() => toggleVitalField("temperature")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.temperature.value}
+                  onChange={(e) =>
+                    handleVitalChange("temperature", e.target.value)
+                  }
+                  placeholder="98.6"
+                  className="w-20"
+                  isDisabled={!vitals.temperature.enabled}
+                />
+                <span>°F</span>
+              </div>
+            </div>
+
+            {/* Respiratory Rate */}
+            <div
+              className={`border border-stroke dark:border-dark-3 p-3 rounded-lg ${vitals.respiratoryRate.enabled ? "" : "bg-gray-100 dark:bg-gray-800"}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Respiratory Rate</span>
+                <Switch
+                  size="sm"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isSelected={vitals.respiratoryRate.enabled}
+                  onValueChange={() => toggleVitalField("respiratoryRate")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  label=""
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  value={vitals.respiratoryRate.value}
+                  onChange={(e) =>
+                    handleVitalChange("respiratoryRate", e.target.value)
+                  }
+                  placeholder="16"
+                  className="w-20"
+                  isDisabled={!vitals.respiratoryRate.enabled}
+                />
+                <span>rpm</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Observations and Notes - made responsive */}
+        {/* Observations and Notes - made responsive  */}
         <div>
           <Textarea
             value={observations}
@@ -875,7 +1157,7 @@ const AppointmentForm = () => {
         </div>
 
         {/* Medications - made responsive */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-dark dark:text-white">
             Medications
           </label>
@@ -920,24 +1202,73 @@ const AppointmentForm = () => {
                   className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
+           
               <div className="sm:col-span-2">
                 <Input
                   type="number"
                   variant="bordered"
                   color={TOOL_TIP_COLORS.secondary}
-                  label="X"
+                  label="Quantity"
                   labelPlacement="outside"
-                  placeholder="X"
+                  value={med.quantity.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+
+                    // Allow empty input during typing
+                    if (inputValue === "") {
+                      updateMedication(index, "quantity", 0); // Temporary 0 (will validate on blur)
+                      return;
+                    }
+
+                    const newValue = parseInt(inputValue);
+
+                    // Only update if valid number and ≥1
+                    if (!isNaN(newValue) && newValue >= 1) {
+                      updateMedication(index, "quantity", newValue);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.value || parseInt(target.value) < 1) {
+                      updateMedication(index, "quantity", 1);
+                    }
+                  }}
+                  onFocus={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    target.select();
+                  }}
                   min="1"
-                  value={med.quantity as unknown as string}
-                  onChange={(e) =>
-                    updateMedication(
-                      index,
-                      "quantity",
-                      parseInt(e.target.value) || 1,
-                    )
-                  }
-                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                  className="w-full"
+                />
+              </div>
+           
+              <div className="sm:col-span-1">
+                <Input
+                  type="number"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  label="Days"
+                  labelPlacement="outside"
+                  value={med.days.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+                    if (inputValue === "") {
+                      updateMedication(index, "days", 0);
+                      return;
+                    }
+                    const newValue = parseInt(inputValue);
+                    if (!isNaN(newValue)) {
+                      updateMedication(index, "days", Math.max(1, newValue));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.value || parseInt(target.value) < 1) {
+                      updateMedication(index, "days", 1);
+                    }
+                  }}
+                  min="1"
+                  className="w-full"
                 />
               </div>
 
@@ -962,6 +1293,34 @@ const AppointmentForm = () => {
                   className="w-full  rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
                 />
               </div>
+              <div className="sm:col-span-2 flex justify-center pt-6">
+                <Button
+                  isIconOnly
+                  color="danger"
+                  variant="light"
+                  aria-label="Delete medication"
+                  onClick={() => {
+                    const updatedMedications = [...medications];
+                    updatedMedications.splice(index, 1);
+                    setMedications(updatedMedications);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </Button>
+              </div>
             </div>
           ))}
           <Button
@@ -971,11 +1330,179 @@ const AppointmentForm = () => {
           >
             + Add Medication
           </Button>
+        </div> */}
+
+        {/* Medications Section - Optimized Layout */}
+
+        {/* Medications Section - Optimized Layout */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-dark dark:text-white">
+            Medications
+          </label>
+
+          <div className="overflow-x-auto">
+            {medications.length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 dark:text-gray-400">
+                    <th className="pb-2">Time</th>
+                    <th className="pb-2">Medication Name</th>
+                    <th className="pb-2 w-20">Quantity</th>
+                    <th className="pb-2 w-20">Days</th>
+                    <th className="pb-2">Note</th>
+                    <th className="pb-2 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="space-y-2">
+                  {medications.map((med, index) => (
+                    <tr key={index} className="align-top">
+                      {/* Time */}
+                      <td className="pr-2 py-2">
+                        <Autocomplete
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Select"
+                          defaultItems={timeItems}
+                          selectedKey={med.time}
+                          onSelectionChange={(key) =>
+                            updateMedication(index, "time", key as string)
+                          }
+                          size="sm"
+                          className="min-w-[100px]"
+                        >
+                          {(item) => (
+                            <AutocompleteItem key={item.id}>
+                              {item.label}
+                            </AutocompleteItem>
+                          )}
+                        </Autocomplete>
+                      </td>
+
+                      {/* Medication Name */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="text"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Enter name"
+                          value={med.name}
+                          onChange={(e) =>
+                            updateMedication(index, "name", e.target.value)
+                          }
+                          size="sm"
+                        />
+                      </td>
+
+                      {/* Quantity */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="number"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          value={med.quantity.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            if (val >= 0)
+                              updateMedication(index, "quantity", val);
+                          }}
+                          min="1"
+                          size="sm"
+                          className="w-full"
+                        />
+                      </td>
+
+                      {/* Days */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="number"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          value={med.days.toString()}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            if (val >= 0) updateMedication(index, "days", val);
+                          }}
+                          min="1"
+                          size="sm"
+                          className="w-full"
+                        />
+                      </td>
+
+                      {/* Note */}
+                      <td className="pr-2 py-2">
+                        <Input
+                          type="text"
+                          variant="bordered"
+                          color={TOOL_TIP_COLORS.secondary}
+                          placeholder="Note (optional)"
+                          value={med.note}
+                          onChange={(e) => {
+                            if (
+                              e.target.value.length <=
+                              CHARACTER_LIMITS.medicationNote
+                            ) {
+                              updateMedication(index, "note", e.target.value);
+                            }
+                          }}
+                          size="sm"
+                        />
+                      </td>
+
+                      {/* Delete Button */}
+                      <td className="py-2">
+                        <Button
+                          isIconOnly
+                          color="danger"
+                          variant="light"
+                          aria-label="Delete medication"
+                          size="sm"
+                          onClick={() => {
+                            const updated = [...medications];
+                            updated.splice(index, 1);
+                            setMedications(updated);
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
+                No medications added yet
+              </div>
+            )}
+          </div>
+
+          <Button
+            onPress={addMedication}
+            className="mt-2"
+            color={TOOL_TIP_COLORS.secondary}
+            size="sm"
+            startContent={<span>+</span>}
+          >
+            Add Medication
+          </Button>
         </div>
 
         {/* Sharing options - made responsive */}
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <Checkbox
+          {/* <Checkbox
             color={TOOL_TIP_COLORS.secondary}
             isSelected={enableSharingWithPatient}
             onValueChange={setEnableSharingWithPatient}
@@ -987,7 +1514,7 @@ const AppointmentForm = () => {
             }}
           >
             Enable Sharing With Patient
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             color={TOOL_TIP_COLORS.secondary}
@@ -1258,7 +1785,7 @@ const AppointmentForm = () => {
                       </div> */}
 
                       {/* In the preview modal's vital signs section */}
-                      <div className="mb-6">
+                      {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">
                           Vital Signs
                         </h3>
@@ -1308,6 +1835,64 @@ const AppointmentForm = () => {
                                 {vitals.respiratoryRate.enabled && (
                                   <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
                                     {vitals.respiratoryRate.value}
+                                  </td>
+                                )}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div> */}
+                      {/* In the preview modal's vital signs section */}
+                      <div className="mb-6">
+                        <h3 className="text-base md:text-lg font-medium mb-2">
+                          Vital Signs
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border">
+                            <thead>
+                              <tr className="bg-gray-100 dark:bg-gray-700">
+                                {vitals.bloodPressure.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Blood Pressure
+                                  </th>
+                                )}
+                                {vitals.heartRate.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Heart Rate
+                                  </th>
+                                )}
+                                {vitals.temperature.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Temperature
+                                  </th>
+                                )}
+                                {vitals.respiratoryRate.enabled && (
+                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                    Respiratory Rate
+                                  </th>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                {vitals.bloodPressure.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`}
+                                  </td>
+                                )}
+                                {vitals.heartRate.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.heartRate.value} bpm`}
+                                  </td>
+                                )}
+                                {vitals.temperature.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.temperature.value} °F`}
+                                  </td>
+                                )}
+                                {vitals.respiratoryRate.enabled && (
+                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                    {`${vitals.respiratoryRate.value} rpm`}
                                   </td>
                                 )}
                               </tr>
@@ -1368,8 +1953,9 @@ const AppointmentForm = () => {
                                   {med.quantity} x{" "}
                                   {med.name || "Unnamed medication"}
                                 </strong>{" "}
-                                ({med.time || "No time specified"}) -{" "}
-                                {med.note || "No notes"}
+                                ({med.time || "No time specified"}) - {med.days}{" "}
+                                day(s) - {med.note || "No notes"}
+                                {/* {med.note || "No notes"} */}
                               </li>
                             ))}
                           </ul>
@@ -1452,6 +2038,11 @@ const AppointmentForm = () => {
         loading={isLoading}
         modalMessage={modalMessage}
         onClose={handleModalClose}
+      />
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        link={shareLink}
       />
     </div>
   );

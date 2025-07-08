@@ -2,8 +2,14 @@
 import {
   Autocomplete,
   AutocompleteItem,
+  Button,
   Checkbox,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Textarea,
   TimeInput,
   useDisclosure,
@@ -17,6 +23,7 @@ import React from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import AddNewPatient from "../Patient/AddNewPatient";
 
 interface AutocompleteItem {
   value: string;
@@ -25,21 +32,40 @@ interface AutocompleteItem {
   dob?: string;
   workingHours: string;
 }
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
 interface AddUsersProps {
   onUsersAdded: () => void;
+  onClose?: () => void;
+  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
-const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+const AddAppointment: React.FC<AddUsersProps> = ({
+  onUsersAdded,
+  onClose,
+  onMessage,
+}) => {
   const profile = useSelector((state: RootState) => state.profile.data);
 
   // const [edit, setEdit] = useState(true);
   const edit = true;
-  const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  // const [patientList, setPatientList] = useState<AutocompleteItem[]>([]);
+  const [patientList, setPatientList] = useState<AutocompleteItem[]>([
+    {
+      label: "Create New Patient...",
+      value: "create-new-patient",
+      description: "Click to add a new patient",
+      dob: "",
+      workingHours: "",
+    },
+  ]);
   const [doctorList, setDoctorList] = useState<AutocompleteItem[]>([]);
   const [appointmentTypeList, setAppointmentTypeList] = useState<
     AutocompleteItem[]
   >([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: internalClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [appointmentStatusList, setAppointmentStatusList] = useState<
     AutocompleteItem[]
@@ -73,7 +99,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   });
 
   const [loading, setLoading] = useState(false);
-
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [dateTimeErrors, setDateTimeErrors] = useState({
+    pastDate: false,
+    pastTime: false,
+  });
   // function extractTime(dateTime: string): string {
   //   const date = new Date(dateTime);
   //   let hours = date.getHours();
@@ -89,6 +119,63 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   //   return `${hours}:${formattedMinutes} ${amPm}`;
   // }
 
+  const validateDateTime = () => {
+    const now = new Date();
+    const errors = {
+      pastDate: false,
+      pastTime: false,
+    };
+
+    // Validate date
+    if (formData.dateTime) {
+      const selectedDate = new Date(formData.dateTime);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Compare just the date part
+
+      errors.pastDate = selectedDate < today;
+    }
+
+    // Validate time
+    if (formData.startDateTime) {
+      const startTime = new Date(formData.startDateTime);
+      errors.pastTime = startTime < now;
+
+      // Also validate end time
+      if (formData.endDateTime) {
+        const endTime = new Date(formData.endDateTime);
+        if (endTime < now) {
+          errors.pastTime = true;
+        }
+
+        // Ensure end time is after start time
+        if (endTime <= startTime) {
+          setTimeWarning("End time must be after start time");
+          return false;
+        }
+      }
+    }
+
+    setDateTimeErrors(errors);
+    return !errors.pastDate && !errors.pastTime;
+  };
+  // const handleDateChange = (date: string) => {
+  //   setFormData({ ...formData, dateTime: date });
+  // };
+
+  const handleDateChange = (date: string) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setDateTimeErrors((prev) => ({ ...prev, pastDate: true }));
+    } else {
+      setDateTimeErrors((prev) => ({ ...prev, pastDate: false }));
+    }
+
+    setFormData({ ...formData, dateTime: date });
+  };
+
   const generateDateTime = (baseDate: string, time: Time) => {
     const currentDate = new Date(baseDate); // Use the current date
     return new Date(
@@ -100,6 +187,50 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       0,
     ); // Convert to ISO format
   };
+
+  // const handleTimeChange = (
+  //   time: Time,
+  //   field: "startDateTime" | "endDateTime",
+  // ) => {
+  //   if (!formData.dateTime) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Please select a date before setting the time.",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
+  //   setFormData({ ...formData, [field]: isoTime });
+  // };
+
+  //   const handleTimeChange = (time: Time, field: "startDateTime" | "endDateTime") => {
+  //   if (!formData.dateTime) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Please select a date before setting the time.",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   const isoTime = generateDateTime(formData.dateTime, time);
+  //   const now = new Date();
+
+  //   // Check if selected date is today and time is in past
+  //   const selectedDate = new Date(formData.dateTime);
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   if (selectedDate.getTime() === today.getTime() && isoTime < now) {
+  //     setDateTimeErrors(prev => ({ ...prev, pastTime: true }));
+  //   } else {
+  //     setDateTimeErrors(prev => ({ ...prev, pastTime: false }));
+  //   }
+
+  //   setFormData({ ...formData, [field]: isoTime });
+  // };
 
   const handleTimeChange = (
     time: Time,
@@ -114,11 +245,76 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       return;
     }
 
-    const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
+    const isoTime = generateDateTime(formData.dateTime, time);
+    const now = new Date();
+
+    // For start time, ensure it's not in the past
+    if (field === "startDateTime" && isoTime < now) {
+      setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+    }
+    // For end time, ensure it's after start time and not in the past
+    else if (field === "endDateTime") {
+      const startTime = new Date(formData.startDateTime);
+      if (isoTime <= startTime) {
+        setTimeWarning("End time must be after start time");
+      } else if (isoTime < now) {
+        setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+      } else {
+        setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+        setTimeWarning("");
+      }
+    } else {
+      setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+      setTimeWarning("");
+    }
+
     setFormData({ ...formData, [field]: isoTime });
   };
 
+  // const handlePatientSelection = (patientId: string) => {
+  //   const selectedPatient = patientList.find(
+  //     (patient) => patient.value === patientId,
+  //   );
+  //   if (selectedPatient) {
+  //     setFormData({
+  //       ...formData,
+  //       patientId,
+  //       name: selectedPatient.label,
+  //       json: JSON.stringify({
+  //         dob: selectedPatient.dob,
+  //         email: selectedPatient.description?.split(" | ")[1] || "",
+  //       }),
+  //     });
+  //   }
+  // };
+  //  const handlePatientSelection = (patientId: string) => {
+  //   if (patientId === "create-new-patient") {
+  //     setShowAddPatientModal(true);
+  //     return;
+  //   }
+
+  //   const selectedPatient = patientList.find(
+  //     (patient) => patient.value === patientId,
+  //   );
+  //   if (selectedPatient) {
+  //     setFormData({
+  //       ...formData,
+  //       patientId,
+  //       name: selectedPatient.label,
+  //       json: JSON.stringify({
+  //         dob: selectedPatient.dob,
+  //         email: selectedPatient.description?.split(" | ")[1] || "",
+  //       }),
+  //     });
+  //   }
+  // };
+
   const handlePatientSelection = (patientId: string) => {
+    if (patientId === "create-new-patient") {
+      setShowAddPatientModal(true);
+      return;
+    }
+
     const selectedPatient = patientList.find(
       (patient) => patient.value === patientId,
     );
@@ -134,10 +330,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
     }
   };
-
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
-    onClose();
+    internalClose();
+    if (onClose) {
+      onClose();
+    }
   };
 
   function isWithinWorkingHours(
@@ -199,6 +397,28 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       (doctor) => doctor.value === doctorId,
     );
 
+    if (!validateDateTime()) {
+      if (dateTimeErrors.pastDate) {
+        setModalMessage({
+          success: "",
+          error: "Cannot book appointment on a past date",
+        });
+      } else if (dateTimeErrors.pastTime) {
+        setModalMessage({
+          success: "",
+          error: "Cannot book appointment at a past time",
+        });
+      } else if (timeWarning) {
+        setModalMessage({
+          success: "",
+          error: timeWarning,
+        });
+      }
+      setSavingData(false);
+      setLoading(false);
+      onOpen();
+      return;
+    }
     if (selectedDoctor) {
       const workingHours = selectedDoctor.workingHours;
 
@@ -233,6 +453,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
       onOpen();
+      setSavingData(false);
+      setLoading(false);
       return;
     }
     setLoading(true);
@@ -273,7 +495,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       });
       onOpen();
       onUsersAdded();
+      //          setTimeout(() => {
+      //   if (onClose) onClose(); // Close main modal after 3s
+      // }, 3000);
+
+      onMessage({ success: "Appointment created successfully!" });
+
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 3000);
     } catch (error: any) {
+      setSavingData(false);
+      setLoading(false);
       console.error(
         "Error creating appointment:",
         error.response?.data || error.message,
@@ -363,9 +596,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
       const params: any = {};
       params.page = 1;
-      params.pageSize = 50;
-      params.from = "2024-12-04T03:32:25.812Z";
-      params.to = "2024-12-11T03:32:25.815Z";
+      params.pageSize = 1000;
+      // params.from = "2024-12-04T03:32:25.812Z";
+      // params.to = "2024-12-11T03:32:25.815Z";
       params.notificationStatus = [
         "Whatsapp notifications paused",
         "SMS notifications paused",
@@ -386,7 +619,21 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           dob: patient.dob, // Include DOB
         }),
       );
-      setPatientList(transformedPatients);
+      // setPatientList(transformedPatients);
+      // setPatientList([
+      //   {
+      //     label: "Create New Patient...",
+      //     value: "create-new-patient",
+      //     description: "Click to add a new patient",
+      //     dob: "",
+      //     workingHours: "",
+      //   },
+      //   ...transformedPatients,
+      // ]);
+      setPatientList((prev) => [
+        prev[0], // Keep the first item (Create New Patient)
+        ...transformedPatients,
+      ]);
 
       // Step 6: Fetch  Doctors
       const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
@@ -394,7 +641,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       // const params: any = {};
 
       params.page = 1;
-      params.pageSize = 50;
+      params.pageSize = 100;
       // params.from = '2024-12-04T03:32:25.812Z';
       // params.to = '2024-12-11T03:32:25.815Z';
 
@@ -411,7 +658,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       const doctors = allUsers.filter((user: any) => {
         try {
           const userJson = JSON.parse(user.json);
-          return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+          // return userJson.designation === "Doctor"; // Check if designation is "Doctor"
+          return (
+            userJson.designation &&
+            (userJson.designation.toLowerCase() === "doctor" ||
+              userJson.designation === "Doctor")
+          );
         } catch (err) {
           console.error("Error parsing JSON for user:", user, err);
           return false;
@@ -484,10 +736,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   const maxDate = new Date();
   maxDate.setMonth(minDate.getMonth() + 1);
 
-  const handleDateChange = (date: string) => {
-    setFormData({ ...formData, dateTime: date });
-  };
-
   // Function to check if the selected times are within the doctor's working hours
   const validateWorkingHours = () => {
     const { startDateTime, endDateTime, doctorId } = formData;
@@ -521,12 +769,97 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
     }
   }, [formData.doctorId, formData.startDateTime, formData.endDateTime]);
 
+  //   const handleNewPatientCreated = () => {
+  //   setShowAddPatientModal(false);
+  //   fetchAppointmentTypes(); // This will refetch patients including the new one
+  //   setModalMessage({
+  //     success: "Patient created successfully! Now select the new patient from the dropdown.",
+  //     error: "",
+  //   });
+  //   onOpen();
+  // };
+  const handleNewPatientCreated = () => {
+    setShowAddPatientModal(false);
+    fetchAppointmentTypes();
+  };
   return (
     <div className="  grid grid-cols-1 gap-9  ">
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        /* Input group styles */
+
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* NextUI component overrides */
+        .nextui-input-wrapper,
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input,
+          textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+      `}</style>
+
       <div className="flex flex-col w-full ">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
-          <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-            {/* <div>
+          {/* <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
+             <div>
               <Switch
                 defaultSelected
                 color="secondary"
@@ -535,22 +868,32 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               >
                 Edit
               </Switch>
-            </div> */}
-          </div>
+            </div> 
+          </div> */}
           <form onSubmit={handleSubmit}>
             {/* {warningMessage && (
               <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
                 {warningMessage}
               </div>
             )} */}
-            <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div>
-              <div className="flex flex-col w-full"></div>
+            <div className="p-2.5 sm:4.5">
+              {/* <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div> */}
+              {/* <div className="flex flex-col w-full"></div> */}
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   label="Appointment Date"
                   labelPlacement="outside"
                   variant="bordered"
@@ -559,20 +902,37 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   type="date"
                   value={formData.dateTime || ""}
                   onChange={(e) => handleDateChange(e.target.value)}
+                  isInvalid={dateTimeErrors.pastDate}
+                  errorMessage={
+                    dateTimeErrors.pastDate ? "Cannot select a past date" : ""
+                  }
                 />
               </div>
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div className="flex flex-col w-full">
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
-                    {timeWarning}
+                    <p className=" text-xs sm:text-sm md:text-lg">
+                      {" "}
+                      {timeWarning}
+                    </p>
                   </div>
                 )}
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment Start Time"
                   labelPlacement="outside"
@@ -581,8 +941,22 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
                   onChange={(time) => handleTimeChange(time, "startDateTime")}
+                  isInvalid={dateTimeErrors.pastTime}
+                  errorMessage={
+                    dateTimeErrors.pastTime ? "Cannot select a past time" : ""
+                  }
                 />
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Appointment End Time"
                   labelPlacement="outside"
@@ -596,15 +970,28 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                    <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>
                 )} */}
               </div>
-              <div style={{ marginTop: 20 }}>
+              <div
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
+              >
                 <Textarea
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
                   labelPlacement="outside"
                   variant="bordered"
                   label="Remarks"
-                  defaultValue="Patient is having chronic neck pain."
-                  errorMessage="The address should be at max 255 characters long."
+                  defaultValue=""
+                  errorMessage="The remarks should be at max 255 characters long."
                   isDisabled={!edit}
                   onChange={(e) =>
                     setFormData({
@@ -615,10 +1002,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 />
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -643,10 +1038,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               </div>
 
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -670,10 +1073,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 </Autocomplete>
               </div>
               <div
-                className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"
-                style={{ marginTop: 20 }}
+                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                // style={{ marginTop: 20 }}
               >
-                <Autocomplete
+                {/* <Autocomplete
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -694,8 +1097,65 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                       {item.label}
                     </AutocompleteItem>
                   )}
-                </Autocomplete>
+                </Autocomplete> */}
+
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  defaultItems={patientList}
+                  label="Select Patient"
+                  placeholder="Search a Patient"
+                  onSelectionChange={(key) =>
+                    handlePatientSelection(key as string)
+                  }
+                  defaultFilter={(textValue, inputValue) => {
+                    // Always show "Create New Patient" option regardless of search
+                    if (textValue === "Create New Patient...") {
+                      return true;
+                    }
+                    // Filter other patients based on search input
+                    return textValue
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase());
+                  }}
+                >
+                  {(item) => (
+                    <AutocompleteItem
+                      key={item.value}
+                      variant="shadow"
+                      color={
+                        item.value === "create-new-patient"
+                          ? "primary"
+                          : TOOL_TIP_COLORS.secondary
+                      }
+                      className={
+                        item.value === "create-new-patient" ? "font-bold" : ""
+                      }
+                    >
+                      {item.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+
+                <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -722,12 +1182,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
-                    {timeWarning}
+                    <p className=" text-xs sm:text-sm md:text-lg  ">
+                      {" "}
+                      {timeWarning}
+                    </p>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col w-full"
+                // style={{ marginTop: 20 }}
+              >
                 <label>
                   Mark uncheck if no notification has to be sent for
                   appointment.
@@ -747,8 +1213,8 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 // onPress={onOpen}
                 // isDisabled={!edit || loading}
                 // color={TOOL_TIP_COLORS.secondary}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
-                style={{ minWidth: 290, marginBottom: 20 }}
+                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500  "
+                style={{ minWidth: 230, marginBottom: 20 }}
               >
                 {savingData ? "Saving..." : "Save Changes"}
               </button>
@@ -763,175 +1229,91 @@ const AddAppointment: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
           </form>
         </div>
       </div>
+      <div>
+        <style>
+          {" "}
+          {`
+        /* Base styling for the button */
+        .responsive-button {
+          min-height: 55px;
+          font-size: 1rem;
+          padding: 0.8rem 1.5rem;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+          .responsive-button {
+            font-size: 0.9rem; /* Smaller font size */
+            padding: 0.7rem 1.2rem; /* Reduced padding */
+            min-height: 50px; /* Smaller height */
+          }
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh; /* Adjust as needed */
+  overflow-y: auto;
+  width: 97%; /* Adjust as needed */
+  max-width: 800px; /* Adjust as needed */
+  // background: white;
+  border-radius: 15px;
+  padding-top:10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
+}
+
+/* Ensure the modal is scrollable */
+.modal-body {
+  max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+  overflow-y: auto;
+}
+        }
+
+        @media (max-width: 480px) {
+          .responsive-button {
+            font-size: 0.7rem; /* Further reduce font size */
+            padding: 0.5rem 0.9rem; /* Further reduce padding */
+            min-height: 40px; /* Smaller height */
+          } 
+        }
+
+
+
+      `}
+        </style>
+        <Modal
+          isOpen={showAddPatientModal}
+          onClose={() => setShowAddPatientModal(false)}
+          style={{
+            maxWidth: 800,
+            maxHeight: 600,
+            overflowY: "scroll",
+            marginTop: "10%",
+          }}
+          className="max-w-[95%] sm:max-w-[800px] mx-auto debug-border"
+          classNames={{
+            backdrop:
+              "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
+          }}
+        >
+          <ModalContent className="modal-content">
+            <ModalHeader>Create New Patient</ModalHeader>
+            <ModalBody>
+              <AddNewPatient onPatientAdded={handleNewPatientCreated} />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="danger"
+                variant="light"
+                onPress={() => setShowAddPatientModal(false)}
+              >
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 };
 export default AddAppointment;
-
-{
-  /* <Modal isOpen={isOpen} onClose={handleModalClose}>
-                <ModalContent>
-                  <ModalHeader>{loading ?(<div className="flex justify-center">
-                        
-                      </div>):  modalMessage.success ? <p className="text-green-600">Success</p> : <p className="text-red-600">Error</p>}</ModalHeader>
-                  <ModalBody>
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <Spinner size="lg" />
-                      </div>
-                    ) : modalMessage.success ? (
-                      <p className="text-green-600">{modalMessage.success}</p>
-                    ) : (
-                      <p className="text-red-600">{modalMessage.error}</p>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    {!loading && (
-                      <Button color="primary" onPress={handleModalClose}>
-                        Ok
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </ModalContent>
-              </Modal> */
-}
-
-// const fetchPatients = async () => {
-//   setLoading(true);
-//   try {
-//     const token = localStorage.getItem("docPocAuth_token");
-
-//     const hospitalEndpoint = `${API_URL}/hospital`;
-//     const hospitalResponse = await axios.get(hospitalEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedHospitalId = hospitalResponse.data[0].id;
-//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-//     const branchResponse = await axios.get(branchEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     if (!branchResponse.data || branchResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedBranchId = branchResponse.data[0]?.id;
-
-//     const endpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
-
-//     const params: any = {};
-
-//     params.page = 1;
-//     params.pageSize = 50;
-//     params.from = '2024-12-04T03:32:25.812Z';
-//     params.to = '2024-12-11T03:32:25.815Z';
-//     params.notificationStatus = ['Whatsapp notifications paused', 'SMS notifications paused'];
-
-//     const response = await axios.get(endpoint, {
-//       params,
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     console.log(response.data.rows)
-//     const transformedPatients: AutocompleteItem[] = response.data.rows.map((patient: any) => ({
-//       label: patient.name,
-//       value: patient.id,
-//       description: `${patient.phone} | ${patient.email}`,
-//       dob: patient.dob, // Include DOB
-//     }));
-//     setPatientList(transformedPatients);
-//     // setTotalPatient(response.data.count || response.data.length);
-
-//   } catch (err) {
-//     // setError("Failed to fetch patients.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-// const fetchDoctors = async () => {
-//   setLoading(true);
-//   try {
-//     const token = localStorage.getItem("docPocAuth_token");
-//     const hospitalEndpoint = `${API_URL}/hospital`;
-//     const hospitalResponse = await axios.get(hospitalEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     if (!hospitalResponse.data || hospitalResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedHospitalId = hospitalResponse.data[0].id;
-//     const branchEndpoint = `${API_URL}/hospital/branches/${fetchedHospitalId}`;
-//     const branchResponse = await axios.get(branchEndpoint, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     if (!branchResponse.data || branchResponse.data.length === 0) {
-//       return;
-//     }
-
-//     const fetchedBranchId = branchResponse.data[0]?.id;
-
-//     const endpoint = `${API_URL}/user/list/${fetchedBranchId}`;
-
-//     const params: any = {};
-
-//     params.page = 1;
-//     params.pageSize = 50;
-//     // params.from = '2024-12-04T03:32:25.812Z';
-//     // params.to = '2024-12-11T03:32:25.815Z';
-
-//     const response = await axios.get(endpoint, {
-//       params,
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     const allUsers = response.data.rows;
-
-//     // Filter and transform only doctors
-//     const doctors = allUsers.filter((user: any) => {
-//       try {
-//         const userJson = JSON.parse(user.json);
-//         return userJson.designation === "Doctor"; // Check if designation is "Doctor"
-//       } catch (err) {
-//         console.error("Error parsing JSON for user:", user, err);
-//         return false;
-//       }
-//     });
-
-//     const transformedDoctors: AutocompleteItem[] = doctors.map((doctor: any) => ({
-//       label: doctor.name,
-//       value: doctor.id,
-//       description: `${doctor.phone} | ${doctor.email}`,
-//     }));
-//     setDoctorList(transformedDoctors)
-//     // setUsers(response.data.rows || response.data);
-//     // setTotalUsers(response.data.count || response.data.length);
-
-//   } catch (err) {
-//     // setError("Failed to fetch patients.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };

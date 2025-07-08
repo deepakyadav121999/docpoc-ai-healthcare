@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -10,14 +10,72 @@ import {
 } from "@nextui-org/react";
 import { PlusIcon } from "@/components/CalenderBox/PlusIcon";
 
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
+
 interface ParentComponentProps {
   child: React.ReactNode;
   headingName: string;
+  onClose?: () => void;
+  onMessage?: (message: ModalMessage) => void;
+}
+interface ChildComponentProps {
+  onClose?: () => void;
+  onMessage?: (message: ModalMessage) => void;
+  // Add other props your child component might need
 }
 
-const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+const App: React.FC<ParentComponentProps> = ({
+  child,
+  headingName,
+  onClose,
+}) => {
+  const {
+    isOpen,
+    onOpen,
+    onOpenChange,
+    onClose: internalClose,
+  } = useDisclosure();
+  const [modalMessage, setModalMessage] = useState<ModalMessage>({});
+  // const handleClose = () => {
+  //   // This closes the modal (toggles isOpen)
+  //    onOpenChange();
+  //   if (onClose) {
+  //     onClose(); // Call parent's onClose
+  //   }
+  // };
+  const handleMessage = (message: ModalMessage) => {
+    setModalMessage(message);
+    // Auto-close only on success after 3 seconds
+    if (message.success) {
+      setTimeout(() => {
+        onOpenChange();
+        handleClose();
+      }, 3000);
+    }
+  };
 
+  const handleClose = () => {
+    // Only allow closing if it's a success message or manual close
+    if (modalMessage.success) {
+      onOpenChange();
+    }
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const handlecloseButton = () => {
+    if (modalMessage.success) {
+      onOpenChange();
+    }
+    if (onClose) {
+      onClose();
+    }
+    internalClose();
+  };
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -31,6 +89,12 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
       }
     }
   }, [isOpen]);
+
+  //  useEffect(() => {
+  //   if (!isOpen && modalClose) {
+  //     modalClose();
+  //   }
+  // }, [isOpen, modalClose]);
 
   return (
     <div>
@@ -59,16 +123,40 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
           backdrop:
             "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
         }}
+        onClose={onClose}
       >
         <ModalContent className="modal-content">
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className="flex flex-col gap-0.5">
                 {headingName}
               </ModalHeader>
-              <ModalBody className="modal-body">{child}</ModalBody>
+              {/* <ModalBody className="modal-body">{child}</ModalBody> */}
+              {/* <ModalBody>
+                {React.isValidElement(child)
+                  ? React.cloneElement(child, { onClose: handleClose })
+                  : child}
+              </ModalBody> */}
+              {/* <ModalBody>
+                {React.isValidElement<ChildComponentProps>(child)
+                  ? React.cloneElement(child, { onClose: handleClose } as ChildComponentProps)
+                  : child}
+              </ModalBody> */}
+              <ModalBody className="modal-body">
+                {React.isValidElement<ChildComponentProps>(child)
+                  ? React.cloneElement(child, {
+                      onClose: handleClose,
+                      onMessage: handleMessage,
+                    })
+                  : child}
+              </ModalBody>
+
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={handlecloseButton}
+                >
                   Close
                 </Button>
               </ModalFooter>
@@ -101,12 +189,12 @@ const App: React.FC<ParentComponentProps> = ({ child, headingName }) => {
   transform: translate(-50%, -50%);
   max-height: 90vh; /* Adjust as needed */
   overflow-y: auto;
-  width: 97%; /* Adjust as needed */
+  width: 99%; /* Adjust as needed */
   max-width: 800px; /* Adjust as needed */
   // background: white;
   border-radius: 15px;
   padding-top:10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
 }
 
 /* Ensure the modal is scrollable */

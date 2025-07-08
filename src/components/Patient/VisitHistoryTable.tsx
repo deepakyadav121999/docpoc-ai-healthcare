@@ -548,7 +548,7 @@ interface VisitData {
   date: string;
   doctor: string;
   report: string;
-  hasReport: boolean;
+  hasReport?: boolean;
 }
 
 interface VisitHistoryTableProps {

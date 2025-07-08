@@ -1,16 +1,37 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import axios from "axios";
 import EnhancedModal from "../common/Modal/EnhancedModal";
-import { useDisclosure } from "@nextui-org/react";
+import {
+  Autocomplete,
+  AutocompleteItem,
+  Button,
+  useDisclosure,
+} from "@nextui-org/react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { updateAccessToken } from "@/store/slices/profileSlice";
 import { RootState } from "../../store";
 import { Spinner } from "@nextui-org/spinner";
 import { AppDispatch } from "../../store";
+import {
+  // GLOBAL_ACTION_ICON_COLOR,
+  // GLOBAL_DANGER_COLOR,
+  // // GLOBAL_ICON_COLOR,
+  // GLOBAL_ICON_COLOR_WHITE,
+  // GLOBAL_SUCCESS_COLOR,
+  // MODAL_TYPES,
+  TOOL_TIP_COLORS,
+  // USER_ICONS,
+} from "@/constants";
+// import { SVGIconProvider } from "@/constants/svgIconProvider";
+// import IconButton from "../Buttons/IconButton";
+import Cropper, { Area } from "react-easy-crop";
+
 const API_URL = process.env.API_URL;
+const NEXT_PUBLIC_AWS_URL = process.env.NEXT_PUBLIC_AWS_URL;
+const NEXT_PUBLIC_S3_BUCKET_URL = process.env.NEXT_PUBLIC_S3_BUCKET_URL;
 
 interface UserProfile {
   id: string;
@@ -28,7 +49,27 @@ interface UserProfile {
   updatedAt: string;
   deletedAt: string | null;
   profilePicture: string | null;
+  designation?: string;
 }
+interface Designation {
+  value: string;
+  label: string;
+}
+interface UserJsonData {
+  dob?: string;
+  designation?: string;
+  workingHours?: string;
+  bio?: string;
+  [key: string]: any;
+}
+// interface PasswordFormData {
+//   oldPassword: string;
+//   newPassword: string;
+//   confirmPassword: string;
+// }
+const DEFAULT_PROFILE_IMAGE =
+  "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg";
+
 const SettingBoxes = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
@@ -37,10 +78,92 @@ const SettingBoxes = () => {
   const [loading, setLoading] = useState(false);
   const profile = useSelector((state: RootState) => state.profile.data);
   const [accessToken, setAccessToken] = useState("");
+
   const [photoLoading, setPhotoLoading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
+  // const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [showSaveButton, setShowSaveButton] = useState(false);
+  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const designations: Designation[] = [
+    { label: "Doctor", value: "Doctor" },
+    { label: "Nurse", value: "Nurse" },
+    { label: "Staff", value: "Staff" },
+    { label: "Admin", value: "Admin" },
+  ];
+  const [editDesignation, setEditDesignation] = useState(false);
+  const [tempDesignation, setTempDesignation] = useState("");
+  const [editBio, setEditBio] = useState(false);
+  const [tempBio, setTempBio] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
+  //   oldPassword: "",
+  //   newPassword: "",
+  //   confirmPassword: "",
+  // });
+  // const [passwordErrors, setPasswordErrors] = useState({
+  //   newPassword: "",
+  //   confirmPassword: "",
+  // });
+  // const [isChangingPassword, setIsChangingPassword] = useState(false);
+  // const [showPasswordForm, setShowPasswordForm] = useState(false);
+  // const [isSocialLogin] = useState(false);
+
+  // Parse the JSON field
+  const userJsonData: UserJsonData = formData.json
+    ? JSON.parse(formData.json)
+    : {};
+  const currentDesignation = userJsonData.designation || "";
+  const currentBio = userJsonData.bio || "";
+
+  // Handle designation update
+  const toggleEditDesignation = () => {
+    if (editDesignation) {
+      // Save the changes
+      const updatedJsonData = {
+        ...userJsonData,
+        designation: tempDesignation,
+      };
+
+      setFormData({
+        ...formData,
+        json: JSON.stringify(updatedJsonData),
+      });
+    } else {
+      // Start editing - copy current designation to temp
+      setTempDesignation(currentDesignation);
+    }
+    setEditDesignation(!editDesignation);
+  };
+
+  const toggleEditBio = () => {
+    if (editBio) {
+      // Save the changes
+      const updatedJsonData = {
+        ...userJsonData,
+        bio: tempBio,
+      };
+
+      setFormData({
+        ...formData,
+        json: JSON.stringify(updatedJsonData),
+      });
+    } else {
+      // Start editing - copy current bio to temp
+      setTempBio(currentBio);
+    }
+    setEditBio(!editBio);
+  };
   const fetchProfiles = async () => {
     setLoading(true);
     const token = localStorage.getItem("docPocAuth_token");
@@ -76,8 +199,12 @@ const SettingBoxes = () => {
     setFormData({ ...formData, [name]: value });
   };
   const handleModalClose = () => {
-    dispatch(updateAccessToken(accessToken));
+    if (accessToken) {
+      dispatch(updateAccessToken(accessToken));
+    }
+
     setModalMessage({ success: "", error: "" });
+    setLoading(false);
     onClose();
   };
 
@@ -111,12 +238,23 @@ const SettingBoxes = () => {
 
           setAccessToken(newAccessToken);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error updating profile:", error);
-        setModalMessage({ success: "", error: "Error updating profile" });
+        // setModalMessage({ success: "", error: "Error updating profile" });
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Error updating profile";
+
+        setModalMessage({
+          success: "",
+          error: errorMessage,
+        });
+        setLoading(false);
       } finally {
-        setLoading(false); // Ensure loading is set to false in both success and error cases
+        // Ensure loading is set to false in both success and error cases
         onOpen(); // Open the modal to show the message
+        setLoading(false);
       }
     } else {
       console.error("User profile ID is missing");
@@ -133,7 +271,7 @@ const SettingBoxes = () => {
 
     if (header) {
       // Only modify z-index when modal is open
-      if (isOpen) {
+      if (isOpen || showCropper || isDeleteModalOpen) {
         header.classList.remove("z-999");
         header.classList.add("z-0");
       } else {
@@ -141,103 +279,545 @@ const SettingBoxes = () => {
         header.classList.add("z-999");
       }
     }
-  }, [isOpen]);
+    return () => {
+      if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+        URL.revokeObjectURL(tempPhotoUrl);
+      }
+    };
+  }, [isOpen, tempPhotoUrl, profilePhotoUrl, showCropper, isDeleteModalOpen]);
+
+  // const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   // Check file type and size
+  //   if (!file.type.match("image.*")) {
+  //     setModalMessage({ success: "", error: "Please select an image file" });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   if (file.size > 2 * 1024 * 1024) {
+  //     // 2MB limit
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Image size should be less than 2MB",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   // Create preview URL
+  //   const previewUrl = URL.createObjectURL(file);
+  //   setTempPhotoUrl(previewUrl);
+  //   setPhotoFile(file);
+  // };
+
+  // const handleSavePhoto = async () => {
+  //   if (!photoFile) return;
+
+  //   setPhotoLoading(true);
+
+  //   const sanitizedUsername = profile.name
+  //     .replace(/\s+/g, "")
+  //     .toLowerCase()
+  //     .slice(0, 9);
+  //   const folderName = `${sanitizedUsername}${profile.id.slice(-6)}`;
+
+  //   try {
+  //     const data = new FormData();
+  //     data.append("file", photoFile);
+  //     data.append("folder", folderName);
+  //     data.append("contentDisposition", "inline");
+
+  //     const config = {
+  //       method: "post",
+  //       maxBodyLength: Infinity,
+  //       url: `${NEXT_PUBLIC_S3_BUCKET_URL}`,
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //       data: data,
+  //     };
+
+  //     const response = await axios.request(config);
+
+  //     if (response.data) {
+  //       const fileUrl = `${NEXT_PUBLIC_AWS_URL}/${folderName}/${photoFile.name}`;
+
+  //       // Update the user's profile with the new profile picture URL
+  //       const token = localStorage.getItem("docPocAuth_token");
+  //       const userEndpoint = `${API_URL}/user`;
+
+  //       const updatedUserData = {
+  //         ...userProfile,
+  //         profilePicture: fileUrl,
+  //       };
+
+  //       const updateResponse = await axios.patch(
+  //         userEndpoint,
+  //         updatedUserData,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //             "Content-Type": "application/json",
+  //           },
+  //         },
+  //       );
+
+  //       const newAccessToken = updateResponse.data.access_token;
+
+  //       if (newAccessToken) {
+  //         // Dispatch the updateAccessToken thunk
+
+  //         setAccessToken(newAccessToken);
+  //       }
+
+  //       setProfilePhotoUrl(fileUrl);
+  //       setUserProfile(updateResponse.data);
+  //       setModalMessage({
+  //         success: "Profile picture updated successfully",
+  //         error: "",
+  //       });
+  //       onOpen();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating photo:", error);
+  //     setModalMessage({ success: "", error: "Error updating profile picture" });
+  //     onOpen();
+  //   } finally {
+  //     setPhotoLoading(false);
+  //   }
+  // };
+
+  // const handleDeletePhoto = () => {
+  //   if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+  //     URL.revokeObjectURL(tempPhotoUrl);
+  //   }
+  //   setTempPhotoUrl(profilePhotoUrl);
+  //   setPhotoFile(null);
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
+
+  // const handleRemovePhoto = async () => {
+  //   if (!profilePhotoUrl) return;
+
+  //   setPhotoLoading(true);
+
+  //   try {
+  //     const token = localStorage.getItem("docPocAuth_token");
+  //     const userEndpoint = `${API_URL}/user`;
+
+  //     const updatedUserData = {
+  //       ...userProfile,
+  //       profilePicture: null,
+  //     };
+
+  //     const updateResponse = await axios.patch(
+  //       userEndpoint,
+  //       updatedUserData,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       },
+  //     );
+
+  //     setProfilePhotoUrl(null);
+  //     setTempPhotoUrl(null);
+  //     setUserProfile(updateResponse.data);
+  //     setModalMessage({ success: "Profile picture removed successfully", error: "" });
+  //     onOpen();
+  //   } catch (error) {
+  //     console.error("Error removing photo:", error);
+  //     setModalMessage({ success: "", error: "Error removing profile picture" });
+  //     onOpen();
+  //   } finally {
+  //     setPhotoLoading(false);
+  //   }
+  // };
+
+  // Password change functions
+  // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setPasswordForm((prev) => ({ ...prev, [name]: value }));
+
+  //   // Validate passwords
+  //   if (name === "newPassword") {
+  //     if (value.length < 8) {
+  //       setPasswordErrors((prev) => ({
+  //         ...prev,
+  //         newPassword: "Password must be at least 8 characters",
+  //       }));
+  //     } else {
+  //       setPasswordErrors((prev) => ({ ...prev, newPassword: "" }));
+  //     }
+  //   }
+
+  //   if (name === "confirmPassword") {
+  //     if (value !== passwordForm.newPassword) {
+  //       setPasswordErrors((prev) => ({
+  //         ...prev,
+  //         confirmPassword: "Passwords do not match",
+  //       }));
+  //     } else {
+  //       setPasswordErrors((prev) => ({ ...prev, confirmPassword: "" }));
+  //     }
+  //   }
+  // };
+
+  // const handlePasswordSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   // Validate form
+  //   if (passwordErrors.newPassword || passwordErrors.confirmPassword) {
+  //     return;
+  //   }
+
+  //   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+  //     setPasswordErrors((prev) => ({
+  //       ...prev,
+  //       confirmPassword: "Passwords do not match",
+  //     }));
+  //     return;
+  //   }
+
+  //   setIsChangingPassword(true);
+
+  //   try {
+  //     const token = localStorage.getItem("docPocAuth_token");
+  //     const passwordEndpoint = `${process.env.API_URL}/password/change`;
+
+  //     const payload = {
+  //       email: userProfile?.email || "",
+  //       phone: userProfile?.phone || null,
+  //       currentPassword: passwordForm.oldPassword,
+  //       newPassword: passwordForm.newPassword,
+  //       // username: userProfile?.username || ""
+  //     };
+
+  //     await axios.post(passwordEndpoint, payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     setModalMessage({ success: "Password changed successfully", error: "" });
+  //     onOpen();
+  //     setPasswordForm({
+  //       oldPassword: "",
+  //       newPassword: "",
+  //       confirmPassword: "",
+  //     });
+  //     // setShowPasswordForm(false);
+  //   } catch (error: any) {
+  //     console.error("Error changing password:", error);
+  //     const errorMsg =
+  //       error.response?.data?.message || "Error changing password";
+  //     setModalMessage({ success: "", error: errorMsg });
+  //     onOpen();
+  //   } finally {
+  //     setIsChangingPassword(false);
+  //   }
+  // };
+
+  const createImageElement = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = document.createElement("img");
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", (error) => reject(error));
+      image.src = url;
+    });
+
+  const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: Area,
+  ): Promise<Blob> => {
+    const image = await createImageElement(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Could not get canvas context");
+    }
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height,
+    );
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Canvas is empty"));
+          return;
+        }
+        resolve(blob);
+      }, "image/jpeg");
+    });
+  };
+
+  // Update the photo change handler
+  // const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   // Check file type and size
+  //   if (!file.type.match("image.*")) {
+  //     setModalMessage({ success: "", error: "Please select an image file" });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   if (file.size > 2 * 1024 * 1024) {
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Image size should be less than 2MB",
+  //     });
+  //     onOpen();
+  //     return;
+  //   }
+
+  //   // Create preview URL
+  //   const previewUrl = URL.createObjectURL(file);
+  //   setTempPhotoUrl(previewUrl);
+  //   setPhotoFile(file);
+  //   setShowSaveButton(true);
+  //   setShowUploadSection(false);
+  // };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPhotoLoading(true);
+    // Check file type and size
+    if (!file.type.match("image.*")) {
+      setModalMessage({ success: "", error: "Please select an image file" });
+      onOpen();
+      return;
+    }
 
-    // Construct the folder name based on the user's name and ID
-    const sanitizedUsername = profile.name
-      .replace(/\s+/g, "")
-      .toLowerCase()
-      .slice(0, 9);
-    const folderName = `${sanitizedUsername}${profile.id.slice(-6)}`;
-    // const uniqueFileName = `${Date.now()}${file.name}`;
+    if (file.size > 2 * 1024 * 1024) {
+      setModalMessage({
+        success: "",
+        error: "Image size should be less than 2MB",
+      });
+      onOpen();
+      return;
+    }
 
+    // Create preview URL and show cropper
+    const previewUrl = URL.createObjectURL(file);
+    setTempPhotoUrl(previewUrl);
+    setPhotoFile(file);
+    setShowCropper(true); // Show cropper immediately
+    setShowUploadSection(false); // Hide upload section
+  };
+
+  // Update the delete handler - now only works with temp data
+  // const handleDeletePhoto = () => {
+  //   if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+  //     URL.revokeObjectURL(tempPhotoUrl);
+  //   }
+  //   setTempPhotoUrl(DEFAULT_PROFILE_IMAGE);
+  //   setPhotoFile(null);
+  //   setShowSaveButton(true);
+  //   setShowUploadSection(false);
+
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
+
+  const handleUpdatePhoto = () => {
+    setShowUploadSection(true);
+    setShowSaveButton(true);
+  };
+
+  // const handleImageClick = () => {
+  //   if (tempPhotoUrl || profilePhotoUrl) {
+  //     setShowCropper(true);
+  //   }
+  // };
+
+  // const handleImageClick = () => {
+  //   // Don't open cropper if it's the default image or existing profile photo
+  //   if (
+  //     (!tempPhotoUrl && profilePhotoUrl === DEFAULT_PROFILE_IMAGE) ||
+  //     (!tempPhotoUrl && !showUploadSection)
+  //   ) {
+  //     return;
+  //   }
+  //   setShowCropper(true);
+  // };
+
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const generateUniqueFilename = (originalName: string): string => {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const extension = originalName.split(".").pop();
+    return `profile-${timestamp}-${randomString}.${extension || "jpg"}`;
+  };
+
+  const handleSaveCroppedImage = async () => {
     try {
-      const data = new FormData();
-      data.append("file", file);
-      data.append("folder", folderName);
-      data.append("contentDisposition", "inline");
+      if (!croppedAreaPixels || !(tempPhotoUrl || profilePhotoUrl)) return;
 
-      const config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://u7b8g2ifb9.execute-api.ap-south-1.amazonaws.com/dev/file-upload",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        data: data,
-      };
+      const croppedBlob = await getCroppedImg(
+        tempPhotoUrl || profilePhotoUrl || "",
+        croppedAreaPixels,
+      );
 
-      const response = await axios.request(config);
+      if (croppedBlob) {
+        // Create a new file from the blob
+        const fileName = generateUniqueFilename("profile.jpg");
+        const croppedFile = new File([croppedBlob], fileName, {
+          type: "image/jpeg",
+        });
 
-      // if (response.data) {
-
-      //   const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-      //   console.log("File uploaded successfully:", fileUrl);
-
-      //   const token = localStorage.getItem("docPocAuth_token");
-      //   const metadataFormData = new FormData();
-      //   metadataFormData.append("userId", profile.id);
-      //   metadataFormData.append("urlRelation", "profilePhotoUrl");
-      //   metadataFormData.append("url", fileUrl);
-      //   metadataFormData.append("branchId", profile.branchId || "");
-      //   metadataFormData.append("file",file)
-      //   const metadataResponse = await axios.post(`${API_URL}/user/upload`, metadataFormData, {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   });
-
-      //   console.log("Photo metadata updated successfully:", metadataResponse.data);
-      // }
-
-      if (response.data) {
-        const fileUrl = `https://docpoc-assets.s3.ap-south-1.amazonaws.com/${folderName}/${file.name}`;
-        console.log("File uploaded successfully:", fileUrl);
-
-        // Update the user's profile with the new profile picture URL
-        const token = localStorage.getItem("docPocAuth_token");
-        const userEndpoint = `${API_URL}/user`;
-
-        // Prepare the updated user data
-        const updatedUserData = {
-          ...userProfile,
-          profilePicture: fileUrl,
-        };
-
-        const updateResponse = await axios.patch(
-          userEndpoint,
-          updatedUserData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        console.log(
-          "Profile picture updated successfully:",
-          updateResponse.data,
-        );
-
-        // Update the local state with the new profile picture URL
-        setProfilePhotoUrl(fileUrl);
-        setUserProfile(updateResponse.data);
-      } else {
-        throw new Error("File upload failed: URL not returned");
+        // Update the temporary photo
+        const croppedUrl = URL.createObjectURL(croppedBlob);
+        setTempPhotoUrl(croppedUrl);
+        setPhotoFile(croppedFile);
+        setShowCropper(false);
       }
     } catch (error) {
+      console.error("Error cropping image:", error);
+      setModalMessage({
+        success: "",
+        error: "Error cropping profile picture",
+      });
+      onOpen();
+    }
+  };
+
+  // Update the save photo handler
+  const handleSavePhoto = async () => {
+    setPhotoLoading(true);
+
+    try {
+      let fileUrl = DEFAULT_PROFILE_IMAGE;
+
+      // If we have a new photo to upload (not the default one)
+      if (photoFile && tempPhotoUrl !== DEFAULT_PROFILE_IMAGE) {
+        const sanitizedUsername = profile.name
+          .replace(/\s+/g, "")
+          .toLowerCase()
+          .slice(0, 9);
+        const folderName = `${sanitizedUsername}${profile.id.slice(-6)}`;
+
+        const data = new FormData();
+        data.append("file", photoFile);
+        data.append("folder", folderName);
+        data.append("contentDisposition", "inline");
+
+        const config = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: `${NEXT_PUBLIC_S3_BUCKET_URL}`,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          data: data,
+        };
+
+        await axios.request(config);
+        fileUrl = `${NEXT_PUBLIC_AWS_URL}/${folderName}/${photoFile.name}`;
+      }
+
+      // Update the user's profile
+      const token = localStorage.getItem("docPocAuth_token");
+      const userEndpoint = `${API_URL}/user`;
+
+      const updatedUserData = {
+        ...userProfile,
+        profilePicture:
+          tempPhotoUrl === DEFAULT_PROFILE_IMAGE
+            ? DEFAULT_PROFILE_IMAGE
+            : fileUrl,
+      };
+
+      const updateResponse = await axios.patch(userEndpoint, updatedUserData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const newAccessToken = updateResponse.data.access_token;
+
+      if (newAccessToken) {
+        setAccessToken(newAccessToken);
+      }
+
+      setProfilePhotoUrl(updatedUserData.profilePicture);
+      setUserProfile(updateResponse.data);
+      setShowSaveButton(false);
+
+      setModalMessage({
+        success: "Profile picture updated successfully",
+        error: "",
+      });
+      onOpen();
+    } catch (error: any) {
       console.error("Error updating photo:", error);
+      // setModalMessage({
+      //   success: "",
+      //   error: "Error updating profile picture",
+      // });
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error updating profile";
+
+      setModalMessage({
+        success: "",
+        error: errorMessage,
+      });
+      onOpen();
     } finally {
       setPhotoLoading(false);
     }
+  };
+
+  const handleDeletePhoto = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePhoto = () => {
+    if (tempPhotoUrl && tempPhotoUrl !== profilePhotoUrl) {
+      URL.revokeObjectURL(tempPhotoUrl);
+    }
+    setTempPhotoUrl(DEFAULT_PROFILE_IMAGE);
+    setPhotoFile(null);
+    setShowSaveButton(true);
+    setShowUploadSection(false);
+    setIsDeleteModalOpen(false);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const cancelDeletePhoto = () => {
+    setIsDeleteModalOpen(false);
   };
 
   return (
@@ -417,38 +997,204 @@ const SettingBoxes = () => {
                 <div className="mb-5.5">
                   <label
                     className="mb-3 block text-body-sm font-medium text-dark dark:text-white"
+                    htmlFor="designation"
+                  >
+                    Designation
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {!editDesignation ? (
+                      <>
+                        <div className="relative w-full">
+                          <span className="absolute left-4.5 top-1/2 -translate-y-1/2">
+                            <svg
+                              className="fill-current"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M10.0008 1.0415C7.81464 1.0415 6.04243 2.81371 6.04243 4.99984C6.04243 7.18596 7.81464 8.95817 10.0008 8.95817C12.1869 8.95817 13.9591 7.18596 13.9591 4.99984C13.9591 2.81371 12.1869 1.0415 10.0008 1.0415ZM7.29243 4.99984C7.29243 3.50407 8.50499 2.2915 10.0008 2.2915C11.4965 2.2915 12.7091 3.50407 12.7091 4.99984C12.7091 6.49561 11.4965 7.70817 10.0008 7.70817C8.50499 7.70817 7.29243 6.49561 7.29243 4.99984Z"
+                                fill=""
+                              />
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M10.0008 10.2082C8.0728 10.2082 6.29653 10.6464 4.9803 11.3868C3.68367 12.1161 2.7091 13.2216 2.7091 14.5832L2.70904 14.6681C2.7081 15.6363 2.70692 16.8515 3.77277 17.7195C4.29733 18.1466 5.03116 18.4504 6.0226 18.6511C7.01681 18.8523 8.31262 18.9582 10.0008 18.9582C11.6889 18.9582 12.9847 18.8523 13.9789 18.6511C14.9704 18.4504 15.7042 18.1466 16.2288 17.7195C17.2946 16.8515 17.2934 15.6363 17.2925 14.6681L17.2924 14.5832C17.2924 13.2216 16.3179 12.1161 15.0212 11.3868C13.705 10.6464 11.9287 10.2082 10.0008 10.2082ZM3.9591 14.5832C3.9591 13.8737 4.47691 13.1041 5.59313 12.4763C6.68976 11.8594 8.24682 11.4582 10.0008 11.4582C11.7547 11.4582 13.3118 11.8594 14.4084 12.4763C15.5246 13.1041 16.0424 13.8737 16.0424 14.5832C16.0424 15.673 16.0088 16.2865 15.4394 16.7502C15.1307 17.0016 14.6145 17.2471 13.7309 17.4259C12.8501 17.6042 11.646 17.7082 10.0008 17.7082C8.35558 17.7082 7.15138 17.6042 6.27059 17.4259C5.38703 17.2471 4.87086 17.0016 4.56209 16.7502C3.99269 16.2865 3.9591 15.673 3.9591 14.5832Z"
+                                fill=""
+                              />
+                            </svg>
+                          </span>
+                          <input
+                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2.5 pl-12.5 pr-4.5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
+                            type="text"
+                            value={currentDesignation || "Not specified"}
+                            readOnly
+                          />
+                        </div>
+                        {/* Show edit button if no designation exists OR user is admin/doctor */}
+                        {(!currentDesignation ||
+                          (userJsonData.designation &&
+                            (userJsonData.designation.toLowerCase() ===
+                              "doctor" ||
+                              userJsonData.designation.toLowerCase() ===
+                                "admin"))) && (
+                          <button
+                            onClick={toggleEditDesignation}
+                            className="text-primary hover:text-primary-dark"
+                            type="button"
+                          >
+                            <svg
+                              className="fill-current"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M9.95153 1.0415L11.2493 1.0415C11.5945 1.0415 11.8743 1.32133 11.8743 1.6665C11.8743 2.01168 11.5945 2.2915 11.2493 2.2915H9.99935C8.01749 2.2915 6.59398 2.29283 5.51066 2.43848C4.44533 2.58171 3.80306 2.85412 3.32835 3.32883C2.85363 3.80355 2.58122 4.44582 2.43799 5.51115C2.29234 6.59447 2.29102 8.01798 2.29102 9.99984C2.29102 11.9817 2.29234 13.4052 2.43799 14.4885C2.58122 15.5539 2.85363 16.1961 3.32835 16.6708C3.80306 17.1456 4.44533 17.418 5.51066 17.5612C6.59398 17.7068 8.01749 17.7082 9.99935 17.7082C11.9812 17.7082 13.4047 17.7068 14.488 17.5612C15.5534 17.418 16.1956 17.1456 16.6704 16.6708C17.1451 16.1961 17.4175 15.5539 17.5607 14.4885C17.7064 13.4052 17.7077 11.9817 17.7077 9.99984V8.74984C17.7077 8.40466 17.9875 8.12484 18.3327 8.12484C18.6779 8.12484 18.9577 8.40466 18.9577 8.74984V10.0476C18.9577 11.9713 18.9577 13.4788 18.7996 14.6551C18.6377 15.859 18.2999 16.809 17.5542 17.5547C16.8086 18.3004 15.8585 18.6382 14.6546 18.8C13.4784 18.9582 11.9708 18.9582 10.0472 18.9582H9.95154C8.02788 18.9582 6.52034 18.9582 5.3441 18.8C4.14016 18.6382 3.19014 18.3004 2.44446 17.5547C1.69879 16.809 1.361 15.859 1.19914 14.6551C1.041 13.4788 1.04101 11.9713 1.04102 10.0477V9.95202C1.04101 8.02836 1.041 6.52083 1.19914 5.34459C1.361 4.14065 1.69879 3.19063 2.44446 2.44495C3.19014 1.69928 4.14016 1.36149 5.3441 1.19963C6.52034 1.04148 8.02787 1.04149 9.95153 1.0415ZM13.9748 1.89643C15.1147 0.756528 16.9628 0.756528 18.1028 1.89643C19.2427 3.03634 19.2427 4.88449 18.1028 6.02439L12.5627 11.5645C12.2533 11.8739 12.0595 12.0678 11.8432 12.2365C11.5884 12.4352 11.3128 12.6055 11.0211 12.7445C10.7735 12.8625 10.5135 12.9492 10.0983 13.0875L7.6779 13.8943C7.23103 14.0433 6.73835 13.927 6.40528 13.5939C6.0722 13.2608 5.95589 12.7682 6.10485 12.3213L6.91166 9.90086C7.05001 9.48572 7.13667 9.22566 7.25468 8.97805C7.39367 8.6864 7.56402 8.41077 7.76272 8.15602C7.93142 7.93973 8.12527 7.74591 8.43472 7.4365L13.9748 1.89643ZM17.2189 2.78032C16.5671 2.12857 15.5104 2.12857 14.8587 2.78032L14.5448 3.09417C14.5637 3.17405 14.5902 3.26923 14.627 3.37539C14.7465 3.71961 14.9725 4.17293 15.3994 4.59983C15.8263 5.02673 16.2796 5.25272 16.6238 5.37215C16.73 5.40898 16.8251 5.43544 16.905 5.45436L17.2189 5.14051C17.8706 4.48876 17.8706 3.43207 17.2189 2.78032ZM15.9203 6.43908C15.4903 6.25417 14.9895 5.95772 14.5155 5.48372C14.0415 5.00971 13.745 4.50886 13.5601 4.07888L9.34727 8.29172C9.00018 8.63881 8.86405 8.77647 8.74836 8.92479C8.6055 9.10795 8.48302 9.30613 8.38308 9.51582C8.30215 9.68564 8.23991 9.86895 8.08469 10.3346L7.72477 11.4144L8.58482 12.2744L9.66456 11.9145C10.1302 11.7593 10.3136 11.697 10.4834 11.6161C10.6931 11.5162 10.8912 11.3937 11.0744 11.2508C11.2227 11.1351 11.3604 10.999 11.7075 10.6519L15.9203 6.43908Z"
+                                fill=""
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full">
+                        <Autocomplete
+                          color={TOOL_TIP_COLORS.secondary}
+                          defaultItems={designations}
+                          label="Select Designation"
+                          placeholder="Search designation..."
+                          selectedKey={tempDesignation}
+                          onSelectionChange={(key) =>
+                            setTempDesignation(key as string)
+                          }
+                          className="w-full"
+                          variant="bordered"
+                        >
+                          {(item) => (
+                            <AutocompleteItem key={item.value}>
+                              {item.label}
+                            </AutocompleteItem>
+                          )}
+                        </Autocomplete>
+                        <div className="mt-2 flex justify-end gap-2">
+                          <button
+                            onClick={() => setEditDesignation(false)}
+                            className="rounded border border-stroke px-3 py-1 text-sm text-dark hover:bg-gray-100 dark:border-dark-3 dark:text-white"
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={toggleEditDesignation}
+                            className="rounded bg-primary px-3 py-1 text-sm text-white hover:bg-primary-dark"
+                            type="button"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-5.5">
+                  <label
+                    className="mb-3 block text-body-sm font-medium text-dark dark:text-white"
                     htmlFor="bio"
                   >
                     BIO
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-5 top-8">
-                      <svg
-                        className="fill-current"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M9.95153 1.0415L11.2493 1.0415C11.5945 1.0415 11.8743 1.32133 11.8743 1.6665C11.8743 2.01168 11.5945 2.2915 11.2493 2.2915H9.99935C8.01749 2.2915 6.59398 2.29283 5.51066 2.43848C4.44533 2.58171 3.80306 2.85412 3.32835 3.32883C2.85363 3.80355 2.58122 4.44582 2.43799 5.51115C2.29234 6.59447 2.29102 8.01798 2.29102 9.99984C2.29102 11.9817 2.29234 13.4052 2.43799 14.4885C2.58122 15.5539 2.85363 16.1961 3.32835 16.6708C3.80306 17.1456 4.44533 17.418 5.51066 17.5612C6.59398 17.7068 8.01749 17.7082 9.99935 17.7082C11.9812 17.7082 13.4047 17.7068 14.488 17.5612C15.5534 17.418 16.1956 17.1456 16.6704 16.6708C17.1451 16.1961 17.4175 15.5539 17.5607 14.4885C17.7064 13.4052 17.7077 11.9817 17.7077 9.99984V8.74984C17.7077 8.40466 17.9875 8.12484 18.3327 8.12484C18.6779 8.12484 18.9577 8.40466 18.9577 8.74984V10.0476C18.9577 11.9713 18.9577 13.4788 18.7996 14.6551C18.6377 15.859 18.2999 16.809 17.5542 17.5547C16.8086 18.3004 15.8585 18.6382 14.6546 18.8C13.4784 18.9582 11.9708 18.9582 10.0472 18.9582H9.95154C8.02788 18.9582 6.52034 18.9582 5.3441 18.8C4.14016 18.6382 3.19014 18.3004 2.44446 17.5547C1.69879 16.809 1.361 15.859 1.19914 14.6551C1.041 13.4788 1.04101 11.9713 1.04102 10.0477V9.95202C1.04101 8.02836 1.041 6.52083 1.19914 5.34459C1.361 4.14065 1.69879 3.19063 2.44446 2.44495C3.19014 1.69928 4.14016 1.36149 5.3441 1.19963C6.52034 1.04148 8.02787 1.04149 9.95153 1.0415ZM13.9748 1.89643C15.1147 0.756528 16.9628 0.756528 18.1028 1.89643C19.2427 3.03634 19.2427 4.88449 18.1028 6.02439L12.5627 11.5645C12.2533 11.8739 12.0595 12.0678 11.8432 12.2365C11.5884 12.4352 11.3128 12.6055 11.0211 12.7445C10.7735 12.8625 10.5135 12.9492 10.0983 13.0875L7.6779 13.8943C7.23103 14.0433 6.73835 13.927 6.40528 13.5939C6.0722 13.2608 5.95589 12.7682 6.10485 12.3213L6.91166 9.90086C7.05001 9.48572 7.13667 9.22566 7.25468 8.97805C7.39367 8.6864 7.56402 8.41077 7.76272 8.15602C7.93142 7.93973 8.12527 7.74591 8.43472 7.4365L13.9748 1.89643ZM17.2189 2.78032C16.5671 2.12857 15.5104 2.12857 14.8587 2.78032L14.5448 3.09417C14.5637 3.17405 14.5902 3.26923 14.627 3.37539C14.7465 3.71961 14.9725 4.17293 15.3994 4.59983C15.8263 5.02673 16.2796 5.25272 16.6238 5.37215C16.73 5.40898 16.8251 5.43544 16.905 5.45436L17.2189 5.14051C17.8706 4.48876 17.8706 3.43207 17.2189 2.78032ZM15.9203 6.43908C15.4903 6.25417 14.9895 5.95772 14.5155 5.48372C14.0415 5.00971 13.745 4.50886 13.5601 4.07888L9.34727 8.29172C9.00018 8.63881 8.86405 8.77647 8.74836 8.92479C8.6055 9.10795 8.48302 9.30613 8.38308 9.51582C8.30215 9.68564 8.23991 9.86895 8.08469 10.3346L7.72477 11.4144L8.58482 12.2744L9.66456 11.9145C10.1302 11.7593 10.3136 11.697 10.4834 11.6161C10.6931 11.5162 10.8912 11.3937 11.0744 11.2508C11.2227 11.1351 11.3604 10.999 11.7075 10.6519L15.9203 6.43908Z"
-                          fill=""
-                        />
-                      </svg>
-                    </span>
+                  <div className="flex items-start gap-2">
+                    <div className="relative w-full">
+                      {!editBio ? (
+                        <>
+                          <textarea
+                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2 pl-2 pr-2 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
+                            name="bio"
+                            id="bio"
+                            rows={6}
+                            placeholder="Write your bio here"
+                            value={currentBio}
+                            readOnly
+                          ></textarea>
+                          <button
+                            onClick={toggleEditBio}
+                            className="absolute right-2 top-2 text-primary hover:text-primary-dark"
+                            type="button"
+                          >
+                            {/* <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg> */}
 
-                    <textarea
-                      className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-5 pl-13 pr-5 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
-                      name="bio"
-                      id="bio"
-                      rows={6}
-                      placeholder="Write your bio here"
-                      value={formData.json || ""}
-                      onChange={handleInputChange}
-                    ></textarea>
+                            {/* <span className="absolute left-5 top-8"> */}
+                            <svg
+                              className="fill-current"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M9.95153 1.0415L11.2493 1.0415C11.5945 1.0415 11.8743 1.32133 11.8743 1.6665C11.8743 2.01168 11.5945 2.2915 11.2493 2.2915H9.99935C8.01749 2.2915 6.59398 2.29283 5.51066 2.43848C4.44533 2.58171 3.80306 2.85412 3.32835 3.32883C2.85363 3.80355 2.58122 4.44582 2.43799 5.51115C2.29234 6.59447 2.29102 8.01798 2.29102 9.99984C2.29102 11.9817 2.29234 13.4052 2.43799 14.4885C2.58122 15.5539 2.85363 16.1961 3.32835 16.6708C3.80306 17.1456 4.44533 17.418 5.51066 17.5612C6.59398 17.7068 8.01749 17.7082 9.99935 17.7082C11.9812 17.7082 13.4047 17.7068 14.488 17.5612C15.5534 17.418 16.1956 17.1456 16.6704 16.6708C17.1451 16.1961 17.4175 15.5539 17.5607 14.4885C17.7064 13.4052 17.7077 11.9817 17.7077 9.99984V8.74984C17.7077 8.40466 17.9875 8.12484 18.3327 8.12484C18.6779 8.12484 18.9577 8.40466 18.9577 8.74984V10.0476C18.9577 11.9713 18.9577 13.4788 18.7996 14.6551C18.6377 15.859 18.2999 16.809 17.5542 17.5547C16.8086 18.3004 15.8585 18.6382 14.6546 18.8C13.4784 18.9582 11.9708 18.9582 10.0472 18.9582H9.95154C8.02788 18.9582 6.52034 18.9582 5.3441 18.8C4.14016 18.6382 3.19014 18.3004 2.44446 17.5547C1.69879 16.809 1.361 15.859 1.19914 14.6551C1.041 13.4788 1.04101 11.9713 1.04102 10.0477V9.95202C1.04101 8.02836 1.041 6.52083 1.19914 5.34459C1.361 4.14065 1.69879 3.19063 2.44446 2.44495C3.19014 1.69928 4.14016 1.36149 5.3441 1.19963C6.52034 1.04148 8.02787 1.04149 9.95153 1.0415ZM13.9748 1.89643C15.1147 0.756528 16.9628 0.756528 18.1028 1.89643C19.2427 3.03634 19.2427 4.88449 18.1028 6.02439L12.5627 11.5645C12.2533 11.8739 12.0595 12.0678 11.8432 12.2365C11.5884 12.4352 11.3128 12.6055 11.0211 12.7445C10.7735 12.8625 10.5135 12.9492 10.0983 13.0875L7.6779 13.8943C7.23103 14.0433 6.73835 13.927 6.40528 13.5939C6.0722 13.2608 5.95589 12.7682 6.10485 12.3213L6.91166 9.90086C7.05001 9.48572 7.13667 9.22566 7.25468 8.97805C7.39367 8.6864 7.56402 8.41077 7.76272 8.15602C7.93142 7.93973 8.12527 7.74591 8.43472 7.4365L13.9748 1.89643ZM17.2189 2.78032C16.5671 2.12857 15.5104 2.12857 14.8587 2.78032L14.5448 3.09417C14.5637 3.17405 14.5902 3.26923 14.627 3.37539C14.7465 3.71961 14.9725 4.17293 15.3994 4.59983C15.8263 5.02673 16.2796 5.25272 16.6238 5.37215C16.73 5.40898 16.8251 5.43544 16.905 5.45436L17.2189 5.14051C17.8706 4.48876 17.8706 3.43207 17.2189 2.78032ZM15.9203 6.43908C15.4903 6.25417 14.9895 5.95772 14.5155 5.48372C14.0415 5.00971 13.745 4.50886 13.5601 4.07888L9.34727 8.29172C9.00018 8.63881 8.86405 8.77647 8.74836 8.92479C8.6055 9.10795 8.48302 9.30613 8.38308 9.51582C8.30215 9.68564 8.23991 9.86895 8.08469 10.3346L7.72477 11.4144L8.58482 12.2744L9.66456 11.9145C10.1302 11.7593 10.3136 11.697 10.4834 11.6161C10.6931 11.5162 10.8912 11.3937 11.0744 11.2508C11.2227 11.1351 11.3604 10.999 11.7075 10.6519L15.9203 6.43908Z"
+                                fill=""
+                              />
+                            </svg>
+                            {/* </span> */}
+                          </button>
+                        </>
+                      ) : (
+                        <div className="relative">
+                          <textarea
+                            className="w-full rounded-[7px] border-[1.5px] border-stroke bg-white py-2 pl-2 pr-2 text-dark focus:border-primary focus-visible:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
+                            name="bio"
+                            id="bio"
+                            rows={6}
+                            placeholder="Write your bio here"
+                            value={tempBio}
+                            onChange={(e) => setTempBio(e.target.value)}
+                          ></textarea>
+                          <div className="mt-2 flex justify-end gap-2">
+                            <button
+                              onClick={() => setEditBio(false)}
+                              className="rounded border border-stroke px-3 py-1 text-sm text-dark hover:bg-gray-100 dark:border-dark-3 dark:text-white"
+                              type="button"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={toggleEditBio}
+                              className="rounded bg-primary px-3 py-1 text-sm text-white hover:bg-primary-dark"
+                              type="button"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -487,8 +1233,8 @@ const SettingBoxes = () => {
           </div>
         </div>
 
-        <div className="col-span-5 xl:col-span-2">
-          <div className="rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+        {/* <div className="col-span-5 xl:col-span-2"> */}
+        {/* <div className="rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
             <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
               <h3 className="font-medium text-dark dark:text-white">
                 Your Photo
@@ -497,38 +1243,43 @@ const SettingBoxes = () => {
             <div className="p-7">
               <form>
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="h-14 w-14 rounded-full">
-                    {profilePhotoUrl ? (
-                      <Image
-                        src={
-                          profilePhotoUrl
-                            ? profilePhotoUrl
-                            : "/images/user/user-03.png"
-                        }
-                        width={55}
-                        height={55}
-                        alt="User"
-                        className="overflow-hidden rounded-full"
-                      />
-                    ) : (
-                      <Image
-                        src="/images/user/user-03.png"
-                        width={55}
-                        height={55}
-                        alt="User"
-                        className="overflow-hidden rounded-full"
-                      />
-                    )}
+                
+                  <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 ">
+                    <Image
+                      src={
+                        tempPhotoUrl ||
+                        profilePhotoUrl ||
+                        "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg"
+                      }
+                      width={128}
+                      height={128}
+                      alt="User"
+                      className="object-cover object-center w-full h-full"
+                      onError={(e) => {
+                        // Fallback to default if image fails to load
+                        e.currentTarget.src =
+                          "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg";
+                      }}
+                    />
                   </div>
                   <div>
                     <span className="mb-1.5 font-medium text-dark dark:text-white">
                       Edit your photo
                     </span>
                     <span className="flex gap-3">
-                      <button className="text-body-sm hover:text-red">
+                      <button
+                        onClick={handleDeletePhoto}
+                        disabled={!photoFile}
+                        className={`text-body-sm ${photoFile ? "hover:text-red" : "text-gray-400 cursor-not-allowed"}`}
+                      >
                         Delete
                       </button>
-                      <button className="text-body-sm hover:text-primary">
+                      <button
+                        type="button"
+                        onClick={handleSavePhoto}
+                        disabled={!photoFile}
+                        className={`text-body-sm ${photoFile ? "hover:text-primary" : "text-gray-400 cursor-not-allowed"}`}
+                      >
                         Update
                       </button>
                     </span>
@@ -540,6 +1291,7 @@ const SettingBoxes = () => {
                   className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
                 >
                   <input
+                    ref={fileInputRef}
                     type="file"
                     name="profilePhoto"
                     id="profilePhoto"
@@ -587,11 +1339,337 @@ const SettingBoxes = () => {
                     className="flex items-center justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
                     type="button"
                     disabled={photoLoading}
+                    onClick={handleSavePhoto}
                   >
                     {photoLoading ? "Saving..." : "Save"}
                   </button>
                 </div>
               </form>
+            </div>
+          </div> */}
+
+        {/* <div className="mt-8 rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+            <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
+              <h3 className="font-medium text-dark dark:text-white">
+                Change Password
+              </h3>
+            </div>
+            <div className="p-7">
+              <form onSubmit={handlePasswordSubmit}>
+                {!isSocialLogin && (
+                  <div className="mb-4">
+                    <label className="mb-2 block text-body-sm font-medium text-dark dark:text-white">
+                      Old Password
+                    </label>
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      value={passwordForm.oldPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full rounded border border-stroke px-3 py-2 dark:border-dark-3 dark:bg-dark-2"
+                      placeholder="Enter old password"
+                    />
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <label className="mb-2 block text-body-sm font-medium text-dark dark:text-white">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full rounded border border-stroke px-3 py-2 dark:border-dark-3 dark:bg-dark-2"
+                    placeholder="Enter new password"
+                  />
+                  {passwordErrors.newPassword && (
+                    <p className="mt-1 text-body-xs text-red-500">
+                      {passwordErrors.newPassword}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2 block text-body-sm font-medium text-dark dark:text-white">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full rounded border border-stroke px-3 py-2 dark:border-dark-3 dark:bg-dark-2"
+                    placeholder="Confirm new password"
+                  />
+                  {passwordErrors.confirmPassword && (
+                    <p className="mt-1 text-body-xs text-red-500">
+                      {passwordErrors.confirmPassword}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // setShowPasswordForm(false);
+                      setPasswordForm({
+                        oldPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                      });
+                      setPasswordErrors({
+                        newPassword: "",
+                        confirmPassword: "",
+                      });
+                    }}
+                    className="rounded border border-stroke px-4 py-2 font-medium text-dark hover:bg-gray-100 dark:border-dark-3 dark:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    // disabled={isChangingPassword || passwordErrors.newPassword || passwordErrors.confirmPassword}
+                    className="flex items-center justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
+                  >
+                    {isChangingPassword ? (
+                      <div className="flex items-center gap-2">
+                        <Spinner size="sm" color="white" />
+                        <span>Changing...</span>
+                      </div>
+                    ) : (
+                      "Change Password"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div> */}
+        {/* </div> */}
+        <div className="col-span-5 xl:col-span-2">
+          <div className="rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+            <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
+              <h3 className="font-medium text-dark dark:text-white">
+                Your Photo
+              </h3>
+            </div>
+            <div className="p-7">
+              <div className="mb-4 flex items-center gap-3">
+                <div
+                  className="relative h-14 w-14 rounded-full overflow-hidden border-2 cursor-pointer"
+                  // onClick={handleImageClick}
+                >
+                  <Image
+                    src={
+                      tempPhotoUrl || profilePhotoUrl || DEFAULT_PROFILE_IMAGE
+                    }
+                    width={128}
+                    height={128}
+                    alt="User"
+                    className="object-cover object-center w-full h-full"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
+                    }}
+                  />
+                </div>
+                <div>
+                  <span className="mb-1.5 font-medium text-dark dark:text-white">
+                    Upload your photo
+                  </span>
+                  <span className="flex gap-3">
+                    {/* <button
+              onClick={handleDeletePhoto}
+              disabled={!profilePhotoUrl && !tempPhotoUrl}
+              className={`text-body-sm ${(profilePhotoUrl || tempPhotoUrl) ? "hover:text-red" : "text-gray-400 cursor-not-allowed"}`}
+              type="button"
+            >
+              Delete
+            </button> */}
+                    <button
+                      onClick={handleDeletePhoto}
+                      disabled={
+                        (!profilePhotoUrl ||
+                          profilePhotoUrl === DEFAULT_PROFILE_IMAGE) &&
+                        !tempPhotoUrl
+                      }
+                      className={`text-body-sm ${(profilePhotoUrl && profilePhotoUrl !== DEFAULT_PROFILE_IMAGE) || tempPhotoUrl ? "hover:text-red" : "text-gray-400 cursor-not-allowed"}`}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUpdatePhoto}
+                      // disabled={!profilePhotoUrl && !tempPhotoUrl}
+                      // className={`text-body-sm ${profilePhotoUrl || tempPhotoUrl ? "hover:text-primary" : "text-gray-400 cursor-not-allowed"}`}
+                    >
+                      Update
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              {showUploadSection && (
+                <div
+                  id="FileUpload"
+                  className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    name="profilePhoto"
+                    id="profilePhoto"
+                    accept="image/png, image/jpg, image/jpeg"
+                    className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
+                    onChange={handlePhotoChange}
+                  />
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M10.4613 2.07827C10.3429 1.94876 10.1755 1.875 10 1.875C9.82453 1.875 9.65714 1.94876 9.53873 2.07827L6.2054 5.7241C5.97248 5.97885 5.99019 6.37419 6.24494 6.6071C6.49969 6.84002 6.89502 6.82232 7.12794 6.56756L9.375 4.10984V13.3333C9.375 13.6785 9.65482 13.9583 10 13.9583C10.3452 13.9583 10.625 13.6785 10.625 13.3333V4.10984L12.8721 6.56756C13.105 6.82232 13.5003 6.84002 13.7551 6.6071C14.0098 6.37419 14.0275 5.97885 13.7946 5.7241L10.4613 2.07827Z"
+                          fill="#5750F1"
+                        />
+                        <path
+                          d="M3.125 12.5C3.125 12.1548 2.84518 11.875 2.5 11.875C2.15482 11.875 1.875 12.1548 1.875 12.5V12.5457C1.87498 13.6854 1.87497 14.604 1.9721 15.3265C2.07295 16.0765 2.2887 16.7081 2.79029 17.2097C3.29189 17.7113 3.92345 17.9271 4.67354 18.0279C5.39602 18.125 6.31462 18.125 7.45428 18.125H12.5457C13.6854 18.125 14.604 18.125 15.3265 18.0279C16.0766 17.9271 16.7081 17.7113 17.2097 17.2097C17.7113 16.7081 17.9271 16.0765 18.0279 15.3265C18.125 14.604 18.125 13.6854 18.125 12.5457V12.5C18.125 12.1548 17.8452 11.875 17.5 11.875C17.1548 11.875 16.875 12.1548 16.875 12.5C16.875 13.6962 16.8737 14.5304 16.789 15.1599C16.7068 15.7714 16.5565 16.0952 16.3258 16.3258C16.0952 16.5565 15.7714 16.7068 15.1599 16.789C14.5304 16.8737 13.6962 16.875 12.5 16.875H7.5C6.30382 16.875 5.46956 16.8737 4.8401 16.789C4.22862 16.7068 3.90481 16.5565 3.67418 16.3258C3.44354 16.0952 3.29317 15.7714 3.21096 15.1599C3.12633 14.5304 3.125 13.6962 3.125 12.5Z"
+                          fill="#5750F1"
+                        />
+                      </svg>
+                    </span>
+                    <p className="mt-2.5 text-body-sm font-medium">
+                      <span className="text-primary">Click to upload</span> or
+                      drag and drop
+                    </p>
+                    <p className="mt-1 text-body-xs">
+                      SVG, PNG, JPG or GIF (max, 800 X 800px)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {showSaveButton && (
+                <div className="flex justify-end gap-3">
+                  <button
+                    className="flex justify-center rounded-[7px] border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
+                    type="button"
+                    onClick={() => {
+                      setShowSaveButton(false);
+                      setTempPhotoUrl(profilePhotoUrl);
+                      setShowUploadSection(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="flex items-center justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
+                    type="button"
+                    disabled={photoLoading}
+                    onClick={handleSavePhoto}
+                  >
+                    {photoLoading ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              )}
+
+              {showCropper && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white dark:bg-dark-2 p-4 rounded-lg max-w-md w-full border border-stroke dark:border-dark-3 shadow-1 dark:shadow-card">
+                    <h3 className="text-lg font-medium text-dark dark:text-white mb-4">
+                      Crop your profile picture
+                    </h3>
+                    <div className="relative h-64 w-full">
+                      <Cropper
+                        image={tempPhotoUrl || ""}
+                        crop={crop}
+                        zoom={zoom}
+                        aspect={1}
+                        onCropChange={setCrop}
+                        onCropComplete={onCropComplete}
+                        onZoomChange={setZoom}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm mb-2 text-dark dark:text-white">
+                        Zoom:
+                      </label>
+                      <input
+                        type="range"
+                        value={zoom}
+                        min={1}
+                        max={3}
+                        step={0.1}
+                        onChange={(e) => setZoom(Number(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        color="danger"
+                        onPress={() => {
+                          setShowCropper(false);
+                          setTempPhotoUrl(profilePhotoUrl);
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = "";
+                        }}
+                        variant="light"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        color="primary"
+                        onPress={async () => {
+                          await handleSaveCroppedImage();
+                          setShowCropper(false);
+                        }}
+                        // className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
+                        disabled={photoLoading}
+                      >
+                        {photoLoading ? (
+                          <>
+                            <Spinner size="sm" color="white" className="mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Photo"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white dark:bg-dark-2 p-6 rounded-lg max-w-md w-full border border-stroke dark:border-dark-3 shadow-1 dark:shadow-card">
+                    <h3 className="ttext-lg font-medium text-dark dark:text-white mb-4">
+                      Delete Profile Photo
+                    </h3>
+                    <p className="mb-6 text-dark dark:text-white">
+                      Are you sure you want to delete your profile photo?
+                    </p>
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        onPress={cancelDeletePhoto}
+                        // className="px-4 py-2 border rounded hover:bg-gray-100"
+                        color="danger"
+                        variant="light"
+                      >
+                        Cancel
+                      </Button>
+                      <Button onPress={confirmDeletePhoto} color="primary">
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

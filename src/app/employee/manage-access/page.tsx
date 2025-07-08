@@ -16,7 +16,7 @@ const EmployeePage = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-7xl ">
-        <Breadcrumb pageName="employee/manage-access " />
+        <Breadcrumb pageName="Employee/Manage-Access " />
         <TabDefaultWithRoute
           current={current}
           color={TOOL_TIP_COLORS.primary}

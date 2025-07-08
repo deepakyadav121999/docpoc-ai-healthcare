@@ -13,22 +13,13 @@ import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { TOOL_TIP_COLORS } from "@/constants";
-interface ModalMessage {
-  success?: string;
-  error?: string;
-}
+
 interface AddPatientProps {
   onPatientAdded: () => void;
-  onClose?: () => void;
-  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
 
-const AddPatient: React.FC<AddPatientProps> = ({
-  onPatientAdded,
-  onMessage,
-  onClose,
-}) => {
+const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   const [edit] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -130,6 +121,11 @@ const AddPatient: React.FC<AddPatientProps> = ({
         return;
       }
 
+      // const payload = {
+      //   ...formData,
+      //   branchId: fetchedBranchId,
+      // };
+
       const payload = {
         branchId: fetchedBranchId,
         name: formData.name,
@@ -154,10 +150,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
         },
       });
 
-      setModalMessage({
-        success: "Patient registered successfully!",
-        error: "",
-      });
+      setModalMessage({ success: "Patient added successfully!", error: "" });
       onOpen();
 
       setFormData({
@@ -176,14 +169,9 @@ const AddPatient: React.FC<AddPatientProps> = ({
         notificationStatus: '{"allergies":["Peanut","Dust"]}',
       });
       onPatientAdded();
-      onMessage({ success: "patient  created successfully!" });
-
-      setTimeout(() => {
-        if (onClose) onClose();
-      }, 2000);
     } catch (error: any) {
       if (error.response) {
-        // Extract and display the error message from the response
+        // // Extract and display the error message from the response
         // const apiErrorMessage =
         //   error.response.data.message &&
         //   Array.isArray(error.response.data.message)
@@ -194,6 +182,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
         //   success: "",
         //   error: apiErrorMessage,
         // });
+
         let errorMessage = "";
 
         if (error.response) {
@@ -346,7 +335,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
       <div className="flex flex-col w-full">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
           <form onSubmit={handleSubmit}>
-            <div className=" p-2.5 sm:p-6.5">
+            <div className=" p-2.5 sm:p-4.5">
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2.5  sm:gap-4.5">
                 <Input
                   classNames={{
@@ -361,10 +350,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   }}
                   label="Patient Name"
                   labelPlacement="outside"
-                  placeholder="Patient Name"
                   variant="bordered"
-                  value={formData.name}
+                  placeholder="Patient Name"
                   color={TOOL_TIP_COLORS.secondary}
+                  value={formData.name}
                   onChange={(e) => {
                     if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
                       setFormData({ ...formData, name: e.target.value });
@@ -396,9 +385,9 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   }}
                   label="Gender"
                   labelPlacement="outside"
+                  color={TOOL_TIP_COLORS.secondary}
                   variant="bordered"
                   placeholder="Select Gender"
-                  color={TOOL_TIP_COLORS.secondary}
                   defaultItems={[
                     { label: "Male" },
                     { label: "Female" },
@@ -463,10 +452,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
                       "dark:group-data-[has-value=true]:text-white", // Dark mode with value
                     ],
                   }}
-                  label="Email "
+                  label="Email"
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Email (Optional)"
+                  placeholder="Email  (Optional)"
                   color={TOOL_TIP_COLORS.secondary}
                   value={formData.email}
                   onChange={(e) =>
@@ -492,11 +481,11 @@ const AddPatient: React.FC<AddPatientProps> = ({
                     selectorButton: "!text-black dark:!text-white",
                     listbox: "text-black dark:text-white",
                   }}
-                  color={TOOL_TIP_COLORS.secondary}
-                  label="Blood Group "
+                  label="Blood Group"
                   labelPlacement="outside"
                   variant="bordered"
-                  placeholder="Select Blood Group (Optional)"
+                  color={TOOL_TIP_COLORS.secondary}
+                  placeholder="Select Blood Group  (Optional)"
                   defaultItems={[
                     { label: "A+" },
                     { label: "O+" },
@@ -527,10 +516,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   }}
                   label="Date of Birth"
                   type="date"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  placeholder="Date Of Birth"
                   color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  placeholder="Date Of Birth"
+                  variant="bordered"
                   value={formData.dob}
                   onChange={(e) =>
                     setFormData({ ...formData, dob: e.target.value })
@@ -553,9 +542,9 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 label="Address"
                 labelPlacement="outside"
                 variant="bordered"
-                value={formData.address}
-                placeholder="Address"
                 color={TOOL_TIP_COLORS.secondary}
+                placeholder="Address"
+                value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
@@ -594,7 +583,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 // color={TOOL_TIP_COLORS.secondary}
                 // onPress={onOpen}
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
-                style={{ minWidth: 280, marginBottom: 20 }}
+                style={{ minWidth: 250, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>
@@ -613,4 +602,4 @@ const AddPatient: React.FC<AddPatientProps> = ({
   );
 };
 
-export default AddPatient;
+export default AddNewPatient;

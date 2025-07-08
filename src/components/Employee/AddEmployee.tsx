@@ -26,12 +26,21 @@ import { useEffect } from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-
+interface ModalMessage {
+  success?: string;
+  error?: string;
+}
 interface AddUsersProps {
   onUsersAdded: () => void;
+  onClose?: () => void;
+  onMessage: (message: ModalMessage) => void;
 }
 const API_URL = process.env.API_URL;
-const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
+const AddUsers: React.FC<AddUsersProps> = ({
+  onUsersAdded,
+  onClose,
+  onMessage,
+}) => {
   const profile = useSelector((state: RootState) => state.profile.data);
   // const [edit, setEdit] = useState(true);
   const edit = true;
@@ -46,7 +55,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
       workingHours: "",
     }),
     userName: "",
-    password: "",
+    password: "defaultPassword123",
     gender: "",
   });
 
@@ -54,14 +63,14 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   const [loading, setLoading] = useState(false);
   const [accessTypes, setAccessTypes] = useState({
-    setAppointments: false,
+    setAppointments: true,
     editDoctor: true,
     editCreatePatients: true,
     editCreateStaffs: true,
-    editCreateReminders: false,
+    editCreateReminders: true,
     editCreatePayments: true,
   });
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: internalClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
 
   const handleJsonUpdate = (key: string, value: string) => {
@@ -84,7 +93,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
   };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
-    onClose();
+    internalClose();
   };
   const handleDobChange = (value: string) => {
     const updatedJson = JSON.parse(formData.json);
@@ -129,7 +138,12 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
     const missingFields: string[] = [];
     for (const key in formData) {
-      if (!formData[key as keyof typeof formData] && key !== "branchId") {
+      if (
+        !formData[key as keyof typeof formData] &&
+        key !== "branchId" &&
+        key !== "email" &&
+        key !== "userName"
+      ) {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     }
@@ -173,8 +187,14 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
       const fetchedBranchId = profile?.branchId;
 
+      const finalEmail = formData.email
+        ? formData.email
+        : `${formData.phone}@docpoc.placeholder`;
+
       const payload = {
         ...formData,
+        userName: formData.phone,
+        email: finalEmail,
         branchId: fetchedBranchId,
         accessType: JSON.stringify(accessTypes),
       };
@@ -206,9 +226,14 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
         editCreatePatients: false,
         editCreateStaffs: false,
         editCreateReminders: false,
-        editCreatePayments: true,
+        editCreatePayments: false,
       });
       onUsersAdded();
+      onMessage({ success: "User  created successfully!" });
+
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 2000);
     } catch (error: any) {
       if (error.response) {
         // Extract and display the error message from the response
@@ -248,17 +273,99 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
 
   return (
     <div className="grid grid-cols-1 gap-9">
+      <style jsx global>{`
+        .nextui-input,
+        .nextui-input-wrapper input,
+        .nextui-textarea,
+        .nextui-textarea-wrapper textarea,
+        .nextui-select-wrapper select {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+        .nextui-time-input-input {
+          font-size: 16px !important;
+        }
+        .nextui-autocomplete-input {
+          font-size: 16px !important;
+        }
+
+        /* Disable text size adjustment */
+        html {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* Container styles */
+        .appointment-container {
+          max-width: 100vw;
+          overflow-x: hidden;
+          padding: 0 1rem;
+        }
+
+        /* Form container */
+        .form-card {
+          border-radius: 15px;
+          border: 1px solid var(--stroke-color);
+          background: white;
+          box-shadow: var(--shadow-1);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        /* Input group styles */
+
+        /* Time inputs container */
+        .time-inputs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        /* Full width inputs */
+        .full-width-input {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* NextUI component overrides */
+        .nextui-input-wrapper,
+        .nextui-autocomplete-wrapper,
+        .nextui-time-input-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input,
+          textarea {
+            -webkit-user-select: auto !important;
+            font-size: 16px !important;
+            min-height: auto !important;
+          }
+        }
+      `}</style>
       <div className="flex flex-col w-full">
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
           <form onSubmit={handleSubmit}>
-            <div className="p-6.5">
-              <div className="mb-4.5 flex flex-col gap-4.5">
+            <div className="p-2.5 sm:p-4.5">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Input
                   label="Name"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Name"
                   value={formData.name}
                   color={TOOL_TIP_COLORS.secondary}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   onChange={(e) => {
                     if (/^[a-zA-Z\s]*$/.test(e.target.value)) {
                       setFormData({ ...formData, name: e.target.value });
@@ -291,6 +398,14 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   {(item) => <AutocompleteItem key={item.label}>{item.label}</AutocompleteItem>}
                 </Autocomplete> */}
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   label="Designation"
                   labelPlacement="outside"
                   variant="bordered"
@@ -323,6 +438,16 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("start", e.toString())}
                     isDisabled={!edit}
+                    classNames={{
+                      input: [
+                        "text-black", // Light mode text color
+                        "dark:text-white", // Dark mode text color
+                      ],
+                      inputWrapper: [
+                        "group-data-[has-value=true]:text-black", // Light mode with value
+                        "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      ],
+                    }}
                   />
                   <TimeInput
                     color={TOOL_TIP_COLORS.secondary}
@@ -333,6 +458,16 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("end", e.toString())}
                     isDisabled={!edit}
+                    classNames={{
+                      input: [
+                        "text-black", // Light mode text color
+                        "dark:text-white", // Dark mode text color
+                      ],
+                      inputWrapper: [
+                        "group-data-[has-value=true]:text-black", // Light mode with value
+                        "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      ],
+                    }}
                   />
                 </div>
 
@@ -340,6 +475,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   label="Phone"
                   labelPlacement="outside"
                   variant="bordered"
+                  placeholder="Phone"
                   value={formData.phone}
                   color={TOOL_TIP_COLORS.secondary}
                   onChange={(e) => {
@@ -361,11 +497,22 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   }}
                   maxLength={10}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
                 <Input
                   label="Email"
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
+                  placeholder="Email(Optional)"
                   variant="bordered"
                   value={formData.email}
                   onChange={(e) =>
@@ -373,10 +520,20 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   }
                   onBlur={() => {}}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Input
                   color={TOOL_TIP_COLORS.secondary}
                   label="Date of Birth"
@@ -386,10 +543,28 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   // value={JSON.parse(formData.json.dob)}
                   onChange={(e) => handleDobChange(e.target.value)}
                   isDisabled={!edit}
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                 />
               </div>
-              <div className="mb-4.5 flex flex-col gap-4.5">
+              <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   label="Gender"
                   labelPlacement="outside"
                   variant="bordered"
@@ -413,8 +588,8 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                 </Autocomplete>
               </div>
 
-              <div className="mb-4.5 flex flex-col gap-4.5">
-                {/* username */}
+              {/* <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
+                // username 
                 <Input
                   label="Username"
                   color={TOOL_TIP_COLORS.secondary}
@@ -427,10 +602,10 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   onBlur={() => {}}
                   isDisabled={!edit}
                 />
-              </div>
+              </div>  */}
 
-              {/*password */}
-              <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row">
+              {/* password  */}
+              {/* <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
                 <Input
                   color={TOOL_TIP_COLORS.secondary}
                   label="Password"
@@ -443,7 +618,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
                   }
                   isDisabled={!edit}
                 />
-              </div>
+              </div> */}
 
               <div className="mb-4.5 flex ">
                 <p className="text-sm font-medium mb-2">Access Types:</p>
@@ -522,7 +697,7 @@ const AddUsers: React.FC<AddUsersProps> = ({ onUsersAdded }) => {
               <button
                 type="submit"
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
-                style={{ minWidth: 280, marginBottom: 20 }}
+                style={{ minWidth: 250, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>

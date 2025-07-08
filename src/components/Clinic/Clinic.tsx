@@ -30,6 +30,86 @@ import {
   updateAccessToken,
 } from "../../store/slices/profileSlice";
 
+// export const appointmentStatuses = [
+//   {
+//     status: "Scheduled",
+//     json: JSON.stringify({
+//       description: "Appointment is scheduled in advance",
+//     }),
+//   },
+//   {
+//     status: "Walk-In",
+//     json: JSON.stringify({
+//       description: "Patient walked in without appointment",
+//     }),
+//   },
+//   {
+//     status: "Emergency",
+//     json: JSON.stringify({ description: "Emergency appointment" }),
+//   },
+//   {
+//     status: "Follow-Up",
+//     json: JSON.stringify({ description: "Follow-up appointment" }),
+//   },
+
+//   {
+//     status: "Visiting",
+//     json: JSON.stringify({ description: "Patient is currently visiting" }),
+//   },
+//   {
+//     status: "Visited",
+//     json: JSON.stringify({ description: "Patient has completed the visit" }),
+//   },
+//   {
+//     status: "Declined",
+//     json: JSON.stringify({ description: "Patient has completed the visit" }),
+//   },
+// ];
+// export const appointmentTypes = [
+//   {
+//     name: "General Consultation",
+//     json: JSON.stringify({
+//       description: "General health checkup or consultation",
+//     }),
+//   },
+//   {
+//     name: "Specialist Consultation",
+//     json: JSON.stringify({
+//       description: "Consultation with a medical specialist",
+//     }),
+//   },
+//   {
+//     name: "Diagnostic/Test Booking",
+//     json: JSON.stringify({
+//       description: "Booking for diagnostic tests or lab work",
+//     }),
+//   },
+//   {
+//     name: "Preventive Care",
+//     json: JSON.stringify({
+//       description: "Preventive health services and screenings",
+//     }),
+//   },
+//   {
+//     name: "Therapy/Procedure Booking",
+//     json: JSON.stringify({
+//       description: "Booking for therapies or medical procedures",
+//     }),
+//   },
+//   {
+//     name: "Virtual/Telehealth Appointment",
+//     json: JSON.stringify({ description: "Remote consultation via telehealth" }),
+//   },
+//   {
+//     name: "Dental",
+//     json: JSON.stringify({ description: "Default dental appointment type" }),
+//   },
+//   {
+//     name: "Checkup",
+//     json: JSON.stringify({ description: "Default Checkup consultation" }),
+//   },
+// ];
+
 const API_URL = process.env.API_URL;
 const Clinic = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
@@ -74,8 +154,16 @@ const Clinic = () => {
   });
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
   const [userId, setUserId] = useState("");
+  // const [autocompleteValue, setAutocompleteValue] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
+    if (field === "state") {
+      const selectedState = IndianStatesList.find(
+        (item) => item.label === value,
+      );
+      setSelectedStateKey(selectedState?.value || null);
+    }
+
     setClinicDetails({ ...clinicDetails, [field]: value });
   };
   const handleWorkingDaysChange = (values: string[]) => {
@@ -191,10 +279,13 @@ const Clinic = () => {
     setLoading(true);
 
     const errors: Record<string, string> = {};
-
+    if (!selectedStateKey || !clinicDetails.state.trim()) {
+      errors.state = "Please select a state from the dropdown";
+    }
     if (!clinicDetails.name.trim()) {
       errors.name = "Clinic/Hospital name is required.";
     }
+
     if (!clinicDetails.phone.trim())
       errors.phone = "Contact number is required.";
     if (!/^\d{10}$/.test(clinicDetails.phone.trim()))
@@ -202,7 +293,7 @@ const Clinic = () => {
     if (!clinicDetails.email.trim()) errors.email = "Email is required.";
     if (!/^\S+@\S+\.\S+$/.test(clinicDetails.email.trim()))
       errors.email = "Email is not valid.";
-    if (!clinicDetails.state.trim()) errors.state = "State is required.";
+    // if (!clinicDetails.state.trim()) errors.state = "State is required.";
     if (!clinicDetails.pincode.trim()) errors.pincode = "Pincode is required.";
     if (!/^\d{6}$/.test(clinicDetails.pincode.trim()))
       errors.pincode = "Pincode must be a valid 6-digit number.";
@@ -345,16 +436,74 @@ const Clinic = () => {
           setAccessToken(newAccessToken);
         }
 
-        console.log("Profile updated successfully:", response.data);
+        // await Promise.all(
+        //   appointmentStatuses.map((status) =>
+        //     axios.post(
+        //       `${API_URL}/appointment/status`,
+        //       {
+        //         status: status.status, // Here we're accessing the status property
+        //         branchId: fetchedBranchId,
+        //         json: status.json,
+        //       },
+        //       {
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       },
+        //     ),
+        //   ),
+        // );
+
+        // await Promise.all(
+        //   appointmentTypes.map((type) =>
+        //     axios.post(
+        //       `${API_URL}/appointment/types`,
+        //       {
+        //         name: type.name,
+        //         branchId: fetchedBranchId,
+        //         json: type.json,
+        //       },
+        //       {
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       },
+        //     ),
+        //   ),
+        // );
+        // console.log("Profile updated successfully:", response.data);
       }
     } catch (error: any) {
+      // console.error("Error creating branch:", error);
+      // // alert("Failed to create branch.");
+      // setModalMessage({
+      //   success: "",
+      //   error: `Error creating branch: ${error.message}`,
+      // });
       console.error("Error creating branch:", error);
-      // alert("Failed to create branch.");
-      setModalMessage({
-        success: "",
-        error: `Error creating branch: ${error.message}`,
-      });
-      onOpen();
+
+      // Handle duplicate email error specifically
+      if (
+        error.response?.status === 400 &&
+        error.response?.data?.message?.[0]?.path === "email" &&
+        error.response?.data?.message?.[0]?.message === "email must be unique"
+      ) {
+        setModalMessage({
+          success: "",
+          error:
+            "This email is already registered. Please use a different email address.",
+        });
+      } else {
+        setModalMessage({
+          success: "",
+          error: `Error creating branch: ${error.message}`,
+        });
+      }
+      onOpen(); // Show the modal for any error
+      setLoading(false);
+      // onOpen();
     }
     setLoading(false);
   };
@@ -377,6 +526,10 @@ const Clinic = () => {
       }
     }
   }, [isOpen]);
+
+  console.log("Selected State Key:", selectedStateKey);
+  console.log("Clinic Details State:", clinicDetails.state);
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
@@ -437,6 +590,16 @@ const Clinic = () => {
             <div className=" p-3 sm:p-6.5">
               <div className=" mb-2.5 sm:mb-4.5 flex flex-col gap-2  sm:gap-4.5 xl:flex-row">
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"
@@ -448,6 +611,16 @@ const Clinic = () => {
                   // errorMessage={errors.name}
                 />
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-phone"
                   variant="bordered"
                   type="text"
@@ -460,6 +633,16 @@ const Clinic = () => {
                   isDisabled={!edit}
                 />
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-email"
                   variant="bordered"
                   type="email"
@@ -492,6 +675,16 @@ const Clinic = () => {
                 style={{ marginTop: 20 }}
               >
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Shift Start Time"
                   labelPlacement="outside"
@@ -507,6 +700,16 @@ const Clinic = () => {
                   }}
                 />
                 <TimeInput
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   label="Shift End Time"
                   labelPlacement="outside"
@@ -523,6 +726,16 @@ const Clinic = () => {
               </div>
               <div style={{ marginTop: 20 }}>
                 <Textarea
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   isDisabled={!edit}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
@@ -539,6 +752,14 @@ const Clinic = () => {
                 style={{ marginTop: 20 }}
               >
                 <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
@@ -552,9 +773,21 @@ const Clinic = () => {
                     const selectedState = IndianStatesList.find(
                       (item) => item.value === key,
                     );
+
                     handleInputChange("state", selectedState?.label || "");
                     setSelectedStateKey(key ? (key as string) : null);
                   }}
+                  // onSelectionChange={(key) => {
+                  //   const selectedState = IndianStatesList.find(item => item.value === key);
+                  //   if (selectedState) {
+                  //     // Update both state values in a single synchronous operation
+                  //     setClinicDetails(prev => ({
+                  //       ...prev,
+                  //       state: selectedState.label
+                  //     }));
+                  //     setSelectedStateKey(key as string);
+                  //   }
+                  // }}
                 >
                   {(IndianStatesList) => (
                     <AutocompleteItem
@@ -566,8 +799,68 @@ const Clinic = () => {
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
+                {/* <Autocomplete
+                  className="[&_.nextui-autocomplete-selector-button]:text-black 
+             [&_.nextui-autocomplete-selector-button]:dark:text-white
+             [&_[data-has-value=true]]:text-black
+             [&_[data-has-value=true]]:dark:text-white"
+                  classNames={{
+                    selectorButton: "!text-black dark:!text-white",
+                    listbox: "text-black dark:text-white",
+                  }}
+                  color={TOOL_TIP_COLORS.secondary}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  isDisabled={!edit}
+                  selectedKey={selectedStateKey}
+                  inputValue={autocompleteValue}
+                  defaultItems={IndianStatesList}
+                  label="Select State"
+                  placeholder="Search a state"
+                  onSelectionChange={(key) => {
+                    const selectedState = IndianStatesList.find(
+                      (item) => item.value === key,
+                    );
+                    if (selectedState) {
+                      // Update both state values in a single synchronous operation
+                      setClinicDetails((prev) => ({
+                        ...prev,
+                        state: selectedState.label,
+                      }));
+                      setSelectedStateKey(key as string);
+                      setAutocompleteValue(selectedState.label);
+                    } else {
+                      setClinicDetails((prev) => ({ ...prev, state: "" }));
+                      setSelectedStateKey(null);
+                      setAutocompleteValue("");
+                    }
+                  }}
+                  onInputChange={(value) => {
+                    setAutocompleteValue(value);
+                    if (!value) {
+                      setClinicDetails((prev) => ({ ...prev, state: "" }));
+                      setSelectedStateKey(null);
+                    }
+                  }}
+                >
+                  {(state) => (
+                    <AutocompleteItem key={state.value} textValue={state.label}>
+                      {state.label}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete> */}
 
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="clinic-pincode"
                   variant="bordered"
                   type="text"
@@ -585,6 +878,16 @@ const Clinic = () => {
                 style={{ marginTop: 20 }}
               >
                 <Input
+                  classNames={{
+                    input: [
+                      "text-black", // Light mode text color
+                      "dark:text-white", // Dark mode text color
+                    ],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black", // Light mode with value
+                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    ],
+                  }}
                   key="location"
                   variant="bordered"
                   type="text"
