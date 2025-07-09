@@ -18,6 +18,7 @@ export default function StyledButton(props: {
   style?: any;
   disabled?: boolean;
   color?: ButtonColor;
+  className?: string;
 }) {
   return (
     <Button
@@ -28,11 +29,11 @@ export default function StyledButton(props: {
       isLoading={props.loading}
       isDisabled={props.disabled}
       color={props.color || "primary"}
-      className={
+      className={`${
         !props.color
           ? "bg-gradient-to-tr from-indigo-400 to-violet-500 text-white shadow-lg"
           : ""
-      }
+      } ${props.className || ""}`}
     >
       {props.label}
     </Button>

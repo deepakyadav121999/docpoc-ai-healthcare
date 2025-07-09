@@ -23,9 +23,6 @@ import {
 import StyledButton from "@/components/common/Button/StyledButton";
 // import useColorMode from "@/hooks/useColorMode";
 
-const IS_UUID =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
-
 type View = "chat" | "history" | "conversation";
 
 const ChatWindow = ({
@@ -60,6 +57,7 @@ const ChatWindow = ({
   const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
   const [isRestoringScroll, setIsRestoringScroll] = useState(false);
   const oldScrollHeightRef = useRef(0);
+  const [isThinking, setIsThinking] = useState(false);
 
   const {
     isOpen: isDeleteModalOpen,
@@ -94,10 +92,12 @@ const ChatWindow = ({
   }, [messages]);
 
   useEffect(() => {
-    if (activeSessionId) {
+    // Only scroll to bottom on the initial load of a conversation.
+    // historyPage is 1 after loadConversation, and incremented on loadMore.
+    if (historyPage === 1 && historyMessages.length > 0) {
       setTimeout(() => scrollToBottom(), 100);
     }
-  }, [activeSessionId]);
+  }, [historyMessages, historyPage]);
 
   useLayoutEffect(() => {
     if (isRestoringScroll && conversationHistoryRef.current) {
@@ -119,6 +119,7 @@ const ChatWindow = ({
       setMessages((prevMessages) => [...prevMessages, userMessage]);
       const currentInput = inputValue;
       setInputValue("");
+      setIsThinking(true);
 
       try {
         const dokuResponse = await sendMessage(currentInput, sessionId);
@@ -132,6 +133,8 @@ const ChatWindow = ({
           timestamp: new Date().toISOString(),
         };
         setMessages((prevMessages) => [...prevMessages, errorMessage]);
+      } finally {
+        setIsThinking(false);
       }
     }
   };
@@ -262,7 +265,7 @@ const ChatWindow = ({
   };
 
   const handleDeleteSessions = async () => {
-    const sessionsToDelete = selectedSessions.filter((id) => IS_UUID.test(id));
+    const sessionsToDelete = selectedSessions;
     if (sessionsToDelete.length === 0) {
       onDeleteModalClose();
       return;
@@ -289,20 +292,20 @@ const ChatWindow = ({
   };
 
   const ChatView = (
-    <>
-      <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden">
+    <div className="flex flex-col flex-1 h-full">
+      <div className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex flex-col mb-4 ${
+            className={`flex flex-col mb-6 ${
               msg.sender === "user" ? "items-end" : "items-start"
             }`}
           >
             <div
-              className={`prose dark:prose-invert rounded-lg px-4 py-2 max-w-full ${
+              className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl ${
                 msg.sender === "user"
-                  ? "bg-primary text-white"
-                  : "bg-gray-2 dark:bg-gray-dark"
+                  ? "bg-primary-soft text-white rounded-br-none"
+                  : "bg-white dark:bg-gray-dark rounded-bl-none"
               }`}
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -310,7 +313,7 @@ const ChatWindow = ({
               </ReactMarkdown>
             </div>
             {msg.timestamp && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 {new Date(msg.timestamp).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -319,47 +322,115 @@ const ChatWindow = ({
             )}
           </div>
         ))}
+        {isThinking && (
+          <div className="flex flex-col mb-6 items-start">
+            <div
+              className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl bg-white dark:bg-gray-dark rounded-bl-none`}
+            >
+              <div className="flex items-center justify-center space-x-1.5">
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-4 border-t border-stroke dark:border-strokedark">
-        <div className="relative">
+      <div className="p-4 bg-transparent">
+        <div className="relative shadow-soft-inset-xl dark:shadow-dark-soft-inset-xl rounded-full">
           <input
             type="text"
             placeholder="Type your message..."
-            className="w-full rounded-md border border-stroke dark:border-strokedark bg-transparent py-3 pl-4 pr-12 text-black dark:text-white focus:outline-none"
+            className="w-full rounded-full border-none bg-white dark:bg-gray-dark py-4 pl-6 pr-16 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
           />
           <button
             onClick={handleSendMessage}
-            className="absolute top-1/2 right-4 -translate-y-1/2"
+            className="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-full bg-primary-soft shadow-soft-md dark:shadow-dark-soft-md hover:scale-105 active:scale-95 transition-all"
           >
             <svg
-              className="w-6 h-6 text-black dark:text-white"
+              className="w-6 h-6 text-white"
               fill="currentColor"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                clipRule="evenodd"
-              ></path>
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
             </svg>
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 
   const HistoryView = (
-    <div className="flex-1 flex flex-col min-h-0">
-      <div className="p-4 border-b border-stroke dark:border-strokedark">
+    <div className="relative flex-1 min-h-0">
+      <div
+        className="absolute inset-0 overflow-y-auto p-4"
+        ref={sessionHistoryRef}
+        onScroll={handleSessionScroll}
+      >
+        <div className="pt-20">
+          {loadingHistory ? (
+            <p className="text-center text-gray-500 dark:text-gray-400">
+              Loading sessions...
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {sessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  onClick={() => handleSessionClick(session)}
+                  className="p-4 rounded-2xl cursor-pointer transition-all duration-300 bg-white dark:bg-gray-dark shadow-soft-xl dark:shadow-dark-soft-xl hover:shadow-soft-2xl dark:hover:shadow-dark-soft-2xl flex items-center gap-4"
+                >
+                  {selectionMode && (
+                    <div
+                      className="w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelection(session.sessionId);
+                      }}
+                    >
+                      <Checkbox
+                        isSelected={selectedSessions.includes(
+                          session.sessionId,
+                        )}
+                        onChange={() => toggleSelection(session.sessionId)}
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 overflow-hidden">
+                    <p className="font-medium text-black dark:text-white truncate">
+                      {session.lastMessage}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {session.messageCount} messages
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {loadingMoreSessions && (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+              Loading more...
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-white/30 dark:bg-black/30 backdrop-blur-xl">
         <div className="flex justify-end gap-2">
           <StyledButton
             label={selectionMode ? "Cancel" : "Select"}
-            clickEvent={() => setSelectionMode(!selectionMode)}
+            clickEvent={() => {
+              if (selectionMode) {
+                setSelectedSessions([]);
+              }
+              setSelectionMode(!selectionMode);
+            }}
             color="secondary"
           />
           {selectionMode && (
@@ -372,66 +443,19 @@ const ChatWindow = ({
           )}
         </div>
       </div>
-      <div
-        className="flex-1 overflow-y-auto p-4"
-        ref={sessionHistoryRef}
-        onScroll={handleSessionScroll}
-      >
-        {loadingHistory ? (
-          <p className="text-center text-gray-500 dark:text-gray-400">
-            Loading sessions...
-          </p>
-        ) : (
-          sessions.map((session) => (
-            <div
-              key={session.sessionId}
-              onClick={() => handleSessionClick(session)}
-              className="p-3 mb-2 rounded-md cursor-pointer hover:bg-gray-2 dark:hover:bg-gray-dark border-b border-stroke dark:border-strokedark flex items-center"
-            >
-              {selectionMode && (
-                <div
-                  className="w-6 mr-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSelection(session.sessionId);
-                  }}
-                >
-                  <Checkbox
-                    isSelected={selectedSessions.includes(session.sessionId)}
-                    onChange={() => toggleSelection(session.sessionId)}
-                  />
-                </div>
-              )}
-              <div className="flex-1 overflow-hidden">
-                <p className="font-medium text-black dark:text-white truncate">
-                  {session.lastMessage}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {session.messageCount} messages
-                </p>
-              </div>
-            </div>
-          ))
-        )}
-        {loadingMoreSessions && (
-          <div className="text-center text-gray-500 dark:text-gray-400 py-2">
-            Loading more...
-          </div>
-        )}
-      </div>
     </div>
   );
 
   const ConversationView = (
     <>
-      <div className="p-4 border-b border-stroke dark:border-strokedark">
+      <div className="p-4 border-b border-stroke dark:border-white/5">
         <button
           onClick={() => {
             setView("history");
             setHistoryMessages([]);
             setActiveSessionId(null);
           }}
-          className="flex items-center gap-2 text-primary hover:underline"
+          className="flex items-center gap-2 text-primary-soft hover:underline"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -449,12 +473,12 @@ const ChatWindow = ({
         </button>
       </div>
       <div
-        className="flex-1 p-4 overflow-y-auto"
+        className="flex-1 p-6 overflow-y-auto"
         ref={conversationHistoryRef}
         onScroll={handleConversationScroll}
       >
         {loadingMore && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
+          <div className="text-center text-gray-500 dark:text-gray-400 py-4">
             Loading...
           </div>
         )}
@@ -466,15 +490,15 @@ const ChatWindow = ({
           historyMessages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex flex-col mb-4 ${
+              className={`flex flex-col mb-6 ${
                 msg.sender === "user" ? "items-end" : "items-start"
               }`}
             >
               <div
-                className={`prose dark:prose-invert rounded-lg px-4 py-2 max-w-full ${
+                className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl ${
                   msg.sender === "user"
-                    ? "bg-primary text-white"
-                    : "bg-gray-2 dark:bg-gray-dark"
+                    ? "bg-primary-soft text-white rounded-br-none"
+                    : "bg-white dark:bg-gray-dark rounded-bl-none"
                 }`}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -482,7 +506,7 @@ const ChatWindow = ({
                 </ReactMarkdown>
               </div>
               {msg.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   {new Date(msg.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -500,8 +524,8 @@ const ChatWindow = ({
   return (
     <>
       <div
-        className={`fixed bottom-0 right-0 z-[9999] transition-all duration-300 ease-in-out
-        md:bottom-28 md:right-8 md:max-w-xl w-full
+        className={`fixed bottom-0 right-0 z-[9999] transition-all duration-500 ease-in-out
+        md:bottom-[90px] md:right-8 md:max-w-2xl w-full
         ${
           isOpen
             ? "translate-y-0 opacity-100"
@@ -510,17 +534,20 @@ const ChatWindow = ({
       `}
       >
         <div
-          className={`bg-white dark:bg-gray-dark rounded-t-lg md:rounded-lg shadow-xl flex flex-col h-[85vh] md:h-[73vh] w-full`}
+          className={`bg-white/70 dark:bg-black/70 backdrop-blur-xl rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-[73vh] w-full overflow-hidden border border-white/30 dark:border-white/10`}
         >
-          <div className="flex justify-between items-center p-4 border-b border-stroke dark:border-strokedark">
-            <h3 className="text-lg font-medium text-black dark:text-white">
+          <div className="flex justify-between items-center p-5 border-b border-stroke dark:border-white/5">
+            <h3 className="text-xl font-semibold text-black dark:text-white">
               {view === "chat"
                 ? "DokuChat"
                 : view === "history"
                   ? "Chat History"
                   : "Conversation"}
             </h3>
-            <button onClick={toggleChat} className="text-black dark:text-white">
+            <button
+              onClick={toggleChat}
+              className="text-black dark:text-white hover:scale-110 transition-transform"
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -538,12 +565,23 @@ const ChatWindow = ({
             </button>
           </div>
 
-          <div className={`p-2 ${view === "conversation" ? "hidden" : ""}`}>
+          <div
+            className={`p-2 bg-white/30 dark:bg-black/30 ${
+              view === "conversation" ? "hidden" : ""
+            }`}
+          >
             <Tabs
               color="primary"
               aria-label="Chat Tabs"
               radius="full"
-              className="bg-gray-2 dark:bg-gray-dark rounded-full p-1 shadow-inner"
+              classNames={{
+                base: "w-full justify-center",
+                tabList:
+                  "bg-white/50 dark:bg-gray-dark/50 shadow-soft-inset-xl dark:shadow-dark-soft-inset-xl p-1.5",
+                cursor:
+                  "bg-primary-soft shadow-soft-xl dark:shadow-dark-soft-xl",
+                tabContent: "group-data-[selected=true]:text-white",
+              }}
               selectedKey={view === "conversation" ? "history" : view}
               onSelectionChange={(key) => {
                 if (key === "history") {
@@ -567,8 +605,12 @@ const ChatWindow = ({
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={onDeleteModalClose}
+        backdrop="transparent"
         classNames={{
-          wrapper: "z-[99999]",
+          wrapper: "z-[9999999]",
+          base: "bg-white/50 dark:bg-black/50 backdrop-blur-xl border border-white/30 dark:border-black/30 rounded-3xl",
+          header: "text-black dark:text-white",
+          body: "text-black dark:text-white",
         }}
       >
         <ModalContent>
@@ -584,11 +626,13 @@ const ChatWindow = ({
               label="Cancel"
               clickEvent={onDeleteModalClose}
               color="default"
+              className="!bg-white dark:!bg-gray-dark !text-black dark:!text-white !shadow-soft-xl hover:!shadow-soft-2xl dark:!shadow-dark-soft-xl dark:hover:!shadow-dark-soft-2xl"
             />
             <StyledButton
               label="Delete"
               clickEvent={handleDeleteSessions}
               color="danger"
+              className="!text-white !shadow-soft-md dark:!shadow-dark-soft-md"
             />
           </ModalFooter>
         </ModalContent>
