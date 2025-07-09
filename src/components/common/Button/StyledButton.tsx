@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@nextui-org/react";
 
 type ButtonType = "button" | "submit" | "reset";
+type ButtonColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger";
 
 export default function StyledButton(props: {
   label: string;
@@ -9,6 +10,8 @@ export default function StyledButton(props: {
   loading?: boolean;
   type?: ButtonType;
   style?: any;
+  disabled?: boolean;
+  color?: ButtonColor;
 }) {
   return (
     <Button
@@ -17,7 +20,9 @@ export default function StyledButton(props: {
       onClick={props.clickEvent}
       radius="full"
       isLoading={props.loading}
-      className="bg-gradient-to-tr from-indigo-400 to-violet-500 text-white shadow-lg"
+      isDisabled={props.disabled}
+      color={props.color || "primary"}
+      className={!props.color ? "bg-gradient-to-tr from-indigo-400 to-violet-500 text-white shadow-lg" : ""}
     >
       {props.label}
     </Button>
