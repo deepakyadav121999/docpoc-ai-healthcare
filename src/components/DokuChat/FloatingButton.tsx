@@ -4,7 +4,7 @@ const FloatingButton = ({ toggleChat }: { toggleChat: () => void }) => {
   return (
     <button
       onClick={toggleChat}
-      className="fixed bottom-8 right-8 bg-primary text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-[9999]"
+      className="fixed bottom-16 right-8 bg-primary text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-[9999]"
       aria-label="Toggle Chat"
     >
       <svg

@@ -325,7 +325,7 @@ const ChatWindow = ({
     <>
     <div
       className={`fixed bottom-0 right-0 z-[9999] transition-all duration-300 ease-in-out
-        md:bottom-28 md:right-8 md:max-w-md w-full
+        md:bottom-28 md:right-8 md:max-w-xl w-full
         ${
           isOpen
             ? "translate-y-0 opacity-100"
