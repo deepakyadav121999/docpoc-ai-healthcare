@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Message,
   sendMessage,
@@ -9,11 +9,22 @@ import {
   Session,
   deleteSessions,
 } from "@/api/doku";
-import { Tabs, Tab, Checkbox, useDisclosure, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import {
+  Tabs,
+  Tab,
+  Checkbox,
+  useDisclosure,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react";
 import StyledButton from "@/components/common/Button/StyledButton";
 import useColorMode from "@/hooks/useColorMode";
 
-const IS_UUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
+const IS_UUID =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
 
 type View = "chat" | "history" | "conversation";
 
@@ -36,11 +47,11 @@ const ChatWindow = ({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
-  
-  const { 
-    isOpen: isDeleteModalOpen, 
-    onOpen: onDeleteModalOpen, 
-    onClose: onDeleteModalClose 
+
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
+    onClose: onDeleteModalClose,
   } = useDisclosure();
 
   useEffect(() => {
@@ -56,8 +67,8 @@ const ChatWindow = ({
         },
       ]);
     } else {
-        setSelectionMode(false);
-        setSelectedSessions([]);
+      setSelectionMode(false);
+      setSelectedSessions([]);
     }
   }, [isOpen, sessionId]);
 
@@ -110,11 +121,11 @@ const ChatWindow = ({
 
   const loadConversation = async (selectedSessionId: string) => {
     if (selectionMode) {
-        const newSelection = selectedSessions.includes(selectedSessionId)
-        ? selectedSessions.filter(id => id !== selectedSessionId)
+      const newSelection = selectedSessions.includes(selectedSessionId)
+        ? selectedSessions.filter((id) => id !== selectedSessionId)
         : [...selectedSessions, selectedSessionId];
-        setSelectedSessions(newSelection);
-        return;
+      setSelectedSessions(newSelection);
+      return;
     }
 
     setLoadingHistory(true);
@@ -128,7 +139,7 @@ const ChatWindow = ({
       setLoadingHistory(false);
     }
   };
-  
+
   const handleSessionClick = (session: Session) => {
     if (selectionMode) {
       toggleSelection(session.sessionId);
@@ -138,7 +149,7 @@ const ChatWindow = ({
   };
 
   const handleDeleteSessions = async () => {
-    const sessionsToDelete = selectedSessions.filter(id => IS_UUID.test(id));
+    const sessionsToDelete = selectedSessions.filter((id) => IS_UUID.test(id));
     if (sessionsToDelete.length === 0) {
       onDeleteModalClose();
       return;
@@ -146,7 +157,9 @@ const ChatWindow = ({
 
     try {
       await deleteSessions({ sessionIds: sessionsToDelete });
-      setSessions(sessions.filter(s => !sessionsToDelete.includes(s.sessionId)));
+      setSessions(
+        sessions.filter((s) => !sessionsToDelete.includes(s.sessionId)),
+      );
       setSelectedSessions([]);
       setSelectionMode(false);
     } catch (error) {
@@ -154,10 +167,10 @@ const ChatWindow = ({
     }
     onDeleteModalClose();
   };
-  
+
   const toggleSelection = (sessionId: string) => {
     const newSelection = selectedSessions.includes(sessionId)
-      ? selectedSessions.filter(id => id !== sessionId)
+      ? selectedSessions.filter((id) => id !== sessionId)
       : [...selectedSessions, sessionId];
     setSelectedSessions(newSelection);
   };
@@ -179,12 +192,17 @@ const ChatWindow = ({
                   : "bg-gray-2 dark:bg-gray-dark"
               }`}
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {msg.text}
+              </ReactMarkdown>
             </div>
             {msg.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {new Date(msg.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             )}
           </div>
         ))}
@@ -226,56 +244,57 @@ const ChatWindow = ({
     <div className="flex-1 flex flex-col min-h-0">
       <div className="p-4 border-b border-stroke dark:border-strokedark">
         <div className="flex justify-end gap-2">
+          <StyledButton
+            label={selectionMode ? "Cancel" : "Select"}
+            clickEvent={() => setSelectionMode(!selectionMode)}
+            color="secondary"
+          />
+          {selectionMode && (
             <StyledButton
-                label={selectionMode ? "Cancel" : "Select"}
-                clickEvent={() => setSelectionMode(!selectionMode)}
-                color="secondary"
+              label="Delete"
+              clickEvent={onDeleteModalOpen}
+              color="danger"
+              disabled={selectedSessions.length === 0}
             />
-            {selectionMode && (
-                <StyledButton
-                    label="Delete"
-                    clickEvent={onDeleteModalOpen}
-                    color="danger"
-                    disabled={selectedSessions.length === 0}
-                />
-            )}
+          )}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {loadingHistory ? (
-          <p className="text-center text-gray-500 dark:text-gray-400">Loading sessions...</p>
+          <p className="text-center text-gray-500 dark:text-gray-400">
+            Loading sessions...
+          </p>
         ) : (
           sessions.map((session) => (
-              <div
-                key={session.sessionId}
-                onClick={() => handleSessionClick(session)}
-                className="p-3 mb-2 rounded-md cursor-pointer hover:bg-gray-2 dark:hover:bg-gray-dark border-b border-stroke dark:border-strokedark flex items-center"
-              >
-                {selectionMode && (
-                  <div 
-                    className="w-6 mr-4" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelection(session.sessionId);
-                    }}
-                  >
-                      <Checkbox
-                        isSelected={selectedSessions.includes(session.sessionId)}
-                        onChange={() => toggleSelection(session.sessionId)}
-                      />
-                  </div>
-                )}
-                <div className="flex-1 overflow-hidden">
-                    <p className="font-medium text-black dark:text-white truncate">
-                    {session.lastMessage}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {session.messageCount} messages
-                    </p>
+            <div
+              key={session.sessionId}
+              onClick={() => handleSessionClick(session)}
+              className="p-3 mb-2 rounded-md cursor-pointer hover:bg-gray-2 dark:hover:bg-gray-dark border-b border-stroke dark:border-strokedark flex items-center"
+            >
+              {selectionMode && (
+                <div
+                  className="w-6 mr-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSelection(session.sessionId);
+                  }}
+                >
+                  <Checkbox
+                    isSelected={selectedSessions.includes(session.sessionId)}
+                    onChange={() => toggleSelection(session.sessionId)}
+                  />
                 </div>
+              )}
+              <div className="flex-1 overflow-hidden">
+                <p className="font-medium text-black dark:text-white truncate">
+                  {session.lastMessage}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {session.messageCount} messages
+                </p>
               </div>
-            )
-          )
+            </div>
+          ))
         )}
       </div>
     </div>
@@ -284,13 +303,18 @@ const ChatWindow = ({
   const ConversationView = (
     <>
       <div className="p-4 border-b border-stroke dark:border-strokedark">
-        <button onClick={() => setView("history")} className="text-primary hover:underline">
+        <button
+          onClick={() => setView("history")}
+          className="text-primary hover:underline"
+        >
           &larr; Back to History
         </button>
       </div>
       <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden">
         {loadingHistory ? (
-          <p className="text-center text-gray-500 dark:text-gray-400">Loading conversation...</p>
+          <p className="text-center text-gray-500 dark:text-gray-400">
+            Loading conversation...
+          </p>
         ) : (
           historyMessages.map((msg) => (
             <div
@@ -306,11 +330,16 @@ const ChatWindow = ({
                     : "bg-gray-2 dark:bg-gray-dark"
                 }`}
               >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.text}
+                </ReactMarkdown>
               </div>
               {msg.timestamp && (
                 <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </div>
@@ -323,8 +352,8 @@ const ChatWindow = ({
 
   return (
     <>
-    <div
-      className={`fixed bottom-0 right-0 z-[9999] transition-all duration-300 ease-in-out
+      <div
+        className={`fixed bottom-0 right-0 z-[9999] transition-all duration-300 ease-in-out
         md:bottom-28 md:right-8 md:max-w-xl w-full
         ${
           isOpen
@@ -332,80 +361,89 @@ const ChatWindow = ({
             : "translate-y-full opacity-0 pointer-events-none"
         }
       `}
-    >
-      <div className={`bg-white dark:bg-gray-dark rounded-t-lg md:rounded-lg shadow-xl flex flex-col h-[85vh] md:h-[73vh] w-full`}>
-        <div className="flex justify-between items-center p-4 border-b border-stroke dark:border-strokedark">
-          <h3 className="text-lg font-medium text-black dark:text-white">
-            Doku Chat
-          </h3>
-          <button onClick={toggleChat} className="text-black dark:text-white">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+      >
+        <div
+          className={`bg-white dark:bg-gray-dark rounded-t-lg md:rounded-lg shadow-xl flex flex-col h-[85vh] md:h-[73vh] w-full`}
+        >
+          <div className="flex justify-between items-center p-4 border-b border-stroke dark:border-strokedark">
+            <h3 className="text-lg font-medium text-black dark:text-white">
+              Doku Chat
+            </h3>
+            <button onClick={toggleChat} className="text-black dark:text-white">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <div className={`p-2 ${view === "conversation" ? "hidden" : ""}`}>
+            <Tabs
+              color="primary"
+              aria-label="Chat Tabs"
+              radius="full"
+              className="bg-gray-2 dark:bg-gray-dark rounded-full p-1 shadow-inner"
+              selectedKey={view === "conversation" ? "history" : view}
+              onSelectionChange={(key) => {
+                if (key === "history") {
+                  setView("history");
+                  loadSessions();
+                } else {
+                  setView("chat");
+                }
+              }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
-          </button>
-        </div>
+              <Tab key="chat" title="Chat" />
+              <Tab key="history" title="History" />
+            </Tabs>
+          </div>
 
-        <div className={`p-2 ${view === "conversation" ? "hidden" : ""}`}>
-          <Tabs
-            color="primary"
-            aria-label="Chat Tabs"
-            radius="full"
-            className="bg-gray-2 dark:bg-gray-dark rounded-full p-1 shadow-inner"
-            selectedKey={view === 'conversation' ? 'history' : view}
-            onSelectionChange={(key) => {
-              if (key === "history") {
-                setView("history");
-                loadSessions();
-              } else {
-                setView("chat");
-              }
-            }}
-          >
-            <Tab key="chat" title="Chat" />
-            <Tab key="history" title="History" />
-          </Tabs>
+          {view === "chat" && ChatView}
+          {view === "history" && HistoryView}
+          {view === "conversation" && ConversationView}
         </div>
-
-        {view === "chat" && ChatView}
-        {view === "history" && HistoryView}
-        {view === "conversation" && ConversationView}
       </div>
-    </div>
-    <Modal 
-      isOpen={isDeleteModalOpen} 
-      onClose={onDeleteModalClose} 
-      classNames={{
-        wrapper: "z-[99999]",
-      }}
-    >
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={onDeleteModalClose}
+        classNames={{
+          wrapper: "z-[99999]",
+        }}
+      >
         <ModalContent>
-            <ModalHeader>Confirm Deletion</ModalHeader>
-            <ModalBody>
-                <p>Are you sure you want to delete {selectedSessions.length} session(s)? This action cannot be undone.</p>
-            </ModalBody>
-            <ModalFooter>
-                <StyledButton label="Cancel" clickEvent={onDeleteModalClose} color="default" />
-                <StyledButton 
-                  label="Delete" 
-                  clickEvent={handleDeleteSessions} 
-                  color="danger"
-                />
-            </ModalFooter>
+          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalBody>
+            <p>
+              Are you sure you want to delete {selectedSessions.length}{" "}
+              session(s)? This action cannot be undone.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <StyledButton
+              label="Cancel"
+              clickEvent={onDeleteModalClose}
+              color="default"
+            />
+            <StyledButton
+              label="Delete"
+              clickEvent={handleDeleteSessions}
+              color="danger"
+            />
+          </ModalFooter>
         </ModalContent>
-    </Modal>
+      </Modal>
     </>
   );
 };
 
-export default ChatWindow; 
+export default ChatWindow;

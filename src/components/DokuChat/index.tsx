@@ -18,4 +18,4 @@ const DokuChat = () => {
   );
 };
 
-export default DokuChat; 
+export default DokuChat;

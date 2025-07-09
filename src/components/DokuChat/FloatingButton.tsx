@@ -25,4 +25,4 @@ const FloatingButton = ({ toggleChat }: { toggleChat: () => void }) => {
   );
 };
 
-export default FloatingButton; 
+export default FloatingButton;
