@@ -253,7 +253,7 @@ const ChatWindow = ({
               >
                 {selectionMode && (
                   <div 
-                    className="w-6 mr-4"
+                    className="w-6 mr-4" 
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleSelection(session.sessionId);
