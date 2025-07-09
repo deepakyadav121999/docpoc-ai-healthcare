@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -48,6 +48,18 @@ const ChatWindow = ({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const conversationHistoryRef = useRef<HTMLDivElement>(null);
+  const sessionHistoryRef = useRef<HTMLDivElement>(null);
+
+  const [sessionsPage, setSessionsPage] = useState(1);
+  const [hasMoreSessions, setHasMoreSessions] = useState(true);
+  const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
+  const [isRestoringScroll, setIsRestoringScroll] = useState(false);
+  const oldScrollHeightRef = useRef(0);
 
   const {
     isOpen: isDeleteModalOpen,
@@ -79,7 +91,22 @@ const ChatWindow = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, historyMessages]);
+  }, [messages]);
+
+  useEffect(() => {
+    if (activeSessionId) {
+      setTimeout(() => scrollToBottom(), 100);
+    }
+  }, [activeSessionId]);
+
+  useLayoutEffect(() => {
+    if (isRestoringScroll && conversationHistoryRef.current) {
+      conversationHistoryRef.current.scrollTop =
+        conversationHistoryRef.current.scrollHeight -
+        oldScrollHeightRef.current;
+      setIsRestoringScroll(false);
+    }
+  }, [isRestoringScroll]);
 
   const handleSendMessage = async () => {
     if (inputValue.trim() && sessionId) {
@@ -111,13 +138,87 @@ const ChatWindow = ({
 
   const loadSessions = async () => {
     setLoadingHistory(true);
+    setSessionsPage(1);
+    setHasMoreSessions(true);
     try {
-      const fetchedSessions = await getChatSessions();
+      const fetchedSessions = await getChatSessions(10, 0);
       setSessions(fetchedSessions);
+      if (fetchedSessions.length < 10) {
+        setHasMoreSessions(false);
+      }
     } catch (error) {
       console.error("Failed to load sessions", error);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const loadMoreSessions = async () => {
+    if (loadingMoreSessions || !hasMoreSessions) return;
+
+    setLoadingMoreSessions(true);
+    try {
+      const fetchedSessions = await getChatSessions(10, sessionsPage * 10);
+      if (fetchedSessions.length > 0) {
+        setSessions((prev) => [...prev, ...fetchedSessions]);
+        setSessionsPage((prev) => prev + 1);
+      }
+      if (fetchedSessions.length < 10) {
+        setHasMoreSessions(false);
+      }
+    } catch (error) {
+      console.error("Failed to load more sessions", error);
+    } finally {
+      setLoadingMoreSessions(false);
+    }
+  };
+
+  const handleSessionScroll = () => {
+    if (sessionHistoryRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        sessionHistoryRef.current;
+      if (scrollHeight - scrollTop - clientHeight < 20) {
+        loadMoreSessions();
+      }
+    }
+  };
+
+  const loadMoreConversation = async () => {
+    if (loadingMore || !hasMoreHistory || !activeSessionId) return;
+
+    setLoadingMore(true);
+    try {
+      const fetchedMessages = await getConversationMessages(
+        activeSessionId,
+        10,
+        historyPage * 10,
+      );
+      if (fetchedMessages.length > 0) {
+        if (conversationHistoryRef.current) {
+          oldScrollHeightRef.current =
+            conversationHistoryRef.current.scrollHeight;
+          setIsRestoringScroll(true);
+        }
+
+        setHistoryMessages((prev) => [...fetchedMessages, ...prev]);
+        setHistoryPage((prev) => prev + 1);
+      }
+      if (fetchedMessages.length < 10) {
+        setHasMoreHistory(false);
+      }
+    } catch (error) {
+      console.error("Failed to load more conversation", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleConversationScroll = () => {
+    if (conversationHistoryRef.current) {
+      const { scrollTop } = conversationHistoryRef.current;
+      if (scrollTop < 1 && !loadingMore && hasMoreHistory) {
+        loadMoreConversation();
+      }
     }
   };
 
@@ -132,9 +233,19 @@ const ChatWindow = ({
 
     setLoadingHistory(true);
     setView("conversation");
+    setHistoryPage(1);
+    setHasMoreHistory(true);
+    setActiveSessionId(selectedSessionId);
     try {
-      const fetchedMessages = await getConversationMessages(selectedSessionId);
+      const fetchedMessages = await getConversationMessages(
+        selectedSessionId,
+        10,
+        0,
+      );
       setHistoryMessages(fetchedMessages);
+      if (fetchedMessages.length < 10) {
+        setHasMoreHistory(false);
+      }
     } catch (error) {
       console.error("Failed to load conversation", error);
     } finally {
@@ -261,7 +372,11 @@ const ChatWindow = ({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        className="flex-1 overflow-y-auto p-4"
+        ref={sessionHistoryRef}
+        onScroll={handleSessionScroll}
+      >
         {loadingHistory ? (
           <p className="text-center text-gray-500 dark:text-gray-400">
             Loading sessions...
@@ -298,6 +413,11 @@ const ChatWindow = ({
             </div>
           ))
         )}
+        {loadingMoreSessions && (
+          <div className="text-center text-gray-500 dark:text-gray-400 py-2">
+            Loading more...
+          </div>
+        )}
       </div>
     </div>
   );
@@ -306,13 +426,38 @@ const ChatWindow = ({
     <>
       <div className="p-4 border-b border-stroke dark:border-strokedark">
         <button
-          onClick={() => setView("history")}
-          className="text-primary hover:underline"
+          onClick={() => {
+            setView("history");
+            setHistoryMessages([]);
+            setActiveSessionId(null);
+          }}
+          className="flex items-center gap-2 text-primary hover:underline"
         >
-          &larr; Back to History
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Back to History
         </button>
       </div>
-      <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden">
+      <div
+        className="flex-1 p-4 overflow-y-auto"
+        ref={conversationHistoryRef}
+        onScroll={handleConversationScroll}
+      >
+        {loadingMore && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            Loading...
+          </div>
+        )}
         {loadingHistory ? (
           <p className="text-center text-gray-500 dark:text-gray-400">
             Loading conversation...
@@ -369,7 +514,11 @@ const ChatWindow = ({
         >
           <div className="flex justify-between items-center p-4 border-b border-stroke dark:border-strokedark">
             <h3 className="text-lg font-medium text-black dark:text-white">
-              Doku Chat
+              {view === "chat"
+                ? "DokuChat"
+                : view === "history"
+                  ? "Chat History"
+                  : "Conversation"}
             </h3>
             <button onClick={toggleChat} className="text-black dark:text-white">
               <svg

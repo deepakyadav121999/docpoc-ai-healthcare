@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import FloatingButton from "./FloatingButton";
-import ChatWindow from "./ChatWindow";
+import FloatingButton from "@/components/DokuChat/FloatingButton";
+import ChatWindow from "@/components/DokuChat/ChatWindow";
 
 const DokuChat = () => {
   const [isOpen, setIsOpen] = useState(false);
