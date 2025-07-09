@@ -552,7 +552,7 @@ const ChatWindow = ({
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-semibold text-black dark:text-white">
                 {view === "chat"
-                  ? "DokuChat"
+                  ? "Doku"
                   : view === "history"
                     ? "Chat History"
                     : "Conversation"}

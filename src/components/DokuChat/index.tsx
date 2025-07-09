@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import FloatingButton from "@/components/DokuChat/FloatingButton";
 import ChatWindow from "@/components/DokuChat/ChatWindow";
 
-const DokuChat = () => {
+const Doku = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleChat = () => {
@@ -18,4 +18,4 @@ const DokuChat = () => {
   );
 };
 
-export default DokuChat;
+export default Doku;

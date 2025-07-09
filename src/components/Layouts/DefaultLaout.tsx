@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import DokuChat from "../DokuChat";
+import Doku from "../DokuChat";
 // import { useEffect } from "react";
 // import axios from "axios";
 
@@ -74,7 +74,7 @@ export default function DefaultLayout({
         </div>
         {/* <!-- ===== Content Area End ===== --> */}
       </div>
-      <DokuChat />
+      <Doku />
       {/* <!-- ===== Page Wrapper End ===== --> */}
     </>
   );

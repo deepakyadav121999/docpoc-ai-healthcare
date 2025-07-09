@@ -4,23 +4,25 @@ const FloatingButton = ({ toggleChat }: { toggleChat: () => void }) => {
   return (
     <button
       onClick={toggleChat}
-      className="fixed bottom-16 right-8 bg-primary text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-[9999]"
+      className="fixed bottom-10 right-4 md:bottom-8 md:right-8 z-[9999] w-16 h-16 rounded-full bg-primary-soft shadow-soft-xl dark:shadow-dark-soft-xl flex items-center justify-center group"
       aria-label="Toggle Chat"
     >
-      <svg
-        className="w-8 h-8"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-        ></path>
-      </svg>
+      <div className="relative w-8 h-8">
+        {/* Eyes */}
+        <span className="absolute top-1/3 left-[18%] w-1.5 h-1.5 bg-white rounded-full transition-all duration-300 ease-in-out group-hover:scale-110"></span>
+        <span className="absolute top-1/3 right-[18%] w-1.5 h-1.5 bg-white rounded-full transition-all duration-300 ease-in-out group-hover:scale-110"></span>
+        {/* Mouth */}
+        <span
+          className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full transition-opacity duration-300 ease-in-out group-hover:opacity-0"
+          aria-hidden="true"
+        ></span>
+        <span
+          className="absolute bottom-[13%] left-1/2 -translate-x-1/2 w-5 h-2 border-b-2 border-white rounded-b-full opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
+          aria-hidden="true"
+        ></span>
+        {/* Pulse animation */}
+        <span className="absolute inset-0 w-full h-full rounded-full bg-primary-soft/50 animate-pulse group-hover:animate-none"></span>
+      </div>
     </button>
   );
 };
