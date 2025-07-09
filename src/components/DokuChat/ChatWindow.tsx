@@ -21,7 +21,7 @@ import {
   ModalFooter,
 } from "@nextui-org/react";
 import StyledButton from "@/components/common/Button/StyledButton";
-import useColorMode from "@/hooks/useColorMode";
+// import useColorMode from "@/hooks/useColorMode";
 
 const IS_UUID =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
@@ -35,7 +35,8 @@ const ChatWindow = ({
   isOpen: boolean;
   toggleChat: () => void;
 }) => {
-  const [colorMode] = useColorMode();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const [_colorMode] = useColorMode();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -96,9 +97,10 @@ const ChatWindow = ({
         const dokuResponse = await sendMessage(currentInput, sessionId);
         setMessages((prevMessages) => [...prevMessages, dokuResponse]);
       } catch (error) {
+        console.log(error);
         const errorMessage: Message = {
           id: new Date().toISOString(),
-          text: "Sorry, something went wrong.",
+          text: "${error}",
           sender: "doku",
           timestamp: new Date().toISOString(),
         };
