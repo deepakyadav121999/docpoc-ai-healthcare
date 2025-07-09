@@ -65,23 +65,35 @@ const ChatWindow = ({
     onClose: onDeleteModalClose,
   } = useDisclosure();
 
+  const startNewChat = () => {
+    setView("chat");
+    const newSessionId = crypto.randomUUID();
+    setSessionId(newSessionId);
+    setMessages([
+      {
+        id: "initial",
+        text: "Hello! I am Doku, your AI assistant. How can I help you today?",
+        sender: "doku",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+  };
+
   useEffect(() => {
-    if (isOpen && !sessionId) {
-      const newSessionId = crypto.randomUUID();
-      setSessionId(newSessionId);
-      setMessages([
-        {
-          id: "initial",
-          text: "Hello! I am Doku, your AI assistant. How can I help you today?",
-          sender: "doku",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    } else {
+    // Start the first chat session when the component mounts for the first time
+    if (!sessionId) {
+      startNewChat();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Clean up history selection state when the chat window is closed
+    if (!isOpen) {
       setSelectionMode(false);
       setSelectedSessions([]);
     }
-  }, [isOpen, sessionId]);
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -537,13 +549,36 @@ const ChatWindow = ({
           className={`bg-white/70 dark:bg-black/70 backdrop-blur-xl rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-[73vh] w-full overflow-hidden border border-white/30 dark:border-white/10`}
         >
           <div className="flex justify-between items-center p-5 border-b border-stroke dark:border-white/5">
-            <h3 className="text-xl font-semibold text-black dark:text-white">
-              {view === "chat"
-                ? "DokuChat"
-                : view === "history"
-                  ? "Chat History"
-                  : "Conversation"}
-            </h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-semibold text-black dark:text-white">
+                {view === "chat"
+                  ? "DokuChat"
+                  : view === "history"
+                    ? "Chat History"
+                    : "Conversation"}
+              </h3>
+              {view === "chat" && (
+                <button
+                  onClick={startNewChat}
+                  title="New Chat"
+                  className="p-1 rounded-full text-black dark:text-white hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
             <button
               onClick={toggleChat}
               className="text-black dark:text-white hover:scale-110 transition-transform"
