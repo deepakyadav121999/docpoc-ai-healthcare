@@ -26,6 +26,7 @@ const config: Config = {
         transparent: "transparent",
         white: "#FFFFFF",
         primary: "#5750F1",
+        "primary-soft": "#818CF8",
         stroke: "#E6EBF1",
         "stroke-dark": "#27303E",
         dark: {
@@ -310,6 +311,18 @@ const config: Config = {
         5: "0px 10px 30px 0px rgba(85, 106, 235, 0.12), 0px 4px 10px 0px rgba(85, 106, 235, 0.04), 0px -18px 38px 0px rgba(85, 106, 235, 0.04)",
         6: "0px 12px 34px 0px rgba(13, 10, 44, 0.08), 0px 34px 26px 0px rgba(13, 10, 44, 0.05)",
         7: "0px 18px 25px 0px rgba(113, 116, 152, 0.05)",
+        "soft-xl":
+          "5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff, inset 1px 1px 0px #ffffff, inset -1px -1px 0px #d1d9e6",
+        "soft-2xl": "10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff",
+        "soft-inset-xl":
+          "inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff",
+        "dark-soft-xl":
+          "3px 3px 6px #0d121f, -3px -3px 6px #212d45, inset 1px 1px 0px #212d45, inset -1px -1px 0px #0d121f",
+        "dark-soft-2xl": "6px 6px 12px #0d121f, -6px -6px 12px #212d45",
+        "dark-soft-inset-xl":
+          "inset 3px 3px 6px #0d121f, inset -3px -3px 6px #212d45",
+        "soft-md": "2px 2px 4px #d1d9e6, -2px -2px 4px #ffffff",
+        "dark-soft-md": "2px 2px 4px #0d121f, -2px -2px 4px #212d45",
       },
       dropShadow: {
         card: "0px 8px 13px rgba(0, 0, 0, 0.07)",
