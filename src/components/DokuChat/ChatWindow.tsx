@@ -1,3 +1,4 @@
+import "regenerator-runtime/runtime";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -22,6 +23,9 @@ import {
 } from "@nextui-org/react";
 import StyledButton from "@/components/common/Button/StyledButton";
 import { useChat } from "@/components/Context/ChatContext";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 // import useColorMode from "@/hooks/useColorMode";
 
 const ChatWindow = ({
@@ -37,6 +41,17 @@ const ChatWindow = ({
   // const [_colorMode] = useColorMode();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  useEffect(() => {
+    setInputValue(transcript);
+  }, [transcript]);
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
@@ -369,24 +384,52 @@ const ChatWindow = ({
           <input
             type="text"
             placeholder="Type your message..."
-            className="w-full rounded-full border-none bg-white dark:bg-gray-dark py-4 pl-6 pr-16 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all"
+            className="w-full rounded-full border-none bg-white dark:bg-gray-dark py-4 pl-6 pr-28 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
           />
-          <button
-            onClick={handleSendMessage}
-            className="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-full bg-primary-soft shadow-soft-md dark:shadow-dark-soft-md hover:scale-105 active:scale-95 transition-all"
-          >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (listening) {
+                  SpeechRecognition.stopListening();
+                } else {
+                  resetTranscript();
+                  SpeechRecognition.startListening({ continuous: true });
+                }
+              }}
+              disabled={!browserSupportsSpeechRecognition}
+              className={`p-2 rounded-full transition-all ${
+                listening
+                  ? "bg-red-500/20 text-red-500 scale-110"
+                  : "bg-primary-soft/20 text-primary-soft"
+              }`}
             >
-              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
-            </svg>
-          </button>
+              <svg
+                className="w-6 h-6"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path>
+                <path d="M17 11h-1c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92z"></path>
+              </svg>
+            </button>
+            <button
+              onClick={handleSendMessage}
+              className="p-2 rounded-full bg-primary-soft shadow-soft-md dark:shadow-dark-soft-md hover:scale-105 active:scale-95 transition-all"
+            >
+              <svg
+                className="w-6 h-6 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
