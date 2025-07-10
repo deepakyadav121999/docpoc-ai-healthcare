@@ -21,6 +21,7 @@ import {
   ModalFooter,
 } from "@nextui-org/react";
 import StyledButton from "@/components/common/Button/StyledButton";
+import { useChat } from "@/components/Context/ChatContext";
 // import useColorMode from "@/hooks/useColorMode";
 
 type View = "chat" | "history" | "conversation";
@@ -32,14 +33,13 @@ const ChatWindow = ({
   isOpen: boolean;
   toggleChat: () => void;
 }) => {
+  const { sessionId, messages, setMessages, view, setView, startNewChat } =
+    useChat();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // const [_colorMode] = useColorMode();
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
-  const [view, setView] = useState<View>("chat");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -65,27 +65,13 @@ const ChatWindow = ({
     onClose: onDeleteModalClose,
   } = useDisclosure();
 
-  const startNewChat = () => {
-    setView("chat");
-    const newSessionId = crypto.randomUUID();
-    setSessionId(newSessionId);
-    setMessages([
-      {
-        id: "initial",
-        text: "Hello! I am Doku, your AI assistant. How can I help you today?",
-        sender: "doku",
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-  };
-
   useEffect(() => {
     // Start the first chat session when the component mounts for the first time
     if (!sessionId) {
       startNewChat();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
     // Clean up history selection state when the chat window is closed
