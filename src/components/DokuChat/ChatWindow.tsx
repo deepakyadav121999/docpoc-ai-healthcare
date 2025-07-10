@@ -331,7 +331,11 @@ const ChatWindow = ({
 
   const renderMessagesWithDateSeparators = (messages: Message[]) => {
     let lastDate: string | null = null;
-    return messages.map((msg) => {
+    const sortedMessages = messages.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    });
+    return sortedMessages.map((msg) => {
       if (!msg.timestamp) {
         return <MessageBubble key={msg.id} msg={msg} />;
       }
@@ -358,7 +362,7 @@ const ChatWindow = ({
   };
 
   const ChatView = (
-    <div className="flex flex-col flex-1 h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
         {renderMessagesWithDateSeparators(messages)}
         {isThinking && (
@@ -551,32 +555,26 @@ const ChatWindow = ({
           <div className="flex justify-between items-center p-5 border-b border-stroke dark:border-white/5">
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-semibold text-black dark:text-white">
-                {view === "chat"
-                  ? "Doku"
-                  : view === "history"
-                    ? "Chat History"
-                    : "Conversation"}
+                Doku
               </h3>
-              {view === "chat" && (
-                <button
-                  onClick={startNewChat}
-                  title="New Chat"
-                  className="p-1 rounded-full text-black dark:text-white hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+              <button
+                onClick={startNewChat}
+                title="New Chat"
+                className="p-1 rounded-full text-black dark:text-white hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              )}
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
             </div>
 
             <button
