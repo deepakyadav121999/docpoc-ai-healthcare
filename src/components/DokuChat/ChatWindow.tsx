@@ -24,8 +24,6 @@ import StyledButton from "@/components/common/Button/StyledButton";
 import { useChat } from "@/components/Context/ChatContext";
 // import useColorMode from "@/hooks/useColorMode";
 
-type View = "chat" | "history" | "conversation";
-
 const ChatWindow = ({
   isOpen,
   toggleChat,
