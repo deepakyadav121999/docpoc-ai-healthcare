@@ -23,7 +23,9 @@ const ConfigureReminder = () => {
           options={REMINDER_TAB_KEYS}
           color={TOOL_TIP_COLORS.primary}
         />
-        <ReminderConfiguration />
+        <div className="mt-6">
+          <ReminderConfiguration />
+        </div>
       </div>
     </DefaultLayout>
   );

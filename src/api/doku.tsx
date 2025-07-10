@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://dev.api.docpoc.app/DocPOC/v1";
+  process.env.API_URL || "https://dev.api.docpoc.app/DocPOC/v1";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -169,6 +169,83 @@ export const deleteSessions = async ({
     });
   } catch (error) {
     console.error("Error deleting sessions:", error);
+    throw error;
+  }
+};
+
+export interface BranchNotificationSetting {
+  id: string;
+  branchId: string;
+  notificationType: string;
+  channelType: "whatsapp" | "sms" | "email";
+  isEnabled: boolean;
+  config: {
+    priority: "high" | "medium" | "low";
+    templateId?: string;
+    delayMinutes: number;
+    retryAttempts: number;
+  };
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  branch: {
+    id: string;
+    name: string | null;
+  };
+}
+
+export const getBranchNotificationSettings = async (
+  branchId: string,
+  channelType: "whatsapp" | "sms" | "email",
+): Promise<BranchNotificationSetting[]> => {
+  try {
+    const token = localStorage.getItem("docPocAuth_token");
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await apiClient.get(
+      `/branch-notification-settings/branch/${branchId}`,
+      {
+        params: { channelType },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching branch notification settings:", error);
+    throw error;
+  }
+};
+
+export const updateBranchNotificationSetting = async (
+  settingId: string,
+  payload: Partial<BranchNotificationSetting>,
+): Promise<BranchNotificationSetting> => {
+  try {
+    const token = localStorage.getItem("docPocAuth_token");
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await apiClient.put(
+      `/branch-notification-settings/${settingId}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updating branch notification setting:", error);
     throw error;
   }
 };
