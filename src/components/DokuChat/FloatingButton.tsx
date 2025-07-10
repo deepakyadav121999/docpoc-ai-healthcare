@@ -4,7 +4,7 @@ const FloatingButton = ({ toggleChat }: { toggleChat: () => void }) => {
   return (
     <button
       onClick={toggleChat}
-      className="fixed bottom-10 right-4 md:bottom-8 md:right-8 z-[9999] w-16 h-16 rounded-full bg-primary-soft shadow-soft-xl dark:shadow-dark-soft-xl flex items-center justify-center group"
+      className="fixed bottom-[65px] right-4 md:bottom-[57px] md:right-8 z-[9999] w-16 h-16 rounded-full bg-primary-soft shadow-soft-xl dark:shadow-dark-soft-xl flex items-center justify-center group"
       aria-label="Toggle Chat"
     >
       <div className="relative w-8 h-8">

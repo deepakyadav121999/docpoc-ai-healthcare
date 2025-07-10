@@ -303,37 +303,64 @@ const ChatWindow = ({
     setSelectedSessions(newSelection);
   };
 
+  const MessageBubble = ({ msg }: { msg: Message }) => (
+    <div
+      className={`flex flex-col mb-6 ${
+        msg.sender === "user" ? "items-end" : "items-start"
+      }`}
+    >
+      <div
+        className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl ${
+          msg.sender === "user"
+            ? "bg-primary-soft text-white rounded-br-none"
+            : "bg-white dark:bg-gray-dark rounded-bl-none"
+        }`}
+      >
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+      </div>
+      {msg.timestamp && (
+        <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          {new Date(msg.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+      )}
+    </div>
+  );
+
+  const renderMessagesWithDateSeparators = (messages: Message[]) => {
+    let lastDate: string | null = null;
+    return messages.map((msg) => {
+      if (!msg.timestamp) {
+        return <MessageBubble key={msg.id} msg={msg} />;
+      }
+
+      const messageDate = new Date(msg.timestamp).toDateString();
+      const showDateSeparator = messageDate !== lastDate;
+      lastDate = messageDate;
+
+      return (
+        <React.Fragment key={msg.id}>
+          {showDateSeparator && (
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 my-4">
+              {new Date(msg.timestamp).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+          )}
+          <MessageBubble msg={msg} />
+        </React.Fragment>
+      );
+    });
+  };
+
   const ChatView = (
     <div className="flex flex-col flex-1 h-full">
       <div className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col mb-6 ${
-              msg.sender === "user" ? "items-end" : "items-start"
-            }`}
-          >
-            <div
-              className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl ${
-                msg.sender === "user"
-                  ? "bg-primary-soft text-white rounded-br-none"
-                  : "bg-white dark:bg-gray-dark rounded-bl-none"
-              }`}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {msg.text}
-              </ReactMarkdown>
-            </div>
-            {msg.timestamp && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
-          </div>
-        ))}
+        {renderMessagesWithDateSeparators(messages)}
         {isThinking && (
           <div className="flex flex-col mb-6 items-start">
             <div
@@ -499,34 +526,7 @@ const ChatWindow = ({
             Loading conversation...
           </p>
         ) : (
-          historyMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex flex-col mb-6 ${
-                msg.sender === "user" ? "items-end" : "items-start"
-              }`}
-            >
-              <div
-                className={`prose dark:prose-invert rounded-2xl px-5 py-3 max-w-lg shadow-soft-xl dark:shadow-dark-soft-xl ${
-                  msg.sender === "user"
-                    ? "bg-primary-soft text-white rounded-br-none"
-                    : "bg-white dark:bg-gray-dark rounded-bl-none"
-                }`}
-              >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {msg.text}
-                </ReactMarkdown>
-              </div>
-              {msg.timestamp && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              )}
-            </div>
-          ))
+          renderMessagesWithDateSeparators(historyMessages)
         )}
         <div ref={messagesEndRef} />
       </div>
