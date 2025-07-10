@@ -30,87 +30,15 @@ import {
   updateAccessToken,
 } from "../../store/slices/profileSlice";
 
-// export const appointmentStatuses = [
-//   {
-//     status: "Scheduled",
-//     json: JSON.stringify({
-//       description: "Appointment is scheduled in advance",
-//     }),
-//   },
-//   {
-//     status: "Walk-In",
-//     json: JSON.stringify({
-//       description: "Patient walked in without appointment",
-//     }),
-//   },
-//   {
-//     status: "Emergency",
-//     json: JSON.stringify({ description: "Emergency appointment" }),
-//   },
-//   {
-//     status: "Follow-Up",
-//     json: JSON.stringify({ description: "Follow-up appointment" }),
-//   },
-
-//   {
-//     status: "Visiting",
-//     json: JSON.stringify({ description: "Patient is currently visiting" }),
-//   },
-//   {
-//     status: "Visited",
-//     json: JSON.stringify({ description: "Patient has completed the visit" }),
-//   },
-//   {
-//     status: "Declined",
-//     json: JSON.stringify({ description: "Patient has completed the visit" }),
-//   },
-// ];
-// export const appointmentTypes = [
-//   {
-//     name: "General Consultation",
-//     json: JSON.stringify({
-//       description: "General health checkup or consultation",
-//     }),
-//   },
-//   {
-//     name: "Specialist Consultation",
-//     json: JSON.stringify({
-//       description: "Consultation with a medical specialist",
-//     }),
-//   },
-//   {
-//     name: "Diagnostic/Test Booking",
-//     json: JSON.stringify({
-//       description: "Booking for diagnostic tests or lab work",
-//     }),
-//   },
-//   {
-//     name: "Preventive Care",
-//     json: JSON.stringify({
-//       description: "Preventive health services and screenings",
-//     }),
-//   },
-//   {
-//     name: "Therapy/Procedure Booking",
-//     json: JSON.stringify({
-//       description: "Booking for therapies or medical procedures",
-//     }),
-//   },
-//   {
-//     name: "Virtual/Telehealth Appointment",
-//     json: JSON.stringify({ description: "Remote consultation via telehealth" }),
-//   },
-//   {
-//     name: "Dental",
-//     json: JSON.stringify({ description: "Default dental appointment type" }),
-//   },
-//   {
-//     name: "Checkup",
-//     json: JSON.stringify({ description: "Default Checkup consultation" }),
-//   },
-// ];
-
 const API_URL = process.env.API_URL;
+interface PincodeValidationResponse {
+  PostOffice: any;
+  state: string;
+  district: string;
+  pincode: string;
+  status: "Success" | "Error";
+}
+
 const Clinic = () => {
   const profile = useSelector((state: RootState) => state.profile.data);
   const dispatch = useDispatch<AppDispatch>();
@@ -155,16 +83,98 @@ const Clinic = () => {
   const [isHospitalAvailable, setIsHospitalAvailable] = useState(false);
   const [userId, setUserId] = useState("");
   // const [autocompleteValue, setAutocompleteValue] = useState("");
+  const [pincodeError, setPincodeError] = useState<string>("");
+  const [isValidatingPincode, setIsValidatingPincode] =
+    useState<boolean>(false);
+  const [isPincodeValid, setIsPincodeValid] = useState<boolean>(false);
+  // Function to validate pincode against selected state
+  const validatePincode = async (pincode: string, state: string) => {
+    if (!pincode || !state) {
+      setIsPincodeValid(false);
+      return false;
+    } // Skip validation if empty
 
-  const handleInputChange = (field: string, value: string) => {
+    setIsValidatingPincode(true);
+    setPincodeError("");
+
+    try {
+      // Use a pincode API service (example using Postalpincode.in)
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
+      const data: PincodeValidationResponse[] = await response.json();
+
+      if (data[0]?.status === "Error") {
+        setPincodeError("Invalid pincode");
+        setIsPincodeValid(false);
+        return false;
+      }
+
+      const pincodeState = data[0]?.PostOffice?.[0]?.State;
+      if (!pincodeState) {
+        setPincodeError("Could not verify pincode");
+        setIsPincodeValid(false);
+        return false;
+      }
+
+      // Check if pincode state matches selected state
+      const selectedStateObj = IndianStatesList.find(
+        (item) => item.label === state,
+      );
+      const isValid =
+        pincodeState.toLowerCase() === selectedStateObj?.label.toLowerCase();
+
+      if (!isValid) {
+        setPincodeError(`Pincode belongs to ${pincodeState}, not ${state}`);
+      }
+
+      setIsPincodeValid(isValid);
+      return isValid;
+    } catch (error) {
+      console.error("Pincode validation error:", error);
+      setPincodeError("Error validating pincode");
+      return false;
+    } finally {
+      setIsValidatingPincode(false);
+    }
+  };
+
+  const handleInputChange = async (field: string, value: string) => {
+    // if (field === "state") {
+    //   const selectedState = IndianStatesList.find(
+    //     (item) => item.label === value,
+    //   );
+    //   setSelectedStateKey(selectedState?.value || null);
+    // }
     if (field === "state") {
       const selectedState = IndianStatesList.find(
         (item) => item.label === value,
       );
       setSelectedStateKey(selectedState?.value || null);
+
+      // Validate pincode when state changes
+      if (clinicDetails.pincode) {
+        await validatePincode(clinicDetails.pincode, value);
+      }
+    }
+    if (field === "pincode") {
+      // Only allow numeric input
+      const numericValue = value.replace(/\D/g, "");
+      setClinicDetails({ ...clinicDetails, [field]: numericValue });
+
+      // Validate pincode if state is selected
+      if (numericValue.length === 6 && clinicDetails.state) {
+        await validatePincode(numericValue, clinicDetails.state);
+      } else if (numericValue.length === 6 && !clinicDetails.state) {
+        setPincodeError("Please select state first");
+      } else {
+        setPincodeError("");
+      }
+    } else {
+      setClinicDetails({ ...clinicDetails, [field]: value });
     }
 
-    setClinicDetails({ ...clinicDetails, [field]: value });
+    // setClinicDetails({ ...clinicDetails, [field]: value });
   };
   const handleWorkingDaysChange = (values: string[]) => {
     setSelectedWorkingDays(values);
@@ -277,6 +287,21 @@ const Clinic = () => {
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    if (clinicDetails.state && clinicDetails.pincode) {
+      const isValid = await validatePincode(
+        clinicDetails.pincode,
+        clinicDetails.state,
+      );
+      if (!isValid) {
+        setLoading(false);
+        setModalMessage({
+          success: "",
+          error: "Please correct the pincode/state mismatch before saving",
+        });
+        onOpen();
+        return;
+      }
+    }
 
     const errors: Record<string, string> = {};
     if (!selectedStateKey || !clinicDetails.state.trim()) {
@@ -856,9 +881,22 @@ const Clinic = () => {
                       "text-black", // Light mode text color
                       "dark:text-white", // Dark mode text color
                     ],
+                    // inputWrapper: [
+                    //   "group-data-[has-value=true]:text-black", // Light mode with value
+                    //   "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                    // ],
                     inputWrapper: [
-                      "group-data-[has-value=true]:text-black", // Light mode with value
-                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      // Base styles
+                      "border-2",
+                      // Normal state
+                      "group-data-[has-value=true]:text-black",
+                      "dark:group-data-[has-value=true]:text-white",
+                      // Invalid state (red border)
+                      pincodeError ? "border-danger" : "border-default",
+                      // Valid state (green border)
+                      clinicDetails.pincode.length === 6 && isPincodeValid
+                        ? "border-success"
+                        : "",
                     ],
                   }}
                   key="clinic-pincode"
@@ -866,11 +904,28 @@ const Clinic = () => {
                   type="text"
                   labelPlacement="outside"
                   label="Enter Pincode"
-                  color={TOOL_TIP_COLORS.secondary}
+                  // color={TOOL_TIP_COLORS.secondary}
+                  color={
+                    pincodeError
+                      ? "danger"
+                      : clinicDetails.pincode.length === 6 && isPincodeValid
+                        ? "success"
+                        : TOOL_TIP_COLORS.secondary
+                  }
                   maxLength={6}
+                  errorMessage={pincodeError}
                   value={clinicDetails.pincode}
                   onChange={(e) => handleInputChange("pincode", e.target.value)}
                   isDisabled={!edit}
+                  description={
+                    isValidatingPincode
+                      ? "Validating pincode..."
+                      : clinicDetails.pincode.length === 6 && isPincodeValid
+                        ? "✓ Pincode matches selected state"
+                        : clinicDetails.pincode.length === 6
+                          ? "Please verify pincode matches state"
+                          : "Enter 6-digit pincode"
+                  }
                 />
               </div>
               <div

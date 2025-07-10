@@ -208,18 +208,49 @@ export default function AppointmentTable() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const getAgeFromDob = (dob: string): number => {
-    const birthDate = new Date(dob);
-    const currentDate = new Date();
-    let age = currentDate.getFullYear() - birthDate.getFullYear();
-    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
-    ) {
-      age--;
+  // const getAgeFromDob = (dob: string): number => {
+  //   const birthDate = new Date(dob);
+  //   const currentDate = new Date();
+  //   let age = currentDate.getFullYear() - birthDate.getFullYear();
+  //   const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+  //   if (
+  //     monthDifference < 0 ||
+  //     (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+  //   ) {
+  //     age--;
+  //   }
+  //   return age;
+  // };
+
+  const getAgeFromDob = (dob: string): string => {
+    try {
+      const birthDate = new Date(dob);
+      const currentDate = new Date();
+
+      // Check if date is valid
+      if (isNaN(birthDate.getTime())) return "N/A";
+
+      // Check if date is in future
+      if (birthDate > currentDate) {
+        return "N/A";
+      }
+
+      let age = currentDate.getFullYear() - birthDate.getFullYear();
+      const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+
+      if (
+        monthDifference < 0 ||
+        (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      // Handle negative ages (shouldn't happen due to future check)
+      return age >= 0 ? age.toString() : "N/A";
+    } catch (error) {
+      console.error("Error calculating age from DOB:", error);
+      return "N/A";
     }
-    return age;
   };
 
   function extractTime(dateTime: string): string {

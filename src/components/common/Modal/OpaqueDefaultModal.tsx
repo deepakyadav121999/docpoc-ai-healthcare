@@ -62,6 +62,7 @@ const App: React.FC<ParentComponentProps> = ({
     if (modalMessage.success) {
       onOpenChange();
     }
+
     if (onClose) {
       onClose();
     }
