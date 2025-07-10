@@ -1,10 +1,11 @@
-import { auth } from "../auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth";
 
 const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getReminderOverview = async (branchId: string) => {
-  const session = await auth();
-  if (!session || !session.user || !session.user.token) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.backendToken) {
     throw new Error("User not authenticated");
   }
 
@@ -16,7 +17,7 @@ export const getReminderOverview = async (branchId: string) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.user.token}`,
+        Authorization: `Bearer ${session.backendToken}`,
       },
     });
 
