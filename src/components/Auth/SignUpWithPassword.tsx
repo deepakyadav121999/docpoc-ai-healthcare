@@ -39,14 +39,19 @@ const SignUp: React.FC<SignUpProps> = ({
   // setAuthPage,
   onLogin,
 }) => {
-  const [data, setData] = useState({
+  // const [data, setData] = useState({
+  //   remember: false,
+  //   signUpMethod: "phone",
+  // });
+  const [data] = useState({
     remember: false,
-    signUpMethod: "email",
+    signUpMethod: "phone",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordBoxType, setPasswordBoxType] = useState("password");
+  // const [showPassword, setShowPassword] = useState(false);
+  // const [passwordBoxType, setPasswordBoxType] = useState("password");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // const [password, setPassword] = useState("");
+  const [password] = useState("");
   const [userInput, setUserInput] = useState(""); // Unified field for email/phone
   const [inputType, setInputType] = useState<"email" | "phone">("email");
 
@@ -66,7 +71,7 @@ const SignUp: React.FC<SignUpProps> = ({
   // const [buttonText] = useState("Sign Up");
   const [loading, setLoading] = useState(false);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  // const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
   const router = useRouter();
@@ -131,9 +136,14 @@ const SignUp: React.FC<SignUpProps> = ({
         [inputType]: userInput.trim(),
       });
       return response.data.exists;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking user existence:", error);
-      return false; // Assume user doesn't exist if there's an error
+      // If it's a 404 or similar error, user doesn't exist
+      if (error.response?.status === 404) {
+        return false;
+      }
+      // For other errors, throw so the calling function can handle it
+      throw new Error("Failed to check user existence");
     } finally {
       setLoadingState("userCheck", false);
     }
@@ -178,10 +188,19 @@ const SignUp: React.FC<SignUpProps> = ({
         // Handle signUpMethod "phone" or "email"
         setLoadingState("otpGeneration", true);
 
-        // Call API for OTP generation
-        const userExists = await checkUserExists(userInput, inputType);
-        if (userExists) {
-          setError("User is already registered. Please log in.");
+        try {
+          // Call API for OTP generation
+          const userExists = await checkUserExists(userInput, inputType);
+          if (userExists) {
+            setError("User is already registered. Please log in.");
+            setShowErrors(true);
+            setLoading(false);
+            setLoadingState("otpGeneration", false);
+            return;
+          }
+        } catch (err) {
+          console.error("Error checking user existence:", err);
+          setError("Failed to verify user status. Please try again later.");
           setShowErrors(true);
           setLoading(false);
           setLoadingState("otpGeneration", false);
@@ -363,6 +382,9 @@ const SignUp: React.FC<SignUpProps> = ({
     try {
       // setLoading(true);
       setLoadingState("otpVerification", true);
+      const defaultPassword = `${userInput}${Date.now()}`;
+      const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
+
       const payload =
         inputType === "email"
           ? { email: userInput, otp, username: userInput } // Use email if detected as email
@@ -381,7 +403,53 @@ const SignUp: React.FC<SignUpProps> = ({
           });
           onOpen();
         } else if (message.includes("Please create a password")) {
-          setIsPasswordModalOpen(true); // Open password modal
+          // setIsPasswordModalOpen(true); // Open password modal
+          setModalMessage({
+            success: "Setting up your account...",
+            error: "",
+          });
+          onOpen();
+
+          const registrationPayload = {
+            [inputType]: userInput,
+            username: userInput,
+            otp,
+            password: defaultPassword,
+            name: inputType === "email" ? email.split("@")[0] : "public user",
+            user_type: "SUPER_ADMIN",
+            accessType: accessType,
+            json: JSON.stringify({ clinicSize: dropdownOption }),
+          };
+
+          const registrationResponse = await axios.post(
+            `${API_URL}/auth/set-password`,
+            registrationPayload,
+          );
+          if (registrationResponse.status === 200) {
+            const { access_token } = registrationResponse.data;
+            if (access_token) {
+              setModalMessage({
+                success: "Finalizing your account...",
+                error: "",
+              });
+              onOpen();
+              onLogin(access_token);
+              await fetchProfile(access_token);
+
+              localStorage.setItem("docPocAuth_token", access_token);
+              // router.push("/");
+              setModalMessage({
+                success: "Account created successfully! Redirecting...",
+                error: "",
+              });
+              onOpen();
+
+              setTimeout(() => {
+                onClose();
+                router.push("/");
+              }, 1500);
+            }
+          }
         }
       }
     } catch (err) {
@@ -394,66 +462,66 @@ const SignUp: React.FC<SignUpProps> = ({
     }
   }
 
-  async function handlePasswordSetup() {
-    try {
-      // setLoading(true);
-      setLoadingState("passwordSetup", true);
-      const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
-      const payload =
-        inputType === "email"
-          ? {
-              email: userInput,
-              username: userInput,
-              otp,
-              password,
-              name: email.split("@")[0],
-              user_type: "SUPER_ADMIN",
-              // accessType:
-              //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
-              accessType: accessType,
-              json: JSON.stringify({ clinicSize: dropdownOption }),
-            } // Use email if detected as email
-          : {
-              phone: userInput,
-              username: userInput,
-              otp,
-              password,
-              name: "public user",
-              user_type: "SUPER_ADMIN",
-              // accessType:
-              //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
-              accessType: accessType,
-              json: JSON.stringify({ clinicSize: dropdownOption }),
-            };
+  // async function handlePasswordSetup() {
+  //   try {
+  //     // setLoading(true);
+  //     setLoadingState("passwordSetup", true);
+  //     const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
+  //     const payload =
+  //       inputType === "email"
+  //         ? {
+  //             email: userInput,
+  //             username: userInput,
+  //             otp,
+  //             password,
+  //             name: email.split("@")[0],
+  //             user_type: "SUPER_ADMIN",
+  //             // accessType:
+  //             //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+  //             accessType: accessType,
+  //             json: JSON.stringify({ clinicSize: dropdownOption }),
+  //           } // Use email if detected as email
+  //         : {
+  //             phone: userInput,
+  //             username: userInput,
+  //             otp,
+  //             password,
+  //             name: "public user",
+  //             user_type: "SUPER_ADMIN",
+  //             // accessType:
+  //             //   '{"setAppointments":true,"messagePatient":true,"editDoctor":true}',
+  //             accessType: accessType,
+  //             json: JSON.stringify({ clinicSize: dropdownOption }),
+  //           };
 
-      const response = await axios.post(
-        `${API_URL}/auth/set-password`,
-        payload,
-      );
-      if (response.status === 200) {
-        const { access_token } = response.data;
+  //     const response = await axios.post(
+  //       `${API_URL}/auth/set-password`,
+  //       payload,
+  //     );
+  //     if (response.status === 200) {
+  //       const { access_token } = response.data;
 
-        if (access_token) {
-          onLogin(access_token);
-          await fetchProfile(access_token);
-          localStorage.setItem("docPocAuth_token", access_token);
+  //       if (access_token) {
+  //         onLogin(access_token);
+  //         await fetchProfile(access_token);
+  //         localStorage.setItem("docPocAuth_token", access_token);
 
-          router.push("/");
-          // window.location.reload();
-        }
-      }
-    } catch (err) {
-      console.error("Password setup failed:", err);
-      setModalMessage({
-        success: "",
-        error: "Failed to set password. Please try again later.",
-      });
-      onOpen();
-    } finally {
-      // setLoading(false);
-      setLoadingState("passwordSetup", false);
-    }
-  }
+  //         router.push("/");
+  //         // window.location.reload();
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Password setup failed:", err);
+  //     setModalMessage({
+  //       success: "",
+  //       error: "Failed to set password. Please try again later.",
+  //     });
+  //     onOpen();
+  //   } finally {
+  //     // setLoading(false);
+  //     setLoadingState("passwordSetup", false);
+  //   }
+  // }
 
   const ErrorMessages = () => (
     <div className="flex gap-12">
@@ -488,28 +556,28 @@ const SignUp: React.FC<SignUpProps> = ({
         />
 
         <div className="mb-4">
-          <label className="mb-2.5 block font-medium text-dark dark:text-white">
+          {/* <label className="mb-2.5 block font-medium text-dark dark:text-white">
             Sign Up Method
-          </label>
+          </label> */}
           {errors && <ErrorMessages />}
           <div className="flex gap-4">
-            <button
+            {/* <button
               type="button"
               className={`w-full rounded-lg border p-3 font-medium ${data.signUpMethod === "email" ? "border-primary" : "border-stroke"}`}
               onClick={() => setData({ ...data, signUpMethod: "email" })}
             >
-              Email & Password
-            </button>
-            <button
+              Signup with Email & Password
+            </button> */}
+            {/* <button
               type="button"
               className={`w-full rounded-lg border p-3 font-medium ${data.signUpMethod === "phone" ? "border-primary" : "border-stroke"}`}
               onClick={() => setData({ ...data, signUpMethod: "phone" })}
             >
-              Email & Phone OTP
-            </button>
+              Signup with Mobile Otp
+            </button> */}
           </div>
         </div>
-        {data.signUpMethod === "email" && (
+        {/* {data.signUpMethod === "email" && (
           <div>
             <div className="mb-4">
               <label
@@ -607,7 +675,7 @@ const SignUp: React.FC<SignUpProps> = ({
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {data.signUpMethod === "phone" && (
           <div>
@@ -616,12 +684,12 @@ const SignUp: React.FC<SignUpProps> = ({
                 htmlFor="userInput"
                 className="mb-2.5 block font-medium text-dark dark:text-white"
               >
-                Email or Phone
+                Phone Number
               </label>
               <div className="relative">
                 <input
-                  type="text"
-                  placeholder="Enter your email or phone number"
+                  type="number"
+                  placeholder="Enter your phone number"
                   name="userInput"
                   value={userInput}
                   onChange={(e) => {
@@ -644,7 +712,7 @@ const SignUp: React.FC<SignUpProps> = ({
                   className="w-full rounded-lg border border-stroke bg-transparent py-[15px] pl-6 pr-11 font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
                   required
                 />
-                <span className="absolute right-4.5 top-1/2 -translate-y-1/2">
+                {/* <span className="absolute right-4.5 top-1/2 -translate-y-1/2">
                   <svg
                     className="fill-current"
                     width="22"
@@ -659,8 +727,60 @@ const SignUp: React.FC<SignUpProps> = ({
                       d="M9.11756 2.979H12.8877C14.5723 2.97899 15.9066 2.97898 16.9509 3.11938C18.0256 3.26387 18.8955 3.56831 19.5815 4.25431C20.2675 4.94031 20.5719 5.81018 20.7164 6.8849C20.8568 7.92918 20.8568 9.26351 20.8568 10.9481V11.0515C20.8568 12.7362 20.8568 14.0705 20.7164 15.1148C20.5719 16.1895 20.2675 17.0594 19.5815 17.7454C18.8955 18.4314 18.0256 18.7358 16.9509 18.8803C15.9066 19.0207 14.5723 19.0207 12.8876 19.0207H9.11756C7.43295 19.0207 6.09861 19.0207 5.05433 18.8803C3.97961 18.7358 3.10974 18.4314 2.42374 17.7454C1.73774 17.0594 1.4333 16.1895 1.28881 15.1148C1.14841 14.0705 1.14842 12.7362 1.14844 11.0516V10.9481C1.14842 9.26351 1.14841 7.92918 1.28881 6.8849C1.4333 5.81018 1.73774 4.94031 2.42374 4.25431C3.10974 3.56831 3.97961 3.26387 5.05433 3.11938C6.09861 2.97898 7.43294 2.97899 9.11756 2.979ZM5.23755 4.48212C4.3153 4.60611 3.78396 4.83864 3.39602 5.22658C3.00807 5.61452 2.77554 6.14587 2.65155 7.06812C2.5249 8.01014 2.52344 9.25192 2.52344 10.9998C2.52344 12.7478 2.5249 13.9895 2.65155 14.9316C2.77554 15.8538 3.00807 16.3851 3.39602 16.7731C3.78396 17.1611 4.3153 17.3936 5.23755 17.5176C6.17957 17.6442 7.42136 17.6456 9.16932 17.6456H12.8359C14.5838 17.6456 15.8256 17.6442 16.7676 17.5176C17.6899 17.3936 18.2212 17.1611 18.6092 16.7731C18.9971 16.3851 19.2297 15.8538 19.3537 14.9316C19.4803 13.9895 19.4817 12.7478 19.4817 10.9998C19.4817 9.25192 19.4803 8.01014 19.3537 7.06812C19.2297 6.14587 18.9971 5.61452 18.6092 5.22658C18.2212 4.83864 17.6899 4.60611 16.7676 4.48212C15.8256 4.35547 14.5838 4.35401 12.8359 4.35401H9.16932C7.42136 4.35401 6.17957 4.35547 5.23755 4.48212ZM12.0022 11.0001L17.7172 6.21275L18.428 6.97529L11.5011 12.5025L4.5742 6.97529L5.28502 6.21275L11.0001 11.0001H11.0043L11.5009 11.4014L12.0022 11.0001Z"
                     />
                   </svg>
+                </span> */}
+                <span className="absolute right-4.5 top-1/2 -translate-y-1/2">
+                  <svg
+                    className="fill-current"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 22 22"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M7.5 1.5H14.5C15.6046 1.5 16.5 2.39543 16.5 3.5V18.5C16.5 19.6046 15.6046 20.5 14.5 20.5H7.5C6.39543 20.5 5.5 19.6046 5.5 18.5V3.5C5.5 2.39543 6.39543 1.5 7.5 1.5ZM7.5 2.5C6.94772 2.5 6.5 2.94772 6.5 3.5V18.5C6.5 19.0523 6.94772 19.5 7.5 19.5H14.5C15.0523 19.5 15.5 19.0523 15.5 18.5V3.5C15.5 2.94772 15.0523 2.5 14.5 2.5H7.5ZM11 17C11.5523 17 12 16.5523 12 16C12 15.4477 11.5523 15 11 15C10.4477 15 10 15.4477 10 16C10 16.5523 10.4477 17 11 17Z"
+                    />
+                  </svg>
                 </span>
               </div>
+              {/* <div className="relative rounded-lg border border-stroke focus-within:border-2 focus-within:border-primary transition-all">
+                <PhoneInput
+                  country={countryCode}
+                  value={userInput}
+                  onChange={(phone) => {
+                    setUserInput(phone);
+                    setInputType("phone");
+                  }}
+                  placeholder="Enter Phone Number"
+                  inputStyle={{
+                    width: "100%",
+                    border: "none",
+                    padding: "15px 15px 15px 50px",
+                    height: "100%",
+                    backgroundColor: "transparent",
+                    fontSize: "16px",
+                    outline: "none",
+                    boxShadow: "none",
+                  }}
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  buttonStyle={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "0 5px 0 12px",
+                  }}
+                  dropdownStyle={{
+                    borderRadius: "8px",
+                  }}
+                  inputProps={{
+                    autoFocus: false,
+                  }}
+                  enableSearch
+                />
+              </div> */}
             </div>
 
             {/* Additional fields like OTP input can go here */}
@@ -824,7 +944,7 @@ const SignUp: React.FC<SignUpProps> = ({
       </Modal>
 
       {/* Password Setup Modal */}
-      <Modal
+      {/* <Modal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
       >
@@ -888,14 +1008,6 @@ const SignUp: React.FC<SignUpProps> = ({
               />
             </div>
 
-            {/* <Input
-              // bordered
-              label="Password"
-              type="password"
-              placeholder="Enter a secure password"
-              fullWidth
-              onChange={(e) => setPassword(e.target.value)}
-            /> */}
           </ModalBody>
           <ModalFooter>
             <Button
@@ -904,7 +1016,7 @@ const SignUp: React.FC<SignUpProps> = ({
               onPress={handlePasswordSetup}
               color="primary"
             >
-              {/* {loading ? <Spinner size="lg" /> : "Set Password"} */}
+           
               {loadingStates.passwordSetup ? (
                 <div className="flex gap-2 items-center">
                   <Spinner size="sm" /> Setting up...
@@ -915,7 +1027,7 @@ const SignUp: React.FC<SignUpProps> = ({
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
+      </Modal> */}
 
       {/* General Error/Success Modal */}
       <Modal isOpen={isOpen} onClose={handleModalClose}>
@@ -935,7 +1047,18 @@ const SignUp: React.FC<SignUpProps> = ({
                 <Spinner size="lg" />
               </div>
             ) : modalMessage.success ? (
-              <p className="text-green-600">{modalMessage.success}</p>
+              <>
+                <Progress
+                  size="sm"
+                  isIndeterminate
+                  aria-label="Progress"
+                  className="w-full"
+                  color="primary"
+                />
+                <p className="text-center text-default-600">
+                  {modalMessage.success}
+                </p>
+              </>
             ) : (
               <p className="text-red-600">{modalMessage.error}</p>
             )}

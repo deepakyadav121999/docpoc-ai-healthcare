@@ -83,6 +83,7 @@ const profileSlice = createSlice({
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch profile";
+        localStorage.removeItem("docPocAuth_token");
       })
       .addCase(clrProfile.fulfilled, (state) => {
         state.data = null;

@@ -1215,8 +1215,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 // color={TOOL_TIP_COLORS.secondary}
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500  "
                 style={{ minWidth: 230, marginBottom: 20 }}
+                disabled={savingData}
               >
-                {savingData ? "Saving..." : "Save Changes"}
+                {savingData ? "Creating Appointment..." : "Create Appointment"}
               </button>
 
               <EnhancedModal

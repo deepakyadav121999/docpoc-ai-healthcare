@@ -14,6 +14,7 @@ import { fetchProfile, clearProfile } from "../store/slices/profileSlice";
 import { RootState } from "../store";
 import { AppDispatch } from "../store";
 import { AuthProvider } from "@/components/auth-provider";
+import { ChatProvider } from "@/components/Context/ChatContext";
 
 function RootLayout({
   children,
@@ -145,7 +146,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <Provider store={store}>
-        <RootLayout>{children}</RootLayout>
+        <ChatProvider>
+          <RootLayout>{children}</RootLayout>
+        </ChatProvider>
       </Provider>
     </AuthProvider>
   );
