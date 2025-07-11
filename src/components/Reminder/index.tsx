@@ -27,6 +27,7 @@ export default function App() {
             setChartData(response.overview);
             setLoading(false);
           } catch (err) {
+            console.log(err);
             setError("Failed to fetch chart data");
             setLoading(false);
           }
