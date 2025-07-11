@@ -4,8 +4,8 @@ import axios from "axios";
 import StyledButton from "@/components/common/Button/StyledButton";
 import { useRouter } from "next/navigation";
 // import Link from "next/link";
-import ResetPasswordModal from "../common/Modal/ResetPasswordModal";
-import { useDisclosure } from "@nextui-org/react";
+// import ResetPasswordModal from "../common/Modal/ResetPasswordModal";
+// import { useDisclosure } from "@nextui-org/react";
 
 const API_URL = process.env.API_URL;
 
@@ -19,11 +19,13 @@ const SigninWithPassword: React.FC<SignInProps> = ({
   onLogin,
 }) => {
   const router = useRouter();
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  // const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const [loginMethod, setLoginMethod] = useState<"password" | "otp">(
-    "password",
-  );
+  // const [loginMethod, setLoginMethod] = useState<"password" | "otp">(
+  //   "password",
+  // );
+  // const [loginMethod, setLoginMethod] = useState<"otp" | "password">("otp");
+  const [loginMethod] = useState<"otp" | "password">("otp");
   const [userInput, setUserInput] = useState(""); // Shared input field for email/mobile
   const [inputType, setInputType] = useState<"email" | "phone">("email"); // Determines the type of input
   const [otp, setOtp] = useState("");
@@ -199,24 +201,24 @@ const SigninWithPassword: React.FC<SignInProps> = ({
   return (
     <div>
       <div className="mb-4">
-        <label className="mb-2.5 block font-medium text-dark dark:text-white">
+        {/* <label className="mb-2.5 block font-medium text-dark dark:text-white">
           Sign In Method
-        </label>
+        </label> */}
 
-        <div className="flex gap-4">
+        {/* <div className="flex gap-4">
           <button
             className={` w-full rounded-lg border p-3 font-medium ${loginMethod === "password" ? " border-primary" : "border-stroke"}`}
             onClick={() => setLoginMethod("password")}
           >
-            Login with Password
+            Login with Email & Password
           </button>
           <button
             className={`w-full rounded-lg border p-3 font-medium${loginMethod === "otp" ? " border-primary" : "border-stroke"}`}
             onClick={() => setLoginMethod("otp")}
           >
-            Login with OTP
+            Login with Mobile Otp
           </button>
-        </div>
+        </div> */}
       </div>
 
       {loginMethod === "password" && (
@@ -231,7 +233,7 @@ const SigninWithPassword: React.FC<SignInProps> = ({
             </label>
             <div className="relative">
               <input
-                type="text"
+                type="number"
                 value={userInput}
                 onChange={(e) => handleInputChange(e.target.value)}
                 className="w-full rounded-lg border border-stroke bg-transparent py-[15px] pl-6 pr-11 font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
@@ -351,10 +353,11 @@ const SigninWithPassword: React.FC<SignInProps> = ({
               htmlFor="userInput"
               className="mb-2.5 block font-medium text-dark dark:text-white"
             >
-              Email or Phone
+              Phone Number
             </label>
+
             <input
-              type="text"
+              type="number"
               value={userInput}
               onChange={(e) => handleInputChange(e.target.value)}
               className="w-full rounded-lg border border-stroke bg-transparent py-[15px] pl-6 pr-11 font-medium text-dark outline-none focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
@@ -412,15 +415,13 @@ const SigninWithPassword: React.FC<SignInProps> = ({
         </form>
       )}
 
-      <p className="text-center text-lg text-black dark:text-white">
+      {/* <p className="text-center text-lg text-black dark:text-white">
         Forgot your password?{" "}
-        {/* <Link href="/auth/forgotpassword" className="ml-1 text-primary">
-        Click to reset
-        </Link> */}
+     
         <button onClick={() => onOpen()}> Click to reset</button>
-      </p>
+      </p> */}
 
-      <ResetPasswordModal isOpen={isOpen} onClose={() => onClose()} />
+      {/* <ResetPasswordModal isOpen={isOpen} onClose={() => onClose()} /> */}
     </div>
   );
 };
