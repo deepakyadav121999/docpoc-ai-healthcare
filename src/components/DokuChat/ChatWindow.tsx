@@ -3,13 +3,12 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
-  Message,
   sendMessage,
   getChatSessions,
   getConversationMessages,
-  Session,
   deleteSessions,
-} from "@/api/doku";
+} from "@/api/doku-chat";
+import { Message, Session } from "@/types/doku-chat";
 import {
   Tabs,
   Tab,

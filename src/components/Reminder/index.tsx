@@ -1,15 +1,44 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ChartLine from "../Charts/ChartLine";
 import { ApexOptions } from "apexcharts";
 import DataTable from "./DataTable";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { dokuGet } from "@/api/doku";
+import { ReminderOverview } from "./types";
+import { Spinner } from "@nextui-org/react";
 
 export default function App() {
   const OverView = () => {
+    const [chartData, setChartData] = useState<ReminderOverview[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const profile = useSelector((state: RootState) => state.profile.data);
+
+    useEffect(() => {
+      if (profile && profile.branchId) {
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+            const response = await dokuGet(
+              `notifications/overview/${profile.branchId}`,
+            );
+            setChartData(response.overview);
+            setLoading(false);
+          } catch (err) {
+            setError("Failed to fetch chart data");
+            setLoading(false);
+          }
+        };
+        fetchData();
+      }
+    }, [profile]);
+
     const series = [
       {
         name: "Reminders Sent",
-        data: [1200, 6000, 7500, 9000, 11000, 18000, 20000],
+        data: chartData.map((item) => item.totalTriggers),
       },
     ];
 
@@ -77,25 +106,22 @@ export default function App() {
       },
       tooltip: {
         fixed: {
-          enabled: !1,
-        },
-        x: {
-          show: !1,
+          enabled: false,
         },
         y: {
           title: {
-            formatter: function () {
-              return "";
+            formatter: function (seriesName) {
+              return seriesName;
             },
           },
         },
         marker: {
-          show: !1,
+          show: false,
         },
       },
       xaxis: {
         type: "category",
-        categories: ["Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"],
+        categories: chartData.map((item) => item.name),
         axisBorder: {
           show: false,
         },
@@ -112,22 +138,39 @@ export default function App() {
       },
     };
 
+    const totalRemindersSent = chartData.reduce(
+      (acc, item) => acc + item.totalTriggers,
+      0,
+    );
     const footer = {
-      start: { title: "Reminders Sent (since last 3 months)", data: "24,000+" },
-      end: { title: "Reminder Sent (between Jan - Mar 2024)", data: "42,000+" },
+      start: {
+        title: "Total Reminders Sent",
+        data: totalRemindersSent.toLocaleString(),
+      },
+      end: { title: "Activated Channels", data: "WhatsApp" },
     };
     return (
       <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
-          <DataTable />
+          <DataTable data={chartData} loading={loading} error={error} />
         </div>
         <div className="flex flex-col w-full " style={{ marginTop: 45 }}>
-          <ChartLine
-            options={options}
-            series={series}
-            footer={footer}
-            label="Reminder Analytics"
-          />
+          {loading ? (
+            <div className="flex h-96 items-center justify-center">
+              <Spinner label="Loading analytics..." />
+            </div>
+          ) : error ? (
+            <div className="flex h-96 items-center justify-center">
+              <p className="text-danger">{error}</p>
+            </div>
+          ) : (
+            <ChartLine
+              options={options}
+              series={series}
+              footer={footer}
+              label="Reminder Analytics"
+            />
+          )}
         </div>
       </div>
     );

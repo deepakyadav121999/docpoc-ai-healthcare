@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -11,9 +11,6 @@ import {
   ChipProps,
   SortDescriptor,
 } from "@nextui-org/react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { dokuGet } from "@/api/doku";
 import { ReminderOverview } from "./types";
 import { format } from "date-fns";
 
@@ -30,38 +27,19 @@ const columns = [
   { name: "STATUS", uid: "status", sortable: true },
 ];
 
-export default function DataTable() {
-  const [data, setData] = useState<ReminderOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const profile = useSelector((state: RootState) => state.profile.data);
+interface DataTableProps {
+  data: ReminderOverview[];
+  loading: boolean;
+  error: string | null;
+}
 
-  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+export default function DataTable({ data, loading, error }: DataTableProps) {
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "name",
     direction: "ascending",
   });
 
-  useEffect(() => {
-    if (profile && profile.branchId) {
-      const fetchData = async () => {
-        try {
-          setLoading(true);
-          const response = await dokuGet(
-            `notifications/overview/${profile.branchId}`,
-          );
-          setData(response.overview);
-          setLoading(false);
-        } catch (err) {
-          console.log(err);
-          setError("Failed to fetch data");
-          setLoading(false);
-        }
-      };
-      fetchData();
-    }
-  }, [profile]);
-
-  const sortedItems = React.useMemo(() => {
+  const sortedItems = useMemo(() => {
     if (!data) return [];
     return [...data].sort((a: ReminderOverview, b: ReminderOverview) => {
       const first = a[sortDescriptor.column as keyof ReminderOverview] as any;
