@@ -4,7 +4,7 @@ import axios from "axios";
 const API_URL = process.env.API_URL;
 
 interface ProfileState {
-  data: any; 
+  data: any;
   loading: boolean;
   error: string | null;
 }
