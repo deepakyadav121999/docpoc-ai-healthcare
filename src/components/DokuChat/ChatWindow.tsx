@@ -568,7 +568,7 @@ const ChatWindow = ({
     <>
       <div
         className={`fixed bottom-0 right-0 z-[9999] transition-all duration-500 ease-in-out
-        md:bottom-[90px] md:right-8 md:max-w-2xl w-full
+        lg:bottom-[90px] lg:right-8 lg:max-w-2xl w-full
         ${
           isOpen
             ? "translate-y-0 opacity-100"
@@ -577,7 +577,7 @@ const ChatWindow = ({
       `}
       >
         <div
-          className={`bg-white/70 dark:bg-black/70 backdrop-blur-xl rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-[73vh] w-full overflow-hidden border border-white/30 dark:border-white/10`}
+          className={`bg-white/70 dark:bg-black/70 backdrop-blur-xl rounded-t-3xl lg:rounded-3xl shadow-2xl flex flex-col h-[85vh] lg:h-[73vh] w-full overflow-hidden border border-white/30 dark:border-white/10`}
         >
           <div className="flex justify-between items-center p-5 border-b border-stroke dark:border-white/5">
             <div className="flex items-center gap-3">
