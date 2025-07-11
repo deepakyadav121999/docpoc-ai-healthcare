@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -8,147 +8,124 @@ import {
   TableRow,
   TableCell,
   Chip,
-  User,
-  Selection,
   ChipProps,
   SortDescriptor,
 } from "@nextui-org/react";
-import { columns, users, statusOptions } from "./data";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { dokuGet } from "@/api/doku";
+import { ReminderOverview } from "./types";
+import { format } from "date-fns";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
-  active: "success",
-  noPatientAssigned: "warning",
-  inactive: "danger",
+  Active: "success",
+  InActive: "danger",
 };
 
-const INITIAL_VISIBLE_COLUMNS = [
-  "name",
-  "createdOn",
-  "totalTriggers",
-  "channels",
-  "status",
+const columns = [
+  { name: "NAME", uid: "name", sortable: true },
+  { name: "ENABLED ON", uid: "enabledOn", sortable: true },
+  { name: "TOTAL TRIGGERS", uid: "totalTriggers" },
+  { name: "ACTIVATED CHANNEL", uid: "activatedChannel" },
+  { name: "STATUS", uid: "status", sortable: true },
 ];
 
-type User = (typeof users)[0];
-
 export default function DataTable() {
-  const [filterValue] = React.useState("");
-  // const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-  //   new Set([]),
-  // );
-  const [visibleColumns] = React.useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS),
-  );
-  // const visibleColumns =   new Set(INITIAL_VISIBLE_COLUMNS)
-  // const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const statusFilter = "all";
-  // const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const rowsPerPage = 5;
+  const [data, setData] = useState<ReminderOverview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const profile = useSelector((state: RootState) => state.profile.data);
+
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-    column: "age",
+    column: "name",
     direction: "ascending",
   });
-  // const [page, setPage] = React.useState(1);
-  const page = 1;
 
-  const hasSearchFilter = Boolean(filterValue);
-
-  const headerColumns = React.useMemo(() => {
-    if (visibleColumns === "all") return columns;
-
-    return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid),
-    );
-  }, [visibleColumns]);
-
-  const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...users];
-
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase()),
-      );
+  useEffect(() => {
+    if (profile && profile.branchId) {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const response = await dokuGet(
+            `notifications/overview/${profile.branchId}`,
+          );
+          setData(response.overview);
+          setLoading(false);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to fetch data");
+          setLoading(false);
+        }
+      };
+      fetchData();
     }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status),
-      );
-    }
-
-    return filteredUsers;
-  }, [users, filterValue, statusFilter]);
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+  }, [profile]);
 
   const sortedItems = React.useMemo(() => {
-    return [...items].sort((a: User, b: User) => {
-      const first = a[sortDescriptor.column as keyof User] as number;
-      const second = b[sortDescriptor.column as keyof User] as number;
+    if (!data) return [];
+    return [...data].sort((a: ReminderOverview, b: ReminderOverview) => {
+      const first = a[sortDescriptor.column as keyof ReminderOverview] as any;
+      const second = b[sortDescriptor.column as keyof ReminderOverview] as any;
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [sortDescriptor, items]);
+  }, [sortDescriptor, data]);
 
-  const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
-    const cellValue = user[columnKey as keyof User];
+  const renderCell = React.useCallback(
+    (item: ReminderOverview, columnKey: React.Key) => {
+      const cellValue = item[columnKey as keyof ReminderOverview];
 
-    switch (columnKey) {
-      case "name":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{cellValue}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">
-              {user.name}
-            </p>
-          </div>
-        );
-      case "createdOn":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{cellValue}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">
-              {user.createdOn}
-            </p>
-          </div>
-        );
-      case "status":
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[user.status]}
-            size="sm"
-            variant="flat"
-          >
-            {cellValue}
-          </Chip>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
+      switch (columnKey) {
+        case "name":
+          return (
+            <div className="flex flex-col">
+              <p className="text-bold text-small capitalize">{cellValue}</p>
+            </div>
+          );
+        case "enabledOn":
+          return (
+            <div className="flex flex-col">
+              <p className="text-bold text-small capitalize">
+                {format(new Date(cellValue as string), "dd/MM/yyyy")}
+              </p>
+            </div>
+          );
+        case "status":
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[item.status]}
+              size="sm"
+              variant="flat"
+            >
+              {cellValue}
+            </Chip>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    [],
+  );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div>
       <Table
-        aria-label="Appointment Details"
-        classNames={{
-          wrapper: "max-h-[482px] ",
-        }}
+        aria-label="Reminder Overview"
         sortDescriptor={sortDescriptor}
-        // onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
         style={{ backgroundColor: "var(--calendar-background-color)" }}
       >
-        <TableHeader columns={headerColumns}>
+        <TableHeader columns={columns}>
           {(column) => (
             <TableColumn
               key={column.uid}
@@ -159,9 +136,9 @@ export default function DataTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No users found"} items={sortedItems}>
+        <TableBody emptyContent={"No reminders found"} items={sortedItems}>
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.name}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

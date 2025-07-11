@@ -10,8 +10,8 @@ import {
 import {
   getBranchNotificationSettings,
   updateBranchNotificationSetting,
-  BranchNotificationSetting,
-} from "@/api/doku";
+} from "@/api/settings";
+import { BranchNotificationSetting } from "@/types/settings";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
