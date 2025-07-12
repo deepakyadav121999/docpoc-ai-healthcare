@@ -106,6 +106,29 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
   };
 
   const handleOtpChange = (index: number, value: string) => {
+    // Handle mobile OTP auto-fill (when user taps the OTP from keyboard)
+    if (value.length > 6) {
+      // This is likely a mobile OTP auto-fill
+      const otpDigits = value
+        .slice(-6)
+        .split("")
+        .map((digit) => digit.replace(/\D/g, ""))
+        .filter((digit) => digit !== "");
+      if (otpDigits.length === 6) {
+        setOtpInputs(otpDigits);
+        setOtp(otpDigits.join(""));
+        currentOtpRef.current = otpDigits.join("");
+        setActiveOtpIndex(5); // Focus last input
+
+        // Auto-submit after a short delay
+        setTimeout(() => {
+          verifyOtp();
+        }, 100);
+        return;
+      }
+    }
+
+    // Regular single digit input
     if (value.length > 1) return;
 
     const newOtpInputs = [...otpInputs];
@@ -131,6 +154,24 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
           verifyOtp();
         }
       }, 100); // Small delay to ensure state is updated
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain");
+    const otpDigits = pastedData.replace(/\D/g, "").slice(0, 6).split("");
+
+    if (otpDigits.length === 6) {
+      setOtpInputs(otpDigits);
+      setOtp(otpDigits.join(""));
+      currentOtpRef.current = otpDigits.join("");
+      setActiveOtpIndex(5);
+
+      // Auto-submit after a short delay
+      setTimeout(() => {
+        verifyOtp();
+      }, 100);
     }
   };
 
@@ -433,12 +474,15 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
                     ref={(el) => {
                       otpRefs.current[index] = el;
                     }}
-                    type="text"
+                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onFocus={() => setActiveOtpIndex(index)}
-                    className={`w-14 h-14 text-center text-xl font-bold border-2 rounded-xl focus:outline-none focus:ring-4 transition-all duration-300 ${
+                    onPaste={(e) => handleOtpPaste(e)}
+                    className={`w-14 h-14 text-center text-xl font-bold border-2 rounded-xl focus:outline-none focus:ring-4 transition-all duration-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                       activeOtpIndex === index
                         ? "border-primary ring-4 ring-primary/20 bg-primary/5"
                         : digit
