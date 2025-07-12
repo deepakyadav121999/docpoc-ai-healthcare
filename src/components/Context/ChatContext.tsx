@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useState, useContext, ReactNode } from "react";
-import { Message } from "@/api/doku";
+import { Message } from "@/types/doku-chat";
+import { generateUUID } from "@/lib/utils";
 
 type View = "chat" | "history" | "conversation";
 
@@ -23,7 +24,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const startNewChat = () => {
     setView("chat");
-    const newSessionId = crypto.randomUUID();
+    const newSessionId = generateUUID();
     setSessionId(newSessionId);
     setMessages([
       {

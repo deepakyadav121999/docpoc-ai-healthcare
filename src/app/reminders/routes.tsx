@@ -8,8 +8,8 @@ export const REMINDER_TAB_KEYS = {
     name: "Configure Reminder",
     screen: ROUTES.CONFIGURE_REMINDER,
   },
-  ManageCredit: {
-    name: "Manage Credit",
-    screen: ROUTES.MANAGE_CREDIT,
-  },
+  // ManageCredit: {
+  //   name: "Manage Credit",
+  //   screen: ROUTES.MANAGE_CREDIT,
+  // },
 };
