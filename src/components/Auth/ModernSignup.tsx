@@ -175,6 +175,52 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
     }
   };
 
+  const handleOtpInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const value = target.value;
+
+    // Handle mobile OTP auto-fill
+    if (value.length >= 6) {
+      const otpDigits = value
+        .slice(0, 6)
+        .split("")
+        .map((digit) => digit.replace(/\D/g, ""))
+        .filter((digit) => digit !== "");
+      if (otpDigits.length === 6) {
+        setOtpInputs(otpDigits);
+        setOtp(otpDigits.join(""));
+        currentOtpRef.current = otpDigits.join("");
+        setActiveOtpIndex(5);
+
+        // Auto-submit after a short delay
+        setTimeout(() => {
+          verifyOtp();
+        }, 100);
+      }
+    }
+  };
+
+  const handleMobileOtpAutoFill = (value: string) => {
+    // Handle mobile OTP auto-fill from hidden input
+    if (value.length === 6) {
+      const otpDigits = value
+        .split("")
+        .map((digit) => digit.replace(/\D/g, ""))
+        .filter((digit) => digit !== "");
+      if (otpDigits.length === 6) {
+        setOtpInputs(otpDigits);
+        setOtp(otpDigits.join(""));
+        currentOtpRef.current = otpDigits.join("");
+        setActiveOtpIndex(5);
+
+        // Auto-submit after a short delay
+        setTimeout(() => {
+          verifyOtp();
+        }, 100);
+      }
+    }
+  };
+
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otpInputs[index] && index > 0) {
       setActiveOtpIndex(index - 1);
@@ -467,6 +513,15 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
                 </p>
               </div>
 
+              {/* Hidden input for mobile OTP auto-fill */}
+              <input
+                type="text"
+                autoComplete="one-time-code"
+                className="absolute opacity-0 pointer-events-none"
+                onChange={(e) => handleMobileOtpAutoFill(e.target.value)}
+                style={{ position: "absolute", left: "-9999px" }}
+              />
+
               <div className="flex justify-between gap-3 mb-6" key={otpKey}>
                 {otpInputs.map((digit, index) => (
                   <input
@@ -477,8 +532,10 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
                     type="number"
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    autoComplete="one-time-code"
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onInput={(e) => handleOtpInput(e)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onFocus={() => setActiveOtpIndex(index)}
                     onPaste={(e) => handleOtpPaste(e)}
