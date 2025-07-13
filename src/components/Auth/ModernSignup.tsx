@@ -202,8 +202,9 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
 
   const handleMobileOtpAutoFill = (value: string) => {
     // Handle mobile OTP auto-fill from hidden input
-    if (value.length === 6) {
+    if (value.length >= 6) {
       const otpDigits = value
+        .slice(0, 6)
         .split("")
         .map((digit) => digit.replace(/\D/g, ""))
         .filter((digit) => digit !== "");
@@ -224,9 +225,7 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otpInputs[index] && index > 0) {
       setActiveOtpIndex(index - 1);
-      setTimeout(() => {
-        otpRefs.current[index - 1]?.focus();
-      }, 0);
+      otpRefs.current[index - 1]?.focus();
     }
   };
 
@@ -241,29 +240,59 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
     setError("");
 
     try {
+      const defaultPassword = `${phoneNumber}${Date.now()}`;
+      const accessType = `{"setAppointments":true,"editDoctor":true,"editCreatePatients":true,"editCreateStaffs":true,"editCreateReminders":true,"editCreatePayments":true}`;
+
       const payload = {
         phone: phoneNumber,
         username: phoneNumber,
         otp: otpToVerify,
-        clinicSize,
       };
-      const response = await axios.post(`${API_URL}/auth/otp/verify`, payload);
-      const { access_token } = response.data;
 
-      if (access_token) {
-        onLogin(access_token);
-        await fetchProfile(access_token);
-        localStorage.setItem("docPocAuth_token", access_token);
-        router.push("/");
-      } else {
-        setError("Invalid or expired OTP.");
-        setShouldClearOtp(true);
+      const response = await axios.post(`${API_URL}/auth/otp/verify`, payload);
+
+      if (response.status === 200) {
+        const { message, access_token } = response.data;
+
+        if (access_token) {
+          // User is already registered
+          setError("User is already registered. Please sign in instead.");
+          setShouldClearOtp(true);
+        } else if (message && message.includes("Please create a password")) {
+          // OTP verified successfully, now create the account
+          const registrationPayload = {
+            phone: phoneNumber,
+            username: phoneNumber,
+            otp: otpToVerify,
+            password: defaultPassword,
+            name: "public user",
+            user_type: "SUPER_ADMIN",
+            accessType: accessType,
+            json: JSON.stringify({ clinicSize: clinicSize }),
+          };
+
+          const registrationResponse = await axios.post(
+            `${API_URL}/auth/set-password`,
+            registrationPayload,
+          );
+
+          if (registrationResponse.status === 200) {
+            const { access_token } = registrationResponse.data;
+            if (access_token) {
+              onLogin(access_token);
+              await fetchProfile(access_token);
+              localStorage.setItem("docPocAuth_token", access_token);
+              router.push("/");
+            }
+          }
+        } else {
+          setError("Invalid or expired OTP.");
+          setShouldClearOtp(true);
+        }
       }
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "OTP verification failed. Please try again.",
-      );
+      console.error("OTP verification failed:", err);
+      setError("Invalid or expired OTP.");
       setShouldClearOtp(true);
     } finally {
       setLoading(false);
@@ -305,7 +334,7 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
-        {step === 1 ? (
+        {step === 1 && (
           <motion.div
             key="step-1"
             initial={{ opacity: 0, y: 20 }}
@@ -482,7 +511,9 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
               )}
             </motion.button>
           </motion.div>
-        ) : (
+        )}
+
+        {step === 2 && (
           <motion.div
             key="step-2"
             initial={{ opacity: 0, y: 20 }}
