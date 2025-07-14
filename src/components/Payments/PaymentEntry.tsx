@@ -29,6 +29,7 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import ShareLinkModal from "../common/Modal/ShareLinkModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -55,6 +56,7 @@ interface Patient {
   age: number;
   gender: string;
   address: string;
+  code: string;
 }
 
 interface Doctor {
@@ -141,6 +143,9 @@ const PaymentEntry = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [savePaymentLoading, setSavePaymentLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -156,6 +161,7 @@ const PaymentEntry = () => {
     age: 0,
     gender: "",
     address: "",
+    code: "",
   });
 
   // Data fetching state
@@ -532,10 +538,17 @@ const PaymentEntry = () => {
   };
 
   const openPreviewModal = async () => {
-    if (selectedPatient) {
-      await fetchPatientDetails(selectedPatient);
+    try {
+      setPreviewLoading(true);
+      if (selectedPatient) {
+        await fetchPatientDetails(selectedPatient);
+      }
+      setIsPreviewModalOpen(true);
+    } catch (error) {
+      console.error("Error loading preview:", error);
+    } finally {
+      setPreviewLoading(false);
     }
-    setIsPreviewModalOpen(true);
   };
 
   const closePreviewModal = () => {
@@ -553,6 +566,23 @@ const PaymentEntry = () => {
   const backendPaymentMethod =
     paymentMethodMapping[paymentMethod as keyof typeof paymentMethodMapping] ||
     "OTHER";
+
+  const clearForm = () => {
+    setSelectedAppointment(null);
+    setSelectedPatient(null);
+    setSelectedDoctor(null);
+    setPaymentItems([
+      { description: "", amount: 0, rate: 0, quantity: 1, serviceType: "" },
+    ]);
+    setMedicineItems([]);
+    setSelectedMedicineName("");
+    setNewMedicineQuantity(1);
+    setNewMedicinePrice(0);
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setDiscountPercentage(0);
+    setSelectedTaxIds([]);
+  };
 
   const handleSavePayment = async () => {
     try {
@@ -678,7 +708,10 @@ const PaymentEntry = () => {
         console.error("Error parsing receipt URL:", e);
       }
 
-      window.open(receiptUrl, "_blank");
+      if (receiptUrl) {
+        setShareLink(receiptUrl);
+        setIsShareModalOpen(true);
+      }
 
       setModalMessage({
         success: "Payment recorded successfully!",
@@ -686,6 +719,7 @@ const PaymentEntry = () => {
       });
       onOpen();
       closePreviewModal();
+      clearForm(); // Clear the form after successful payment
     } catch (error: any) {
       console.error("Error saving payment:", error);
 
@@ -1131,15 +1165,17 @@ const PaymentEntry = () => {
                     isIconOnly
                   >
                     <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
                       xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
                       <path
-                        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-                        fill="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                       />
                     </svg>
                   </Button>
@@ -1473,8 +1509,16 @@ const PaymentEntry = () => {
           color={TOOL_TIP_COLORS.secondary}
           className="w-full rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white"
           onPress={openPreviewModal}
+          isDisabled={previewLoading}
         >
-          Preview Payment
+          {previewLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <Spinner size="sm" color="white" />
+              <span>Loading Preview...</span>
+            </div>
+          ) : (
+            "Preview Payment"
+          )}
         </Button>
 
         {/* Preview Modal */}
@@ -1519,16 +1563,7 @@ const PaymentEntry = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                         <div>
                           <p className="text-sm text-gray-500">Payment ID</p>
-                          <p className="font-medium">
-                            PAY-{new Date().getFullYear()}-
-                            {(new Date().getMonth() + 1)
-                              .toString()
-                              .padStart(2, "0")}
-                            -
-                            {Math.floor(Math.random() * 1000)
-                              .toString()
-                              .padStart(3, "0")}
-                          </p>
+                          <p className="font-medium">Not Generated</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Patient</p>
@@ -1539,7 +1574,9 @@ const PaymentEntry = () => {
                         <div>
                           <p className="text-sm text-gray-500">Patient ID</p>
                           <p className="font-medium">
-                            {patientDetails.id ? `${patientDetails.id}` : "N/A"}
+                            {patientDetails.code
+                              ? `${patientDetails.code}`
+                              : "N/A"}
                           </p>
                         </div>
                         <div>
@@ -1769,19 +1806,25 @@ const PaymentEntry = () => {
                     color={TOOL_TIP_COLORS.secondary}
                     className="order-2 sm:order-1 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                     onPress={handleSavePayment}
+                    isDisabled={savePaymentLoading || isLoading}
                   >
-                    {`${savePaymentLoading ? `Processing Payment... ` : "Save Payment"}`}
-                    <p>
-                      {savePaymentLoading && (
-                        <Spinner size="sm" color="white" />
+                    <div className="flex items-center justify-center gap-2">
+                      {savePaymentLoading ? (
+                        <>
+                          <Spinner size="sm" color="white" />
+                          <span>Processing Payment...</span>
+                        </>
+                      ) : (
+                        "Save Payment"
                       )}
-                    </p>
+                    </div>
                   </Button>
                   <Button
                     color={TOOL_TIP_COLORS.secondary}
                     variant="light"
                     onPress={onClose}
                     className="order-1 sm:order-2 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
+                    isDisabled={savePaymentLoading || isLoading}
                   >
                     Continue Editing
                   </Button>
@@ -1797,6 +1840,11 @@ const PaymentEntry = () => {
         loading={isLoading}
         modalMessage={modalMessage}
         onClose={handleModalClose}
+      />
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        link={shareLink}
       />
     </div>
   );

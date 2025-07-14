@@ -233,6 +233,25 @@ const AppointmentForm = () => {
     }
   };
 
+  const clearForm = () => {
+    setSelectedAppointment(null);
+    setSelectedPatient(null);
+    setSelectedDoctor(null);
+    setObservations("");
+    setAdditionalNotes("");
+    setMedications([]);
+    setFollowUpRequired("no");
+    setFollowUpDate("");
+    setFollowUpNotes("");
+    setIsSharedWithPatient(true);
+    setVitals({
+      bloodPressure: { systolic: "", diastolic: "", enabled: false },
+      heartRate: { value: "", enabled: false },
+      temperature: { value: "", enabled: false },
+      respiratoryRate: { value: "", enabled: false },
+    });
+  };
+
   const handleSaveReport = async () => {
     try {
       setIsLoading(true);
@@ -333,6 +352,7 @@ const AppointmentForm = () => {
         onOpen();
       }
       closePreviewModal();
+      clearForm(); // Clear the form after successful report creation
 
       // onOpen();
       // closePreviewModal();
@@ -2037,17 +2057,25 @@ const AppointmentForm = () => {
                     color={TOOL_TIP_COLORS.secondary}
                     className="order-2 sm:order-1 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                     onPress={handleSaveReport}
+                    isDisabled={saveReportLoading || isLoading}
                   >
-                    {`${saveReportLoading ? `Generating Report... ` : "Save and Generate Report"}`}
-                    <p>
-                      {saveReportLoading && <Spinner size="sm" color="white" />}
-                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      {saveReportLoading ? (
+                        <>
+                          <Spinner size="sm" color="white" />
+                          <span>Generating Report...</span>
+                        </>
+                      ) : (
+                        "Save and Generate Report"
+                      )}
+                    </div>
                   </Button>
                   <Button
                     color={TOOL_TIP_COLORS.secondary}
                     variant="light"
                     onPress={onClose}
                     className="order-1 sm:order-2 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
+                    isDisabled={saveReportLoading || isLoading}
                   >
                     Continue Editing
                   </Button>
