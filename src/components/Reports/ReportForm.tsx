@@ -21,6 +21,8 @@ import {
   AutocompleteItem,
   useDisclosure,
   Switch,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
@@ -52,14 +54,29 @@ interface Patient {
   age: number;
   gender: string;
   address: string;
+  code: string;
 }
 
 interface Doctor {
   id: string;
   name: string;
 }
+// Add Hospital interface
+interface Hospital {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  ninId: string;
+  json: string;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Update Medication interface for multiple times
 interface Medication {
-  time: string;
+  times: string[];
   name: string;
   note: string;
   quantity: number;
@@ -116,16 +133,17 @@ const AppointmentForm = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [saveReportLoading, setSaveReportLoading] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const [shareLink, setShareLink] = useState("");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [vitals, setVitals] = useState<VitalSigns>({
-    bloodPressure: { systolic: "0", diastolic: "0", enabled: false },
-    heartRate: { value: "0", enabled: false },
-    temperature: { value: "0.0", enabled: false },
-    respiratoryRate: { value: "0", enabled: false },
+    bloodPressure: { systolic: "", diastolic: "", enabled: false },
+    heartRate: { value: "", enabled: false },
+    temperature: { value: "", enabled: false },
+    respiratoryRate: { value: "", enabled: false },
   });
 
   // Patient details state (unchanged)
@@ -139,6 +157,7 @@ const AppointmentForm = () => {
     age: 0,
     gender: "",
     address: "",
+    code: "",
   });
 
   // Data fetching state (unchanged)
@@ -164,11 +183,11 @@ const AppointmentForm = () => {
         enabled: !prev[field].enabled,
         ...(field === "bloodPressure"
           ? {
-              systolic: "0",
-              diastolic: "0",
+              systolic: "",
+              diastolic: "",
             }
           : {
-              value: field === "temperature" ? "0.0" : "0",
+              value: "",
             }),
       },
     }));
@@ -235,6 +254,7 @@ const AppointmentForm = () => {
         name: "abc",
         patientId: selectedPatient,
         branchId: branchId,
+        hospitalId: hospital?.id,
         patient: {
           id: patient?.id,
           name: patient?.name,
@@ -245,6 +265,7 @@ const AppointmentForm = () => {
           age: patient?.age,
           gender: patient?.gender,
           address: patient?.address,
+          code: patient?.code,
         },
         doctor: {
           id: doctor?.id,
@@ -252,24 +273,6 @@ const AppointmentForm = () => {
         },
         appointmentId: selectedAppointment,
         reportType: "MEDICAL_REPORT",
-        // name: reportName,
-        // vitals,
-
-        // vitals: {
-        //   ...(vitals.bloodPressure.enabled && {
-        //     bloodPressure: vitals.bloodPressure.value,
-        //   }),
-        //   ...(vitals.heartRate.enabled && {
-        //     heartRate: vitals.heartRate.value,
-        //   }),
-        //   ...(vitals.temperature.enabled && {
-        //     temperature: vitals.temperature.value,
-        //   }),
-        //   ...(vitals.respiratoryRate.enabled && {
-        //     respiratoryRate: vitals.respiratoryRate.value,
-        //   }),
-        // },
-
         vitals: {
           ...(vitals.bloodPressure.enabled && {
             bloodPressure: `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`,
@@ -284,7 +287,6 @@ const AppointmentForm = () => {
             respiratoryRate: `${vitals.respiratoryRate.value} rpm`,
           }),
         },
-
         observations,
         additionalNotes,
         medications: JSON.stringify(medications),
@@ -484,21 +486,55 @@ const AppointmentForm = () => {
     }
   }, []);
 
+  const [hospital, setHospital] = useState<Hospital | null>(null);
+
+  // Fetch hospital (like PaymentEntry)
+  const fetchHospital = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = getAuthToken();
+      const response = await fetch(`${BASE_URL}/hospital`, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch hospital");
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const latestHospital = data.reduce(
+          (latest: Hospital, current: Hospital) => {
+            return new Date(current.createdAt) > new Date(latest.createdAt)
+              ? current
+              : latest;
+          },
+        );
+        setHospital(latestHospital);
+      }
+    } catch (error) {
+      console.error("Error fetching hospital:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAppointments(1);
     fetchPatients(1);
     fetchDoctors(1);
-  }, [fetchAppointments, fetchPatients, fetchDoctors]);
+    fetchHospital();
+  }, [fetchAppointments, fetchPatients, fetchDoctors, fetchHospital]);
 
   // Form handlers (unchanged)
   // const addMedication = () => {
   //   setMedications([...medications, { time: "", name: "", note: "" }]);
   // };
 
+  // AddMedication: default times as []
   const addMedication = () => {
     setMedications([
       ...medications,
-      { time: "", name: "", note: "", quantity: 1, days: 1 },
+      { times: [], name: "", note: "", quantity: 1, days: 1 },
     ]);
   };
 
@@ -508,6 +544,7 @@ const AppointmentForm = () => {
   //   setMedications(updatedMedications);
   // };
 
+  // UpdateMedication: support times array
   const updateMedication = (
     index: number,
     field: keyof Medication,
@@ -527,11 +564,28 @@ const AppointmentForm = () => {
   //   setVitals(prev => ({ ...prev, [field]: value }));
   // };
 
+  // Handle multiple time selection for medicine
+  const handleTimeSelection = (medIndex: number, selectedTimes: string[]) => {
+    setMedications((prev) => {
+      const updated = [...prev];
+      updated[medIndex] = {
+        ...updated[medIndex],
+        times: selectedTimes,
+      };
+      return updated;
+    });
+  };
+
   const openPreviewModal = async () => {
-    if (selectedPatient) {
-      await fetchPatientDetails(selectedPatient);
+    try {
+      setIsPreviewLoading(true);
+      if (selectedPatient) {
+        await fetchPatientDetails(selectedPatient);
+      }
+      setIsPreviewModalOpen(true);
+    } finally {
+      setIsPreviewLoading(false);
     }
-    setIsPreviewModalOpen(true);
   };
 
   const closePreviewModal = () => {
@@ -560,7 +614,7 @@ const AppointmentForm = () => {
   // }));
 
   const timeItems = times.map((time) => ({
-    id: time,
+    key: time,
     label: time,
   }));
 
@@ -605,6 +659,27 @@ const AppointmentForm = () => {
       header?.classList.add("z-999");
     }
   }, [isPreviewModalOpen]);
+
+  // Parse hospital JSON data for preview
+  const getHospitalDetails = () => {
+    if (!hospital) return null;
+    try {
+      const hospitalData = JSON.parse(hospital.json);
+      return {
+        name: hospital.name,
+        phone: hospital.phone,
+        email: hospital.email,
+        address: hospitalData.address,
+        pincode: hospitalData.pincode,
+        state: hospitalData.state,
+        code: hospital.code,
+      };
+    } catch (error) {
+      console.error("Error parsing hospital data:", error);
+      return null;
+    }
+  };
+  const hospitalDetails = getHospitalDetails();
 
   return (
     <div className="min-h-screen p-4 md:p-8  text-black dark:text-white ">
@@ -1358,24 +1433,24 @@ const AppointmentForm = () => {
                     <tr key={index} className="align-top">
                       {/* Time */}
                       <td className="pr-2 py-2">
-                        <Autocomplete
-                          variant="bordered"
-                          color={TOOL_TIP_COLORS.secondary}
-                          placeholder="Select"
-                          defaultItems={timeItems}
-                          selectedKey={med.time}
-                          onSelectionChange={(key) =>
-                            updateMedication(index, "time", key as string)
+                        <Select
+                          selectionMode="multiple"
+                          selectedKeys={new Set(med.times)}
+                          onSelectionChange={(keys) =>
+                            handleTimeSelection(
+                              index,
+                              keys ? Array.from(keys).map(String) : [],
+                            )
                           }
                           size="sm"
-                          className="min-w-[100px]"
+                          className="min-w-[140px]"
+                          aria-label="Select times"
+                          placeholder="Select times"
                         >
-                          {(item) => (
-                            <AutocompleteItem key={item.id}>
-                              {item.label}
-                            </AutocompleteItem>
-                          )}
-                        </Autocomplete>
+                          {timeItems.map((item) => (
+                            <SelectItem key={item.key}>{item.label}</SelectItem>
+                          ))}
+                        </Select>
                       </td>
 
                       {/* Medication Name */}
@@ -1616,8 +1691,10 @@ const AppointmentForm = () => {
           color={TOOL_TIP_COLORS.secondary}
           className="w-full rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white"
           onPress={openPreviewModal}
+          isLoading={isPreviewLoading}
+          spinner={<Spinner size="sm" color="white" />}
         >
-          Preview Report
+          {isPreviewLoading ? "Loading Preview..." : "Preview Report"}
         </Button>
 
         {/* Preview Modal - made responsive */}
@@ -1638,6 +1715,22 @@ const AppointmentForm = () => {
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-6 text-left p-4 bg-white dark:bg-gray-800 rounded-lg">
+                    {hospital && (
+                      <div className="text-center border-b-2 border-blue-600 pb-4 mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                          {hospital.name}
+                        </h2>
+                        <div className="text-gray-600 dark:text-gray-300 space-y-1 text-sm">
+                          <p>
+                            {hospitalDetails?.address || "Hospital Address"}
+                          </p>
+                          <p>Pincode: {hospitalDetails?.pincode || "N/A"}</p>
+                          <p>
+                            Phone: {hospital.phone} | Email: {hospital.email}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div className="border-b pb-4">
                       <h2 className="text-lg md:text-xl font-semibold">
                         Report Details
@@ -1645,16 +1738,7 @@ const AppointmentForm = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                         <div>
                           <p className="text-sm text-gray-500">Report ID</p>
-                          <p className="font-medium">
-                            MED-{new Date().getFullYear()}-
-                            {(new Date().getMonth() + 1)
-                              .toString()
-                              .padStart(2, "0")}
-                            -{new Date().getDate().toString().padStart(2, "0")}-
-                            {Math.floor(Math.random() * 1000)
-                              .toString()
-                              .padStart(3, "0")}
-                          </p>
+                          <p className="font-medium">Not Generated</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Patient</p>
@@ -1665,7 +1749,9 @@ const AppointmentForm = () => {
                         <div>
                           <p className="text-sm text-gray-500">Patient ID</p>
                           <p className="font-medium">
-                            {patientDetails.id ? `${patientDetails.id}` : "N/A"}
+                            {patientDetails.code
+                              ? `${patientDetails.code}`
+                              : "N/A"}
                           </p>
                         </div>
                         <div>
@@ -1728,7 +1814,11 @@ const AppointmentForm = () => {
                           <div>
                             <p className="text-sm text-gray-500">Blood Group</p>
                             <p className="font-medium">
-                              {patientDetails.bloodGroup || "N/A"}
+                              {patientDetails.bloodGroup &&
+                              patientDetails.bloodGroup !== "{}" &&
+                              patientDetails.bloodGroup !== "null"
+                                ? patientDetails.bloodGroup
+                                : "N/A"}
                             </p>
                           </div>
                           <div>
@@ -1760,146 +1850,78 @@ const AppointmentForm = () => {
                         </div>
                       </div>
 
-                      {/* <div className="mb-6">
-                        <h3 className="text-base md:text-lg font-medium mb-2">Vital Signs</h3>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full border">
-                            <thead>
-                              <tr className="bg-gray-100 dark:bg-gray-700">
-                                <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Blood Pressure</th>
-                                <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Heart Rate</th>
-                                <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Temperature</th>
-                                <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">Respiratory Rate</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.bloodPressure}</td>
-                                <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.heartRate}</td>
-                                <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.temperature}</td>
-                                <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">{vitals.respiratoryRate}</td>
-                              </tr>
-                            </tbody>
-                          </table>
+                      {/* Only show vital signs section if any vital is enabled */}
+                      {(vitals.bloodPressure.enabled ||
+                        vitals.heartRate.enabled ||
+                        vitals.temperature.enabled ||
+                        vitals.respiratoryRate.enabled) && (
+                        <div className="mb-6">
+                          <h3 className="text-base md:text-lg font-medium mb-2">
+                            Vital Signs
+                          </h3>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full border">
+                              <thead>
+                                <tr className="bg-gray-100 dark:bg-gray-700">
+                                  {vitals.bloodPressure.enabled && (
+                                    <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                      Blood Pressure
+                                    </th>
+                                  )}
+                                  {vitals.heartRate.enabled && (
+                                    <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                      Heart Rate
+                                    </th>
+                                  )}
+                                  {vitals.temperature.enabled && (
+                                    <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                      Temperature
+                                    </th>
+                                  )}
+                                  {vitals.respiratoryRate.enabled && (
+                                    <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
+                                      Respiratory Rate
+                                    </th>
+                                  )}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  {vitals.bloodPressure.enabled && (
+                                    <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                      {vitals.bloodPressure.systolic &&
+                                      vitals.bloodPressure.diastolic
+                                        ? `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`
+                                        : "N/A"}
+                                    </td>
+                                  )}
+                                  {vitals.heartRate.enabled && (
+                                    <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                      {vitals.heartRate.value
+                                        ? `${vitals.heartRate.value} bpm`
+                                        : "N/A"}
+                                    </td>
+                                  )}
+                                  {vitals.temperature.enabled && (
+                                    <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                      {vitals.temperature.value
+                                        ? `${vitals.temperature.value} °F`
+                                        : "N/A"}
+                                    </td>
+                                  )}
+                                  {vitals.respiratoryRate.enabled && (
+                                    <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
+                                      {vitals.respiratoryRate.value
+                                        ? `${vitals.respiratoryRate.value} rpm`
+                                        : "N/A"}
+                                    </td>
+                                  )}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div> */}
-
-                      {/* In the preview modal's vital signs section */}
-                      {/* <div className="mb-6">
-                        <h3 className="text-base md:text-lg font-medium mb-2">
-                          Vital Signs
-                        </h3>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full border">
-                            <thead>
-                              <tr className="bg-gray-100 dark:bg-gray-700">
-                                {vitals.bloodPressure.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Blood Pressure
-                                  </th>
-                                )}
-                                {vitals.heartRate.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Heart Rate
-                                  </th>
-                                )}
-                                {vitals.temperature.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Temperature
-                                  </th>
-                                )}
-                                {vitals.respiratoryRate.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Respiratory Rate
-                                  </th>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                {vitals.bloodPressure.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {vitals.bloodPressure.value}
-                                  </td>
-                                )}
-                                {vitals.heartRate.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {vitals.heartRate.value}
-                                  </td>
-                                )}
-                                {vitals.temperature.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {vitals.temperature.value}
-                                  </td>
-                                )}
-                                {vitals.respiratoryRate.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {vitals.respiratoryRate.value}
-                                  </td>
-                                )}
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div> */}
-                      {/* In the preview modal's vital signs section */}
-                      <div className="mb-6">
-                        <h3 className="text-base md:text-lg font-medium mb-2">
-                          Vital Signs
-                        </h3>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full border">
-                            <thead>
-                              <tr className="bg-gray-100 dark:bg-gray-700">
-                                {vitals.bloodPressure.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Blood Pressure
-                                  </th>
-                                )}
-                                {vitals.heartRate.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Heart Rate
-                                  </th>
-                                )}
-                                {vitals.temperature.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Temperature
-                                  </th>
-                                )}
-                                {vitals.respiratoryRate.enabled && (
-                                  <th className="border px-2 py-1 md:px-4 md:py-2 text-sm md:text-base">
-                                    Respiratory Rate
-                                  </th>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                {vitals.bloodPressure.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {`${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic} mmHg`}
-                                  </td>
-                                )}
-                                {vitals.heartRate.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {`${vitals.heartRate.value} bpm`}
-                                  </td>
-                                )}
-                                {vitals.temperature.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {`${vitals.temperature.value} °F`}
-                                  </td>
-                                )}
-                                {vitals.respiratoryRate.enabled && (
-                                  <td className="border px-2 py-1 md:px-4 md:py-2 text-center text-sm md:text-base">
-                                    {`${vitals.respiratoryRate.value} rpm`}
-                                  </td>
-                                )}
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+                      )}
 
                       {/* <div className="mb-6">
                         <h3 className="text-base md:text-lg font-medium mb-2">Observations</h3>
@@ -1953,8 +1975,11 @@ const AppointmentForm = () => {
                                   {med.quantity} x{" "}
                                   {med.name || "Unnamed medication"}
                                 </strong>{" "}
-                                ({med.time || "No time specified"}) - {med.days}{" "}
-                                day(s) - {med.note || "No notes"}
+                                (
+                                {med.times && med.times.length > 0
+                                  ? med.times.join(", ")
+                                  : "No time specified"}
+                                ) - {med.days} day(s) - {med.note || "No notes"}
                                 {/* {med.note || "No notes"} */}
                               </li>
                             ))}
