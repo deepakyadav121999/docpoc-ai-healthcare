@@ -11,7 +11,6 @@ import {
   Chip,
   Pagination,
   Selection,
-  SortDescriptor,
   Spinner,
 } from "@nextui-org/react";
 import { columns, statusOptions } from "./data";
@@ -52,10 +51,6 @@ export default function ReportDataTable() {
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter] = useState<Selection>("all");
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: "reportDate",
-    direction: "ascending",
-  });
 
   const API_URL = process.env.API_URL;
   const hasSearchFilter = Boolean(filterValue);
@@ -138,16 +133,6 @@ export default function ReportDataTable() {
   }, [reports, filterValue, statusFilter]);
 
   const pages = Math.ceil(totalCount / rowsPerPage) || 1;
-
-  const sortedItems = useMemo(() => {
-    return [...filteredItems].sort((a: Report, b: Report) => {
-      const first = a[sortDescriptor.column as keyof Report] as string;
-      const second = b[sortDescriptor.column as keyof Report] as string;
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
-
-      return sortDescriptor.direction === "descending" ? -cmp : cmp;
-    });
-  }, [sortDescriptor, filteredItems]);
 
   const renderCell = useCallback((report: Report, columnKey: React.Key) => {
     const cellValue = report[columnKey as keyof Report];
@@ -291,13 +276,10 @@ export default function ReportDataTable() {
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
         classNames={{
-          wrapper: "max-h-[482px]",
+          wrapper: "max-h-[382px]",
         }}
         selectedKeys={selectedKeys}
-        sortDescriptor={sortDescriptor}
         onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
-        style={{ backgroundColor: "var(--calendar-background-color)" }}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
@@ -312,7 +294,7 @@ export default function ReportDataTable() {
         </TableHeader>
         <TableBody
           emptyContent={loading ? <Spinner /> : "No reports found"}
-          items={sortedItems}
+          items={filteredItems}
         >
           {(item) => (
             <TableRow key={item.id}>

@@ -29,6 +29,7 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { GLOBAL_TAB_NAVIGATOR_ACTIVE, TOOL_TIP_COLORS } from "@/constants";
 import EnhancedModal from "../common/Modal/EnhancedModal";
+import ShareLinkModal from "../common/Modal/ShareLinkModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -55,6 +56,7 @@ interface Patient {
   age: number;
   gender: string;
   address: string;
+  code: string;
 }
 
 interface Doctor {
@@ -67,6 +69,49 @@ interface PaymentItem {
   amount: number;
   rate: number;
   quantity: number;
+  serviceType?: string;
+}
+
+interface MedicineItem {
+  name: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalAmount: number;
+}
+
+interface TaxInfo {
+  id: string;
+  countryName: string;
+  countryCode: string;
+  countryIso2: string;
+  taxType: string;
+  taxName: string;
+  taxRate: number;
+  applicability: string;
+  minAmount: number | null;
+  maxAmount: number | null;
+  isActive: boolean;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  description: string;
+  priority: number;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+interface Hospital {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  ninId: string;
+  json: string;
+  code: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const API_URL = process.env.API_URL;
@@ -85,15 +130,22 @@ const PaymentEntry = () => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [paymentItems, setPaymentItems] = useState<PaymentItem[]>([
-    { description: "", amount: 0, rate: 0, quantity: 1 },
+    { description: "", amount: 0, rate: 0, quantity: 1, serviceType: "" },
   ]);
+  const [medicineItems, setMedicineItems] = useState<MedicineItem[]>([]);
+  const [selectedMedicineName, setSelectedMedicineName] = useState<string>("");
+  const [newMedicineQuantity, setNewMedicineQuantity] = useState<number>(1);
+  const [newMedicinePrice, setNewMedicinePrice] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [paymentNotes, setPaymentNotes] = useState<string>("");
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [taxAmount, setTaxAmount] = useState<number>(0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+  const [selectedTaxIds, setSelectedTaxIds] = useState<string[]>([]);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [savePaymentLoading, setSavePaymentLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
@@ -109,18 +161,15 @@ const PaymentEntry = () => {
     age: 0,
     gender: "",
     address: "",
+    code: "",
   });
 
   // Data fetching state
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  // const [appointmentPage, setAppointmentPage] = useState(1);
-  // const [patientPage, setPatientPage] = useState(1);
-  // const [doctorPage, setDoctorPage] = useState(1);
-  // const [hasMoreAppointments, setHasMoreAppointments] = useState(true);
-  // const [hasMorePatients, setHasMorePatients] = useState(true);
-  // const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
+  const [taxes, setTaxes] = useState<TaxInfo[]>([]);
+  const [hospital, setHospital] = useState<Hospital | null>(null);
 
   // Constants
   const paymentMethods = [
@@ -131,26 +180,140 @@ const PaymentEntry = () => {
     "upi",
     "other",
   ];
-  // const serviceTypes = [
-  //   "consultation",
-  //   "procedure",
-  //   "medication",
-  //   "test",
-  //   "other",
+
+  const serviceTypes = [
+    "General Consultation",
+    "Specialist Consultation",
+    "Follow-up Consultation",
+    "Emergency Consultation",
+    "Health Checkup",
+    "Laboratory Tests",
+    "X-Ray",
+    "ECG",
+    "Ultrasound",
+    "Surgery",
+    "Dental Treatment",
+    "Physiotherapy",
+    "Vaccination",
+    "Medicine",
+    "Other",
+  ];
+
+  // Medicine suggestions for autocomplete
+  // const medicineSuggestions = [
+  //   "Paracetamol 500mg",
+  //   "Amoxicillin 250mg",
+  //   "Ibuprofen 400mg",
+  //   "Omeprazole 20mg",
+  //   "Cetirizine 10mg",
+  //   "Metformin 500mg",
+  //   "Amlodipine 5mg",
+  //   "Atorvastatin 10mg",
+  //   "Losartan 50mg",
+  //   "Metoprolol 25mg",
+  //   "Aspirin 100mg",
+  //   "Vitamin D3 1000IU",
+  //   "Calcium Carbonate 500mg",
+  //   "Iron Sulfate 325mg",
+  //   "Folic Acid 5mg",
+  //   "Azithromycin 250mg",
+  //   "Ciprofloxacin 500mg",
+  //   "Doxycycline 100mg",
+  //   "Clarithromycin 250mg",
+  //   "Levofloxacin 500mg",
   // ];
+
+  // const serviceTypeItems = serviceTypes.map((service) => ({
+  //   id: service,
+  //   label: service,
+  // }));
 
   const getAuthToken = () => {
     return localStorage.getItem("docPocAuth_token") || "";
   };
 
   // Calculate totals
-  const subtotal = paymentItems.reduce(
+  const medicineSubtotal = medicineItems.reduce(
+    (sum, item) => sum + item.totalAmount,
+    0,
+  );
+
+  const serviceSubtotal = paymentItems.reduce(
     (sum, item) => sum + item.amount * item.quantity,
     0,
   );
-  const total = subtotal - discountAmount + taxAmount;
+
+  const subtotal = medicineSubtotal + serviceSubtotal;
+
+  const discountAmount = (subtotal * discountPercentage) / 100;
+  const subtotalAfterDiscount = subtotal - discountAmount;
+
+  const selectedTaxes = taxes.filter((tax) => selectedTaxIds.includes(tax.id));
+  const taxAmount = selectedTaxes.reduce(
+    (total, tax) => total + (subtotalAfterDiscount * tax.taxRate) / 100,
+    0,
+  );
+  const total = subtotalAfterDiscount + taxAmount;
 
   // Data fetching functions
+  const fetchHospital = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = getAuthToken();
+      const response = await fetch(`${BASE_URL}/hospital`, {
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch hospital");
+      }
+
+      const data = await response.json();
+      // Get the latest hospital (most recent by createdAt)
+      if (data && data.length > 0) {
+        const latestHospital = data.reduce(
+          (latest: Hospital, current: Hospital) => {
+            return new Date(current.createdAt) > new Date(latest.createdAt)
+              ? current
+              : latest;
+          },
+        );
+        setHospital(latestHospital);
+      }
+    } catch (error) {
+      console.error("Error fetching hospital:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const fetchTaxes = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = getAuthToken();
+      const response = await fetch(`${BASE_URL}/tax/country/IND`, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch taxes");
+      }
+
+      const data = await response.json();
+      setTaxes(data.filter((tax: TaxInfo) => tax.isActive));
+    } catch (error) {
+      console.error("Error fetching taxes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const fetchAppointments = useCallback(async (page: number) => {
     try {
       setIsLoading(true);
@@ -176,7 +339,6 @@ const PaymentEntry = () => {
       } else {
         setAppointments((prev) => [...prev, ...data.rows]);
       }
-      // setHasMoreAppointments(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching appointments:", error);
     } finally {
@@ -209,7 +371,6 @@ const PaymentEntry = () => {
       } else {
         setPatients((prev) => [...prev, ...data.rows]);
       }
-      // setHasMorePatients(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching patients:", error);
     } finally {
@@ -271,7 +432,6 @@ const PaymentEntry = () => {
       } else {
         setDoctors((prev) => [...prev, ...data.rows]);
       }
-      // setHasMoreDoctors(data.rows.length === 10);
     } catch (error) {
       console.error("Error fetching doctors:", error);
     } finally {
@@ -283,13 +443,21 @@ const PaymentEntry = () => {
     fetchAppointments(1);
     fetchPatients(1);
     fetchDoctors(1);
-  }, [fetchAppointments, fetchPatients, fetchDoctors]);
+    fetchTaxes();
+    fetchHospital();
+  }, [
+    fetchAppointments,
+    fetchPatients,
+    fetchDoctors,
+    fetchTaxes,
+    fetchHospital,
+  ]);
 
   // Form handlers
   const addPaymentItem = () => {
     setPaymentItems([
       ...paymentItems,
-      { description: "", amount: 0, quantity: 1, rate: 0 },
+      { description: "", amount: 0, quantity: 1, rate: 0, serviceType: "" },
     ]);
   };
 
@@ -313,11 +481,74 @@ const PaymentEntry = () => {
     setPaymentItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const openPreviewModal = async () => {
-    if (selectedPatient) {
-      await fetchPatientDetails(selectedPatient);
+  const addMedicineItem = (
+    medicineName: string,
+    quantity: number,
+    pricePerUnit: number,
+  ) => {
+    if (medicineName?.trim()) {
+      const newMedicine: MedicineItem = {
+        name: medicineName.trim(),
+        quantity: quantity,
+        pricePerUnit: pricePerUnit,
+        totalAmount: quantity * pricePerUnit,
+      };
+      setMedicineItems((prev) => [...prev, newMedicine]);
     }
-    setIsPreviewModalOpen(true);
+  };
+
+  const removeMedicineItem = (index: number) => {
+    setMedicineItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // const updateMedicineItem = (
+  //   index: number,
+  //   field: keyof MedicineItem,
+  //   value: any,
+  // ) => {
+  //   setMedicineItems((prev) => {
+  //     const updated = [...prev];
+  //     updated[index] = {
+  //       ...updated[index],
+  //       [field]: value,
+  //       ...(field === "quantity" || field === "pricePerUnit"
+  //         ? {
+  //             totalAmount:
+  //               (field === "quantity" ? value : updated[index].quantity) *
+  //               (field === "pricePerUnit"
+  //                 ? value
+  //                 : updated[index].pricePerUnit),
+  //           }
+  //         : {}),
+  //     };
+  //     return updated;
+  //   });
+  // };
+
+  const handleServiceTypeChange = (index: number, serviceType: string) => {
+    setPaymentItems((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        serviceType,
+        description: serviceType,
+      };
+      return updated;
+    });
+  };
+
+  const openPreviewModal = async () => {
+    try {
+      setPreviewLoading(true);
+      if (selectedPatient) {
+        await fetchPatientDetails(selectedPatient);
+      }
+      setIsPreviewModalOpen(true);
+    } catch (error) {
+      console.error("Error loading preview:", error);
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const closePreviewModal = () => {
@@ -336,6 +567,23 @@ const PaymentEntry = () => {
     paymentMethodMapping[paymentMethod as keyof typeof paymentMethodMapping] ||
     "OTHER";
 
+  const clearForm = () => {
+    setSelectedAppointment(null);
+    setSelectedPatient(null);
+    setSelectedDoctor(null);
+    setPaymentItems([
+      { description: "", amount: 0, rate: 0, quantity: 1, serviceType: "" },
+    ]);
+    setMedicineItems([]);
+    setSelectedMedicineName("");
+    setNewMedicineQuantity(1);
+    setNewMedicinePrice(0);
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setDiscountPercentage(0);
+    setSelectedTaxIds([]);
+  };
+
   const handleSavePayment = async () => {
     try {
       setIsLoading(true);
@@ -351,11 +599,59 @@ const PaymentEntry = () => {
         return;
       }
 
-      if (paymentItems.some((item) => !item.description || item.amount <= 0)) {
+      // Check if there are any payment items or medicine items
+      const hasPaymentItems = paymentItems.some(
+        (item) => item.serviceType && item.serviceType !== "",
+      );
+      const hasMedicineItems = medicineItems.length > 0;
+
+      if (!hasPaymentItems && !hasMedicineItems) {
+        setModalMessage({
+          success: "",
+          error: "Please add at least one payment item or medicine",
+        });
+        onOpen();
+        return;
+      }
+
+      // Validate payment items (non-medicine services)
+      const invalidPaymentItems = paymentItems.filter(
+        (item) =>
+          item.serviceType &&
+          item.serviceType !== "Medicine" &&
+          (!item.serviceType || item.amount <= 0),
+      );
+
+      if (invalidPaymentItems.length > 0) {
         setModalMessage({
           success: "",
           error:
-            "Please ensure all payment items have a description and positive amount",
+            "Please ensure all payment items have a service type and positive amount",
+        });
+        onOpen();
+        return;
+      }
+
+      // Validate medicine items
+      const invalidMedicineItems = medicineItems.filter(
+        (item) => !item.name || item.quantity <= 0 || item.pricePerUnit <= 0,
+      );
+
+      if (invalidMedicineItems.length > 0) {
+        setModalMessage({
+          success: "",
+          error:
+            "Please ensure all medicine items have a name, positive quantity, and positive price",
+        });
+        onOpen();
+        return;
+      }
+
+      // Check if tax is selected
+      if (selectedTaxIds.length === 0) {
+        setModalMessage({
+          success: "",
+          error: "Please select at least one tax",
         });
         onOpen();
         return;
@@ -366,11 +662,24 @@ const PaymentEntry = () => {
         branchId: profile?.branchId,
         appointmentId: selectedAppointment,
         doctorId: selectedDoctor,
+        hospitalId: hospital?.id,
+        taxIds: selectedTaxIds,
         paymentMethod: backendPaymentMethod,
-        items: paymentItems,
+        items: paymentItems
+          .filter((item) => item.serviceType && item.serviceType !== "Medicine")
+          .map((item) => ({
+            description: item.description || item.serviceType,
+            amount: item.amount,
+            rate: item.rate,
+            quantity: item.quantity,
+            serviceType: item.serviceType,
+            totalAmount: item.amount * item.quantity,
+          })),
+        medicines: medicineItems,
         subtotal,
-        discount: discountAmount,
-        tax: taxAmount,
+        discountPercentage,
+        discountAmount,
+        taxAmount,
         amount: total,
         notes: paymentNotes,
         paymentDate: new Date().toISOString(),
@@ -399,7 +708,10 @@ const PaymentEntry = () => {
         console.error("Error parsing receipt URL:", e);
       }
 
-      window.open(receiptUrl, "_blank");
+      if (receiptUrl) {
+        setShareLink(receiptUrl);
+        setIsShareModalOpen(true);
+      }
 
       setModalMessage({
         success: "Payment recorded successfully!",
@@ -407,13 +719,10 @@ const PaymentEntry = () => {
       });
       onOpen();
       closePreviewModal();
+      clearForm(); // Clear the form after successful payment
     } catch (error: any) {
       console.error("Error saving payment:", error);
 
-      // setModalMessage({
-      //   success: "",
-      //   error: "Error saving payment. Please try again.",
-      // });
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -434,6 +743,17 @@ const PaymentEntry = () => {
     setModalMessage({ success: "", error: "" });
     onClose();
   };
+
+  const parseHospitalJson = (jsonString: string) => {
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.error("Error parsing hospital JSON:", error);
+      return {};
+    }
+  };
+
+  const hospitalDetails = hospital ? parseHospitalJson(hospital.json) : {};
 
   // Data for dropdowns/autocomplete
   const appointmentItems = appointments.map((appointment) => ({
@@ -456,26 +776,38 @@ const PaymentEntry = () => {
     label: method.charAt(0).toUpperCase() + method.slice(1),
   }));
 
-  // const serviceTypeItems = serviceTypes.map((type) => ({
-  //   id: type,
-  //   label: type.charAt(0).toUpperCase() + type.slice(1),
-  // }));
+  const serviceTypeItems = serviceTypes.map((service) => ({
+    id: service,
+    label: service,
+  }));
 
-  // const formatDate = (dateString: string) => {
-  //   if (!dateString) return "N/A";
+  const taxItems = taxes.map((tax) => ({
+    id: tax.id,
+    label: `${tax.taxName} (${tax.taxRate}%)`,
+    taxRate: tax.taxRate,
+  }));
+
+  // Parse hospital JSON data
+  // const getHospitalDetails = () => {
+  //   if (!hospital) return null;
   //   try {
-  //     const date = new Date(dateString);
-  //     return isNaN(date.getTime())
-  //       ? dateString
-  //       : date.toLocaleDateString("en-US", {
-  //           year: "numeric",
-  //           month: "long",
-  //           day: "numeric",
-  //         });
-  //   } catch {
-  //     return dateString;
+  //     const hospitalData = JSON.parse(hospital.json);
+  //     return {
+  //       name: hospital.name,
+  //       phone: hospital.phone,
+  //       email: hospital.email,
+  //       address: hospitalData.address,
+  //       pincode: hospitalData.pincode,
+  //       state: hospitalData.state,
+  //       code: hospital.code,
+  //     };
+  //   } catch (error) {
+  //     console.error("Error parsing hospital data:", error);
+  //     return null;
   //   }
   // };
+
+  // const hospitalDetails = getHospitalDetails();
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -560,8 +892,58 @@ const PaymentEntry = () => {
             min-height: auto !important;
           }
         }
+
+        /* Receipt styles */
+        .receipt-container {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+
+        .receipt-header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 2rem;
+          text-align: center;
+        }
+
+        .receipt-body {
+          padding: 2rem;
+        }
+
+        .receipt-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+        }
+
+        .receipt-table th,
+        .receipt-table td {
+          border: 1px solid #e5e7eb;
+          padding: 0.75rem;
+          text-align: left;
+        }
+
+        .receipt-table th {
+          background-color: #f9fafb;
+          font-weight: 600;
+        }
+
+        .receipt-total {
+          border-top: 2px solid #e5e7eb;
+          margin-top: 1rem;
+          padding-top: 1rem;
+        }
+
+        .receipt-footer {
+          background-color: #f9fafb;
+          padding: 1rem 2rem;
+          text-align: center;
+          border-top: 1px solid #e5e7eb;
+        }
       `}</style>
-      <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
+      <div className="max-w-4xl mx-auto rounded-[15px] border border-stroke bg-white dark:bg-gray-dark shadow-1 dark:border-dark-3 dark:shadow-card p-4 md:p-8 space-y-4 md:space-y-6">
         <h1 className="text-xl md:text-2xl font-bold text-dark dark:text-white">
           Payment Entry Form
         </h1>
@@ -716,80 +1098,309 @@ const PaymentEntry = () => {
           {paymentItems.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center mt-2"
+              className="space-y-4 mt-4 p-4 border border-gray-200 dark:border-dark-3 rounded-lg bg-white dark:bg-gray-dark"
             >
-              <div className="sm:col-span-5">
-                <Input
-                  type="text"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  label="Description"
-                  labelPlacement="outside"
-                  placeholder="Service description"
-                  value={item.description}
-                  onChange={(e) =>
-                    updatePaymentItem(index, "description", e.target.value)
-                  }
-                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
-                />
-              </div>
+              {/* Service Type Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-4">
+                  <Select
+                    variant="bordered"
+                    color={TOOL_TIP_COLORS.secondary}
+                    label="Service Type"
+                    labelPlacement="outside"
+                    placeholder="Select service type"
+                    selectedKeys={item.serviceType ? [item.serviceType] : []}
+                    onChange={(e) =>
+                      handleServiceTypeChange(index, e.target.value)
+                    }
+                    isDisabled={item.serviceType !== ""} // Lock after selection
+                    className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                  >
+                    {serviceTypeItems.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {item.serviceType && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Service type locked. Add new item to change.
+                    </p>
+                  )}
+                </div>
 
-              <div className="sm:col-span-2">
-                <Input
-                  type="number"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  label="Quantity"
-                  labelPlacement="outside"
-                  placeholder="Qty"
-                  min="1"
-                  value={item.quantity.toString()}
-                  onChange={(e) =>
-                    updatePaymentItem(
-                      index,
-                      "quantity",
-                      parseInt(e.target.value) || 1,
-                    )
-                  }
-                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
-                />
-              </div>
+                {/* Amount - Only show for non-medicine services */}
+                {item.serviceType && item.serviceType !== "Medicine" && (
+                  <div className="md:col-span-5">
+                    <Input
+                      type="number"
+                      variant="bordered"
+                      color={TOOL_TIP_COLORS.secondary}
+                      label="Amount"
+                      labelPlacement="outside"
+                      placeholder="Amount"
+                      min="0"
+                      value={item.amount.toString()}
+                      onChange={(e) =>
+                        updatePaymentItem(
+                          index,
+                          "amount",
+                          parseFloat(e.target.value) || 0,
+                        )
+                      }
+                      className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                    />
+                  </div>
+                )}
 
-              <div className="sm:col-span-3">
-                <Input
-                  type="number"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  label="Amount"
-                  labelPlacement="outside"
-                  placeholder="Amount"
-                  min="0"
-                  value={item.amount.toString()}
-                  onChange={(e) =>
-                    updatePaymentItem(
-                      index,
-                      "amount",
-                      parseFloat(e.target.value) || 0,
-                    )
-                  }
-                  className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
-                />
-              </div>
-
-              <div className="sm:col-span-2 flex items-end h-full">
-                {paymentItems.length > 1 && (
+                {/* Remove button */}
+                <div
+                  className={`${item.serviceType && item.serviceType !== "Medicine" ? "md:col-span-3" : "md:col-span-8"} flex items-center gap-2`}
+                >
                   <Button
                     color="danger"
                     variant="light"
                     onPress={() => removePaymentItem(index)}
-                    className="h-[56px] w-full"
+                    className="h-[56px] px-3 rounded-[7px]"
+                    isIconOnly
                   >
-                    Remove
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
                   </Button>
-                )}
+                </div>
               </div>
+
+              {/* Medicine Names Section - Only show for Medicine service */}
+              {item.serviceType === "Medicine" && (
+                <div className="space-y-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <label className="block text-sm font-medium text-dark dark:text-white">
+                      Medicine Management
+                    </label>
+                  </div>
+
+                  {/* Medicine Input Form */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 p-4 border border-stroke dark:border-dark-3 rounded-lg bg-white dark:bg-gray-dark">
+                    <div className="sm:col-span-2 lg:col-span-2">
+                      <Input
+                        type="text"
+                        variant="bordered"
+                        color={TOOL_TIP_COLORS.secondary}
+                        label="Medicine Name"
+                        labelPlacement="outside"
+                        placeholder="Enter medicine name"
+                        className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                        value={selectedMedicineName}
+                        onChange={(e) =>
+                          setSelectedMedicineName(e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <Input
+                        type="number"
+                        variant="bordered"
+                        color={TOOL_TIP_COLORS.secondary}
+                        label="Quantity"
+                        labelPlacement="outside"
+                        placeholder="Enter quantity (e.g., 10)"
+                        min="1"
+                        value={newMedicineQuantity.toString()}
+                        onChange={(e) =>
+                          setNewMedicineQuantity(parseInt(e.target.value) || 1)
+                        }
+                        className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                      />
+                    </div>
+
+                    <div>
+                      <Input
+                        type="number"
+                        variant="bordered"
+                        color={TOOL_TIP_COLORS.secondary}
+                        label="Price per Unit"
+                        labelPlacement="outside"
+                        placeholder="Enter price (e.g., 5.50)"
+                        min="0"
+                        step="0.01"
+                        value={newMedicinePrice.toString()}
+                        onChange={(e) =>
+                          setNewMedicinePrice(parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 items-end">
+                      <Button
+                        color={TOOL_TIP_COLORS.secondary}
+                        className="flex-1 rounded-[7px] font-medium"
+                        onPress={() => {
+                          if (
+                            selectedMedicineName?.trim() &&
+                            newMedicinePrice > 0
+                          ) {
+                            addMedicineItem(
+                              selectedMedicineName,
+                              newMedicineQuantity,
+                              newMedicinePrice,
+                            );
+                            setSelectedMedicineName("");
+                            setNewMedicineQuantity(1);
+                            setNewMedicinePrice(0);
+                          }
+                        }}
+                        isDisabled={
+                          !selectedMedicineName?.trim() || newMedicinePrice <= 0
+                        }
+                      >
+                        <span className="hidden sm:inline">Add Medicine</span>
+                        <span className="sm:hidden">Add</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Medicine List */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-dark dark:text-white flex items-center gap-2">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${medicineItems.length > 0 ? "bg-green-500" : "bg-gray-400"}`}
+                      ></span>
+                      Added Medicines ({medicineItems.length})
+                    </h4>
+
+                    {medicineItems.length === 0 && (
+                      <div className="text-center py-6 px-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
+                          No medicines added yet. Use the form above to add
+                          medicines.
+                        </div>
+                      </div>
+                    )}
+
+                    {medicineItems.length > 0 && (
+                      <div className="overflow-x-auto rounded-lg border border-stroke dark:border-dark-3">
+                        <table className="w-full min-w-full">
+                          <thead>
+                            <tr className="bg-gray-50 dark:bg-gray-700 border-b border-stroke dark:border-dark-3">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Medicine
+                              </th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Qty
+                              </th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Price/Unit
+                              </th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Total
+                              </th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {medicineItems.map((medicine, medIndex) => (
+                              <tr
+                                key={medIndex}
+                                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                                  {medicine.name}
+                                </td>
+                                <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 text-center">
+                                  {medicine.quantity}
+                                </td>
+                                <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 text-right">
+                                  ₹{medicine.pricePerUnit.toFixed(2)}
+                                </td>
+                                <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 text-right font-semibold">
+                                  ₹{medicine.totalAmount.toFixed(2)}
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <Button
+                                    color="danger"
+                                    variant="light"
+                                    size="sm"
+                                    onPress={() => removeMedicineItem(medIndex)}
+                                    isIconOnly
+                                    className="min-w-0"
+                                  >
+                                    <svg
+                                      width="14"
+                                      height="14"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr className="bg-gray-50 dark:bg-gray-700 border-t border-stroke dark:border-dark-3">
+                              <td
+                                colSpan={3}
+                                className="px-3 py-3 text-sm font-semibold text-right text-gray-900 dark:text-gray-100"
+                              >
+                                Medicine Subtotal:
+                              </td>
+                              <td className="px-3 py-3 text-sm font-bold text-right text-blue-600 dark:text-blue-400">
+                                ₹{medicineSubtotal.toFixed(2)}
+                              </td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Service Description for non-medicine services */}
+              {item.serviceType && item.serviceType !== "Medicine" && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-dark dark:text-white mb-2">
+                    Service Description
+                  </label>
+                  <Input
+                    type="text"
+                    variant="bordered"
+                    color={TOOL_TIP_COLORS.secondary}
+                    placeholder={`Enter ${item.serviceType.toLowerCase()} details`}
+                    value={item.description}
+                    onChange={(e) =>
+                      updatePaymentItem(index, "description", e.target.value)
+                    }
+                    className="w-full rounded-[7px] bg-white dark:bg-gray-dark border-stroke dark:border-dark-3"
+                  />
+                </div>
+              )}
             </div>
           ))}
+
           <Button
             onPress={addPaymentItem}
             className="mt-4"
@@ -803,36 +1414,40 @@ const PaymentEntry = () => {
         <div className="border border-stroke dark:border-dark-3 rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">Payment Summary</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Input
-                type="number"
-                variant="bordered"
-                color={TOOL_TIP_COLORS.secondary}
-                label="Discount"
-                labelPlacement="outside"
-                placeholder="Discount amount"
-                min="0"
-                value={discountAmount.toString()}
-                onChange={(e) =>
-                  setDiscountAmount(parseFloat(e.target.value) || 0)
-                }
-                className="w-full"
-              />
-            </div>
-            <div>
-              <Input
-                type="number"
-                variant="bordered"
-                color={TOOL_TIP_COLORS.secondary}
-                label="Tax"
-                labelPlacement="outside"
-                placeholder="Tax amount"
-                min="0"
-                value={taxAmount.toString()}
-                onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                className="w-full"
-              />
-            </div>
+            <Input
+              type="number"
+              variant="bordered"
+              color={TOOL_TIP_COLORS.secondary}
+              label="Discount (%)"
+              labelPlacement="outside"
+              placeholder="Discount percentage"
+              min="0"
+              max="100"
+              value={discountPercentage.toString()}
+              onChange={(e) =>
+                setDiscountPercentage(parseFloat(e.target.value) || 0)
+              }
+              className="w-full"
+            />
+            <Select
+              variant="bordered"
+              color={TOOL_TIP_COLORS.secondary}
+              label="Select Taxes *"
+              labelPlacement="outside"
+              placeholder="Select Taxes (Required)"
+              selectedKeys={selectedTaxIds}
+              onSelectionChange={(keys) =>
+                setSelectedTaxIds(Array.from(keys) as string[])
+              }
+              selectionMode="multiple"
+              className="w-full"
+            >
+              {taxItems.map((tax) => (
+                <SelectItem key={tax.id} value={tax.id}>
+                  {tax.label}
+                </SelectItem>
+              ))}
+            </Select>
           </div>
           <div className="mt-4 space-y-2">
             <div className="flex justify-between">
@@ -840,13 +1455,34 @@ const PaymentEntry = () => {
               <span>₹{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">Discount:</span>
+              <span className="font-medium">
+                Discount ({discountPercentage}%):
+              </span>
               <span>-₹{discountAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">Tax:</span>
-              <span>₹{taxAmount.toFixed(2)}</span>
+              <span className="font-medium">Subtotal after discount:</span>
+              <span>₹{subtotalAfterDiscount.toFixed(2)}</span>
             </div>
+            {selectedTaxes.length > 0 && (
+              <div className="space-y-1">
+                {selectedTaxes.map((tax) => (
+                  <div key={tax.id} className="flex justify-between">
+                    <span className="font-medium">
+                      {tax.taxName} ({tax.taxRate}%):
+                    </span>
+                    <span>
+                      ₹
+                      {((subtotalAfterDiscount * tax.taxRate) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between border-t pt-1">
+                  <span className="font-medium">Total Tax:</span>
+                  <span>₹{taxAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
             <div className="flex justify-between border-t pt-2 font-bold text-lg">
               <span>Total:</span>
               <span>₹{total.toFixed(2)}</span>
@@ -873,8 +1509,16 @@ const PaymentEntry = () => {
           color={TOOL_TIP_COLORS.secondary}
           className="w-full rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white"
           onPress={openPreviewModal}
+          isDisabled={previewLoading}
         >
-          Preview Payment
+          {previewLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <Spinner size="sm" color="white" />
+              <span>Loading Preview...</span>
+            </div>
+          ) : (
+            "Preview Payment"
+          )}
         </Button>
 
         {/* Preview Modal */}
@@ -894,7 +1538,24 @@ const PaymentEntry = () => {
                   </h1>
                 </ModalHeader>
                 <ModalBody>
-                  <div className="space-y-6 text-left p-4 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="space-y-6 text-left p-4 bg-white dark:bg-gray-800 rounded-lg w-full">
+                    {/* Hospital Header - Just Added */}
+                    {hospital && (
+                      <div className="text-center border-b-2 border-blue-600 pb-4 mb-4">
+                        <h2 className="text-xl font-bold  mb-2">
+                          {hospital.name}
+                        </h2>
+                        <div className="text-gray-600 dark:text-white space-y-1 text-sm">
+                          <p>{hospitalDetails.address || "Hospital Address"}</p>
+                          <p>Pincode: {hospitalDetails.pincode || "N/A"}</p>
+                          <p>
+                            Phone: {hospital.phone} | Email: {hospital.email}
+                          </p>
+                          {/* <p className="font-medium">Hospital Code: {hospital.code}</p> */}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="border-b pb-4">
                       <h2 className="text-lg md:text-xl font-semibold">
                         Payment Details
@@ -902,16 +1563,7 @@ const PaymentEntry = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                         <div>
                           <p className="text-sm text-gray-500">Payment ID</p>
-                          <p className="font-medium">
-                            PAY-{new Date().getFullYear()}-
-                            {(new Date().getMonth() + 1)
-                              .toString()
-                              .padStart(2, "0")}
-                            -
-                            {Math.floor(Math.random() * 1000)
-                              .toString()
-                              .padStart(3, "0")}
-                          </p>
+                          <p className="font-medium">Not Generated</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Patient</p>
@@ -922,7 +1574,9 @@ const PaymentEntry = () => {
                         <div>
                           <p className="text-sm text-gray-500">Patient ID</p>
                           <p className="font-medium">
-                            {patientDetails.id ? `${patientDetails.id}` : "N/A"}
+                            {patientDetails.code
+                              ? `${patientDetails.code}`
+                              : "N/A"}
                           </p>
                         </div>
                         <div>
@@ -951,6 +1605,18 @@ const PaymentEntry = () => {
                               : "N/A"}
                           </p>
                         </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Taxes Applied</p>
+                          <p className="font-medium">
+                            {selectedTaxes.length > 0
+                              ? selectedTaxes
+                                  .map(
+                                    (tax) => `${tax.taxName} (${tax.taxRate}%)`,
+                                  )
+                                  .join(", ")
+                              : "No tax selected"}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -977,19 +1643,58 @@ const PaymentEntry = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {paymentItems.map((item, index) => (
-                              <tr key={index}>
+                            {/* Service Items */}
+                            {paymentItems
+                              .filter((item) => item.serviceType !== "Medicine")
+                              .map((item, index) => (
+                                <tr key={`service-${index}`}>
+                                  <td className="border px-4 py-2">
+                                    <div>
+                                      <div className="font-medium">
+                                        {item.serviceType ||
+                                          item.description ||
+                                          "N/A"}
+                                      </div>
+                                      {item.serviceType &&
+                                        item.serviceType !== "Medicine" &&
+                                        item.description && (
+                                          <div className="text-sm text-gray-600 mt-1">
+                                            {item.description}
+                                          </div>
+                                        )}
+                                    </div>
+                                  </td>
+                                  <td className="border px-4 py-2 text-center">
+                                    {item.quantity}
+                                  </td>
+                                  <td className="border px-4 py-2 text-right">
+                                    ₹{item.amount.toFixed(2)}
+                                  </td>
+                                  <td className="border px-4 py-2 text-right">
+                                    ₹{(item.amount * item.quantity).toFixed(2)}
+                                  </td>
+                                </tr>
+                              ))}
+
+                            {/* Medicine Items */}
+                            {medicineItems.map((medicine, index) => (
+                              <tr key={`medicine-${index}`}>
                                 <td className="border px-4 py-2">
-                                  {item.description || "N/A"}
+                                  <div className="font-medium ">
+                                    {medicine.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Medicine
+                                  </div>
                                 </td>
                                 <td className="border px-4 py-2 text-center">
-                                  {item.quantity}
+                                  {medicine.quantity}
                                 </td>
                                 <td className="border px-4 py-2 text-right">
-                                  ₹{item.amount.toFixed(2)}
+                                  ₹{medicine.pricePerUnit.toFixed(2)}
                                 </td>
                                 <td className="border px-4 py-2 text-right">
-                                  ₹{(item.amount * item.quantity).toFixed(2)}
+                                  ₹{medicine.totalAmount.toFixed(2)}
                                 </td>
                               </tr>
                             ))}
@@ -1011,7 +1716,7 @@ const PaymentEntry = () => {
                                 className="border px-4 py-2 text-right font-bold"
                                 colSpan={3}
                               >
-                                Discount:
+                                Discount ({discountPercentage}%):
                               </td>
                               <td className="border px-4 py-2 text-right font-bold">
                                 -₹{discountAmount.toFixed(2)}
@@ -1022,12 +1727,44 @@ const PaymentEntry = () => {
                                 className="border px-4 py-2 text-right font-bold"
                                 colSpan={3}
                               >
-                                Tax:
+                                Subtotal after discount:
                               </td>
                               <td className="border px-4 py-2 text-right font-bold">
-                                ₹{taxAmount.toFixed(2)}
+                                ₹{subtotalAfterDiscount.toFixed(2)}
                               </td>
                             </tr>
+                            {selectedTaxes.length > 0 && (
+                              <>
+                                {selectedTaxes.map((tax) => (
+                                  <tr key={tax.id}>
+                                    <td
+                                      className="border px-4 py-2 text-right font-bold"
+                                      colSpan={3}
+                                    >
+                                      {tax.taxName} ({tax.taxRate}%):
+                                    </td>
+                                    <td className="border px-4 py-2 text-right font-bold">
+                                      ₹
+                                      {(
+                                        (subtotalAfterDiscount * tax.taxRate) /
+                                        100
+                                      ).toFixed(2)}
+                                    </td>
+                                  </tr>
+                                ))}
+                                <tr>
+                                  <td
+                                    className="border px-4 py-2 text-right font-bold"
+                                    colSpan={3}
+                                  >
+                                    Total Tax:
+                                  </td>
+                                  <td className="border px-4 py-2 text-right font-bold">
+                                    ₹{taxAmount.toFixed(2)}
+                                  </td>
+                                </tr>
+                              </>
+                            )}
                             <tr>
                               <td
                                 className="border px-4 py-2 text-right font-bold"
@@ -1069,19 +1806,25 @@ const PaymentEntry = () => {
                     color={TOOL_TIP_COLORS.secondary}
                     className="order-2 sm:order-1 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
                     onPress={handleSavePayment}
+                    isDisabled={savePaymentLoading || isLoading}
                   >
-                    {`${savePaymentLoading ? `Processing Payment... ` : "Save Payment"}`}
-                    <p>
-                      {savePaymentLoading && (
-                        <Spinner size="sm" color="white" />
+                    <div className="flex items-center justify-center gap-2">
+                      {savePaymentLoading ? (
+                        <>
+                          <Spinner size="sm" color="white" />
+                          <span>Processing Payment...</span>
+                        </>
+                      ) : (
+                        "Save Payment"
                       )}
-                    </p>
+                    </div>
                   </Button>
                   <Button
                     color={TOOL_TIP_COLORS.secondary}
                     variant="light"
                     onPress={onClose}
                     className="order-1 sm:order-2 rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 bg-purple-500 text-white w-full sm:w-auto"
+                    isDisabled={savePaymentLoading || isLoading}
                   >
                     Continue Editing
                   </Button>
@@ -1097,6 +1840,11 @@ const PaymentEntry = () => {
         loading={isLoading}
         modalMessage={modalMessage}
         onClose={handleModalClose}
+      />
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        link={shareLink}
       />
     </div>
   );

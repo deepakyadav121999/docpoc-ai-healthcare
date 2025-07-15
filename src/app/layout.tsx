@@ -7,6 +7,8 @@ import React, { useEffect } from "react";
 import Loader from "@/components/common/Loader";
 import SignUp from "./auth/signup/page";
 import SignIn from "./auth/signin/page";
+import ModernSignUp from "./auth-v2/signup/page";
+import ModernSignIn from "./auth-v2/signin/page";
 import { usePathname, useRouter } from "next/navigation";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { store } from "../store";
@@ -15,6 +17,10 @@ import { RootState } from "../store";
 import { AppDispatch } from "../store";
 import { AuthProvider } from "@/components/auth-provider";
 import { ChatProvider } from "@/components/Context/ChatContext";
+
+// Auth Version Configuration
+// Set to 'v1' for old auth pages, 'v2' for new modern auth pages
+const AUTH_VERSION: "v1" | "v2" = "v2";
 
 function RootLayout({
   children,
@@ -61,8 +67,25 @@ function RootLayout({
     if (isLoading) return;
 
     if (!isAuthenticated) {
-      if (pathname !== "/auth/signin" && pathname !== "/auth/signup") {
-        router.push("/auth/signin");
+      const authRoutes =
+        AUTH_VERSION === "v2"
+          ? [
+              "/auth-v2/signin",
+              "/auth-v2/signup",
+              "/auth/signin",
+              "/auth/signup",
+            ]
+          : [
+              "/auth/signin",
+              "/auth/signup",
+              "/auth-v2/signin",
+              "/auth-v2/signup",
+            ];
+
+      if (!authRoutes.includes(pathname)) {
+        const defaultRoute =
+          AUTH_VERSION === "v2" ? "/auth-v2/signin" : "/auth/signin";
+        router.push(defaultRoute);
       }
     } else {
       try {
@@ -81,7 +104,13 @@ function RootLayout({
           }
         } else {
           // Only when both exist, allow access to main app
-          if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+          const authRoutes = [
+            "/auth/signin",
+            "/auth/signup",
+            "/auth-v2/signin",
+            "/auth-v2/signup",
+          ];
+          if (authRoutes.includes(pathname)) {
             router.push("/");
           }
         }
@@ -111,6 +140,7 @@ function RootLayout({
   }
 
   if (!isAuthenticated) {
+    // Handle v1 auth routes
     if (pathname === "/auth/signup") {
       return (
         <html lang="en">
@@ -123,14 +153,62 @@ function RootLayout({
         </html>
       );
     }
+    if (pathname === "/auth/signin") {
+      return (
+        <html lang="en">
+          <body suppressHydrationWarning={true}>
+            <SignIn
+              onLogin={handleLogin}
+              setAuthPage={() => router.push("/auth/signup")}
+            />
+          </body>
+        </html>
+      );
+    }
+
+    // Handle v2 auth routes
+    if (pathname === "/auth-v2/signup") {
+      return (
+        <html lang="en">
+          <body suppressHydrationWarning={true}>
+            <ModernSignUp
+              onLogin={handleLogin}
+              setAuthPage={() => router.push("/auth-v2/signin")}
+            />
+          </body>
+        </html>
+      );
+    }
+    if (pathname === "/auth-v2/signin") {
+      return (
+        <html lang="en">
+          <body suppressHydrationWarning={true}>
+            <ModernSignIn
+              onLogin={handleLogin}
+              setAuthPage={() => router.push("/auth-v2/signup")}
+            />
+          </body>
+        </html>
+      );
+    }
+
+    // Default route based on AUTH_VERSION
+    const defaultComponent =
+      AUTH_VERSION === "v2" ? (
+        <ModernSignIn
+          onLogin={handleLogin}
+          setAuthPage={() => router.push("/auth-v2/signup")}
+        />
+      ) : (
+        <SignIn
+          onLogin={handleLogin}
+          setAuthPage={() => router.push("/auth/signup")}
+        />
+      );
+
     return (
       <html lang="en">
-        <body suppressHydrationWarning={true}>
-          <SignIn
-            onLogin={handleLogin}
-            setAuthPage={() => router.push("/auth/signup")}
-          />
-        </body>
+        <body suppressHydrationWarning={true}>{defaultComponent}</body>
       </html>
     );
   }
