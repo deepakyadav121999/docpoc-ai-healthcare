@@ -1073,7 +1073,8 @@ const SettingBoxes = () => {
                             onClick={(e) => {
                               if (
                                 currentDesignation.toLowerCase() === "doctor" ||
-                                currentDesignation.toLowerCase() === "admin"
+                                currentDesignation.toLowerCase() === "admin" ||
+                                "Not specified"
                               ) {
                                 e.stopPropagation();
                                 setTempDesignation(currentDesignation);
