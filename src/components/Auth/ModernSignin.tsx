@@ -55,6 +55,29 @@ const ModernSignin: React.FC<ModernSigninProps> = ({ onLogin }) => {
     setError("");
 
     try {
+      // Check if user exists before sending OTP
+      const checkUserExists = async (phone: string) => {
+        try {
+          const response = await axios.post(`${API_URL}/auth/findByUsername`, {
+            phone: phone.trim(),
+          });
+          return response.data.exists;
+        } catch (error) {
+          const err = error as any;
+          if (err.response?.status === 404) {
+            return false;
+          }
+          throw new Error("Failed to check user existence");
+        }
+      };
+
+      const exists = await checkUserExists(phoneNumber);
+      if (!exists) {
+        setError("User not found. Please sign up.");
+        setLoading(false);
+        return;
+      }
+
       const payload = { phone: phoneNumber, username: phoneNumber };
       await axios.post(`${API_URL}/auth/otp/generate`, payload);
 
