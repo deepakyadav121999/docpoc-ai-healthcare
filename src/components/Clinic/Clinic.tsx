@@ -9,6 +9,7 @@ import {
   Textarea,
   TimeInput,
   useDisclosure,
+  Spinner,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import { TOOL_TIP_COLORS } from "@/constants";
@@ -288,19 +289,18 @@ const Clinic = () => {
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsButtonLoading(true); // Disable button and show spinner
-    setLoading(true);
     if (clinicDetails.state && clinicDetails.pincode) {
       const isValid = await validatePincode(
         clinicDetails.pincode,
         clinicDetails.state,
       );
       if (!isValid) {
-        setLoading(false);
         setModalMessage({
           success: "",
           error: "Please correct the pincode/state mismatch before saving",
         });
         onOpen();
+        setIsButtonLoading(false);
         return;
       }
     }
@@ -335,8 +335,6 @@ const Clinic = () => {
 
     if (Object.keys(errors).length > 0) {
       // setErrors(errors); // Set the errors in state for further use
-      setLoading(false);
-
       // Build the modal message for displaying required fields
       const errorMessage = Object.entries(errors)
         .map(([message]) => `- ${message}`)
@@ -348,6 +346,7 @@ const Clinic = () => {
       });
 
       onOpen(); // Open the modal to show the errors
+      setIsButtonLoading(false);
       return;
     }
 
@@ -529,11 +528,10 @@ const Clinic = () => {
         });
       }
       onOpen(); // Show the modal for any error
-      setLoading(false);
+      setIsButtonLoading(false);
       // onOpen();
     }
     setIsButtonLoading(false); // Re-enable button and hide spinner
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -562,33 +560,20 @@ const Clinic = () => {
 
   return loading ? (
     <div className="flex items-center justify-center min-h-[400px]">
-      <svg
-        className="animate-spin h-10 w-10 text-purple-500"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8z"
-        />
-      </svg>
+      <Spinner size="lg" color="primary" />
     </div>
   ) : (
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
 
-        <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+        <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card relative">
+          {/* Overlay spinner when saving/updating */}
+          {isButtonLoading && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80 dark:bg-dark-2 dark:bg-opacity-80">
+              <Spinner size="lg" color="primary" />
+            </div>
+          )}
           <div className="border-b border-stroke px-3 py-2  sm:px-6.5 sm:py-4 dark:border-dark-3 flex flex-row gap-4 sm:gap-9">
             {/* {
   loading? <div></div> : <div> {!isHospitalAvailable&& (
@@ -660,7 +645,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   // errorMessage={errors.name}
                 />
                 <Input
@@ -683,7 +668,7 @@ const Clinic = () => {
                   maxLength={15}
                   value={clinicDetails.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                 />
                 <Input
                   classNames={{
@@ -704,7 +689,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={clinicDetails.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                 />
               </div>
               <div className="flex flex-col w-full">
@@ -714,7 +699,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedWorkingDays}
                   onChange={handleWorkingDaysChange}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                 >
                   {workingDays.map((day) => (
                     <Checkbox key={day} value={day}>
@@ -745,7 +730,7 @@ const Clinic = () => {
                   value={shiftStartTime}
                   // defaultValue={new Time(8, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   // onChange={(time) => handleInputChange("shiftStart", time.toString())}
                   onChange={(time) => {
                     setShiftStartTime(time); // Update the Time state
@@ -770,7 +755,7 @@ const Clinic = () => {
                   value={shiftEndTime}
                   // defaultValue={new Time(6, 45)}
                   startContent={<SVGIconProvider iconName="clock" />}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   onChange={(time) => {
                     setShiftEndTime(time); // Update the Time state
                     handleInputChange("shiftEnd", time.toString()); // Update clinicDetails state
@@ -789,7 +774,7 @@ const Clinic = () => {
                       "dark:group-data-[has-value=true]:text-white", // Dark mode with value
                     ],
                   }}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   color={TOOL_TIP_COLORS.secondary}
                   isInvalid={false}
                   labelPlacement="outside"
@@ -816,7 +801,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   selectedKey={selectedStateKey}
                   // defaultSelectedKey="karnataka"
                   defaultItems={IndianStatesList}
@@ -944,7 +929,7 @@ const Clinic = () => {
                   errorMessage={pincodeError}
                   value={clinicDetails.pincode}
                   onChange={(e) => handleInputChange("pincode", e.target.value)}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                   description={
                     isValidatingPincode
                       ? "Validating pincode..."
@@ -979,7 +964,7 @@ const Clinic = () => {
                   value={detectedLocation}
                   isReadOnly
                   color={TOOL_TIP_COLORS.secondary}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                 />
 
                 <button
@@ -987,7 +972,7 @@ const Clinic = () => {
                   onClick={locationDetact}
                   type="button"
                   // style={{ marginTop: 20 }}
-                  disabled={!edit}
+                  disabled={isButtonLoading || !edit}
                   className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
                   style={{ minWidth: 200, marginBottom: 20, marginTop: 20 }}
                 >
@@ -1001,7 +986,7 @@ const Clinic = () => {
                   color={TOOL_TIP_COLORS.secondary}
                   value={selectedDepartments}
                   onChange={handleDepartmentsChange}
-                  isDisabled={!edit}
+                  isDisabled={isButtonLoading || !edit}
                 >
                   {medicalDepartments.map((department) => (
                     <Checkbox key={department.value} value={department.value}>
@@ -1016,7 +1001,10 @@ const Clinic = () => {
                   Leave unchecked if appointments from your website needs
                   admin(s) action to confirm booking.
                 </label>
-                <Checkbox color={TOOL_TIP_COLORS.secondary} isDisabled={!edit}>
+                <Checkbox
+                  color={TOOL_TIP_COLORS.secondary}
+                  isDisabled={isButtonLoading || !edit}
+                >
                   All appointments gets confirmed by default.
                 </Checkbox>
               </div>
@@ -1028,35 +1016,12 @@ const Clinic = () => {
                 disabled={!edit || isButtonLoading}
                 // isDisabled={!edit}
                 color={TOOL_TIP_COLORS.secondary}
-                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 ${
-                  edit && !isButtonLoading
-                    ? "bg-purple-500 text-white"
-                    : "bg-purple-500 text-white opacity-50 cursor-not-allowed"
-                } flex items-center justify-center gap-2`}
+                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 ${edit && !isButtonLoading ? "bg-purple-500 text-white" : "bg-purple-500 text-white opacity-50 cursor-not-allowed"} flex items-center justify-center gap-2`}
                 style={{ minWidth: 280, marginBottom: 20 }}
                 // onPress={onOpen}
               >
                 {isButtonLoading && (
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8z"
-                    />
-                  </svg>
+                  <Spinner size="sm" color="white" className="mr-2" />
                 )}
                 {!isHospitalAvailable
                   ? isButtonLoading
