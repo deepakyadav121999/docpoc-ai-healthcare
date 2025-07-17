@@ -33,6 +33,7 @@ function RootLayout({
   const profile = useSelector((state: RootState) => state.profile.data);
   const isLoading = useSelector((state: RootState) => state.profile.loading);
   const isAuthenticated = !!profile;
+  const [redirecting, setRedirecting] = React.useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("docPocAuth_token");
@@ -95,11 +96,13 @@ function RootLayout({
         if (!hasDesignation) {
           // FIRST check - Redirect to profile settings if designation is missing
           if (pathname !== "/pages/settings") {
+            setRedirecting(true);
             router.push("/pages/settings");
           }
         } else if (!profile?.branchId) {
           // THEN check - Redirect to hospital setup if branchId is missing
           if (pathname !== "/settings") {
+            setRedirecting(true);
             router.push("/settings");
           }
         } else {
@@ -114,10 +117,12 @@ function RootLayout({
             router.push("/");
           }
         }
+        setRedirecting(false);
       } catch (error) {
         console.error("Error parsing profile JSON", error);
         // If JSON parsing fails, treat it as missing designation
         if (pathname !== "/pages/settings") {
+          setRedirecting(true);
           router.push("/pages/settings");
         }
       }
@@ -129,7 +134,7 @@ function RootLayout({
     dispatch(fetchProfile());
   };
 
-  if (isLoading) {
+  if (isLoading || redirecting) {
     return (
       <html lang="en">
         <body suppressHydrationWarning={true}>

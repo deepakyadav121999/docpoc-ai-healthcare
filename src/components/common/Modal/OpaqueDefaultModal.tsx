@@ -53,7 +53,7 @@ const App: React.FC<ParentComponentProps> = ({
       setTimeout(() => {
         onOpenChange();
         handleClose();
-      }, 3000);
+      }, 1500);
     }
   };
 
