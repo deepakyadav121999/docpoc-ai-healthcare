@@ -49,6 +49,7 @@ const Clinic = () => {
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
+  const [isButtonLoading, setIsButtonLoading] = useState(false);
   const [workingDays] = useState([
     "monday",
     "tuesday",
@@ -286,6 +287,7 @@ const Clinic = () => {
 
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsButtonLoading(true); // Disable button and show spinner
     setLoading(true);
     if (clinicDetails.state && clinicDetails.pincode) {
       const isValid = await validatePincode(
@@ -530,6 +532,7 @@ const Clinic = () => {
       setLoading(false);
       // onOpen();
     }
+    setIsButtonLoading(false); // Re-enable button and hide spinner
     setLoading(false);
   };
 
@@ -555,7 +558,32 @@ const Clinic = () => {
   console.log("Selected State Key:", selectedStateKey);
   console.log("Clinic Details State:", clinicDetails.state);
 
-  return (
+  // Add or update the handler for saved address click to only fill address
+
+  return loading ? (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <svg
+        className="animate-spin h-10 w-10 text-purple-500"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8z"
+        />
+      </svg>
+    </div>
+  ) : (
     <div className="grid grid-cols-1 gap-4 sm:gap-9  m-1 sm:m-2">
       <div className="flex flex-col w-full">
         {/* <!-- Contact Form --> */}
@@ -997,14 +1025,46 @@ const Clinic = () => {
             <div className="flex justify-center mt-2 sm:mt-4">
               <button
                 type="submit"
-                disabled={!edit}
+                disabled={!edit || isButtonLoading}
                 // isDisabled={!edit}
                 color={TOOL_TIP_COLORS.secondary}
-                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90  ${edit ? "bg-purple-500 text-white" : " bg-purple-500 text-white opacity-50 cursor-not-allowed "} `}
+                className={`rounded-[7px] p-[10px] font-medium hover:bg-opacity-90 ${
+                  edit && !isButtonLoading
+                    ? "bg-purple-500 text-white"
+                    : "bg-purple-500 text-white opacity-50 cursor-not-allowed"
+                } flex items-center justify-center gap-2`}
                 style={{ minWidth: 280, marginBottom: 20 }}
                 // onPress={onOpen}
               >
-                Save Changes
+                {isButtonLoading && (
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
+                )}
+                {!isHospitalAvailable
+                  ? isButtonLoading
+                    ? "Creating Hospital..."
+                    : "Create Hospital"
+                  : isButtonLoading
+                    ? "Saving Changes..."
+                    : "Save Changes"}
               </button>
               <EnhancedModal
                 isOpen={isOpen}
