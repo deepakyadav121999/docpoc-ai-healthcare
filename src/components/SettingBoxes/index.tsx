@@ -126,42 +126,35 @@ const SettingBoxes = () => {
   const currentDesignation = userJsonData.designation || "";
   const currentBio = userJsonData.bio || "";
 
-  // const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(
-  //   null,
-  // );
-  const [originalProfile] = useState<UserProfile | null>(null);
+  // Store the original profile for reset and dirty check
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(
+    null,
+  );
 
-  // Modify fetchProfiles to store original data
-  // const fetchProfilesR = async () => {
-  //   setLoading(true);
-  //   const token = localStorage.getItem("docPocAuth_token");
+  // When profile is fetched, store original
+  useEffect(() => {
+    if (userProfile) {
+      setOriginalProfile(userProfile);
+    }
+  }, [userProfile]);
 
-  //   try {
-  //     if (profile.id) {
-  //       const userEndpoint = `${API_URL}/user/${profile.id}`;
-  //       const userResponse = await axios.get(userEndpoint, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-
-  //       setUserProfile(userResponse.data);
-  //       setFormData(userResponse.data);
-  //       setOriginalProfile(userResponse.data); // Store original data
-  //       setProfilePhotoUrl(userResponse.data.profilePicture);
-  //       setLoading(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching profile:", error);
-  //   }
-  // };
-
+  // Cancel button resets all fields to original
   const handleCancel = () => {
     if (originalProfile) {
       setFormData(originalProfile);
+      // Reset temp fields if needed
+      setTempDesignation("");
+      setEditDesignation(false);
+      setTempBio("");
+      setEditBio(false);
+      setTempPhotoUrl(originalProfile.profilePicture || null);
+      setPhotoFile(null);
+      setShowSaveButton(false);
+      setShowUploadSection(false);
+      setShowCropper(false);
     }
   };
+
   // Handle designation update
   const toggleEditDesignation = () => {
     if (editDesignation) {
@@ -229,12 +222,36 @@ const SettingBoxes = () => {
     }
   };
 
+  // Validation function for required fields and formats
+  const validateForm = () => {
+    const errors = [];
+    if (!formData.email || !formData.email.trim()) {
+      errors.push("Email is required");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push("Email format is invalid");
+    }
+    if (!formData.phone || !/^\d{10}$/.test(formData.phone.toString())) {
+      errors.push("Phone number must be 10 digits");
+    }
+    if (!currentDesignation) {
+      errors.push("Designation is required");
+    }
+    return errors;
+  };
+
+  // Restrict phone input to 10 digits, numeric only
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
+    if (name === "phone") {
+      const numericValue = value.replace(/\D/g, "").slice(0, 10);
+      setFormData({ ...formData, [name]: numericValue });
+      return;
+    }
     setFormData({ ...formData, [name]: value });
   };
+
   const handleModalClose = () => {
     if (accessToken) {
       dispatch(updateAccessToken(accessToken));
@@ -245,8 +262,15 @@ const SettingBoxes = () => {
     onClose();
   };
 
+  // Update handleSave to use validation and EnhancedModal for errors
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setModalMessage({ success: "", error: errors.join(", ") });
+      onOpen();
+      return;
+    }
     console.log("Save button clicked");
     setLoading(true);
 
@@ -857,9 +881,36 @@ const SettingBoxes = () => {
     setIsDeleteModalOpen(false);
   };
 
+  // Check if form is dirty (has changes)
+  const isFormDirty = () => {
+    if (!originalProfile) return false;
+    const fields: (keyof UserProfile)[] = [
+      "name",
+      "email",
+      "phone",
+      "json",
+      "profilePicture",
+    ];
+    for (const key of fields) {
+      if (formData[key] !== originalProfile[key]) return true;
+    }
+    return false;
+  };
+
   return (
     <>
-      <div className="grid grid-cols-5 gap-8">
+      {/* Warning for missing designation */}
+      {!loading && !currentDesignation && (
+        <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
+          Please set your designation to complete the onboarding process.
+        </div>
+      )}
+      <div className="grid grid-cols-5 gap-8 relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
+            <Spinner size="lg" color="primary" />
+          </div>
+        )}
         <div className="col-span-5 xl:col-span-3">
           <div className="rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
             <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
@@ -989,7 +1040,7 @@ const SettingBoxes = () => {
                   </div>
                 </div>
 
-                <div className="mb-5.5">
+                {/* <div className="mb-5.5">
                   <label
                     className="mb-3 block text-body-sm font-medium text-dark dark:text-white"
                     htmlFor="Username"
@@ -1029,7 +1080,7 @@ const SettingBoxes = () => {
                       value={formData.email || ""}
                     />
                   </div>
-                </div>
+                </div> */}
 
                 <div className="mb-5.5">
                   <label
@@ -1073,7 +1124,8 @@ const SettingBoxes = () => {
                             onClick={(e) => {
                               if (
                                 currentDesignation.toLowerCase() === "doctor" ||
-                                currentDesignation.toLowerCase() === "admin"
+                                currentDesignation.toLowerCase() === "admin" ||
+                                "Not specified"
                               ) {
                                 e.stopPropagation();
                                 setTempDesignation(currentDesignation);
@@ -1331,7 +1383,7 @@ const SettingBoxes = () => {
                 <div className="flex justify-end gap-3">
                   <button
                     className="flex justify-center rounded-[7px] border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
-                    // type="submit"
+                    type="button"
                     onClick={handleCancel}
                   >
                     Cancel
@@ -1339,17 +1391,18 @@ const SettingBoxes = () => {
                   <button
                     className="flex justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
                     type="submit"
+                    disabled={!isFormDirty() || loading}
                   >
                     {loading ? (
                       <div className="flex gap-2">
                         {" "}
-                        <p>Saving</p>{" "}
+                        <p>Updating Profile</p>{" "}
                         <p>
                           <Spinner size="sm" color="white" />{" "}
                         </p>{" "}
                       </div>
                     ) : (
-                      <p>Save</p>
+                      <p>Upadte Profile</p>
                     )}
                   </button>
                   <EnhancedModal
