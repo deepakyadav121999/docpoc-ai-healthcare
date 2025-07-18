@@ -236,6 +236,9 @@ const SettingBoxes = () => {
     if (!currentDesignation) {
       errors.push("Designation is required");
     }
+    if (!formData.name || !formData.name.trim()) {
+      errors.push("Name is required");
+    }
     return errors;
   };
 
