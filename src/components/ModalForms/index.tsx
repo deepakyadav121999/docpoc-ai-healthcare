@@ -31,6 +31,7 @@ import {
   // getLocalTimeZone,
   // now,
   parseTime,
+  today,
 } from "@internationalized/date";
 
 // import ToolTip from "../Tooltip";
@@ -105,7 +106,7 @@ export default function ModalForm(props: {
     useState(false);
   const [editSelectedEmployeeShiftTime, setEditEmployeeShiftTime] =
     useState(false);
-  const [editSelectedEmployeeJoiningDate] = useState(false);
+  // const [editSelectedEmployeeJoiningDate] = useState(false);
   const [editSelectedEmployeeDOB, setEditEmployeeDOB] = useState(false);
 
   const [employeeEmail, setEmployeeEmail] = useState("");
@@ -2567,7 +2568,7 @@ export default function ModalForm(props: {
           }
         `}</style>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center   z-50">
             <Spinner size="lg" />
           </div>
         ) : (
@@ -2699,6 +2700,10 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
+          .nextui-date-picker-input {
+            font-size: 16px !important;
+            touch-action: manipulation;
+          }
 
           /* Disable text size adjustment */
           html {
@@ -2756,7 +2761,7 @@ export default function ModalForm(props: {
           }
         `}</style>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center  z-50">
             <Spinner size="lg" />
           </div>
         ) : (
@@ -2767,44 +2772,37 @@ export default function ModalForm(props: {
           >
             <CardBody>
               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-                <div className="relative col-span-6 md:col-span-4">
-                  <div>
-                    <div className="relative drop-shadow-2">
-                      <Image
-                        // src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
-
-                        src={
-                          profilePhoto
-                            ? profilePhoto
-                            : employeeGender
-                              ? employeeGender === "Male"
-                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                                : `${AWS_URL}/docpoc-images/user-female.jpg`
-                              : `${AWS_URL}/docpoc-images/user-male.jpg`
-                        }
-                        width={160}
-                        height={160}
-                        className="overflow-hidden rounded-full"
-                        alt="profile"
-                      />
-                    </div>
-
+                <div className="col-span-6 md:col-span-4">
+                  <div className="relative flex justify-center items-center w-[160px] h-[160px] mx-auto sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]">
+                    <Image
+                      src={
+                        profilePhoto
+                          ? profilePhoto
+                          : employeeGender
+                            ? employeeGender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                            : `${AWS_URL}/docpoc-images/user-male.jpg`
+                      }
+                      width={160}
+                      height={160}
+                      className="rounded-full object-cover w-[160px] h-[160px] sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]"
+                      alt="profile"
+                    />
                     <label
                       htmlFor="profilePhoto"
-                      className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-5"
+                      className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 w-9 h-9 sm:w-8 sm:h-8 cursor-pointer z-10 transition duration-200"
                     >
                       <SVGIconProvider
                         iconName="camera"
                         color={GLOBAL_ICON_COLOR_WHITE}
                       />
-
                       <input
                         type="file"
                         name="profilePhoto"
                         id="profilePhoto"
                         className="sr-only"
                         accept="image/png, image/jpg, image/jpeg"
-                        // onChange={handleProfilePhotoChange}
                         onChange={handleProfilePhotoChange}
                       />
                     </label>
@@ -2818,71 +2816,89 @@ export default function ModalForm(props: {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="user" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Name: </strong>
-                        {!editSelectedEmployee && employeeName}
-                      </p>
-                      {editSelectedEmployee && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="text"
-                            placeholder="Patient name.."
-                            labelPlacement="outside"
-                            value={employeeName}
-                            onChange={(e) => setEmployeeName(e.target.value)}
-                          />
+                    {/* Name */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="user" />
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployee && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeName}
-                          />
-                        )}
-                        {editSelectedEmployee && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeName}
-                          />
-                        )}
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployee && (
+                            <p>
+                              <strong>Name: </strong> {employeeName}
+                            </p>
+                          )}
+                          {editSelectedEmployee && (
+                            <>
+                              <p>
+                                <strong>Name:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Input
+                                  type="text"
+                                  placeholder="Patient name.."
+                                  labelPlacement="outside"
+                                  value={employeeName}
+                                  onChange={(e) =>
+                                    setEmployeeName(e.target.value)
+                                  }
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployee && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeName}
+                            />
+                          )}
+                          {editSelectedEmployee && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeName}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="email" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Email: </strong>
-                        {!editSelectedEmployeeEmail && employeeEmail}
-                      </p>
-                      {editSelectedEmployeeEmail && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="email"
-                            placeholder="Employee email.."
-                            labelPlacement="outside"
-                            value={employeeEmail}
-                            onChange={(e) => setEmployeeEmail(e.target.value)}
-                          />
-                        </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
+                    {/* Email */}
+                    <div className="flex items-center w-full text-xs sm:text-base mb-2">
+                      <div className="ml-[-5px]">
+                        <SVGIconProvider iconName="email" />
+                      </div>
+                      <div className="ml-2 truncate flex-1 min-w-0">
+                        {!editSelectedEmployeeEmail && (
+                          <p className="truncate flex-1 min-w-0">
+                            <strong>Email: </strong> {employeeEmail}
+                          </p>
+                        )}
+                        {editSelectedEmployeeEmail && (
+                          <>
+                            <p>
+                              <strong>Email:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Input
+                                type="email"
+                                placeholder="Employee email.."
+                                labelPlacement="outside"
+                                value={employeeEmail}
+                                onChange={(e) =>
+                                  setEmployeeEmail(e.target.value)
+                                }
+                                className="w-full text-xs"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
                         {!editSelectedEmployeeEmail && (
                           <IconButton
                             iconName="edit"
@@ -2899,48 +2915,58 @@ export default function ModalForm(props: {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="phone" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Phone: </strong>
-                        {!editSelectedEmployeePhone && employeePhone}
-                      </p>
-                      {editSelectedEmployeePhone && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="text"
-                            placeholder="Employee phone.."
-                            labelPlacement="outside"
-                            value={employeePhone}
-                            onChange={(e) => setEmployeePhone(e.target.value)}
-                          />
+                    {/* Phone */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="phone" />
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployeePhone && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeePhone}
-                          />
-                        )}
-                        {editSelectedEmployeePhone && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeePhone}
-                          />
-                        )}
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeePhone && (
+                            <p>
+                              <strong>Phone: </strong> {employeePhone}
+                            </p>
+                          )}
+                          {editSelectedEmployeePhone && (
+                            <>
+                              <p>
+                                <strong>Phone:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Input
+                                  type="text"
+                                  placeholder="Employee phone.."
+                                  labelPlacement="outside"
+                                  value={employeePhone}
+                                  onChange={(e) =>
+                                    setEmployeePhone(e.target.value)
+                                  }
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeePhone && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeePhone}
+                            />
+                          )}
+                          {editSelectedEmployeePhone && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeePhone}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center">
+                    {/* <div className="flex items-center">
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="user" />
                       </div>
@@ -3009,17 +3035,81 @@ export default function ModalForm(props: {
                           />
                         )}
                       </div>
+                    </div> */}
+
+                    {/* Gender */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="user" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeGender && (
+                            <p>
+                              <strong>Gender: </strong> {employeeGender}
+                            </p>
+                          )}
+                          {editSelectedEmployeeGender && (
+                            <>
+                              <p>
+                                <strong>Gender:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Autocomplete
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  isDisabled={!editSelectedEmployeeGender}
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  defaultItems={[
+                                    { label: "Male", value: "Male" },
+                                    { label: "Female", value: "Female" },
+                                  ]}
+                                  label="Select Gender"
+                                  placeholder={
+                                    employeeGender || "Select Gender"
+                                  }
+                                  className="w-full text-xs"
+                                  onSelectionChange={(key) => {
+                                    const selected = key as string;
+                                    setEmployeeGender(selected || "");
+                                  }}
+                                >
+                                  {({ label, value }) => (
+                                    <AutocompleteItem
+                                      key={value}
+                                      variant="shadow"
+                                      color={TOOL_TIP_COLORS.secondary}
+                                      className="text-xs"
+                                    >
+                                      {label}
+                                    </AutocompleteItem>
+                                  )}
+                                </Autocomplete>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeeGender && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeGender}
+                            />
+                          )}
+                          {editSelectedEmployeeGender && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeGender}
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center">
-                      {/* <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="icard" />
-                      </div>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Designation: </strong>
-                        {employeeDesignation}
-                      </p> */}
-
+                    {/* <div className="flex items-center">
+                    
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="doctor" />
                       </div>
@@ -3038,32 +3128,25 @@ export default function ModalForm(props: {
                             className="flex items-center"
                             style={{ marginLeft: 10 }}
                           >
-                            {/* <Input
-                            type="text"
-                            placeholder="Employee designation.."
-                            labelPlacement="outside"
-                            value={employeeDesignation}
-                            onChange={(e) => setEmployeeDesignation(e.target.value)}
-                          /> */}
-
+                           
                             <Autocomplete
                               color={TOOL_TIP_COLORS.secondary}
                               isDisabled={!editSelectedEmployeeDesignation}
                               labelPlacement="outside"
                               variant="bordered"
-                              defaultItems={designations} // Use the designations array as items
+                              defaultItems={designations} 
                               label="Select Designation"
                               placeholder={
                                 employeeDesignation || "Search Designation"
                               }
-                              // selectedKeys={[selectedDesignation]}
+                           
                               onSelectionChange={(key) => {
                                 const selected = designations.find(
                                   (designation) => designation.value === key,
                                 );
-                                // setTempDesignation(selected?.label || "");
+                              
                                 setEmployeeDesignation(selected?.label || "");
-                                // Temporarily set the designation
+                              
                               }}
                             >
                               {(item) => (
@@ -3073,7 +3156,7 @@ export default function ModalForm(props: {
                                   color={TOOL_TIP_COLORS.secondary}
                                 >
                                   {item.label}{" "}
-                                  {/* Display the label for each item */}
+                               
                                 </AutocompleteItem>
                               )}
                             </Autocomplete>
@@ -3099,165 +3182,252 @@ export default function ModalForm(props: {
                           />
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="clock" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Working Hours: </strong>
-                        {!editSelectedEmployeeShiftTime && employeeShiftTime}
-                      </p>
-                      {editSelectedEmployeeShiftTime && (
-                        <div className="flex items-center">
-                          <TimeInput
-                            color={TOOL_TIP_COLORS.secondary}
-                            label="From"
-                            labelPlacement="outside"
-                            variant="bordered"
-                            value={employeeShiftStartTime}
-                            startContent={<SVGIconProvider iconName="clock" />}
-                            onChange={(e) => {
-                              handleTimeChange("start", e.toString());
-                              setEmployeeShiftStartTime(e);
-                            }}
-                            isDisabled={!editSelectedEmployeeShiftTime}
-                          />
+                    </div> */}
 
-                          <div
-                            className="flex items-center"
-                            style={{ marginLeft: 10 }}
-                          >
-                            <TimeInput
-                              color={TOOL_TIP_COLORS.secondary}
-                              label="To"
-                              labelPlacement="outside"
-                              variant="bordered"
-                              value={employeeShiftEndTime}
-                              startContent={
-                                <SVGIconProvider iconName="clock" />
-                              }
-                              onChange={(e) => {
-                                handleTimeChange("end", e.toString());
-                                setEmployeeShiftEndTime(e);
-                              }}
-                              isDisabled={!editSelectedEmployeeShiftTime}
+                    {/* Designation */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="doctor" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeDesignation && (
+                            <p>
+                              <strong>Designation: </strong>{" "}
+                              {employeeDesignation}
+                            </p>
+                          )}
+                          {editSelectedEmployeeDesignation && (
+                            <>
+                              <p>
+                                <strong>Designation:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Autocomplete
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  isDisabled={!editSelectedEmployeeDesignation}
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  defaultItems={designations}
+                                  label="Select Designation"
+                                  placeholder={
+                                    employeeDesignation || "Search Designation"
+                                  }
+                                  className="w-full text-xs"
+                                  onSelectionChange={(key) => {
+                                    const selected = designations.find(
+                                      (designation) =>
+                                        designation.value === key,
+                                    );
+                                    setEmployeeDesignation(
+                                      selected?.label || "",
+                                    );
+                                  }}
+                                >
+                                  {(item) => (
+                                    <AutocompleteItem
+                                      key={item.value}
+                                      variant="shadow"
+                                      color={TOOL_TIP_COLORS.secondary}
+                                      className="text-xs"
+                                    >
+                                      {item.label}
+                                    </AutocompleteItem>
+                                  )}
+                                </Autocomplete>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeeDesignation && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeDesignation}
                             />
-                          </div>
+                          )}
+                          {editSelectedEmployeeDesignation && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeDesignation}
+                            />
+                          )}
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployeeShiftTime && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeShiftTime}
-                          />
-                        )}
-                        {editSelectedEmployeeShiftTime && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeShiftTime}
-                          />
-                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="calendar" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Joined On: </strong>{" "}
-                      </p>
-                      {!editSelectedEmployeeJoiningDate && (
-                        <p className="text-sm sm:text-medium ml-2">
-                          {formatDateOne(employeeJoiningDate)}
-                        </p>
-                      )}
-
-                      {editSelectedEmployeeJoiningDate && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          {/* <DatePicker
-                                       showMonthAndYearPickers
-                                       label="Joining Date"
-                                       className="max-w-[284px]"
-                                       onChange={editEmployeeJoiningDate}
-                                       style={{ marginLeft: 0 }}
-                                     /> */}
-                        </div>
-                      )}
-                      {/* <div className="flex items-center" style={{ marginLeft: 10 }}>
-                                   {!editSelectedEmployeeJoiningDate && (
-                                     <IconButton
-                                       iconName="edit"
-                                       color={GLOBAL_DANGER_COLOR}
-                                       clickEvent={editEmployeeTime}
-                                     />
-                                   )}
-                                   {editSelectedEmployeeJoiningDate && (
-                                     <IconButton
-                                       iconName="followup"
-                                       color={GLOBAL_SUCCESS_COLOR}
-                                       clickEvent={editEmployeeTime}
-                                     />
-                                   )}
-                                 </div> */}
-                    </div>
-                    <div className="flex items-center">
-                      <div style={{ marginLeft: -5 }}>
-                        <SVGIconProvider iconName="key" />
-                      </div>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Access Type: </strong>Super-Admin
-                      </p>
-                    </div>
-
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="birthday" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Date Of Birth: </strong>{" "}
-                      </p>
-                      {!editSelectedEmployeeDOB && (
-                        <p className="text-sm sm:text-medium ml-2">
-                          {employeeDOB}
-                        </p>
-                      )}
-
-                      {editSelectedEmployeeDOB && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="date"
-                            variant="bordered"
-                            value={employeeDOB}
-                            onChange={(e) => setEmployeeDOB(e.target.value)}
-                          />
-                        </div>
-                      )}
+                    {/* Working Hours */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
                       <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
+                        className={`flex ${editSelectedEmployeeShiftTime ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
                       >
-                        {!editSelectedEmployeeDOB && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeDobTime}
-                          />
-                        )}
-                        {editSelectedEmployeeDOB && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeDobTime}
-                          />
-                        )}
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="clock" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeShiftTime && (
+                            <p>
+                              <strong>Working Hours: </strong>{" "}
+                              {employeeShiftTime}
+                            </p>
+                          )}
+                          {editSelectedEmployeeShiftTime && (
+                            <>
+                              <p>
+                                <strong>Working Hours:</strong>
+                              </p>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
+                                <TimeInput
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  label="From"
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  value={employeeShiftStartTime}
+                                  startContent={
+                                    <SVGIconProvider iconName="clock" />
+                                  }
+                                  onChange={(e) => {
+                                    handleTimeChange("start", e.toString());
+                                    setEmployeeShiftStartTime(e);
+                                  }}
+                                  isDisabled={!editSelectedEmployeeShiftTime}
+                                  className="w-full text-xs"
+                                />
+                                <TimeInput
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  label="To"
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  value={employeeShiftEndTime}
+                                  startContent={
+                                    <SVGIconProvider iconName="clock" />
+                                  }
+                                  onChange={(e) => {
+                                    handleTimeChange("end", e.toString());
+                                    setEmployeeShiftEndTime(e);
+                                  }}
+                                  isDisabled={!editSelectedEmployeeShiftTime}
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div
+                          className={`flex items-center ml-2 ${editSelectedEmployeeShiftTime ? "self-start sm:self-center" : ""}`}
+                        >
+                          {!editSelectedEmployeeShiftTime && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeShiftTime}
+                            />
+                          )}
+                          {editSelectedEmployeeShiftTime && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeShiftTime}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Date Of Birth */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div
+                        className={`flex ${editSelectedEmployeeDOB ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
+                      >
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="birthday" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeDOB && (
+                            <p>
+                              <strong>Date Of Birth: </strong> {employeeDOB}
+                            </p>
+                          )}
+                          {editSelectedEmployeeDOB && (
+                            <>
+                              <p>
+                                <strong>Date Of Birth:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <DatePicker
+                                  showMonthAndYearPickers
+                                  label="Select Date of Birth"
+                                  value={
+                                    employeeDOB
+                                      ? parseDate(employeeDOB)
+                                      : undefined
+                                  }
+                                  onChange={(date) => {
+                                    if (date) {
+                                      const formattedDate = date.toString();
+                                      setEmployeeDOB(formattedDate);
+                                    }
+                                  }}
+                                  className="w-full text-xs"
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  variant="bordered"
+                                  labelPlacement="outside"
+                                  maxValue={today("UTC")}
+                                  classNames={{
+                                    input: ["nextui-date-picker-input"],
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div
+                          className={`flex items-center ml-2 ${editSelectedEmployeeDOB ? "self-start sm:self-center" : ""}`}
+                        >
+                          {!editSelectedEmployeeDOB && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeDobTime}
+                            />
+                          )}
+                          {editSelectedEmployeeDOB && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeDobTime}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Joined On */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="calendar" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          <p>
+                            <strong>Joined On: </strong>{" "}
+                            {formatDateOne(employeeJoiningDate)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Access Type */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="key" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          <p>
+                            <strong>Access Type: </strong>Super-Admin
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3348,7 +3518,7 @@ export default function ModalForm(props: {
           Are you sure you want to delete this employee?
         </h2>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center   z-50">
             <Spinner size="lg" />
           </div>
         ) : (

@@ -182,6 +182,16 @@ const Clinic = () => {
     setSelectedWorkingDays(values);
   };
 
+  const handleAllDaysToggle = () => {
+    if (selectedWorkingDays.length === workingDays.length) {
+      // If all days are selected, deselect all
+      setSelectedWorkingDays([]);
+    } else {
+      // If not all days are selected, select all
+      setSelectedWorkingDays(workingDays);
+    }
+  };
+
   const handleDepartmentsChange = (values: string[]) => {
     setSelectedDepartments(values);
   };
@@ -693,6 +703,19 @@ const Clinic = () => {
                 />
               </div>
               <div className="flex flex-col w-full">
+                <div className="mb-2">
+                  <Checkbox
+                    isSelected={
+                      selectedWorkingDays.length === workingDays.length
+                    }
+                    onChange={handleAllDaysToggle}
+                    color={TOOL_TIP_COLORS.secondary}
+                    isDisabled={isButtonLoading || !edit}
+                    className="font-semibold"
+                  >
+                    All Days
+                  </Checkbox>
+                </div>
                 <CheckboxGroup
                   label="Select working days"
                   orientation="horizontal"

@@ -265,7 +265,7 @@ const ModernSignup: React.FC<ModernSignupProps> = ({ onLogin }) => {
             username: phoneNumber,
             otp: otpToVerify,
             password: defaultPassword,
-            name: "public user",
+            name: "name",
             user_type: "SUPER_ADMIN",
             accessType: accessType,
             json: JSON.stringify({ clinicSize: clinicSize }),
