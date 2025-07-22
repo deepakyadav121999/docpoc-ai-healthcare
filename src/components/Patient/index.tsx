@@ -246,8 +246,9 @@ export default function App() {
         return (
           <User
             avatarProps={{ radius: "lg", src: avatarSrc }}
-            // description={user.email}
-            name={cellValue}
+            name={
+              <span className="block max-w-[120px] truncate">{cellValue}</span>
+            }
           >
             {/* {user.email} */}
           </User>

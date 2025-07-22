@@ -7,6 +7,7 @@ import {
   AutocompleteItem,
   // Spinner,
   TimeInput,
+  DatePicker,
 } from "@nextui-org/react";
 import { useState } from "react";
 import axios from "axios";
@@ -23,6 +24,7 @@ import { useDisclosure } from "@nextui-org/react";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 // import { Time } from "@internationalized/date";
 import { useEffect } from "react";
+import { today } from "@internationalized/date";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -288,6 +290,10 @@ const AddUsers: React.FC<AddUsersProps> = ({
         .nextui-autocomplete-input {
           font-size: 16px !important;
         }
+        .nextui-date-picker-input {
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
 
         /* Disable text size adjustment */
         html {
@@ -384,6 +390,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     }
                   }}
                   isDisabled={!edit}
+                  maxLength={70}
                 />
 
                 {/* <Autocomplete
@@ -530,19 +537,19 @@ const AddUsers: React.FC<AddUsersProps> = ({
                       "dark:group-data-[has-value=true]:text-white", // Dark mode with value
                     ],
                   }}
+                  maxLength={80}
                 />
               </div>
 
               <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
-                <Input
+                <DatePicker
                   color={TOOL_TIP_COLORS.secondary}
                   label="Date of Birth"
-                  type="date"
                   labelPlacement="outside"
                   variant="bordered"
-                  // value={JSON.parse(formData.json.dob)}
-                  onChange={(e) => handleDobChange(e.target.value)}
                   isDisabled={!edit}
+                  maxValue={today("UTC")}
+                  showMonthAndYearPickers
                   classNames={{
                     input: [
                       "text-black", // Light mode text color
@@ -552,6 +559,12 @@ const AddUsers: React.FC<AddUsersProps> = ({
                       "group-data-[has-value=true]:text-black", // Light mode with value
                       "dark:group-data-[has-value=true]:text-white", // Dark mode with value
                     ],
+                  }}
+                  onChange={(date) => {
+                    if (date) {
+                      const formattedDate = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
+                      handleDobChange(formattedDate);
+                    }
                   }}
                 />
               </div>

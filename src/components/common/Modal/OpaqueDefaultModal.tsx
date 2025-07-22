@@ -213,6 +213,19 @@ const App: React.FC<ParentComponentProps> = ({
           } 
         }
 
+        @media (min-width: 640px) and (max-width: 768px) {
+  .modal-content {
+    max-width: calc(100vw - 32px) !important; /* 16px margin on each side */
+    width: 100vw !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    border-radius: 15px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
 
 
       `}

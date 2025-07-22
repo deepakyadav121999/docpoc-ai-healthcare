@@ -12,30 +12,32 @@ const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
   // const columnLength = dataStatsList.length || 3;
   return (
     <div
-      className={`grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3`}
+      className={`grid grid-cols-1 gap-2 sm:gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3`}
     >
       {dataStatsList.map((item, index) => (
         <div
           key={index}
-          className="rounded-[10px] bg-white p-6 shadow-1 dark:bg-gray-dark"
+          className="rounded-[10px] bg-white p-3 sm:p-6 shadow-1 dark:bg-gray-dark"
         >
           <div
-            className="flex h-14.5 w-14.5 items-center justify-center rounded-full"
+            className="flex h-10 w-10 sm:h-14.5 sm:w-14.5 items-center justify-center rounded-full"
             style={{ backgroundColor: item.color }}
           >
             {item.icon}
           </div>
 
-          <div className="mt-6 flex items-end justify-between">
+          <div className="mt-3 sm:mt-6 flex items-end justify-between">
             <div>
-              <h4 className="mb-1.5 text-heading-6 font-bold text-dark dark:text-white">
+              <h4 className="mb-1 sm:mb-1.5 text-sm sm:text-heading-6 font-bold text-dark dark:text-white">
                 {item.value}
               </h4>
-              <span className="text-body-sm font-medium">{item.title}</span>
+              <span className="text-xs sm:text-body-sm font-medium">
+                {item.title}
+              </span>
             </div>
 
             <span
-              className={`flex items-center gap-1.5 text-body-sm font-medium ${
+              className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-body-sm font-medium ${
                 item.growthRate > 0 ? "text-green" : "text-red"
               }`}
             >
@@ -43,8 +45,8 @@ const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
               {item.growthRate > 0 ? (
                 <svg
                   className="fill-current"
-                  width="10"
-                  height="10"
+                  width="8"
+                  height="8"
                   viewBox="0 0 10 10"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -57,8 +59,8 @@ const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
               ) : (
                 <svg
                   className="fill-current"
-                  width="10"
-                  height="10"
+                  width="8"
+                  height="8"
                   viewBox="0 0 10 10"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"

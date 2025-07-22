@@ -31,8 +31,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     address: "",
     isActive: true,
     json: '{"allergies":["Peanut","Dust"]}',
-    documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-    lastVisit: "2024-01-15T08:30:00.000Z",
+    documents: "{}",
+
     status: "Active",
     notificationStatus: '{"allergies":["Peanut","Dust"]}',
   });
@@ -136,7 +136,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         isActive: formData.isActive,
         json: formData.json,
         documents: formData.documents,
-        lastVisit: formData.lastVisit,
+        // lastVisit: formData.lastVisit,
         status: formData.status,
         notificationStatus: formData.notificationStatus,
         ...(formData.email ? { email: formData.email } : {}),
@@ -163,8 +163,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         address: "",
         isActive: true,
         json: '{"allergies":["Peanut","Dust"]}',
-        documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-        lastVisit: "2024-01-15T08:30:00.000Z",
+        documents: "{}",
+
         status: "Active",
         notificationStatus: '{"allergies":["Peanut","Dust"]}',
       });
