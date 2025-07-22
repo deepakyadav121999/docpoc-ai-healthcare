@@ -15,8 +15,8 @@ export const SVGIconProvider: React.FC<SVGIconProps> = ({
     case "clock":
       return (
         <svg
-          width="31"
-          height="31"
+          width="30"
+          height="30"
           fill="none"
           stroke={color ?? iconColor}
           strokeWidth="3"
@@ -1253,6 +1253,54 @@ export const SVGIconProvider: React.FC<SVGIconProps> = ({
             d="M12 4.5c-4.2 0-8.1 2.3-10.4 6a12.7 12.7 0 0 0 10.4 6c4.2 0 8.1-2.3 10.4-6a12.7 12.7 0 0 0-10.4-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-6.4a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"
             fill={color ?? iconColor}
             stroke={color ?? iconColor}
+          />
+        </svg>
+      );
+
+    case "allergy":
+      return (
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          version="1"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          enable-background="new 0 0 48 48"
+        >
+          <path
+            d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
+            fill={color ?? iconColor}
+          />
+          <path
+            d="M19 14L19.5 16.5L22 17L19.5 17.5L19 20L18.5 17.5L16 17L18.5 16.5L19 14Z"
+            fill={color ?? iconColor}
+          />
+          <path
+            d="M5 14L5.5 16.5L8 17L5.5 17.5L5 20L4.5 17.5L2 17L4.5 16.5L5 14Z"
+            fill={color ?? iconColor}
+          />
+          <path
+            d="M12 18L12.5 20.5L15 21L12.5 21.5L12 24L11.5 21.5L9 21L11.5 20.5L12 18Z"
+            fill={color ?? iconColor}
+          />
+        </svg>
+      );
+
+    case "address":
+      return (
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          version="1"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          enable-background="new 0 0 48 48"
+        >
+          <path
+            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+            fill={color ?? iconColor}
           />
         </svg>
       );

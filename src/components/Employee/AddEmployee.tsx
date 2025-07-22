@@ -390,6 +390,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     }
                   }}
                   isDisabled={!edit}
+                  maxLength={70}
                 />
 
                 {/* <Autocomplete
@@ -536,6 +537,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                       "dark:group-data-[has-value=true]:text-white", // Dark mode with value
                     ],
                   }}
+                  maxLength={80}
                 />
               </div>
 

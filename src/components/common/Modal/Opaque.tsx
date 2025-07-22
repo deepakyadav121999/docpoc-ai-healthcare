@@ -411,7 +411,9 @@ export default function OpaqueModal(props: {
       // setmessage("Patient updated successfully!");
       setModalMessage({ success: "Patient updated successfully!", error: "" });
       setNotificationOpen(true);
-      onClose();
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (error: any) {
       console.error("Error updating patient:", error);
       // setModalMessage({
@@ -419,10 +421,17 @@ export default function OpaqueModal(props: {
       //   error: "Failed to update the patient. Please try again.",
       // });
 
-      const errorMessage =
+      let errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        "ailed to update the patient. Please try again.";
+        "Failed to update the patient. Please try again.";
+
+      // If errorMessage is an array (e.g., validation errors), join the messages
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage
+          .map((err: any) => err.message || JSON.stringify(err))
+          .join("; ");
+      }
 
       setModalMessage({
         success: "",
@@ -433,8 +442,7 @@ export default function OpaqueModal(props: {
       setNotificationOpen(true);
     } finally {
       setLoading(false);
-      setNotificationOpen(true);
-      onClose();
+      // Only close on success, not on error
     }
   };
 
@@ -482,16 +490,23 @@ export default function OpaqueModal(props: {
       });
 
       setNotificationOpen(true);
-      // alert("Patient updated successfully!");
-      onClose(); // Close the modal after successful update
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (error: any) {
       console.error("Error updating Employee:", error);
       // setModalMessage({ success: "", error: "Error updating Employee" });
 
-      const errorMessage =
+      let errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
         "Failed to update employee";
+
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage
+          .map((err: any) => err.message || JSON.stringify(err))
+          .join("; ");
+      }
 
       setModalMessage({
         success: "",
@@ -502,8 +517,7 @@ export default function OpaqueModal(props: {
       // alert("Failed to update the patient. Please try again.");
     } finally {
       setLoading(false);
-      setNotificationOpen(true);
-      onClose();
+      // Only close on success, not on error
     }
   };
 
@@ -531,16 +545,23 @@ export default function OpaqueModal(props: {
         error: " ",
       });
       setNotificationOpen(true);
-      // alert("Patient updated successfully!");
-      onClose(); // Close the modal after successful update
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (error: any) {
       console.error("Error updating appointment:", error);
       // setModalMessage({ success: "", error: "Error updating appointment" });
 
-      const errorMessage =
+      let errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
         "Error updating appointment";
+
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage
+          .map((err: any) => err.message || JSON.stringify(err))
+          .join("; ");
+      }
 
       setModalMessage({
         success: "",
@@ -551,8 +572,7 @@ export default function OpaqueModal(props: {
       // alert("Failed to update the patient. Please try again.");
     } finally {
       setLoading(false);
-      setNotificationOpen(true);
-      onClose();
+      // Only close on success, not on error
     }
   };
 
@@ -602,7 +622,7 @@ export default function OpaqueModal(props: {
   };
 
   return (
-    <>
+    <div className="relative">
       <Dropdown>
         <DropdownTrigger>
           <Button isIconOnly size="sm" variant="light">
@@ -635,11 +655,18 @@ export default function OpaqueModal(props: {
         isOpen={isOpen}
         onClose={onClose}
         style={{ maxWidth: 800 }}
-        className="max-h-[90vh] overflow-y-auto"
+        className="max-h-[90vh] overflow-y-auto relative"
       >
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-white/60 z-[2000] w-full h-full">
+            <Spinner size="lg" color="primary" />
+          </div>
+        )}
         <ModalContent>
           {(onClose) => (
             <>
+              {/* Full-viewport spinner overlay when loading */}
+
               <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
               <ModalBody>
                 <ModalForm
@@ -677,6 +704,6 @@ export default function OpaqueModal(props: {
         modalMessage={modalMessage}
         onClose={handleModalClose}
       />
-    </>
+    </div>
   );
 }
