@@ -3376,119 +3376,110 @@ export default function ModalForm(props: {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="user" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Name: </strong>
-                            {employeeName}
-                          </p>
-                        </div>
+                    {/* Name */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Name: </strong>
+                          {employeeName}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="email" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Email: </strong>
-                            {employeeEmail}
-                          </p>
-                        </div>
+                    {/* Email */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="email" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Email: </strong>
+                          {employeeEmail}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="phone" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Phone: </strong>+91- {employeePhone}
-                          </p>
-                        </div>
+                    {/* Phone */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="phone" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Phone: </strong>+91- {employeePhone}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="user" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Gender: </strong>
-                            {employeeGender}
-                          </p>
-                        </div>
+                    {/* Gender */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Gender: </strong>
+                          {employeeGender}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="icard" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Designation: </strong>
-                            {employeeDesignation}
-                          </p>
-                        </div>
+                    {/* Designation */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="icard" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Designation: </strong>
+                          {employeeDesignation}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="clock" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Working Hours: </strong>
-                            {employeeShiftTime}
-                          </p>
-                        </div>
+                    {/* Working Hours */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <div className="ml-1 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Working Hours: </strong>
+                          {employeeShiftTime}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="calendar" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Joined On: </strong>{" "}
-                            {extractDate(employeeJoiningDate)}
-                          </p>
-                        </div>
+                    {/* Joined On */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Joined On: </strong>{" "}
+                          {formatDateOne(employeeJoiningDate)}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="key" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Access Type: </strong>Super-Admin
-                          </p>
-                        </div>
+                    {/* Access Type */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-10px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="key" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Access Type: </strong>Super-Admin
+                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
-                          <SVGIconProvider iconName="birthday" />
-                        </div>
-                        <div className="ml-2 flex-1 min-w-0">
-                          <p className="break-words">
-                            <strong>Date Of Birth: </strong>
-                            {employeeDOB}
-                          </p>
-                        </div>
+                    {/* Date Of Birth */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="birthday" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Date Of Birth: </strong>
+                          {employeeDOB}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -4162,7 +4153,7 @@ export default function ModalForm(props: {
                         <div className="ml-[-5px]">
                           <SVGIconProvider iconName="clock" />
                         </div>
-                        <div className="ml-2 w-full">
+                        <div className="ml-1 w-full">
                           {!editSelectedEmployeeShiftTime && (
                             <p>
                               <strong>Working Hours: </strong>{" "}
@@ -4316,11 +4307,11 @@ export default function ModalForm(props: {
                     {/* Access Type */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
                       <div className="flex items-center w-full">
-                        <div className="ml-[-5px]">
+                        <div className="ml-[-10px]">
                           <SVGIconProvider iconName="key" />
                         </div>
-                        <div className="ml-2 w-full">
-                          <p>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
                             <strong>Access Type: </strong>Super-Admin
                           </p>
                         </div>
@@ -4451,7 +4442,7 @@ export default function ModalForm(props: {
                   <div className="space-y-3">
                     {/* Name */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="user" />
                         </div>
@@ -4465,7 +4456,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Email */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="email" />
                         </div>
@@ -4479,7 +4470,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Phone */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="phone" />
                         </div>
@@ -4492,7 +4483,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Gender */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="user" />
                         </div>
@@ -4506,7 +4497,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Designation */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="icard" />
                         </div>
@@ -4520,11 +4511,11 @@ export default function ModalForm(props: {
                     </div>
                     {/* Working Hours */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="clock" />
                         </div>
-                        <div className="ml-2 flex-1 min-w-0">
+                        <div className="ml-1 flex-1 min-w-0">
                           <p className="break-words">
                             <strong>Working Hours: </strong>
                             {employeeShiftTime}
@@ -4534,7 +4525,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Joined On */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="calendar" />
                         </div>
@@ -4548,8 +4539,8 @@ export default function ModalForm(props: {
                     </div>
                     {/* Access Type */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
-                        <div className="ml-[-5px] mt-1">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-10px] mt-1">
                           <SVGIconProvider iconName="key" />
                         </div>
                         <div className="ml-2 flex-1 min-w-0">
@@ -4561,7 +4552,7 @@ export default function ModalForm(props: {
                     </div>
                     {/* Date Of Birth */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                      <div className="flex items-start w-full">
+                      <div className="flex items-center w-full">
                         <div className="ml-[-5px] mt-1">
                           <SVGIconProvider iconName="birthday" />
                         </div>
