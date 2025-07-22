@@ -1286,19 +1286,15 @@ export default function ModalForm(props: {
                     </h3>
 
                     <div className="flex flex-col center">
-                      {showLastVisit &&
-                        (Array.isArray(patientDocument) &&
-                        patientDocument.length > 0 ? (
-                          <VisitHistoryTable
-                            patientId={patientId}
-                            viewMode={viewMode}
-                            uploadedDocuments={patientDocument}
-                          />
-                        ) : (
-                          <div className="text-center text-gray-500 py-8">
-                            No previous visits found.
-                          </div>
-                        ))}
+                      {showLastVisit && (
+                        <VisitHistoryTable
+                          patientId={patientId}
+                          viewMode={
+                            viewMode === "documents" ? "documents" : viewMode
+                          }
+                          uploadedDocuments={patientDocument}
+                        />
+                      )}
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -2142,19 +2138,15 @@ export default function ModalForm(props: {
                     </h3>
 
                     <div className="flex flex-col center">
-                      {showLastVisit &&
-                        (Array.isArray(patientDocument) &&
-                        patientDocument.length > 0 ? (
-                          <VisitHistoryTable
-                            patientId={patientId}
-                            viewMode={viewMode}
-                            uploadedDocuments={patientDocument}
-                          />
-                        ) : (
-                          <div className="text-center text-gray-500 py-8">
-                            No Data found.
-                          </div>
-                        ))}
+                      {showLastVisit && (
+                        <VisitHistoryTable
+                          patientId={patientId}
+                          viewMode={
+                            viewMode === "documents" ? "documents" : viewMode
+                          }
+                          uploadedDocuments={patientDocument}
+                        />
+                      )}
                     </div>
 
                     <div className="flex justify-end mt-6">

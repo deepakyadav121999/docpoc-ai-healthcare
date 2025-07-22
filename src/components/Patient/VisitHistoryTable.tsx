@@ -16,6 +16,7 @@ import axios from "axios";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 import { Spinner } from "@nextui-org/react";
 import { useRef } from "react";
+import EnhancedModal from "../common/Modal/EnhancedModal";
 
 interface VisitData {
   key?: string;
@@ -26,6 +27,8 @@ interface VisitData {
   url?: string;
   code?: string;
   amount?: number;
+  id?: string; // Added for reports
+  reportType?: string; // Added for reports
 }
 
 interface VisitHistoryTableProps {
@@ -63,9 +66,16 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   const [editValue, setEditValue] = useState<string>("");
   const editInputRef = useRef<HTMLInputElement>(null);
 
+  // Add modal state at the top of the component
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState<{
+    success?: string;
+    error?: string;
+  }>({});
+
   // Focus the input when editingRow changes
   useEffect(() => {
-    if (editingRow && editInputRef.current) {
+    if (editingRow !== null && editInputRef.current) {
       editInputRef.current.focus();
     }
   }, [editingRow]);
@@ -158,6 +168,8 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
           name: item.name || item.reportType || "Report",
           date: formatDateToDDMMYYYY(item.reportDate),
           url,
+          id: item.id, // Add id
+          reportType: item.reportType, // Add reportType
         };
       });
       setTableData(data);
@@ -204,19 +216,95 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
     }
   };
 
-  // Update document name in backend (placeholder)
-  const updateDocumentNameInBackend = async (
-    item: VisitData,
-    newName: string,
-  ) => {
-    // TODO: Implement PATCH to backend to update document name in patient documents JSON
-    // Example: await axios.patch(`${API_URL}/patient`, { id: patientId, documents: ... })
-    setTableData((prev) =>
-      prev.map((doc) =>
-        doc.key === item.key ? { ...doc, name: newName, doctor: newName } : doc,
-      ),
-    );
-    setEditingRow(null);
+  // Update document name in backend (now implemented)
+  const updateDocumentNameInBackend = async (idx: number, newName: string) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      // Fetch current patient data to get the full documents array
+      const patientRes = await axios.get(`${API_URL}/patient/${patientId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const documents = patientRes.data.documents;
+      let docArr: any[] = [];
+      try {
+        docArr =
+          typeof documents === "string" ? JSON.parse(documents) : documents;
+      } catch {
+        docArr = [];
+      }
+      // Update the name at the correct index
+      if (Array.isArray(docArr) && docArr[idx]) {
+        docArr[idx].name = newName;
+        docArr[idx].doctor = newName;
+      }
+      // PATCH the updated documents array
+      await axios.patch(
+        `${API_URL}/patient`,
+        {
+          id: patientId,
+          documents: JSON.stringify(docArr),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      // Update local tableData
+      setTableData((prev) =>
+        prev.map((doc, i) =>
+          i === idx ? { ...doc, name: newName, doctor: newName } : doc,
+        ),
+      );
+      setEditingRow(null);
+      setModalMessage({ success: "Document name updated successfully!" });
+      setModalOpen(true);
+    } catch (err) {
+      console.log(err);
+      setModalMessage({
+        error: "Failed to update document name. Please try again.",
+      });
+      setModalOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add updateReportNameInBackend function:
+  const updateReportNameInBackend = async (idx: number, newName: string) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      // Get the report id and reportType from tableData[idx]
+      const report = tableData[idx];
+      if (!report || !report.id || !report.reportType)
+        throw new Error("Missing report id or type");
+      await axios.patch(
+        `${API_URL}/reports/${report.id}`,
+        {
+          id: report.id,
+          reportType: report.reportType,
+          name: newName,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      // Update local tableData
+      setTableData((prev) =>
+        prev.map((doc, i) => (i === idx ? { ...doc, name: newName } : doc)),
+      );
+      setEditingRow(null);
+      setModalMessage({ success: "Report name updated successfully!" });
+      setModalOpen(true);
+    } catch (err) {
+      console.log(err);
+      setModalMessage({
+        error: "Failed to update report name. Please try again.",
+      });
+      setModalOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Main effect for tab switching
@@ -339,31 +427,29 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
 
   return (
     <>
-      {viewMode !== "history" && (
-        <div className="flex w-full justify-between items-center mb-4">
-          <Select
-            selectedKeys={[tab]}
-            onSelectionChange={(keys) => setTab(Array.from(keys)[0] as string)}
-            className="max-w-xs"
-            aria-label="Select document type"
-          >
-            {TABS.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
-              </SelectItem>
-            ))}
-          </Select>
-          <Input
-            isClearable
-            className="w-full max-w-[97%] sm:max-w-md"
-            placeholder={`Search by ${tab === "receipts" ? "code/date/amount" : "name/date"}..`}
-            startContent={<SVGIconProvider iconName="search" />}
-            value={filterValue}
-            onClear={() => onClear()}
-            onValueChange={(value) => onSearchChange(value as string)}
-          />
-        </div>
-      )}
+      <div className="flex w-full justify-between items-center mb-4">
+        <Select
+          selectedKeys={[tab]}
+          onSelectionChange={(keys) => setTab(Array.from(keys)[0] as string)}
+          className="max-w-xs"
+          aria-label="Select document type"
+        >
+          {TABS.map((t) => (
+            <SelectItem key={t.value} value={t.value}>
+              {t.label}
+            </SelectItem>
+          ))}
+        </Select>
+        <Input
+          isClearable
+          className="w-full max-w-[97%] sm:max-w-md"
+          placeholder={`Search by ${tab === "receipts" ? "code/date/amount" : "name/date"}..`}
+          startContent={<SVGIconProvider iconName="search" />}
+          value={filterValue}
+          onClear={() => onClear()}
+          onValueChange={(value) => onSearchChange(value as string)}
+        />
+      </div>
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <Spinner />
@@ -374,7 +460,13 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
         </div>
       ) : items.length === 0 ? (
         <div className="flex justify-center items-center h-40 text-gray-500">
-          {emptyMsg}
+          {tab === "documents"
+            ? "No uploaded documents found."
+            : tab === "reports"
+              ? "No reports found."
+              : tab === "receipts"
+                ? "No receipts found."
+                : emptyMsg}
         </div>
       ) : (
         <Table
@@ -401,81 +493,172 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
               <TableColumn key={col.key}>{col.label}</TableColumn>
             ))}
           </TableHeader>
-          <TableBody items={tableData}>
-            {(item: VisitData) => (
-              <TableRow key={item.key || item.name || item.code || item.date}>
-                {columns.map((col) => (
-                  <TableCell key={col.key}>
-                    {col.key === "name" && tab === "documents" ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          value={
-                            editingRow === item.key
-                              ? editValue
-                              : item.name || ""
-                          }
-                          disabled={editingRow !== item.key}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="border rounded px-2 py-1 text-sm"
-                          style={{ minWidth: 80 }}
-                        />
-                        {editingRow === item.key ? (
-                          <>
-                            {editValue !== item.name &&
-                              editValue.trim() !== "" && (
-                                <button
-                                  onClick={() =>
-                                    updateDocumentNameInBackend(item, editValue)
-                                  }
-                                  className="text-green-600 font-bold px-2"
-                                >
-                                  Save
-                                </button>
-                              )}
-                            <button
-                              onClick={() => setEditingRow(null)}
-                              className="text-gray-400 px-2"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setEditingRow(item.key || "");
-                              setEditValue(item.name || "");
+          <TableBody>
+            {items.map((item, idx) => {
+              // Calculate the real index in tableData for editingRow logic
+              const realIdx = (page - 1) * rowsPerPage + idx;
+              return (
+                <TableRow key={realIdx}>
+                  {columns.map((col) => (
+                    <TableCell key={col.key}>
+                      {col.key === "name" && tab === "documents" ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={
+                              editingRow === String(realIdx)
+                                ? editInputRef
+                                : undefined
+                            }
+                            value={
+                              editingRow === String(realIdx)
+                                ? editValue
+                                : item.name || ""
+                            }
+                            disabled={editingRow !== String(realIdx)}
+                            onChange={(e) => {
+                              if (editingRow === String(realIdx))
+                                setEditValue(e.target.value);
                             }}
+                            className={
+                              editingRow === String(realIdx)
+                                ? "border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                                : "border-none bg-transparent text-sm cursor-default focus:outline-none focus:ring-0 px-2 py-1"
+                            }
+                            style={{ minWidth: 80 }}
+                          />
+                          {editingRow === String(realIdx) ? (
+                            <>
+                              {editValue !== item.name &&
+                                editValue.trim() !== "" && (
+                                  <button
+                                    onClick={() =>
+                                      updateDocumentNameInBackend(
+                                        realIdx,
+                                        editValue,
+                                      )
+                                    }
+                                    className="text-green-600 font-bold px-2"
+                                  >
+                                    Save
+                                  </button>
+                                )}
+                              <button
+                                onClick={() => setEditingRow(null)}
+                                className="text-gray-400 px-2"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingRow(String(realIdx));
+                                setEditValue(item.name || "");
+                                setTimeout(() => {
+                                  if (editInputRef.current)
+                                    editInputRef.current.focus();
+                                }, 0);
+                              }}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <SVGIconProvider iconName="edit" />
+                            </button>
+                          )}
+                        </div>
+                      ) : col.key === "name" && tab === "reports" ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={
+                              editingRow === `report-${realIdx}`
+                                ? editInputRef
+                                : undefined
+                            }
+                            value={
+                              editingRow === `report-${realIdx}`
+                                ? editValue
+                                : item.name || ""
+                            }
+                            disabled={editingRow !== `report-${realIdx}`}
+                            onChange={(e) => {
+                              if (editingRow === `report-${realIdx}`)
+                                setEditValue(e.target.value);
+                            }}
+                            className={
+                              editingRow === `report-${realIdx}`
+                                ? "border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                                : "border-none bg-transparent text-sm cursor-default focus:outline-none focus:ring-0 px-2 py-1"
+                            }
+                            style={{ minWidth: 80 }}
+                          />
+                          {editingRow === `report-${realIdx}` ? (
+                            <>
+                              {editValue !== item.name &&
+                                editValue.trim() !== "" && (
+                                  <button
+                                    onClick={() =>
+                                      updateReportNameInBackend(
+                                        realIdx,
+                                        editValue,
+                                      )
+                                    }
+                                    className="text-green-600 font-bold px-2"
+                                  >
+                                    Save
+                                  </button>
+                                )}
+                              <button
+                                onClick={() => setEditingRow(null)}
+                                className="text-gray-400 px-2"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingRow(`report-${realIdx}`);
+                                setEditValue(item.name || "");
+                                setTimeout(() => {
+                                  if (editInputRef.current)
+                                    editInputRef.current.focus();
+                                }, 0);
+                              }}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <SVGIconProvider iconName="edit" />
+                            </button>
+                          )}
+                        </div>
+                      ) : col.key === "url" ? (
+                        item.url ? (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-blue-500 hover:text-blue-700"
                           >
-                            <SVGIconProvider iconName="edit" />
-                          </button>
-                        )}
-                      </div>
-                    ) : col.key === "name" && tab === "reports" ? (
-                      <span>{item.name}</span>
-                    ) : col.key === "url" ? (
-                      item.url ? (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:text-blue-700"
-                        >
-                          <SVGIconProvider iconName="eye" />
-                        </a>
+                            <SVGIconProvider iconName="eye" />
+                          </a>
+                        ) : (
+                          "-"
+                        )
                       ) : (
-                        "-"
-                      )
-                    ) : (
-                      getKeyValue(item, col.key)
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            )}
+                        getKeyValue(item, col.key)
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}
+      <EnhancedModal
+        isOpen={modalOpen}
+        loading={false}
+        modalMessage={modalMessage}
+        onClose={() => setModalOpen(false)}
+      />
     </>
   );
 };

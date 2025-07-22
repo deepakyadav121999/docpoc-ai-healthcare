@@ -5,6 +5,7 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
+  DatePicker,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -13,6 +14,7 @@ import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { TOOL_TIP_COLORS } from "@/constants";
+import { parseDate, today } from "@internationalized/date";
 
 interface AddPatientProps {
   onPatientAdded: () => void;
@@ -276,7 +278,11 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         .nextui-autocomplete-input {
           font-size: 16px !important;
         }
-
+        .nextui-date-picker-input {
+          font-size: 16px !important;
+          min-height: 44px !important;
+          touch-action: manipulation;
+        }
         /* Disable text size adjustment */
         html {
           -webkit-text-size-adjust: 100%;
@@ -503,28 +509,32 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-                <Input
+                {/* Date of Birth - use NextUI DatePicker */}
+                <DatePicker
+                  showMonthAndYearPickers
+                  label="Date of Birth"
+                  labelPlacement="outside"
+                  color={TOOL_TIP_COLORS.secondary}
+                  variant="bordered"
+                  className="w-full"
                   classNames={{
                     input: [
-                      "text-black", // Light mode text color
-                      "dark:text-white", // Dark mode text color
-                    ],
-                    inputWrapper: [
-                      "group-data-[has-value=true]:text-black", // Light mode with value
-                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      "nextui-date-picker-input",
+                      "text-black dark:text-white",
                     ],
                   }}
-                  label="Date of Birth"
-                  type="date"
-                  color={TOOL_TIP_COLORS.secondary}
-                  labelPlacement="outside"
-                  placeholder="Date Of Birth"
-                  variant="bordered"
-                  value={formData.dob}
-                  onChange={(e) =>
-                    setFormData({ ...formData, dob: e.target.value })
-                  }
-                  isDisabled={!edit}
+                  value={formData.dob ? parseDate(formData.dob) : undefined}
+                  onChange={(date) => {
+                    if (date) {
+                      // Format as YYYY-MM-DD
+                      const d = date.toDate("UTC");
+                      const yyyy = d.getUTCFullYear();
+                      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+                      const dd = String(d.getUTCDate()).padStart(2, "0");
+                      setFormData({ ...formData, dob: `${yyyy}-${mm}-${dd}` });
+                    }
+                  }}
+                  maxValue={today("UTC")}
                 />
               </div>
 

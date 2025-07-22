@@ -319,53 +319,33 @@ export default function OpaqueModal(props: {
         );
         // setProfilePhotoUrl(profilePictureUrl);
       }
-      // Parse existing documents
-      // let existingDocuments: Record<string, string> = {};
-      // if (updatedPatientData.document) {
-      //   try {
-      //     existingDocuments = JSON.parse(updatedPatientData.document);
-      //   } catch (error) {
-      //     console.error("Error parsing existing documents:", error);
-      //   }
-      // }
+      // Update: When handling patient documents, always use an array of objects.
+      // 1. When reading documents from updatedPatientData.document, parse as array (if not already an array).
+      // 2. When saving, JSON.stringify(documentsArray).
+      // 3. When uploading new files, push new document objects to the array.
+      // 4. When merging, always work with arrays.
 
-      // // Upload new files and get their URLs
-      // const documentsObject: Record<string, string> = { ...existingDocuments };
-      // if (selectedFiles.length > 0) {
-      //   const uploadedFileUrls = await uploadFiles(selectedFiles, updatedPatientData.name || " ");
-      //   setFileUrls(uploadedFileUrls);
-
-      //   // Append new documents to the existing ones
-      //   uploadedFileUrls.forEach((url, index) => {
-      //     const newKey = `document${Object.keys(documentsObject).length + index + 1}`;
-      //     documentsObject[newKey] = url;
-      //   });
-      // }
-
-      // // Convert documentsObject to a JSON string
-      // const documentsPayload = JSON.stringify(documentsObject);
-
-      // const requestData = {
-      //   id: props.userId,
-      //   displayPicture: profilePictureUrl ? profilePictureUrl : updatedPatientData.dp,
-      //   documents: documentsPayload ? documentsPayload : updatedPatientData.document,
-      //   ...updatedPatientData,
-      // };
-
-      let existingDocuments: Record<string, string> = {};
+      // Replace the block that parses existingDocuments:
+      let existingDocuments: Array<any> = [];
       if (updatedPatientData.document) {
         if (typeof updatedPatientData.document === "string") {
           try {
-            existingDocuments = JSON.parse(updatedPatientData.document);
+            const parsed = JSON.parse(updatedPatientData.document);
+            existingDocuments = Array.isArray(parsed)
+              ? parsed
+              : Object.values(parsed).map((doc) =>
+                  typeof doc === "string" ? JSON.parse(doc) : doc,
+                );
           } catch (error) {
             console.error("Error parsing existing documents:", error);
-            existingDocuments = {}; // Fallback to empty object
+            existingDocuments = [];
           }
+        } else if (Array.isArray(updatedPatientData.document)) {
+          existingDocuments = updatedPatientData.document;
         } else if (typeof updatedPatientData.document === "object") {
-          existingDocuments = updatedPatientData.document as Record<
-            string,
-            string
-          >;
+          existingDocuments = Object.values(updatedPatientData.document).map(
+            (doc) => (typeof doc === "string" ? JSON.parse(doc) : doc),
+          );
         }
       }
 
@@ -375,29 +355,22 @@ export default function OpaqueModal(props: {
           ? await uploadFiles(selectedFiles, updatedPatientData.name || "")
           : [];
 
-      // Append new files to existing documents
-      const mergedDocuments: Record<string, string> = { ...existingDocuments };
-
-      // Find the next document index
-      let documentIndex = Object.keys(mergedDocuments).length;
-
-      // Add each uploaded file URL with a `date`
+      // Append new files to existing documents (array)
+      const mergedDocuments: Array<any> = [...existingDocuments];
       uploadedFileUrls.forEach((url) => {
-        documentIndex += 1; // Increment the index
-        const newDocumentKey = `document${documentIndex}`;
-        const documentData = {
+        mergedDocuments.push({
+          name: `document${mergedDocuments.length + 1}`,
           url: url,
-          date: new Date().toISOString(), // Attach the current date in ISO format
-        };
-        mergedDocuments[newDocumentKey] = JSON.stringify(documentData);
+          date: new Date().toISOString(),
+        });
       });
 
       // Prepare the request payload
       const requestData = {
         id: props.userId,
         displayPicture: profilePictureUrl || updatedPatientData.dp,
-        documents: JSON.stringify(mergedDocuments), // Convert the merged documents to a JSON string
-        ...updatedPatientData, // Include other patient data
+        documents: JSON.stringify(mergedDocuments), // Now an array of objects
+        ...updatedPatientData,
       };
 
       await axios.patch(endpoint, requestData, {
