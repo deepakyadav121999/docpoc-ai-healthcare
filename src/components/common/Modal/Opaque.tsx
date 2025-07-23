@@ -73,13 +73,19 @@ export default function OpaqueModal(props: {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   // const [fileUrls, setFileUrls] = useState<string[]>([]);
   const dispatch = useDispatch<AppDispatch>();
+  // Add state for fileNames if not present
+  const [fileNames, setFileNames] = useState<{ [key: string]: string }>({});
 
   const handleProfilePhotoChange = (file: any) => {
     setSelectedFile(file); // Store the file in state
   };
 
-  const handleFileChange = (files: any) => {
+  const handleFileChange = (
+    files: File[],
+    names?: { [key: string]: string },
+  ) => {
     setSelectedFiles(files);
+    if (names) setFileNames(names);
   };
 
   const uploadProfilePicture = async (
@@ -357,9 +363,15 @@ export default function OpaqueModal(props: {
 
       // Append new files to existing documents (array)
       const mergedDocuments: Array<any> = [...existingDocuments];
-      uploadedFileUrls.forEach((url) => {
+      uploadedFileUrls.forEach((url, idx) => {
+        const file = selectedFiles[idx];
+        // Use custom name if provided, else fallback to default
+        const customName =
+          file && fileNames[file.name] && fileNames[file.name].trim()
+            ? fileNames[file.name].trim()
+            : `document${mergedDocuments.length + 1}`;
         mergedDocuments.push({
-          name: `document${mergedDocuments.length + 1}`,
+          name: customName,
           url: url,
           date: new Date().toISOString(),
         });

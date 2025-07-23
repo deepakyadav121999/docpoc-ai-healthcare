@@ -88,7 +88,7 @@ export default function ModalForm(props: {
   userId: string;
   onDataChange: (data: any) => void;
   onProfilePhotoChange: (file: any) => void;
-  onFilesChange: (files: any) => void;
+  onFilesChange: (files: any, fileNames?: any) => void;
 }) {
   // console.log("aws url is" + AWS_URL)
   const [editVisitTime, setEditVisitTime] = useState(false);
@@ -695,6 +695,8 @@ export default function ModalForm(props: {
         appointment.endDateTime ? parseTime(endTimeObject) : null,
       );
       console.log(`time is ${parseTime(startTimeObject)}`);
+
+      setAppointment(appointment);
     } catch (err) {
       console.error("Failed to fetch appointment.", err);
     } finally {
@@ -930,20 +932,50 @@ export default function ModalForm(props: {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
 
-  // Handle files when dropped or selected
+  // Add state to track custom file names
+  const [fileNames, setFileNames] = useState<{ [key: string]: string }>({});
+
+  // Update on file selection
   const onDrop = (acceptedFiles: File[]) => {
     const filesWithPreview = acceptedFiles.map((file) => {
       if (file.type.startsWith("image/")) {
         return Object.assign(file, {
-          preview: URL.createObjectURL(file), // Generate preview for images
+          preview: URL.createObjectURL(file),
         });
       }
-      return file; // No preview for other file types
+      return file;
     });
-
     setFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
     setSelectedFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
-    props.onFilesChange([...selectedFiles, ...filesWithPreview]);
+    // Set default names (file name without extension)
+    const newNames: { [key: string]: string } = {};
+    filesWithPreview.forEach((file) => {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      newNames[file.name] = baseName;
+    });
+    setFileNames((prev) => ({ ...prev, ...newNames }));
+    props.onFilesChange([...selectedFiles, ...filesWithPreview], {
+      ...fileNames,
+      ...newNames,
+    });
+  };
+
+  // Update file name in state
+  const handleFileNameChange = (fileName: string, newName: string) => {
+    setFileNames((prev) => ({ ...prev, [fileName]: newName }));
+  };
+
+  // Remove file and its name
+  const removeFile = (fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((file) => file.name !== fileName),
+    );
+    setFileNames((prev) => {
+      const updated = { ...prev };
+      delete updated[fileName];
+      return updated;
+    });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -951,14 +983,6 @@ export default function ModalForm(props: {
     accept: undefined, // Accept any file type
     multiple: true,
   });
-
-  // Remove a specific file
-  const removeFile = (fileName: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((file) => file.name !== fileName),
-    );
-  };
 
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
@@ -1112,7 +1136,11 @@ export default function ModalForm(props: {
     }
   };
 
+  const [appointment, setAppointment] = useState<any>(null);
+
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
+    // Assume appointment data is available in state (from fetchAppointments or similar)
+    // Use patient object for name and details
     return (
       <div>
         <style jsx global>{`
@@ -1130,60 +1158,8 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
-
-          /* Disable text size adjustment */
           html {
             -webkit-text-size-adjust: 100%;
-          }
-
-          /* Container styles */
-          .appointment-container {
-            max-width: 100vw;
-            overflow-x: hidden;
-            padding: 0 1rem;
-          }
-
-          /* Form container */
-          .form-card {
-            border-radius: 15px;
-            border: 1px solid var(--stroke-color);
-            background: white;
-            box-shadow: var(--shadow-1);
-            max-width: 100%;
-            overflow: hidden;
-          }
-
-          /* Input group styles */
-
-          /* Time inputs container */
-          .time-inputs-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          /* Full width inputs */
-          .full-width-input {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* NextUI component overrides */
-          .nextui-input-wrapper,
-          .nextui-autocomplete-wrapper,
-          .nextui-time-input-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* iOS specific fixes */
-          @supports (-webkit-touch-callout: none) {
-            input,
-            textarea {
-              -webkit-user-select: auto !important;
-              font-size: 16px !important;
-              min-height: auto !important;
-            }
           }
         `}</style>
         <div>
@@ -1194,114 +1170,167 @@ export default function ModalForm(props: {
           )}
         </div>
         <Card
-          isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%] sm:max-w-[610px] mx-auto"
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%] sm:max-w-[700px] mx-auto"
           shadow="sm"
         >
           <CardBody>
-            <div className="relative overflow-hidden">
-              <div
-                className={`flex transition-transform duration-500 ease-in-out ${
-                  showLastVisit ? "-translate-x-full" : "translate-x-0"
-                }`}
-              >
-                <div className="flex-shrink-0 w-full">
-                  <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-                    <div className="relative col-span-6 md:col-span-4">
-                      <Image
-                        alt="Patient photo"
-                        className="object-cover"
-                        height={200}
-                        shadow="md"
-                        src={
-                          patientPhoto
-                            ? patientPhoto
-                            : patientGender
-                              ? patientGender == "Male"
-                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                                : `${AWS_URL}/docpoc-images/user-female.jpg`
-                              : `${AWS_URL}/docpoc-images/user-male.jpg`
-                        }
-                        width="100%"
-                      />
-                    </div>
-
-                    <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-foreground/90">
-                          Appointment Details
-                        </h3>
-                        <StyledButton
-                          label={"Follow-up"}
-                          clickEvent={() => setShowLastVisit(true)}
-                        />
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <Image
+                  alt="Patient photo"
+                  className="object-cover"
+                  height={200}
+                  shadow="md"
+                  src={
+                    appointment?.patient?.displayPicture
+                      ? appointment.patient.displayPicture
+                      : appointment?.patient?.gender === "Male"
+                        ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                        : `${AWS_URL}/docpoc-images/user-female.jpg`
+                  }
+                  width="100%"
+                />
+              </div>
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90">
+                    Appointment Details
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {/* Patient Name */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
                       </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <div style={{ marginLeft: -5 }}>
-                            <SVGIconProvider iconName="doctor" />
-                          </div>
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Patient Name: </strong> {appointmentName}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="clock" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Visiting Time: </strong>{" "}
-                            {extractTime(startDateTime)}-
-                            {extractTime(endDateTime)}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="calendar" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Date: </strong>
-                            {extractDate(appointmentDate)}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <div style={{ marginLeft: -5 }}>
-                            <SVGIconProvider iconName="doctor" />
-                          </div>
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Appointed Doctor: </strong> {employeeName}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="followup" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Follow-up: </strong> Yes
-                          </p>
-                        </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Patient Name: </strong>
+                          {appointment?.patient?.name || "N/A"}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex-shrink-0 w-full">
-                  <div className="w-full">
-                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
-                      Previous Visits
-                    </h3>
-
-                    <div className="flex flex-col center">
-                      {showLastVisit && (
-                        <VisitHistoryTable
-                          patientId={patientId}
-                          viewMode={
-                            viewMode === "documents" ? "documents" : viewMode
-                          }
-                          uploadedDocuments={patientDocument}
-                        />
-                      )}
+                  {/* Appointment Code */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="icard" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Appointment Code: </strong>
+                          {appointment?.code || "N/A"}
+                        </p>
+                      </div>
                     </div>
-
-                    <div className="flex justify-end mt-6">
-                      <StyledButton
-                        label="Close"
-                        clickEvent={() => setShowLastVisit(false)}
-                      />
+                  </div>
+                  {/* Doctor Name */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="doctor" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Doctor: </strong>
+                          {appointment?.doctor?.name ||
+                            appointment?.doctorName ||
+                            "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Appointment Type */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Type: </strong>
+                          {appointment?.visitType?.name || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Date */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Date: </strong>
+                          {appointment?.dateTime
+                            ? extractDate(appointment.dateTime)
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Time */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Time: </strong>
+                          {appointment?.startDateTime &&
+                          appointment?.endDateTime
+                            ? `${extractTime(appointment.startDateTime)} - ${extractTime(appointment.endDateTime)}`
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Patient Phone */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="phone" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Phone: </strong>
+                          {appointment?.patient?.phone || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Patient Gender */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Gender: </strong>
+                          {appointment?.patient?.gender || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Branch Name */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="address" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Branch: </strong>
+                          {appointment?.branch?.hospital?.name ||
+                            appointment?.branch?.name ||
+                            "N/A"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1396,12 +1425,12 @@ export default function ModalForm(props: {
         </div>
         <Card
           // isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto "
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto "
           shadow="sm"
         >
           <CardBody>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-4 md:gap-8 items-center justify-center">
-              <div className="relative col-span-6 md:col-span-4">
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="col-span-6 md:col-span-4">
                 <Image
                   alt="Patient photo"
                   className="object-cover"
@@ -1429,126 +1458,127 @@ export default function ModalForm(props: {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
-                    {!editVisitTime && (
-                      <p className="text-sm sm:text-medium ml-1">
-                        <strong>Visiting Time: </strong>{" "}
-                        {/* {extractTime(startDateTime)} */}
-                        {extractTime(startDateTime)}-{extractTime(endDateTime)}
-                      </p>
-                    )}
-
-                    {editVisitTime && (
-                      <div
-                        className="  flex gap-4.5 xl:flex-row"
-                        style={{ marginTop: 20 }}
-                      >
-                        <TimeInput
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="From"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          // defaultValue={new Time(7, 38)}
-                          value={shiftStartTime}
-                          onChange={(time) => {
-                            handleTimeChangeAppointment(time, "startDateTime");
-                            setShiftStartTime(time);
-                          }}
-                        />
-                        <TimeInput
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="To"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          // defaultValue={new Time(8, 45)}
-                          value={shiftEndTime}
-                          onChange={(time) => {
-                            setShiftEndTime(time);
-                            handleTimeChangeAppointment(time, "endDateTime");
-                          }}
-                        />
+                  {/* Time Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="clock" />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editVisitTime && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editTime}
-                        />
-                      )}
-                      {editVisitTime && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editTime}
-                        />
-                      )}
+                      <div className="ml-2 w-full">
+                        {!editVisitTime && (
+                          <p>
+                            <strong>Visiting Time: </strong>
+                            {extractTime(startDateTime)} -{" "}
+                            {extractTime(endDateTime)}
+                          </p>
+                        )}
+                        {editVisitTime && (
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
+                            <TimeInput
+                              color={TOOL_TIP_COLORS.secondary}
+                              label="From"
+                              labelPlacement="outside"
+                              variant="bordered"
+                              value={shiftStartTime}
+                              onChange={(time) => {
+                                handleTimeChangeAppointment(
+                                  time,
+                                  "startDateTime",
+                                );
+                                setShiftStartTime(time);
+                              }}
+                              startContent={
+                                <SVGIconProvider iconName="clock" />
+                              }
+                              className="w-full text-xs"
+                            />
+                            <TimeInput
+                              color={TOOL_TIP_COLORS.secondary}
+                              label="To"
+                              labelPlacement="outside"
+                              variant="bordered"
+                              value={shiftEndTime}
+                              onChange={(time) => {
+                                setShiftEndTime(time);
+                                handleTimeChangeAppointment(
+                                  time,
+                                  "endDateTime",
+                                );
+                              }}
+                              startContent={
+                                <SVGIconProvider iconName="clock" />
+                              }
+                              className="w-full text-xs"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className={`flex items-center ml-2 ${editVisitTime ? "self-start sm:self-center" : ""}`}
+                      >
+                        {!editVisitTime && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editTime}
+                          />
+                        )}
+                        {editVisitTime && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editTime}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {/* <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-                    <p className=" text-sm sm:text-medium ml-2">
-                      <strong>Date: </strong>
-                      {extractDate(appointmentDate)}
-                    </p>
-                  </div> */}
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-
-                    {/* Display mode */}
-                    {!editAppointmentDate && (
-                      <div className="flex items-center">
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Date: </strong>
-                          {formatDisplayDate(tempDate)}
-                        </p>
+                  {/* Date Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="calendar" />
                       </div>
-                    )}
-
-                    {/* Edit mode */}
-                    {editAppointmentDate && (
-                      <div className="ml-2 w-full max-w-[200px]">
-                        <DatePicker
-                          showMonthAndYearPickers
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="Appointment Date"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          value={parseDate(
-                            tempDate.toISOString().split("T")[0],
-                          )}
-                          onChange={(date) => {
-                            const newDate = new Date(date.toString());
-                            setTempDate(newDate);
-                          }}
-                          className="w-full"
-                        />
+                      <div className="ml-2 w-full">
+                        {!editAppointmentDate && (
+                          <p>
+                            <strong>Date: </strong>
+                            {formatDisplayDate(tempDate)}
+                          </p>
+                        )}
+                        {editAppointmentDate && (
+                          <DatePicker
+                            showMonthAndYearPickers
+                            color={TOOL_TIP_COLORS.secondary}
+                            label="Appointment Date"
+                            labelPlacement="outside"
+                            variant="bordered"
+                            value={parseDate(
+                              tempDate.toISOString().split("T")[0],
+                            )}
+                            onChange={(date) => {
+                              const newDate = new Date(date.toString());
+                              setTempDate(newDate);
+                            }}
+                            className="w-full"
+                            minValue={today("UTC")}
+                          />
+                        )}
                       </div>
-                    )}
-
-                    {/* Edit/Save buttons */}
-                    <div className="flex items-center ml-2">
-                      {!editAppointmentDate ? (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={() => setEditAppointmentDate(true)}
-                        />
-                      ) : (
-                        <>
+                      <div className="flex items-center ml-2">
+                        {!editAppointmentDate ? (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={() => setEditAppointmentDate(true)}
+                          />
+                        ) : (
                           <IconButton
                             iconName="followup"
                             color={GLOBAL_SUCCESS_COLOR}
                             clickEvent={() => {
                               const newAppointmentDate = tempDate.toISOString();
                               setAppointmentDate(newAppointmentDate);
-
-                              // Update start and end datetimes with new date but same times
                               setStartDateTime(
                                 updateDatePreservingTime(
                                   tempDate,
@@ -1558,34 +1588,26 @@ export default function ModalForm(props: {
                               setEndDateTime(
                                 updateDatePreservingTime(tempDate, endDateTime),
                               );
-
                               setEditAppointmentDate(false);
                             }}
-                            // className="mr-1"
                           />
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center">
-                    <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="doctor" />
-                    </div>
-                    {!editSelectedDoctor && (
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Appointed Doctor: </strong> {employeeName}
-                      </p>
-                    )}
-                    {editSelectedDoctor && (
-                      <>
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Appointed Doctor: </strong>
-                        </p>
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
+                  {/* Doctor Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="doctor" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        {!editSelectedDoctor && (
+                          <p>
+                            <strong>Appointed Doctor: </strong> {employeeName}
+                          </p>
+                        )}
+                        {editSelectedDoctor && (
                           <Autocomplete
                             color={TOOL_TIP_COLORS.secondary}
                             labelPlacement="outside"
@@ -1613,34 +1635,38 @@ export default function ModalForm(props: {
                               </AutocompleteItem>
                             )}
                           </Autocomplete>
-                        </div>
-                      </>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedDoctor && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editDoctor}
-                        />
-                      )}
-                      {editSelectedDoctor && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editDoctor}
-                        />
-                      )}
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedDoctor && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editDoctor}
+                          />
+                        )}
+                        {editSelectedDoctor && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editDoctor}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="followup" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Follow-up: </strong> Yes
-                    </p>
+                  {/* Follow-up Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="followup" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        <p>
+                          <strong>Follow-up: </strong> Yes
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2890,15 +2916,15 @@ export default function ModalForm(props: {
                     {/* File Preview Section */}
                     <div className="flex flex-wrap gap-4">
                       {files.map((file) => {
-                        const fileExtension = file.name.split(".").pop();
-                        const trimmedFileName =
-                          file.name.length > 8
-                            ? file.name.substring(0, 7) + "." + fileExtension
-                            : file.name + "." + fileExtension;
+                        // const fileExtension = file.name.split(".").pop();
+                        // const trimmedFileName =
+                        //   file.name.length > 8
+                        //     ? file.name.substring(0, 7) + "." + fileExtension
+                        //     : file.name + "." + fileExtension;
                         return (
                           <div
                             key={file.name}
-                            className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
+                            className="relative flex flex-col items-center justify-center w-[100px] h-[100px] border border-gray-100 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-default-100 text-center shadow-md"
                           >
                             {/* Remove Button*/}
                             <button
@@ -2912,17 +2938,25 @@ export default function ModalForm(props: {
                               <img
                                 src={file.preview}
                                 alt={file.name}
-                                className="w-full h-full object-cover rounded-md"
+                                className="w-full h-10 object-cover rounded-md"
                               />
                             )}
                             {!file.type.startsWith("image/") && (
                               <div className="flex flex-col items-center">
                                 <SVGIconProvider iconName="document" />
-                                <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
-                                  {trimmedFileName}
-                                </span>
                               </div>
                             )}
+                            {/* Editable file name input */}
+                            <input
+                              type="text"
+                              className="mt-2 text-xs border rounded px-1 py-0.5 w-full text-center border-gray-100 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary"
+                              value={fileNames[file.name] || ""}
+                              onChange={(e) =>
+                                handleFileNameChange(file.name, e.target.value)
+                              }
+                              maxLength={32}
+                              placeholder="Document name"
+                            />
                           </div>
                         );
                       })}
@@ -4145,6 +4179,7 @@ export default function ModalForm(props: {
                         <div className="ml-[-5px]">
                           <SVGIconProvider iconName="clock" />
                         </div>
+
                         <div className="ml-1 w-full">
                           {!editSelectedEmployeeShiftTime && (
                             <p>
