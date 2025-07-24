@@ -87,7 +87,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
     //   onOpen();
     //   return;
     // }
-    const requiredFields = ["name", "phone", "gender", "dob", "address"];
+    const requiredFields = ["name", "phone", "gender", "dob"];
 
     requiredFields.forEach((key) => {
       if (!formData[key as keyof typeof formData]) {
@@ -564,7 +564,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 labelPlacement="outside"
                 variant="bordered"
                 value={formData.address}
-                placeholder="Address"
+                placeholder="Address(Optional)"
                 color={TOOL_TIP_COLORS.secondary}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })

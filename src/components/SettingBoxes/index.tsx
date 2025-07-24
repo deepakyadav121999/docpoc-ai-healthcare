@@ -923,7 +923,8 @@ const SettingBoxes = () => {
       {/* Warning for missing designation */}
       {!loading && !currentDesignation && (
         <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
-          Please set your designation to complete the onboarding process.
+          Please set your Name, Email ID, and Designation to complete the
+          onboarding process.
         </div>
       )}
       <div className="grid grid-cols-5 gap-8 relative">

@@ -450,11 +450,31 @@ const Clinic = () => {
         const fetchedBranchId = branchdetails.data?.id;
         const userEndpoint = `${API_URL}/user`;
 
+        // Get current user profile to preserve existing json data
+        const userProfile = profile?.json ? JSON.parse(profile.json) : {};
+
+        // Format times to 12-hour format with AM/PM
+        const formatTime = (time: Time | null): string => {
+          if (!time) return "";
+          const hours = time.hour % 12 || 12; // Convert 24h to 12h format
+          const minutes = time.minute.toString().padStart(2, "0");
+          const period = time.hour >= 12 ? "PM" : "AM";
+          return `${hours}:${minutes} ${period}`;
+        };
+
+        const formattedStartTime = formatTime(shiftStartTime);
+        const formattedEndTime = formatTime(shiftEndTime);
+
+        // Update user profile with clinic working hours and branch
         const userres = await axios.patch(
           userEndpoint,
           {
             id: userId,
             branchId: fetchedBranchId,
+            json: JSON.stringify({
+              ...userProfile,
+              workingHours: `${formattedStartTime} - ${formattedEndTime}`,
+            }),
           },
           {
             headers: {
