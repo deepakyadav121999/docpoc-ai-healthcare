@@ -1139,8 +1139,6 @@ export default function ModalForm(props: {
   const [appointment, setAppointment] = useState<any>(null);
 
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
-    // Assume appointment data is available in state (from fetchAppointments or similar)
-    // Use patient object for name and details
     return (
       <div>
         <style jsx global>{`
@@ -1164,7 +1162,7 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80   z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80 z-50">
               <Spinner />
             </div>
           )}
@@ -1174,163 +1172,208 @@ export default function ModalForm(props: {
           shadow="sm"
         >
           <CardBody>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-              <div className="relative col-span-6 md:col-span-4">
-                <Image
-                  alt="Patient photo"
-                  className="object-cover"
-                  height={200}
-                  shadow="md"
-                  src={
-                    appointment?.patient?.displayPicture
-                      ? appointment.patient.displayPicture
-                      : appointment?.patient?.gender === "Male"
-                        ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                        : `${AWS_URL}/docpoc-images/user-female.jpg`
-                  }
-                  width="100%"
-                />
-              </div>
-              <div className="flex flex-col col-span-6 md:col-span-8 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-foreground/90">
-                    Appointment Details
-                  </h3>
+            <div className="relative overflow-hidden">
+              <div
+                className={`flex transition-transform duration-500 ease-in-out ${
+                  showLastVisit ? "-translate-x-full" : "translate-x-0"
+                }`}
+              >
+                {/* Main Appointment View */}
+                <div className="flex-shrink-0 w-full">
+                  <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                    <div className="relative col-span-6 md:col-span-4">
+                      <Image
+                        alt="Patient photo"
+                        className="object-cover"
+                        height={200}
+                        shadow="md"
+                        src={
+                          appointment?.patient?.displayPicture
+                            ? appointment.patient.displayPicture
+                            : appointment?.patient?.gender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
+                        }
+                        width="100%"
+                      />
+                    </div>
+                    <div className="flex flex-col col-span-6 md:col-span-8 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-foreground/90">
+                          Appointment Details
+                        </h3>
+                        <StyledButton
+                          label={"Follow-up"}
+                          clickEvent={() => setShowLastVisit(true)}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        {/* Patient Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Patient Name: </strong>
+                                {appointment?.patient?.name || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Appointment Code */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="icard" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Appointment Code: </strong>
+                                {appointment?.code || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Doctor Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="doctor" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Doctor: </strong>
+                                {appointment?.doctor?.name ||
+                                  appointment?.doctorName ||
+                                  "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Appointment Type */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Type: </strong>
+                                {appointment?.visitType?.name || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Date */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Date: </strong>
+                                {appointment?.dateTime
+                                  ? extractDate(appointment.dateTime)
+                                  : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Time */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-5 flex items-center justify-center">
+                              <SVGIconProvider iconName="clock" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-6px]">
+                              <p className="break-words">
+                                <strong>Time: </strong>
+                                {appointment?.startDateTime &&
+                                appointment?.endDateTime
+                                  ? `${extractTime(appointment.startDateTime)} - ${extractTime(appointment.endDateTime)}`
+                                  : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Patient Phone */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="phone" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Phone: </strong>
+                                {appointment?.patient?.phone || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Patient Gender */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Gender: </strong>
+                                {appointment?.patient?.gender || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Branch Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="address" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Branch: </strong>
+                                {appointment?.branch?.hospital?.name ||
+                                  appointment?.branch?.name ||
+                                  "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {/* Patient Name */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-start w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="user" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Patient Name: </strong>
-                          {appointment?.patient?.name || "N/A"}
-                        </p>
-                      </div>
+
+                {/* Previous Visits View */}
+                <div className="flex-shrink-0 w-full">
+                  <div className="w-full">
+                    <h3 className="font-semibold text-foreground/90 text-center mb-6">
+                      Previous Visits
+                    </h3>
+                    <div className="flex flex-col center">
+                      {showLastVisit &&
+                        (Array.isArray(patientDocument) &&
+                        patientDocument.length > 0 ? (
+                          <VisitHistoryTable
+                            patientId={appointment?.patient?.id || patientId}
+                            viewMode={viewMode}
+                            uploadedDocuments={patientDocument}
+                          />
+                        ) : (
+                          <div className="text-center text-gray-500 py-8">
+                            No previous visits found.
+                          </div>
+                        ))}
                     </div>
-                  </div>
-                  {/* Appointment Code */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="icard" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Appointment Code: </strong>
-                          {appointment?.code || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Doctor Name */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="doctor" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Doctor: </strong>
-                          {appointment?.doctor?.name ||
-                            appointment?.doctorName ||
-                            "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Appointment Type */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="calendar" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Type: </strong>
-                          {appointment?.visitType?.name || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Date */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="calendar" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Date: </strong>
-                          {appointment?.dateTime
-                            ? extractDate(appointment.dateTime)
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Time */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="clock" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Time: </strong>
-                          {appointment?.startDateTime &&
-                          appointment?.endDateTime
-                            ? `${extractTime(appointment.startDateTime)} - ${extractTime(appointment.endDateTime)}`
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Patient Phone */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="phone" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Phone: </strong>
-                          {appointment?.patient?.phone || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Patient Gender */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="user" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Gender: </strong>
-                          {appointment?.patient?.gender || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Branch Name */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                        <SVGIconProvider iconName="address" />
-                      </div>
-                      <div className="ml-2 flex-1 min-w-0">
-                        <p className="break-words">
-                          <strong>Branch: </strong>
-                          {appointment?.branch?.hospital?.name ||
-                            appointment?.branch?.name ||
-                            "N/A"}
-                        </p>
-                      </div>
+                    <div className="flex justify-end mt-6">
+                      <StyledButton
+                        label="Close"
+                        clickEvent={() => setShowLastVisit(false)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1405,6 +1448,13 @@ export default function ModalForm(props: {
             width: 100% !important;
             max-width: 100% !important;
           }
+          .nextui-date-picker-input,
+          textarea,
+          .nextui-textarea {
+            font-size: 16px !important;
+            min-height: 44px !important;
+            touch-action: manipulation;
+          }
 
           /* iOS specific fixes */
           @supports (-webkit-touch-callout: none) {
@@ -1460,11 +1510,13 @@ export default function ModalForm(props: {
                 <div className="space-y-3">
                   {/* Time Row */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
-                    <div className="flex items-center w-full">
-                      <div className="ml-[-5px] flex items-center">
+                    <div
+                      className={`flex ${editVisitTime ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
+                    >
+                      <div className="ml-[-5px]">
                         <SVGIconProvider iconName="clock" />
                       </div>
-                      <div className="ml-2 w-full">
+                      <div className="ml-1 w-full">
                         {!editVisitTime && (
                           <p>
                             <strong>Visiting Time: </strong>
@@ -1473,44 +1525,49 @@ export default function ModalForm(props: {
                           </p>
                         )}
                         {editVisitTime && (
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
-                            <TimeInput
-                              color={TOOL_TIP_COLORS.secondary}
-                              label="From"
-                              labelPlacement="outside"
-                              variant="bordered"
-                              value={shiftStartTime}
-                              onChange={(time) => {
-                                handleTimeChangeAppointment(
-                                  time,
-                                  "startDateTime",
-                                );
-                                setShiftStartTime(time);
-                              }}
-                              startContent={
-                                <SVGIconProvider iconName="clock" />
-                              }
-                              className="w-full text-xs"
-                            />
-                            <TimeInput
-                              color={TOOL_TIP_COLORS.secondary}
-                              label="To"
-                              labelPlacement="outside"
-                              variant="bordered"
-                              value={shiftEndTime}
-                              onChange={(time) => {
-                                setShiftEndTime(time);
-                                handleTimeChangeAppointment(
-                                  time,
-                                  "endDateTime",
-                                );
-                              }}
-                              startContent={
-                                <SVGIconProvider iconName="clock" />
-                              }
-                              className="w-full text-xs"
-                            />
-                          </div>
+                          <>
+                            <p>
+                              <strong>Visiting Time:</strong>
+                            </p>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
+                              <TimeInput
+                                color={TOOL_TIP_COLORS.secondary}
+                                label="From"
+                                labelPlacement="outside"
+                                variant="bordered"
+                                value={shiftStartTime}
+                                onChange={(time) => {
+                                  handleTimeChangeAppointment(
+                                    time,
+                                    "startDateTime",
+                                  );
+                                  setShiftStartTime(time);
+                                }}
+                                startContent={
+                                  <SVGIconProvider iconName="clock" />
+                                }
+                                className="w-full text-xs"
+                              />
+                              <TimeInput
+                                color={TOOL_TIP_COLORS.secondary}
+                                label="To"
+                                labelPlacement="outside"
+                                variant="bordered"
+                                value={shiftEndTime}
+                                onChange={(time) => {
+                                  setShiftEndTime(time);
+                                  handleTimeChangeAppointment(
+                                    time,
+                                    "endDateTime",
+                                  );
+                                }}
+                                startContent={
+                                  <SVGIconProvider iconName="clock" />
+                                }
+                                className="w-full text-xs"
+                              />
+                            </div>
+                          </>
                         )}
                       </div>
                       <div
@@ -1695,8 +1752,6 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
-
-          /* Disable text size adjustment */
           html {
             -webkit-text-size-adjust: 100%;
           }
@@ -1753,7 +1808,7 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80   z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80 z-50">
               <Spinner />
             </div>
           )}
@@ -1762,33 +1817,71 @@ export default function ModalForm(props: {
           Are you sure you want to delete this appointment?
         </h2>
 
-        <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+        <div className="flex flex-col space-y-4 mt-4">
           <div className="space-y-3">
-            <div className="flex items-center">
-              <SVGIconProvider iconName="clock" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Visit Time: </strong> {extractTime(appointmentDateTime)}
-              </p>
+            {/* Patient Name */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="user" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0 mt-[-10px]">
+                <p className="break-words">
+                  <strong>Patient Name: </strong>
+                  {appointment?.patient?.name || appointmentName || "N/A"}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="calendar" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Date: </strong> {extractDate(appointmentDateTime)}
-              </p>
+
+            {/* Time */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="clock" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0 mt-[-10px]">
+                <p className="break-words">
+                  <strong>Visit Time: </strong>
+                  {extractTime(appointmentDateTime)}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <div style={{ marginLeft: -5 }}>
+
+            {/* Date */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="calendar" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Date: </strong>
+                  {extractDate(appointmentDateTime)}
+                </p>
+              </div>
+            </div>
+
+            {/* Doctor */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                 <SVGIconProvider iconName="doctor" />
               </div>
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Appointed Doctor: </strong> {employeeName}
-              </p>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Appointed Doctor: </strong>
+                  {employeeName}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="followup" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Follow-up: </strong> Yes
-              </p>
+
+            {/* Follow-up */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="followup" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Follow-up: </strong>
+                  Yes
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -1,13 +1,23 @@
 import React from "react";
 import { dataStatsDefault } from "@/types/dataStatsDefault";
+import { Spinner } from "@nextui-org/react";
 
 interface DataStatsDefaultProps {
   dataStatsList: dataStatsDefault[];
+  loading?: boolean;
 }
 
 const DataStatsReport: React.FC<DataStatsDefaultProps> = ({
   dataStatsList,
+  loading = false,
 }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
   return (
     <div className="flex justify-center">
       <div
