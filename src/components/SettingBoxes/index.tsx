@@ -303,12 +303,30 @@ const SettingBoxes = () => {
           setAccessToken(newAccessToken);
         }
       } catch (error: any) {
-        console.error("Error updating profile:", error);
-        // setModalMessage({ success: "", error: "Error updating profile" });
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.error ||
-          "Error updating profile";
+        let errorMessage = "Error updating profile";
+
+        // Handle array of validation errors
+        if (
+          error.response?.data?.message &&
+          Array.isArray(error.response.data.message)
+        ) {
+          const messages = error.response.data.message.map((err: any) => {
+            // Convert technical messages to user-friendly ones
+            if (err.message === "email must be unique") {
+              return "This email address is already in use. Please use a different email.";
+            }
+            return err.message;
+          });
+          errorMessage = messages.join(". ");
+        }
+        // Handle single error message
+        else if (error.response?.data?.message) {
+          errorMessage = error.response?.data?.message;
+        }
+        // Handle other errors
+        else if (error.response?.data?.error) {
+          errorMessage = error.response?.data?.error;
+        }
 
         setModalMessage({
           success: "",
@@ -905,7 +923,8 @@ const SettingBoxes = () => {
       {/* Warning for missing designation */}
       {!loading && !currentDesignation && (
         <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
-          Please set your designation to complete the onboarding process.
+          Please set your Name, Email ID, and Designation to complete the
+          onboarding process.
         </div>
       )}
       <div className="grid grid-cols-5 gap-8 relative">

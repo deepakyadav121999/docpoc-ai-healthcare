@@ -5,6 +5,7 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
+  DatePicker,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -13,6 +14,7 @@ import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { TOOL_TIP_COLORS } from "@/constants";
+import { parseDate, today } from "@internationalized/date";
 
 interface AddPatientProps {
   onPatientAdded: () => void;
@@ -31,8 +33,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     address: "",
     isActive: true,
     json: '{"allergies":["Peanut","Dust"]}',
-    documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-    lastVisit: "2024-01-15T08:30:00.000Z",
+    documents: "{}",
+
     status: "Active",
     notificationStatus: '{"allergies":["Peanut","Dust"]}',
   });
@@ -76,7 +78,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
     //   onOpen();
     //   return;
     // }
-    const requiredFields = ["name", "phone", "gender", "dob", "address"];
+    const requiredFields = ["name", "phone", "gender", "dob"];
 
     requiredFields.forEach((key) => {
       if (!formData[key as keyof typeof formData]) {
@@ -136,7 +138,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         isActive: formData.isActive,
         json: formData.json,
         documents: formData.documents,
-        lastVisit: formData.lastVisit,
+        // lastVisit: formData.lastVisit,
         status: formData.status,
         notificationStatus: formData.notificationStatus,
         ...(formData.email ? { email: formData.email } : {}),
@@ -163,8 +165,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         address: "",
         isActive: true,
         json: '{"allergies":["Peanut","Dust"]}',
-        documents: '{"insurance":"ABC123","report":"xyz-report.pdf"}',
-        lastVisit: "2024-01-15T08:30:00.000Z",
+        documents: "{}",
+
         status: "Active",
         notificationStatus: '{"allergies":["Peanut","Dust"]}',
       });
@@ -276,7 +278,11 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         .nextui-autocomplete-input {
           font-size: 16px !important;
         }
-
+        .nextui-date-picker-input {
+          font-size: 16px !important;
+          min-height: 44px !important;
+          touch-action: manipulation;
+        }
         /* Disable text size adjustment */
         html {
           -webkit-text-size-adjust: 100%;
@@ -503,28 +509,32 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-                <Input
+                {/* Date of Birth - use NextUI DatePicker */}
+                <DatePicker
+                  showMonthAndYearPickers
+                  label="Date of Birth"
+                  labelPlacement="outside"
+                  color={TOOL_TIP_COLORS.secondary}
+                  variant="bordered"
+                  className="w-full"
                   classNames={{
                     input: [
-                      "text-black", // Light mode text color
-                      "dark:text-white", // Dark mode text color
-                    ],
-                    inputWrapper: [
-                      "group-data-[has-value=true]:text-black", // Light mode with value
-                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
+                      "nextui-date-picker-input",
+                      "text-black dark:text-white",
                     ],
                   }}
-                  label="Date of Birth"
-                  type="date"
-                  color={TOOL_TIP_COLORS.secondary}
-                  labelPlacement="outside"
-                  placeholder="Date Of Birth"
-                  variant="bordered"
-                  value={formData.dob}
-                  onChange={(e) =>
-                    setFormData({ ...formData, dob: e.target.value })
-                  }
-                  isDisabled={!edit}
+                  value={formData.dob ? parseDate(formData.dob) : undefined}
+                  onChange={(date) => {
+                    if (date) {
+                      // Format as YYYY-MM-DD
+                      const d = date.toDate("UTC");
+                      const yyyy = d.getUTCFullYear();
+                      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+                      const dd = String(d.getUTCDate()).padStart(2, "0");
+                      setFormData({ ...formData, dob: `${yyyy}-${mm}-${dd}` });
+                    }
+                  }}
+                  maxValue={today("UTC")}
                 />
               </div>
 
@@ -543,7 +553,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 labelPlacement="outside"
                 variant="bordered"
                 color={TOOL_TIP_COLORS.secondary}
-                placeholder="Address"
+                placeholder="Address (Optional)"
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })

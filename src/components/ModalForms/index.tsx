@@ -1,19 +1,20 @@
 "use client";
 import { DatePicker, Spinner } from "@nextui-org/react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Card,
   CardBody,
   Image,
-  Dropdown,
-  DropdownItem,
-  DropdownTrigger,
+  // Dropdown,
+  // DropdownItem,
+  // DropdownTrigger,
   Button,
-  DropdownMenu,
+  // DropdownMenu,
   Input,
   TimeInput,
   AutocompleteItem,
   Autocomplete,
+  Textarea,
 } from "@nextui-org/react";
 import {
   GLOBAL_ACTION_ICON_COLOR,
@@ -31,6 +32,7 @@ import {
   // getLocalTimeZone,
   // now,
   parseTime,
+  today,
 } from "@internationalized/date";
 
 // import ToolTip from "../Tooltip";
@@ -45,6 +47,7 @@ import { Time } from "@internationalized/date";
 import { useDropzone } from "react-dropzone";
 import { parseDate } from "@internationalized/date";
 // import DocumentList from "../Patient/DocumentList";
+import Cropper, { Area } from "react-easy-crop";
 
 type FileWithPreview = File & { preview?: string };
 
@@ -85,7 +88,7 @@ export default function ModalForm(props: {
   userId: string;
   onDataChange: (data: any) => void;
   onProfilePhotoChange: (file: any) => void;
-  onFilesChange: (files: any) => void;
+  onFilesChange: (files: any, fileNames?: any) => void;
 }) {
   // console.log("aws url is" + AWS_URL)
   const [editVisitTime, setEditVisitTime] = useState(false);
@@ -105,7 +108,7 @@ export default function ModalForm(props: {
     useState(false);
   const [editSelectedEmployeeShiftTime, setEditEmployeeShiftTime] =
     useState(false);
-  const [editSelectedEmployeeJoiningDate] = useState(false);
+  // const [editSelectedEmployeeJoiningDate] = useState(false);
   const [editSelectedEmployeeDOB, setEditEmployeeDOB] = useState(false);
 
   const [employeeEmail, setEmployeeEmail] = useState("");
@@ -144,6 +147,10 @@ export default function ModalForm(props: {
   const [profilePhoto, setProfilePhoto] = useState("");
   // const [patientPhotoLoading, setPatientPhotoLoading] = useState(false);
   const [patientDocument, setPatientDocument] = useState<VisitData[]>([]); // Initialize as an array
+  const [patientCode, setPatientCode] = useState("");
+  const [patientAddress, setPatientAddress] = useState("");
+  const [patientAge, setPatientAge] = useState("");
+
   // const [appointmentId, setAppointmentId] = useState("");
   // const [reportType, setReportType] = useState("");
   // const [description, setDescription] = useState("");
@@ -198,6 +205,15 @@ export default function ModalForm(props: {
   const [shiftStartTime, setShiftStartTime] = useState<Time | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Time | null>(null);
 
+  const [editSelectedPatientDob, setEditSelectedPatientDob] = useState(false);
+  const [editSelectedPatientAddress, setEditSelectedPatientAddress] =
+    useState(false);
+  // const [editSelectedPatientAllergies, setEditSelectedPatientAllergies] =
+  //   useState(false);
+
+  const [patientPhoneError, setPatientPhoneError] = useState("");
+  const [employeePhoneError, setEmployeePhoneError] = useState("");
+
   // Convert ISO string to Date object
   const parseAppointmentDate = (dateString: string) => {
     return dateString ? new Date(dateString) : new Date();
@@ -242,6 +258,53 @@ export default function ModalForm(props: {
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
+
+  // Helper function to validate and format field values
+  const formatFieldValue = (value: any): string => {
+    if (value === null || value === undefined || value === "") {
+      return "N/A";
+    }
+
+    // Handle empty objects
+    if (typeof value === "object" && Object.keys(value).length === 0) {
+      return "N/A";
+    }
+
+    // Handle JSON strings that might be empty objects
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === "object" && Object.keys(parsed).length === 0) {
+          return "N/A";
+        }
+      } catch (err) {
+        console.log(err);
+
+        // If it's not valid JSON, continue with the original value
+      }
+    }
+
+    return String(value);
+  };
+
+  // Helper function to format allergies from JSON
+  // const formatAllergies = (jsonString: string): string => {
+  //   if (!jsonString) return "N/A";
+
+  //   try {
+  //     const parsed = JSON.parse(jsonString);
+  //     if (
+  //       parsed.allergies &&
+  //       Array.isArray(parsed.allergies) &&
+  //       parsed.allergies.length > 0
+  //     ) {
+  //       return parsed.allergies.join(", ");
+  //     }
+  //     return "N/A";
+  //   } catch (e) {
+  //     return "N/A";
+  //   }
+  // };
 
   function extractTimeDisplay(datetimeStr: string): string {
     // Parse the ISO 8601 string into a Date object
@@ -344,44 +407,48 @@ export default function ModalForm(props: {
       // setGender(response.data.gender);
       setPatientId(response.data.id);
       setPatientGender(response.data.gender);
-      // const uploadedDocuments = Object.entries(
-      //   JSON.parse(response.data.documents)
-      // ).map(([key, value]) => ({
-      //   date: "N/A",
-      //   doctor: key, // Use the document key as the document name
-      //   report: String(value), // Ensure the report is a string
-      // }));
-
-      // setPatientDocument(uploadedDocuments)
+      setPatientCode(response.data.code);
+      setPatientAddress(response.data.address);
+      setPatientAge(response.data.age?.toString() || "");
 
       const uploadedDocuments = Object.entries(
-        JSON.parse(response.data.documents || "{}"), // Handle empty documents gracefully
+        JSON.parse(response.data.documents || "{}"),
       ).map(([key, value]) => {
+        let parsedValue;
         try {
-          const parsedValue = JSON.parse(String(value));
-
-          // Parse the JSON string of the document
-
-          // Format the date
-          const formattedDate = parsedValue.date
-            ? formatDateToDDMMYYYY(parsedValue.date) // Format the date if available
-            : "N/A";
-          return {
-            date: formattedDate, // Use the date if available, otherwise default to "N/A"
-            doctor: key, // Use the document key as the document name
-            report: parsedValue.url || "N/A", // Use the URL if available
-          };
-        } catch (error) {
-          console.error(`Error parsing document ${key}:`, error);
-          return {
-            date: "N/A",
-            doctor: key, // Use the document key as the document name
-            report: String(value) || "N/A", // Use the raw value if parsing fails
-          };
+          parsedValue = typeof value === "string" ? JSON.parse(value) : value;
+        } catch {
+          parsedValue = value;
         }
+        let url = "";
+        if (parsedValue.url && typeof parsedValue.url === "string") {
+          url = parsedValue.url;
+        } else if (
+          parsedValue.report &&
+          typeof parsedValue.report === "string" &&
+          parsedValue.report.startsWith("http")
+        ) {
+          url = parsedValue.report;
+        }
+        const name = parsedValue.name || parsedValue.doctor || key;
+        // Only return the fields you need
+        // Format date as DD/MM/YYYY, even if already in that format
+        let formattedDate = "N/A";
+        if (parsedValue.date) {
+          if (/\d{2}\/\d{2}\/\d{4}/.test(parsedValue.date)) {
+            formattedDate = parsedValue.date;
+          } else {
+            formattedDate = formatDateToDDMMYYYY(parsedValue.date);
+          }
+        }
+        return {
+          name,
+          date: formattedDate,
+          url,
+          doctor: "",
+          report: "",
+        };
       });
-
-      // Set the documents to the state
       setPatientDocument(uploadedDocuments);
     } catch (err) {
       console.log(err);
@@ -628,6 +695,8 @@ export default function ModalForm(props: {
         appointment.endDateTime ? parseTime(endTimeObject) : null,
       );
       console.log(`time is ${parseTime(startTimeObject)}`);
+
+      setAppointment(appointment);
     } catch (err) {
       console.error("Failed to fetch appointment.", err);
     } finally {
@@ -710,6 +779,7 @@ export default function ModalForm(props: {
         gender: patientGender,
         dp: patientPhoto,
         document: patientDocument,
+        address: patientAddress,
       };
 
       props.onDataChange(updatedData);
@@ -752,6 +822,8 @@ export default function ModalForm(props: {
     patientDob,
     patientDocument,
     patientGender,
+    patientAddress,
+
     emloyeeBranch,
     employeeName,
     employeePhone,
@@ -818,21 +890,21 @@ export default function ModalForm(props: {
     setEditEmployeeDOB(!editSelectedEmployeeDOB);
   };
 
-  const handleProfilePhotoChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  // const handleProfilePhotoChange = (
+  //   event: React.ChangeEvent<HTMLInputElement>,
+  // ) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setProfilePhoto(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
 
-      // setSelectedFile(file)
-      props.onProfilePhotoChange(file);
-    }
-  };
+  //     // setSelectedFile(file)
+  //     props.onProfilePhotoChange(file);
+  //   }
+  // };
   const [editSelectedPatientGender, setEditSelectedPatientGender] =
     useState(false);
 
@@ -860,20 +932,50 @@ export default function ModalForm(props: {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
 
-  // Handle files when dropped or selected
+  // Add state to track custom file names
+  const [fileNames, setFileNames] = useState<{ [key: string]: string }>({});
+
+  // Update on file selection
   const onDrop = (acceptedFiles: File[]) => {
     const filesWithPreview = acceptedFiles.map((file) => {
       if (file.type.startsWith("image/")) {
         return Object.assign(file, {
-          preview: URL.createObjectURL(file), // Generate preview for images
+          preview: URL.createObjectURL(file),
         });
       }
-      return file; // No preview for other file types
+      return file;
     });
-
     setFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
     setSelectedFiles((prevFiles) => [...prevFiles, ...filesWithPreview]);
-    props.onFilesChange([...selectedFiles, ...filesWithPreview]);
+    // Set default names (file name without extension)
+    const newNames: { [key: string]: string } = {};
+    filesWithPreview.forEach((file) => {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      newNames[file.name] = baseName;
+    });
+    setFileNames((prev) => ({ ...prev, ...newNames }));
+    props.onFilesChange([...selectedFiles, ...filesWithPreview], {
+      ...fileNames,
+      ...newNames,
+    });
+  };
+
+  // Update file name in state
+  const handleFileNameChange = (fileName: string, newName: string) => {
+    setFileNames((prev) => ({ ...prev, [fileName]: newName }));
+  };
+
+  // Remove file and its name
+  const removeFile = (fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((file) => file.name !== fileName),
+    );
+    setFileNames((prev) => {
+      const updated = { ...prev };
+      delete updated[fileName];
+      return updated;
+    });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -881,14 +983,6 @@ export default function ModalForm(props: {
     accept: undefined, // Accept any file type
     multiple: true,
   });
-
-  // Remove a specific file
-  const removeFile = (fileName: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((file) => file.name !== fileName),
-    );
-  };
 
   const formatDateOne = (isoString: string): string => {
     // Convert the ISO string to a Date object
@@ -953,6 +1047,97 @@ export default function ModalForm(props: {
   ];
   const [showLastVisit, setShowLastVisit] = useState(false);
   const [viewMode, setViewMode] = useState("history");
+
+  // Add cropping state and helpers at the top of the component
+  const [showCropper, setShowCropper] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null);
+  // const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [croppedPhotoUrl, setCroppedPhotoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const createImageElement = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = document.createElement("img");
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", (error) => reject(error));
+      image.src = url;
+    });
+
+  const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: Area,
+  ): Promise<Blob> => {
+    const image = await createImageElement(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height,
+    );
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Canvas is empty"));
+          return;
+        }
+        resolve(blob);
+      }, "image/jpeg");
+    });
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.match("image.*")) {
+      // Show error modal or message
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      // Show error modal or message
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setTempPhotoUrl(previewUrl);
+    // setPhotoFile(file);
+    setShowCropper(true);
+  };
+
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleSaveCroppedImage = async () => {
+    if (!croppedAreaPixels || !tempPhotoUrl) return;
+    const croppedBlob = await getCroppedImg(tempPhotoUrl, croppedAreaPixels);
+    if (croppedBlob) {
+      const fileName = `profile-${Date.now()}.jpg`;
+      const croppedFile = new File([croppedBlob], fileName, {
+        type: "image/jpeg",
+      });
+      // setPhotoFile(croppedFile);
+      const url = URL.createObjectURL(croppedBlob);
+      setCroppedPhotoUrl(url);
+      setShowCropper(false);
+      props.onProfilePhotoChange(croppedFile);
+      setProfilePhoto(url);
+    }
+  };
+
+  const [appointment, setAppointment] = useState<any>(null);
+
   if (props.type === MODAL_TYPES.VIEW_APPOINTMENT) {
     return (
       <div>
@@ -971,72 +1156,19 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
-
-          /* Disable text size adjustment */
           html {
             -webkit-text-size-adjust: 100%;
-          }
-
-          /* Container styles */
-          .appointment-container {
-            max-width: 100vw;
-            overflow-x: hidden;
-            padding: 0 1rem;
-          }
-
-          /* Form container */
-          .form-card {
-            border-radius: 15px;
-            border: 1px solid var(--stroke-color);
-            background: white;
-            box-shadow: var(--shadow-1);
-            max-width: 100%;
-            overflow: hidden;
-          }
-
-          /* Input group styles */
-
-          /* Time inputs container */
-          .time-inputs-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          /* Full width inputs */
-          .full-width-input {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* NextUI component overrides */
-          .nextui-input-wrapper,
-          .nextui-autocomplete-wrapper,
-          .nextui-time-input-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* iOS specific fixes */
-          @supports (-webkit-touch-callout: none) {
-            input,
-            textarea {
-              -webkit-user-select: auto !important;
-              font-size: 16px !important;
-              min-height: auto !important;
-            }
           }
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80 z-50">
               <Spinner />
             </div>
           )}
         </div>
         <Card
-          isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%] sm:max-w-[610px] mx-auto"
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%] sm:max-w-[700px] mx-auto"
           shadow="sm"
         >
           <CardBody>
@@ -1046,6 +1178,7 @@ export default function ModalForm(props: {
                   showLastVisit ? "-translate-x-full" : "translate-x-0"
                 }`}
               >
+                {/* Main Appointment View */}
                 <div className="flex-shrink-0 w-full">
                   <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
                     <div className="relative col-span-6 md:col-span-4">
@@ -1055,19 +1188,16 @@ export default function ModalForm(props: {
                         height={200}
                         shadow="md"
                         src={
-                          patientPhoto
-                            ? patientPhoto
-                            : patientGender
-                              ? patientGender == "Male"
-                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                                : `${AWS_URL}/docpoc-images/user-female.jpg`
-                              : `${AWS_URL}/docpoc-images/user-male.jpg`
+                          appointment?.patient?.displayPicture
+                            ? appointment.patient.displayPicture
+                            : appointment?.patient?.gender === "Male"
+                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                              : `${AWS_URL}/docpoc-images/user-female.jpg`
                         }
                         width="100%"
                       />
                     </div>
-
-                    <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                    <div className="flex flex-col col-span-6 md:col-span-8 space-y-3">
                       <div className="flex justify-between items-center">
                         <h3 className="font-semibold text-foreground/90">
                           Appointment Details
@@ -1077,65 +1207,168 @@ export default function ModalForm(props: {
                           clickEvent={() => setShowLastVisit(true)}
                         />
                       </div>
-
                       <div className="space-y-3">
-                        <div className="flex items-center">
-                          <div style={{ marginLeft: -5 }}>
-                            <SVGIconProvider iconName="doctor" />
+                        {/* Patient Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Patient Name: </strong>
+                                {appointment?.patient?.name || "N/A"}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Patient Name: </strong> {appointmentName}
-                          </p>
                         </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="clock" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Visiting Time: </strong>{" "}
-                            {extractTime(startDateTime)}-
-                            {extractTime(endDateTime)}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="calendar" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Date: </strong>
-                            {extractDate(appointmentDate)}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <div style={{ marginLeft: -5 }}>
-                            <SVGIconProvider iconName="doctor" />
+                        {/* Appointment Code */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="icard" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Appointment Code: </strong>
+                                {appointment?.code || "N/A"}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Appointed Doctor: </strong> {employeeName}
-                          </p>
                         </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="followup" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Follow-up: </strong> Yes
-                          </p>
+                        {/* Doctor Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="doctor" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Doctor: </strong>
+                                {appointment?.doctor?.name ||
+                                  appointment?.doctorName ||
+                                  "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Appointment Type */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Type: </strong>
+                                {appointment?.visitType?.name || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Date */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Date: </strong>
+                                {appointment?.dateTime
+                                  ? extractDate(appointment.dateTime)
+                                  : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Time */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-5 flex items-center justify-center">
+                              <SVGIconProvider iconName="clock" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-6px]">
+                              <p className="break-words">
+                                <strong>Time: </strong>
+                                {appointment?.startDateTime &&
+                                appointment?.endDateTime
+                                  ? `${extractTime(appointment.startDateTime)} - ${extractTime(appointment.endDateTime)}`
+                                  : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Patient Phone */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="phone" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Phone: </strong>
+                                {appointment?.patient?.phone || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Patient Gender */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Gender: </strong>
+                                {appointment?.patient?.gender || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Branch Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="address" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0 mt-[-5px]">
+                              <p className="break-words">
+                                <strong>Branch: </strong>
+                                {appointment?.branch?.hospital?.name ||
+                                  appointment?.branch?.name ||
+                                  "N/A"}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Previous Visits View */}
                 <div className="flex-shrink-0 w-full">
                   <div className="w-full">
                     <h3 className="font-semibold text-foreground/90 text-center mb-6">
                       Previous Visits
                     </h3>
-
                     <div className="flex flex-col center">
-                      {showLastVisit && (
-                        <VisitHistoryTable
-                          patientId={patientId}
-                          viewMode={"history"}
-                          uploadedDocuments={[]}
-                        />
-                      )}
+                      {showLastVisit &&
+                        (Array.isArray(patientDocument) &&
+                        patientDocument.length > 0 ? (
+                          <VisitHistoryTable
+                            patientId={appointment?.patient?.id || patientId}
+                            viewMode={viewMode}
+                            uploadedDocuments={patientDocument}
+                          />
+                        ) : (
+                          <div className="text-center text-gray-500 py-8">
+                            No previous visits found.
+                          </div>
+                        ))}
                     </div>
-
                     <div className="flex justify-end mt-6">
                       <StyledButton
                         label="Close"
@@ -1215,6 +1448,13 @@ export default function ModalForm(props: {
             width: 100% !important;
             max-width: 100% !important;
           }
+          .nextui-date-picker-input,
+          textarea,
+          .nextui-textarea {
+            font-size: 16px !important;
+            min-height: 44px !important;
+            touch-action: manipulation;
+          }
 
           /* iOS specific fixes */
           @supports (-webkit-touch-callout: none) {
@@ -1228,19 +1468,19 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80   z-50">
               <Spinner />
             </div>
           )}
         </div>
         <Card
           // isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[700px] mx-auto "
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto "
           shadow="sm"
         >
           <CardBody>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-4 md:gap-8 items-center justify-center">
-              <div className="relative col-span-6 md:col-span-4">
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="col-span-6 md:col-span-4">
                 <Image
                   alt="Patient photo"
                   className="object-cover"
@@ -1268,126 +1508,134 @@ export default function ModalForm(props: {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="clock" />
-                    {!editVisitTime && (
-                      <p className="text-sm sm:text-medium ml-1">
-                        <strong>Visiting Time: </strong>{" "}
-                        {/* {extractTime(startDateTime)} */}
-                        {extractTime(startDateTime)}-{extractTime(endDateTime)}
-                      </p>
-                    )}
-
-                    {editVisitTime && (
-                      <div
-                        className="  flex gap-4.5 xl:flex-row"
-                        style={{ marginTop: 20 }}
-                      >
-                        <TimeInput
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="From"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          // defaultValue={new Time(7, 38)}
-                          value={shiftStartTime}
-                          onChange={(time) => {
-                            handleTimeChangeAppointment(time, "startDateTime");
-                            setShiftStartTime(time);
-                          }}
-                        />
-                        <TimeInput
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="To"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          // defaultValue={new Time(8, 45)}
-                          value={shiftEndTime}
-                          onChange={(time) => {
-                            setShiftEndTime(time);
-                            handleTimeChangeAppointment(time, "endDateTime");
-                          }}
-                        />
-                      </div>
-                    )}
+                  {/* Time Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
                     <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
+                      className={`flex ${editVisitTime ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
                     >
-                      {!editVisitTime && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editTime}
-                        />
-                      )}
-                      {editVisitTime && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editTime}
-                        />
-                      )}
+                      <div className="ml-[-5px]">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <div className="ml-1 w-full">
+                        {!editVisitTime && (
+                          <p>
+                            <strong>Visiting Time: </strong>
+                            {extractTime(startDateTime)} -{" "}
+                            {extractTime(endDateTime)}
+                          </p>
+                        )}
+                        {editVisitTime && (
+                          <>
+                            <p>
+                              <strong>Visiting Time:</strong>
+                            </p>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
+                              <TimeInput
+                                color={TOOL_TIP_COLORS.secondary}
+                                label="From"
+                                labelPlacement="outside"
+                                variant="bordered"
+                                value={shiftStartTime}
+                                onChange={(time) => {
+                                  handleTimeChangeAppointment(
+                                    time,
+                                    "startDateTime",
+                                  );
+                                  setShiftStartTime(time);
+                                }}
+                                startContent={
+                                  <SVGIconProvider iconName="clock" />
+                                }
+                                className="w-full text-xs"
+                              />
+                              <TimeInput
+                                color={TOOL_TIP_COLORS.secondary}
+                                label="To"
+                                labelPlacement="outside"
+                                variant="bordered"
+                                value={shiftEndTime}
+                                onChange={(time) => {
+                                  setShiftEndTime(time);
+                                  handleTimeChangeAppointment(
+                                    time,
+                                    "endDateTime",
+                                  );
+                                }}
+                                startContent={
+                                  <SVGIconProvider iconName="clock" />
+                                }
+                                className="w-full text-xs"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div
+                        className={`flex items-center ml-2 ${editVisitTime ? "self-start sm:self-center" : ""}`}
+                      >
+                        {!editVisitTime && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editTime}
+                          />
+                        )}
+                        {editVisitTime && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editTime}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {/* <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-                    <p className=" text-sm sm:text-medium ml-2">
-                      <strong>Date: </strong>
-                      {extractDate(appointmentDate)}
-                    </p>
-                  </div> */}
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="calendar" />
-
-                    {/* Display mode */}
-                    {!editAppointmentDate && (
-                      <div className="flex items-center">
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Date: </strong>
-                          {formatDisplayDate(tempDate)}
-                        </p>
+                  {/* Date Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="calendar" />
                       </div>
-                    )}
-
-                    {/* Edit mode */}
-                    {editAppointmentDate && (
-                      <div className="ml-2 w-full max-w-[200px]">
-                        <DatePicker
-                          showMonthAndYearPickers
-                          color={TOOL_TIP_COLORS.secondary}
-                          label="Appointment Date"
-                          labelPlacement="outside"
-                          variant="bordered"
-                          value={parseDate(
-                            tempDate.toISOString().split("T")[0],
-                          )}
-                          onChange={(date) => {
-                            const newDate = new Date(date.toString());
-                            setTempDate(newDate);
-                          }}
-                          className="w-full"
-                        />
+                      <div className="ml-2 w-full">
+                        {!editAppointmentDate && (
+                          <p>
+                            <strong>Date: </strong>
+                            {formatDisplayDate(tempDate)}
+                          </p>
+                        )}
+                        {editAppointmentDate && (
+                          <DatePicker
+                            showMonthAndYearPickers
+                            color={TOOL_TIP_COLORS.secondary}
+                            label="Appointment Date"
+                            labelPlacement="outside"
+                            variant="bordered"
+                            value={parseDate(
+                              tempDate.toISOString().split("T")[0],
+                            )}
+                            onChange={(date) => {
+                              const newDate = new Date(date.toString());
+                              setTempDate(newDate);
+                            }}
+                            className="w-full"
+                            minValue={today("UTC")}
+                          />
+                        )}
                       </div>
-                    )}
-
-                    {/* Edit/Save buttons */}
-                    <div className="flex items-center ml-2">
-                      {!editAppointmentDate ? (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={() => setEditAppointmentDate(true)}
-                        />
-                      ) : (
-                        <>
+                      <div className="flex items-center ml-2">
+                        {!editAppointmentDate ? (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={() => setEditAppointmentDate(true)}
+                          />
+                        ) : (
                           <IconButton
                             iconName="followup"
                             color={GLOBAL_SUCCESS_COLOR}
                             clickEvent={() => {
                               const newAppointmentDate = tempDate.toISOString();
                               setAppointmentDate(newAppointmentDate);
-
-                              // Update start and end datetimes with new date but same times
                               setStartDateTime(
                                 updateDatePreservingTime(
                                   tempDate,
@@ -1397,34 +1645,26 @@ export default function ModalForm(props: {
                               setEndDateTime(
                                 updateDatePreservingTime(tempDate, endDateTime),
                               );
-
                               setEditAppointmentDate(false);
                             }}
-                            // className="mr-1"
                           />
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center">
-                    <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="doctor" />
-                    </div>
-                    {!editSelectedDoctor && (
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Appointed Doctor: </strong> {employeeName}
-                      </p>
-                    )}
-                    {editSelectedDoctor && (
-                      <>
-                        <p className="text-sm sm:text-medium ml-2">
-                          <strong>Appointed Doctor: </strong>
-                        </p>
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
+                  {/* Doctor Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="doctor" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        {!editSelectedDoctor && (
+                          <p>
+                            <strong>Appointed Doctor: </strong> {employeeName}
+                          </p>
+                        )}
+                        {editSelectedDoctor && (
                           <Autocomplete
                             color={TOOL_TIP_COLORS.secondary}
                             labelPlacement="outside"
@@ -1452,34 +1692,38 @@ export default function ModalForm(props: {
                               </AutocompleteItem>
                             )}
                           </Autocomplete>
-                        </div>
-                      </>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedDoctor && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editDoctor}
-                        />
-                      )}
-                      {editSelectedDoctor && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editDoctor}
-                        />
-                      )}
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedDoctor && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editDoctor}
+                          />
+                        )}
+                        {editSelectedDoctor && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editDoctor}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="followup" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Follow-up: </strong> Yes
-                    </p>
+                  {/* Follow-up Row */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="ml-[-5px] flex items-center">
+                        <SVGIconProvider iconName="followup" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        <p>
+                          <strong>Follow-up: </strong> Yes
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1508,8 +1752,6 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
-
-          /* Disable text size adjustment */
           html {
             -webkit-text-size-adjust: 100%;
           }
@@ -1566,7 +1808,7 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80 z-50">
               <Spinner />
             </div>
           )}
@@ -1575,33 +1817,71 @@ export default function ModalForm(props: {
           Are you sure you want to delete this appointment?
         </h2>
 
-        <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
+        <div className="flex flex-col space-y-4 mt-4">
           <div className="space-y-3">
-            <div className="flex items-center">
-              <SVGIconProvider iconName="clock" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Visit Time: </strong> {extractTime(appointmentDateTime)}
-              </p>
+            {/* Patient Name */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="user" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0 mt-[-10px]">
+                <p className="break-words">
+                  <strong>Patient Name: </strong>
+                  {appointment?.patient?.name || appointmentName || "N/A"}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="calendar" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Date: </strong> {extractDate(appointmentDateTime)}
-              </p>
+
+            {/* Time */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="clock" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0 mt-[-10px]">
+                <p className="break-words">
+                  <strong>Visit Time: </strong>
+                  {extractTime(appointmentDateTime)}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <div style={{ marginLeft: -5 }}>
+
+            {/* Date */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="calendar" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Date: </strong>
+                  {extractDate(appointmentDateTime)}
+                </p>
+              </div>
+            </div>
+
+            {/* Doctor */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                 <SVGIconProvider iconName="doctor" />
               </div>
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Appointed Doctor: </strong> {employeeName}
-              </p>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Appointed Doctor: </strong>
+                  {employeeName}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="followup" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Follow-up: </strong> Yes
-              </p>
+
+            {/* Follow-up */}
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <SVGIconProvider iconName="followup" />
+              </div>
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="break-words">
+                  <strong>Follow-up: </strong>
+                  Yes
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1686,7 +1966,7 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80   z-50">
               <Spinner />
             </div>
           )}
@@ -1733,41 +2013,188 @@ export default function ModalForm(props: {
                       </div>
 
                       <div className="space-y-3">
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="user" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Patient Name: </strong>
-                            {patientName}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="clock" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Last Visit: </strong>
-                            {lastVisit}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="calendar" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Status: </strong> {patientStatus}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <SVGIconProvider iconName="user" />
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Gender: </strong> {patientGender}
-                          </p>
+                        {/* Patient Name */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Patient Name: </strong>
+                                {formatFieldValue(patientName)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center">
-                          <div style={{ marginLeft: -5 }}>
-                            <SVGIconProvider iconName="doctor" />
+                        {/* Patient Code (read-only, label + value) */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="icard" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Patient Code: </strong>
+                                {formatFieldValue(patientCode)}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm sm:text-medium ml-2">
-                            <strong>Last Appointed Doctor: </strong>{" "}
-                            {lastAppointedDoctor}
-                          </p>
+                        </div>
+
+                        {/* Phone */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="phone" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Phone: </strong>
+                                {formatFieldValue(patientPhone)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Email */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="email" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Email: </strong>
+                                {patientEmail ? patientEmail : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Blood Group */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="blood-drop" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Blood Group: </strong>
+                                {formatFieldValue(patientBloodGroup)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Age */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="birthday" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Age: </strong>
+                                {formatFieldValue(patientAge)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Date of Birth */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Date of Birth: </strong>
+                                {formatFieldValue(
+                                  patientDob
+                                    ? formatDateToDDMMYYYY(patientDob)
+                                    : "",
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gender */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="user" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Gender: </strong>
+                                {formatFieldValue(patientGender)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="address" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Address: </strong>
+                                {formatFieldValue(patientAddress)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-start w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="calendar" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Status: </strong>
+                                {formatFieldValue(patientStatus)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Last Visit (read-only, label + value) */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="clock" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Last Visit: </strong>
+                                {formatFieldValue(lastVisit)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Last Appointed Doctor (read-only, label + value) */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                          <div className="flex items-center w-full">
+                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                              <SVGIconProvider iconName="doctor" />
+                            </div>
+                            <div className="ml-2 flex-1 min-w-0">
+                              <p className="break-words">
+                                <strong>Last Appointed Doctor: </strong>
+                                {formatFieldValue(lastAppointedDoctor)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
 
                         {/* <div className="flex items-center"> 
@@ -1833,7 +2260,9 @@ export default function ModalForm(props: {
                       {showLastVisit && (
                         <VisitHistoryTable
                           patientId={patientId}
-                          viewMode={viewMode}
+                          viewMode={
+                            viewMode === "documents" ? "documents" : viewMode
+                          }
                           uploadedDocuments={patientDocument}
                         />
                       )}
@@ -1858,6 +2287,54 @@ export default function ModalForm(props: {
   if (props.type === MODAL_TYPES.EDIT_PATIENT) {
     return (
       <div>
+        {showCropper && tempPhotoUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-4 rounded-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-4">
+                Crop your profile picture
+              </h3>
+              <div className="relative h-64 w-full">
+                <Cropper
+                  image={tempPhotoUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm mb-2">Zoom:</label>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  color="danger"
+                  onPress={() => {
+                    setShowCropper(false);
+                    setTempPhotoUrl(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  variant="light"
+                >
+                  Cancel
+                </Button>
+                <Button color="primary" onPress={handleSaveCroppedImage}>
+                  Ok
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         <style jsx global>{`
           .nextui-input,
           .nextui-input-wrapper input,
@@ -1873,449 +2350,674 @@ export default function ModalForm(props: {
           .nextui-autocomplete-input {
             font-size: 16px !important;
           }
-
-          /* Disable text size adjustment */
           html {
             -webkit-text-size-adjust: 100%;
           }
-
-          /* Container styles */
-          .appointment-container {
-            max-width: 100vw;
-            overflow-x: hidden;
-            padding: 0 1rem;
-          }
-
-          /* Form container */
-          .form-card {
-            border-radius: 15px;
-            border: 1px solid var(--stroke-color);
-            background: white;
-            box-shadow: var(--shadow-1);
-            max-width: 100%;
-            overflow: hidden;
-          }
-
-          /* Input group styles */
-
-          /* Time inputs container */
-          .time-inputs-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          /* Full width inputs */
-          .full-width-input {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* NextUI component overrides */
-          .nextui-input-wrapper,
-          .nextui-autocomplete-wrapper,
-          .nextui-time-input-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-
-          /* iOS specific fixes */
-          @supports (-webkit-touch-callout: none) {
-            input,
-            textarea {
-              -webkit-user-select: auto !important;
-              font-size: 16px !important;
-              min-height: auto !important;
-            }
+          /* Manual mobile/iPhone responsive styles for DatePicker and Textarea */
+          .nextui-date-picker-input,
+          textarea,
+          .nextui-textarea {
+            font-size: 16px !important;
+            min-height: 44px !important;
+            touch-action: manipulation;
           }
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80 z-50">
               <Spinner />
             </div>
           )}
         </div>
         <Card
-          // isBlurred
           className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
           shadow="sm"
         >
           <CardBody>
             <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
               <div className="relative col-span-6 md:col-span-4">
-                <div>
-                  <div className="relative drop-shadow-2">
-                    <Image
-                      src={
-                        profilePhoto
-                          ? profilePhoto
-                          : patientGender
-                            ? patientGender === "Male"
-                              ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                              : `${AWS_URL}/docpoc-images/user-female.jpg`
-                            : `${AWS_URL}/docpoc-images/user-male.jpg`
-                      }
-                      width={160}
-                      height={160}
-                      className="overflow-hidden rounded-full"
-                      alt="profile"
-                    />
-                  </div>
-
+                <div className="relative flex justify-center items-center w-[160px] h-[160px] mx-auto sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]">
+                  <Image
+                    src={
+                      croppedPhotoUrl || profilePhoto
+                        ? profilePhoto
+                        : patientGender
+                          ? patientGender === "Male"
+                            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                            : `${AWS_URL}/docpoc-images/user-female.jpg`
+                          : `${AWS_URL}/docpoc-images/user-male.jpg`
+                    }
+                    width={160}
+                    height={160}
+                    className="rounded-full object-cover w-[160px] h-[160px] sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]"
+                    alt="profile"
+                  />
                   <label
                     htmlFor="profilePhoto"
-                    className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-16"
+                    className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 w-9 h-9 sm:w-8 sm:h-8 cursor-pointer z-10 transition duration-200"
                   >
                     <SVGIconProvider
                       iconName="camera"
                       color={GLOBAL_ICON_COLOR_WHITE}
                     />
-
                     <input
                       type="file"
                       name="profilePhoto"
                       id="profilePhoto"
                       className="sr-only"
                       accept="image/png, image/jpg, image/jpeg"
-                      onChange={handleProfilePhotoChange}
+                      onChange={handlePhotoChange}
+                      ref={fileInputRef}
                     />
                   </label>
                 </div>
               </div>
-
               <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold text-foreground/90">
                     Patient Details
                   </h3>
                 </div>
-
                 <div className="space-y-3">
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="user" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Name: </strong>
-                      {!editSelectedPatient && patientName}
-                    </p>
-                    {editSelectedPatient && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
+                  {/* Patient Name (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        {!editSelectedPatient && (
+                          <p className="break-words">
+                            <strong>Name: </strong>
+                            {patientName}
+                          </p>
+                        )}
+                        {editSelectedPatient && (
+                          <>
+                            <p className="mb-1">
+                              <strong>Name:</strong>
+                            </p>
+                            <Input
+                              type="text"
+                              placeholder="Patient name.."
+                              labelPlacement="outside"
+                              value={patientName}
+                              onChange={(e) => setPatientName(e.target.value)}
+                            />
+                          </>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 ml-2">
+                        {!editSelectedPatient && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editName}
+                          />
+                        )}
+                        {editSelectedPatient && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editName}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Patient Code (read-only) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="icard" />
+                      </div>
+                      <p className="break-words ml-2">
+                        <strong>Patient Code: </strong>
+                      </p>
+                      <div className="ml-2 flex-1 min-w-0">
                         <Input
                           type="text"
-                          placeholder="Patient name.."
+                          value={formatFieldValue(patientCode)}
                           labelPlacement="outside"
-                          value={patientName}
-                          onChange={(e) => {
-                            setPatientName(e.target.value);
-                          }}
+                          disabled
+                          className="w-full text-xs"
+                          aria-label="Patient Code"
+                          startContent={null}
                         />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatient && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editName}
-                        />
-                      )}
-                      {editSelectedPatient && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editName}
-                        />
-                      )}
+                    </div>
+                  </div>
+                  {/* Phone (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="phone" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        {!editSelectedPatientPhone && (
+                          <p>
+                            <strong>Phone: </strong> {patientPhone}
+                          </p>
+                        )}
+                        {editSelectedPatientPhone && (
+                          <>
+                            <p>
+                              <strong>Phone:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Input
+                                type="text"
+                                placeholder="Patient phone.."
+                                labelPlacement="outside"
+                                value={patientPhone}
+                                maxLength={10}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    "",
+                                  );
+                                  setPatientPhone(value);
+                                  if (value.length !== 10) {
+                                    setPatientPhoneError(
+                                      "Phone number must be 10 digits",
+                                    );
+                                  } else {
+                                    setPatientPhoneError("");
+                                  }
+                                }}
+                                className="w-full text-xs"
+                                isInvalid={!!patientPhoneError}
+                                errorMessage={patientPhoneError}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedPatientPhone && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editPhone}
+                          />
+                        )}
+                        {editSelectedPatientPhone && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editPhone}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="blood-drop" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Status: </strong>
-                      {!editSelectedPatientStatus && patientStatus}
-                    </p>
-                    {editSelectedPatientStatus && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button variant="bordered">{patientStatus}</Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            aria-label="Dynamic Actions"
-                            items={statusGroupList}
-                            onAction={(key) => {
-                              setPatientStatus(
-                                statusGroupList.find((item) => item.key === key)
-                                  ?.label ?? patientStatus,
-                              );
-                            }}
-                          >
-                            {(item) => (
-                              <DropdownItem
-                                key={item.key}
-                                color={
-                                  item.key === "delete" ? "danger" : "default"
-                                }
-                                className={
-                                  item.key === "delete" ? "text-danger" : ""
-                                }
-                              >
-                                {item.label}
-                              </DropdownItem>
-                            )}
-                          </DropdownMenu>
-                        </Dropdown>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="email" />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
-                      {editSelectedPatientStatus && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editStatus}
-                        />
-                      )}
+                      <div className="ml-2 w-full">
+                        {!editSelectedPatientEmail &&
+                          (patientEmail && patientEmail.trim() !== "" ? (
+                            <p>
+                              <strong>Email: </strong> {patientEmail}
+                            </p>
+                          ) : (
+                            <div className="flex items-center">
+                              <strong className="mr-1">Email:</strong>
+                              <Input
+                                type="text"
+                                value="N/A"
+                                labelPlacement="outside"
+                                disabled
+                                className="w-full text-xs"
+                              />
+                            </div>
+                          ))}
+                        {editSelectedPatientEmail && (
+                          <>
+                            <p>
+                              <strong>Email:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Input
+                                type="email"
+                                placeholder="Patient email.."
+                                labelPlacement="outside"
+                                value={patientEmail}
+                                onChange={(e) =>
+                                  setPatientEmail(e.target.value)
+                                }
+                                className="w-full text-xs"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedPatientEmail && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editEmail}
+                          />
+                        )}
+                        {editSelectedPatientEmail && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editEmail}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="email" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Email: </strong>
-                      {!editSelectedPatientEmail && patientEmail}
-                    </p>
-                    {editSelectedPatientEmail && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Input
-                          type="email"
-                          placeholder="Patient email.."
-                          labelPlacement="outside"
-                          value={patientEmail}
-                          onChange={(e) => {
-                            setPatientEmail(e.target.value);
-                          }}
-                        />
+                  {/* Blood Group (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="blood-drop" />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatientEmail && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editEmail}
-                        />
-                      )}
-                      {editSelectedPatientEmail && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editEmail}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="blood-drop" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Blood Group: </strong>
-                      {!editSelectedPatientBloodGroup && patientBloodGroup}
-                    </p>
-                    {editSelectedPatientBloodGroup && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button variant="bordered">
-                              {patientBloodGroup}
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            aria-label="Dynamic Actions"
-                            items={bloodGroupList}
-                            onAction={(key) => {
-                              setPatientBloodGroup(
-                                bloodGroupList.find((item) => item.key === key)
-                                  ?.label ?? patientBloodGroup,
-                              );
-                            }}
-                          >
-                            {(item) => (
-                              <DropdownItem
-                                key={item.key}
-                                color={
-                                  item.key === "delete" ? "danger" : "default"
+                      <div className="ml-2 w-full">
+                        {!editSelectedPatientBloodGroup && (
+                          <p>
+                            <strong>Blood Group: </strong>{" "}
+                            {patientBloodGroup === null ||
+                            patientBloodGroup === "" ||
+                            patientBloodGroup === "{}"
+                              ? "N/A"
+                              : patientBloodGroup}
+                          </p>
+                        )}
+                        {editSelectedPatientBloodGroup && (
+                          <>
+                            <p>
+                              <strong>Blood Group:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Autocomplete
+                                color={TOOL_TIP_COLORS.secondary}
+                                isDisabled={!editSelectedPatientBloodGroup}
+                                labelPlacement="outside"
+                                variant="bordered"
+                                size="sm"
+                                defaultItems={bloodGroupList.map((bg) => ({
+                                  label: bg.label,
+                                  value: bg.label,
+                                }))}
+                                label="Select Blood Group"
+                                placeholder={
+                                  patientBloodGroup || "Select Blood Group"
                                 }
-                                className={
-                                  item.key === "delete" ? "text-danger" : ""
-                                }
+                                className="w-full text-xs min-w-[80px]"
+                                onSelectionChange={(key) => {
+                                  setPatientBloodGroup(key as string);
+                                }}
                               >
-                                {item.label}
-                              </DropdownItem>
-                            )}
-                          </DropdownMenu>
-                        </Dropdown>
+                                {({ label, value }) => (
+                                  <AutocompleteItem
+                                    key={value}
+                                    variant="shadow"
+                                    color={TOOL_TIP_COLORS.secondary}
+                                    className="text-xs"
+                                  >
+                                    {label}
+                                  </AutocompleteItem>
+                                )}
+                              </Autocomplete>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatientBloodGroup && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editBloodGroup}
-                        />
-                      )}
-                      {editSelectedPatientBloodGroup && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editBloodGroup}
-                        />
-                      )}
+                      <div className="flex items-center ml-2">
+                        {!editSelectedPatientBloodGroup && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editBloodGroup}
+                          />
+                        )}
+                        {editSelectedPatientBloodGroup && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editBloodGroup}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="phone" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Phone: </strong>
-                      {!editSelectedPatientPhone && patientPhone}
-                    </p>
-                    {editSelectedPatientPhone && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
+                  {/* Date of Birth (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        {!editSelectedPatientDob && (
+                          <p className="break-words">
+                            <strong>Date of Birth: </strong>
+                            {patientDob
+                              ? formatDateToDDMMYYYY(patientDob)
+                              : "N/A"}
+                          </p>
+                        )}
+                        {editSelectedPatientDob && (
+                          <>
+                            <p className="mb-1">
+                              <strong>Date of Birth:</strong>
+                            </p>
+                            <DatePicker
+                              showMonthAndYearPickers
+                              label="Select Date of Birth"
+                              value={(() => {
+                                if (!patientDob) return undefined;
+                                try {
+                                  const parsed = parseDate(patientDob);
+                                  const now = today("UTC");
+                                  if (parsed.compare(now) > 0) return now;
+                                  return parsed;
+                                } catch (err) {
+                                  console.log(err);
+
+                                  // If parsing fails (invalid/future date), fallback to today
+                                  return today("UTC");
+                                }
+                              })()}
+                              onChange={(date) => {
+                                if (date) {
+                                  const formattedDate = date.toString();
+                                  setPatientDob(formattedDate);
+                                }
+                              }}
+                              className="w-full text-xs"
+                              color={TOOL_TIP_COLORS.secondary}
+                              variant="bordered"
+                              labelPlacement="outside"
+                              maxValue={today("UTC")}
+                            />
+                          </>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 ml-2">
+                        {!editSelectedPatientDob && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={() => setEditSelectedPatientDob(true)}
+                          />
+                        )}
+                        {editSelectedPatientDob && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={() => setEditSelectedPatientDob(false)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Gender (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        {!editSelectedPatientGender && (
+                          <p>
+                            <strong>Gender: </strong> {patientGender}
+                          </p>
+                        )}
+                        {editSelectedPatientGender && (
+                          <>
+                            <p>
+                              <strong>Gender:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Autocomplete
+                                color={TOOL_TIP_COLORS.secondary}
+                                isDisabled={!editSelectedPatientGender}
+                                labelPlacement="outside"
+                                variant="bordered"
+                                size="sm"
+                                defaultItems={[
+                                  { label: "Male", value: "Male" },
+                                  { label: "Female", value: "Female" },
+                                  { label: "Other", value: "Other" },
+                                ]}
+                                label="Select Gender"
+                                placeholder={patientGender || "Select Gender"}
+                                className="w-full text-xs min-w-[80px]"
+                                onSelectionChange={(key) => {
+                                  const selected = key as string;
+                                  setPatientGender(selected || "");
+                                }}
+                              >
+                                {({ label, value }) => (
+                                  <AutocompleteItem
+                                    key={value}
+                                    variant="shadow"
+                                    color={TOOL_TIP_COLORS.secondary}
+                                    className="text-xs"
+                                  >
+                                    {label}
+                                  </AutocompleteItem>
+                                )}
+                              </Autocomplete>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedPatientGender && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={() =>
+                              setEditSelectedPatientGender(true)
+                            }
+                          />
+                        )}
+                        {editSelectedPatientGender && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={() =>
+                              setEditSelectedPatientGender(false)
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Address (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="address" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        {!editSelectedPatientAddress && (
+                          <p className="break-words">
+                            <strong>Address: </strong>
+                            {patientAddress}
+                          </p>
+                        )}
+                        {editSelectedPatientAddress && (
+                          <>
+                            <p className="mb-1">
+                              <strong>Address:</strong>
+                            </p>
+                            <Textarea
+                              id="patient-address"
+                              label="Address"
+                              labelPlacement="outside"
+                              placeholder="Enter patient address..."
+                              value={patientAddress}
+                              onChange={(e) =>
+                                setPatientAddress(e.target.value)
+                              }
+                              minRows={2}
+                              maxRows={5}
+                              className="w-full text-xs"
+                            />
+                          </>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 ml-2">
+                        {!editSelectedPatientAddress && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={() =>
+                              setEditSelectedPatientAddress(true)
+                            }
+                          />
+                        )}
+                        {editSelectedPatientAddress && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={() =>
+                              setEditSelectedPatientAddress(false)
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status (editable) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 w-full">
+                        {!editSelectedPatientStatus && (
+                          <p>
+                            <strong>Status: </strong> {patientStatus}
+                          </p>
+                        )}
+                        {editSelectedPatientStatus && (
+                          <>
+                            <p>
+                              <strong>Status:</strong>
+                            </p>
+                            <div className="flex items-center w-full mt-1 mb-2">
+                              <Autocomplete
+                                color={TOOL_TIP_COLORS.secondary}
+                                isDisabled={!editSelectedPatientStatus}
+                                labelPlacement="outside"
+                                variant="bordered"
+                                size="sm"
+                                defaultItems={statusGroupList.map((st) => ({
+                                  label: st.label,
+                                  value: st.label,
+                                }))}
+                                label="Select Status"
+                                placeholder={patientStatus || "Select Status"}
+                                className="w-full text-xs min-w-[80px]"
+                                onSelectionChange={(key) => {
+                                  setPatientStatus(key as string);
+                                }}
+                              >
+                                {({ label, value }) => (
+                                  <AutocompleteItem
+                                    key={value}
+                                    variant="shadow"
+                                    color={TOOL_TIP_COLORS.secondary}
+                                    className="text-xs"
+                                  >
+                                    {label}
+                                  </AutocompleteItem>
+                                )}
+                              </Autocomplete>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {!editSelectedPatientStatus && (
+                          <IconButton
+                            iconName="edit"
+                            color={GLOBAL_DANGER_COLOR}
+                            clickEvent={editStatus}
+                          />
+                        )}
+                        {editSelectedPatientStatus && (
+                          <IconButton
+                            iconName="followup"
+                            color={GLOBAL_SUCCESS_COLOR}
+                            clickEvent={editStatus}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Last Visit (read-only) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <p className="break-words ml-2">
+                        <strong>Last Visit: </strong>
+                      </p>
+                      <div className="ml-2 flex-1 min-w-0">
                         <Input
                           type="text"
-                          placeholder="Patient Phone.."
+                          value={formatFieldValue(lastVisit)}
                           labelPlacement="outside"
-                          value={patientPhone}
-                          onChange={(e) => {
-                            setPatientPhone(e.target.value);
-                          }}
+                          disabled
+                          className="w-full text-xs"
+                          aria-label="Last Visit"
+                          startContent={null}
                         />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatientPhone && (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={editPhone}
-                        />
-                      )}
-                      {editSelectedPatientPhone && (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={editPhone}
-                        />
-                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center">
-                    <SVGIconProvider iconName="user" />
-                    <p className="text-sm sm:text-medium ml-2">
-                      <strong>Gender: </strong>
-                      {!editSelectedPatientGender && patientGender}
-                    </p>
-                    {editSelectedPatientGender && (
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button variant="bordered">{patientGender}</Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            aria-label="Select Gender"
-                            items={[
-                              { key: "Male", label: "Male" },
-                              { key: "Female", label: "Female" },
-                              { key: "Other", label: "Other" },
-                            ]}
-                            onAction={(key) => setPatientGender(key.toString())}
-                          >
-                            {(item) => (
-                              <DropdownItem key={item.key}>
-                                {item.label}
-                              </DropdownItem>
-                            )}
-                          </DropdownMenu>
-                        </Dropdown>
+                  {/* Last Appointed Doctor (read-only) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="doctor" />
                       </div>
-                    )}
-                    <div
-                      className="flex items-center"
-                      style={{ marginLeft: 10 }}
-                    >
-                      {!editSelectedPatientGender ? (
-                        <IconButton
-                          iconName="edit"
-                          color={GLOBAL_DANGER_COLOR}
-                          clickEvent={() => setEditSelectedPatientGender(true)}
+                      <p className="break-words ml-2">
+                        <strong> Last Appointed Doctor: </strong>
+                      </p>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <Input
+                          type="text"
+                          value={formatFieldValue(lastAppointedDoctor)}
+                          labelPlacement="outside"
+                          disabled
+                          className="w-full text-xs"
+                          aria-label="Last Appointed Doctor"
+                          startContent={null}
                         />
-                      ) : (
-                        <IconButton
-                          iconName="followup"
-                          color={GLOBAL_SUCCESS_COLOR}
-                          clickEvent={() => setEditSelectedPatientGender(false)}
-                        />
-                      )}
+                      </div>
                     </div>
                   </div>
+                  {/* Email (editable) */}
 
+                  {/* File upload and preview section remains unchanged */}
                   <div className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded-xl border border-dashed border-gray-400 bg-gray-100 px-4 py-4 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary sm:py-7.5">
                     {/* File Preview Section */}
                     <div className="flex flex-wrap gap-4">
                       {files.map((file) => {
-                        const fileExtension = file.name.split(".").pop();
-
-                        // const displayName = `${Date.now()}-${Math.floor(performance.now())}.${fileExtension}`;
-
-                        const trimmedFileName =
-                          file.name.length > 8
-                            ? file.name.substring(0, 7) + "." + fileExtension // Trim to 12 characters + "..."
-                            : file.name + "." + fileExtension;
+                        // const fileExtension = file.name.split(".").pop();
+                        // const trimmedFileName =
+                        //   file.name.length > 8
+                        //     ? file.name.substring(0, 7) + "." + fileExtension
+                        //     : file.name + "." + fileExtension;
                         return (
                           <div
                             key={file.name}
-                            className="relative flex items-center justify-center w-[80px] h-[80px] border rounded-lg p-3 bg-white text-center shadow-md"
+                            className="relative flex flex-col items-center justify-center w-[100px] h-[100px] border border-gray-100 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-default-100 text-center shadow-md"
                           >
                             {/* Remove Button*/}
                             <button
@@ -2324,30 +3026,34 @@ export default function ModalForm(props: {
                             >
                               X
                             </button>
-
                             {/* preview for image files */}
                             {file.type.startsWith("image/") && file.preview && (
                               <img
                                 src={file.preview}
                                 alt={file.name}
-                                className="w-full h-full object-cover rounded-md"
+                                className="w-full h-10 object-cover rounded-md"
                               />
                             )}
-
                             {!file.type.startsWith("image/") && (
                               <div className="flex flex-col items-center">
                                 <SVGIconProvider iconName="document" />
-                                <span className="truncate text-xs  sm:text-sm max-w-full mt-2 text-gray-600 overflow-hidden whitespace-nowrap">
-                                  {/* {file.name} */}
-                                  {trimmedFileName}
-                                </span>
                               </div>
                             )}
+                            {/* Editable file name input */}
+                            <input
+                              type="text"
+                              className="mt-2 text-xs border rounded px-1 py-0.5 w-full text-center border-gray-100 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary"
+                              value={fileNames[file.name] || ""}
+                              onChange={(e) =>
+                                handleFileNameChange(file.name, e.target.value)
+                              }
+                              maxLength={32}
+                              placeholder="Document name"
+                            />
                           </div>
                         );
                       })}
                     </div>
-
                     {/* Drag-and-Drop Area */}
                     <div
                       {...getRootProps()}
@@ -2456,7 +3162,7 @@ export default function ModalForm(props: {
         `}</style>
         <div>
           {loading && (
-            <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+            <div className="absolute inset-0 flex justify-center items-center bg-background/80 dark:bg-default-100/80   z-50">
               <Spinner />
             </div>
           )}
@@ -2464,30 +3170,212 @@ export default function ModalForm(props: {
         <h2 style={{ color: GLOBAL_DANGER_COLOR }}>
           Are you sure you want to delete this patient?
         </h2>
-
-        <div className="flex flex-col col-span-6 md:col-span-8 space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <SVGIconProvider iconName="clock" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>Name: </strong> {patientName}
-              </p>
+        <Card
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[99%]  sm:max-w-[800px] mx-auto mt-4"
+          shadow="sm"
+        >
+          <CardBody>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+              <div className="relative col-span-6 md:col-span-4">
+                <Image
+                  alt="Patient photo"
+                  className="object-cover"
+                  height={200}
+                  shadow="md"
+                  src={
+                    profilePhoto
+                      ? profilePhoto
+                      : patientGender
+                        ? patientGender === "Male"
+                          ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                          : `${AWS_URL}/docpoc-images/user-female.jpg`
+                        : `${AWS_URL}/docpoc-images/user-male.jpg`
+                  }
+                  width="100%"
+                />
+              </div>
+              <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-foreground/90">
+                    Patient Details
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {/* Patient Name */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Patient Name: </strong>
+                          {formatFieldValue(patientName)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Patient Code */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="icard" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Patient Code: </strong>
+                          {formatFieldValue(patientCode)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Phone */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="phone" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Phone: </strong>
+                          {formatFieldValue(patientPhone)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Email */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="email" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Email: </strong>
+                          {patientEmail ? patientEmail : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Blood Group */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="blood-drop" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Blood Group: </strong>
+                          {formatFieldValue(patientBloodGroup)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Age */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="birthday" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Age: </strong>
+                          {formatFieldValue(patientAge)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Date of Birth */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Date of Birth: </strong>
+                          {formatFieldValue(
+                            patientDob ? formatDateToDDMMYYYY(patientDob) : "",
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Gender */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Gender: </strong>
+                          {formatFieldValue(patientGender)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Address */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="address" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Address: </strong>
+                          {formatFieldValue(patientAddress)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Status */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-start w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Status: </strong>
+                          {formatFieldValue(patientStatus)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Last Visit */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Last Visit: </strong>
+                          {formatFieldValue(lastVisit)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Last Appointed Doctor */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                        <SVGIconProvider iconName="doctor" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Last Appointed Doctor: </strong>
+                          {formatFieldValue(lastAppointedDoctor)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="calendar" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>email: </strong>
-                {patientEmail}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <SVGIconProvider iconName="phone" />
-              <p className="text-sm sm:text-medium ml-2">
-                <strong>phone: </strong> {patientPhone}
-              </p>
-            </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
     );
   }
@@ -2567,7 +3455,7 @@ export default function ModalForm(props: {
           }
         `}</style>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center   z-50 bg-background/80 dark:bg-default-100/80 ">
             <Spinner size="lg" />
           </div>
         ) : (
@@ -2607,69 +3495,111 @@ export default function ModalForm(props: {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="user" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Name: </strong>
-                        {employeeName}
-                      </p>
+                    {/* Name */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Name: </strong>
+                          {employeeName}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="email" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>email: </strong>
-                        {employeeEmail}
-                      </p>
+                    {/* Email */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="email" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Email: </strong>
+                          {employeeEmail}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="phone" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Phone: </strong>+91- {employeePhone}
-                      </p>
+                    {/* Phone */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="phone" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Phone: </strong>+91- {employeePhone}
+                        </p>
+                      </div>
                     </div>
-
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="user" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Gender: </strong>
-                        {employeeGender}
-                      </p>
+                    {/* Gender */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="user" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Gender: </strong>
+                          {employeeGender}
+                        </p>
+                      </div>
                     </div>
-
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="icard" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Designation: </strong>
-                        {employeeDesignation}
-                      </p>
+                    {/* Designation */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="icard" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Designation: </strong>
+                          {employeeDesignation}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="clock" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Working Hours: </strong>
-                        {employeeShiftTime}
-                      </p>
+                    {/* Working Hours */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="clock" />
+                      </div>
+                      <div className="ml-1 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Working Hours: </strong>
+                          {employeeShiftTime}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="calendar" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Joined On: </strong>{" "}
-                        {extractDate(employeeJoiningDate)}
-                      </p>
+                    {/* Joined On */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="calendar" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Joined On: </strong>{" "}
+                          {formatDateOne(employeeJoiningDate)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <div style={{ marginLeft: -5 }}>
+                    {/* Access Type */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-10px] mt-1 flex items-center">
                         <SVGIconProvider iconName="key" />
                       </div>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Access Type: </strong>Super-Admin
-                      </p>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Access Type: </strong>Super-Admin
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="birthday" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Date Of Birth: {employeeDOB}</strong>
-                      </p>
+                    {/* Date Of Birth */}
+                    <div className="flex items-center w-full mb-2">
+                      <div className="ml-[-5px] mt-1 flex items-center">
+                        <SVGIconProvider iconName="birthday" />
+                      </div>
+                      <div className="ml-2 flex-1 min-w-0">
+                        <p className="break-words">
+                          <strong>Date Of Birth: </strong>
+                          {employeeDOB}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2684,6 +3614,55 @@ export default function ModalForm(props: {
   if (props.type === MODAL_TYPES.EDIT_EMPLOYEE) {
     return (
       <div>
+        {showCropper && tempPhotoUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-4 rounded-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-4">
+                Crop your profile picture
+              </h3>
+              <div className="relative h-64 w-full">
+                <Cropper
+                  image={tempPhotoUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm mb-2">Zoom:</label>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  color="danger"
+                  onPress={() => {
+                    setShowCropper(false);
+                    setTempPhotoUrl(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  variant="light"
+                >
+                  Cancel
+                </Button>
+                <Button color="primary" onPress={handleSaveCroppedImage}>
+                  Ok
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <style jsx global>{`
           .nextui-input,
           .nextui-input-wrapper input,
@@ -2698,6 +3677,10 @@ export default function ModalForm(props: {
           }
           .nextui-autocomplete-input {
             font-size: 16px !important;
+          }
+          .nextui-date-picker-input {
+            font-size: 16px !important;
+            touch-action: manipulation;
           }
 
           /* Disable text size adjustment */
@@ -2754,9 +3737,20 @@ export default function ModalForm(props: {
               min-height: auto !important;
             }
           }
+          /* Add missing mobile/iOS styles for DatePicker and Textarea */
+          .nextui-date-picker-input {
+            font-size: 16px !important;
+            touch-action: manipulation;
+            min-height: 44px !important;
+          }
+          .nextui-textarea {
+            font-size: 16px !important;
+            touch-action: manipulation;
+            min-height: 44px !important;
+          }
         `}</style>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center  z-50 bg-background/80 dark:bg-default-100/80 ">
             <Spinner size="lg" />
           </div>
         ) : (
@@ -2767,45 +3761,37 @@ export default function ModalForm(props: {
           >
             <CardBody>
               <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
-                <div className="relative col-span-6 md:col-span-4">
-                  <div>
-                    <div className="relative drop-shadow-2">
-                      <Image
-                        // src={profilePhoto ? profilePhoto : employeeGender == "Male" ? "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-male.jpg" : "https://docpoc-assets.s3.ap-south-1.amazonaws.com/docpoc-images/user-female.jpg"}
-
-                        src={
-                          profilePhoto
-                            ? profilePhoto
-                            : employeeGender
-                              ? employeeGender === "Male"
-                                ? `${AWS_URL}/docpoc-images/user-male.jpg`
-                                : `${AWS_URL}/docpoc-images/user-female.jpg`
-                              : `${AWS_URL}/docpoc-images/user-male.jpg`
-                        }
-                        width={160}
-                        height={160}
-                        className="overflow-hidden rounded-full"
-                        alt="profile"
-                      />
-                    </div>
-
+                <div className="col-span-6 md:col-span-4">
+                  <div className="relative flex justify-center items-center w-[160px] h-[160px] mx-auto sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]">
+                    <Image
+                      src={
+                        croppedPhotoUrl ||
+                        profilePhoto ||
+                        (employeeGender === "Male"
+                          ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                          : `${AWS_URL}/docpoc-images/user-female.jpg`)
+                      }
+                      width={160}
+                      height={160}
+                      className="rounded-full object-cover w-[160px] h-[160px] sm:w-[160px] sm:h-[160px] md:w-[160px] md:h-[160px]"
+                      alt="profile"
+                    />
                     <label
                       htmlFor="profilePhoto"
-                      className="absolute bottom-0 right-0 flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 sm:bottom-1 sm:right-5"
+                      className="absolute bottom-2 right-2 flex items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90 w-9 h-9 sm:w-8 sm:h-8 cursor-pointer z-10 transition duration-200"
                     >
                       <SVGIconProvider
                         iconName="camera"
                         color={GLOBAL_ICON_COLOR_WHITE}
                       />
-
                       <input
                         type="file"
                         name="profilePhoto"
                         id="profilePhoto"
                         className="sr-only"
                         accept="image/png, image/jpg, image/jpeg"
-                        // onChange={handleProfilePhotoChange}
-                        onChange={handleProfilePhotoChange}
+                        onChange={handlePhotoChange}
+                        ref={fileInputRef}
                       />
                     </label>
                   </div>
@@ -2818,129 +3804,173 @@ export default function ModalForm(props: {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="user" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Name: </strong>
-                        {!editSelectedEmployee && employeeName}
-                      </p>
-                      {editSelectedEmployee && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="text"
-                            placeholder="Patient name.."
-                            labelPlacement="outside"
-                            value={employeeName}
-                            onChange={(e) => setEmployeeName(e.target.value)}
-                          />
+                    {/* Name */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="user" />
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployee && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeName}
-                          />
-                        )}
-                        {editSelectedEmployee && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeName}
-                          />
-                        )}
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployee && (
+                            <p>
+                              <strong>Name: </strong> {employeeName}
+                            </p>
+                          )}
+                          {editSelectedEmployee && (
+                            <>
+                              <p>
+                                <strong>Name:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Input
+                                  type="text"
+                                  placeholder="Patient name.."
+                                  labelPlacement="outside"
+                                  value={employeeName}
+                                  onChange={(e) =>
+                                    setEmployeeName(e.target.value)
+                                  }
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployee && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeName}
+                            />
+                          )}
+                          {editSelectedEmployee && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeName}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="email" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Email: </strong>
-                        {!editSelectedEmployeeEmail && employeeEmail}
-                      </p>
-                      {editSelectedEmployeeEmail && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="email"
-                            placeholder="Employee email.."
-                            labelPlacement="outside"
-                            value={employeeEmail}
-                            onChange={(e) => setEmployeeEmail(e.target.value)}
-                          />
+                    {/* Email */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-start w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="email" />
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployeeEmail && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeEmail}
-                          />
-                        )}
-                        {editSelectedEmployeeEmail && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeEmail}
-                          />
-                        )}
+                        <div className="ml-2 flex-1 min-w-0">
+                          {!editSelectedEmployeeEmail && (
+                            <p className="break-words">
+                              <strong>Email: </strong> {employeeEmail}
+                            </p>
+                          )}
+                          {editSelectedEmployeeEmail && (
+                            <>
+                              <p>
+                                <strong>Email:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Input
+                                  type="email"
+                                  placeholder="Employee email.."
+                                  labelPlacement="outside"
+                                  value={employeeEmail}
+                                  onChange={(e) =>
+                                    setEmployeeEmail(e.target.value)
+                                  }
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-start ml-2 flex-shrink-0">
+                          {!editSelectedEmployeeEmail && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeEmail}
+                            />
+                          )}
+                          {editSelectedEmployeeEmail && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeEmail}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="phone" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Phone: </strong>
-                        {!editSelectedEmployeePhone && employeePhone}
-                      </p>
-                      {editSelectedEmployeePhone && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="text"
-                            placeholder="Employee phone.."
-                            labelPlacement="outside"
-                            value={employeePhone}
-                            onChange={(e) => setEmployeePhone(e.target.value)}
-                          />
+                    {/* Phone */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="phone" />
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployeePhone && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeePhone}
-                          />
-                        )}
-                        {editSelectedEmployeePhone && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeePhone}
-                          />
-                        )}
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeePhone && (
+                            <p>
+                              <strong>Phone: </strong> {employeePhone}
+                            </p>
+                          )}
+                          {editSelectedEmployeePhone && (
+                            <>
+                              <p>
+                                <strong>Phone:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Input
+                                  type="text"
+                                  placeholder="Employee phone.."
+                                  labelPlacement="outside"
+                                  value={employeePhone}
+                                  maxLength={10}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(
+                                      /\D/g,
+                                      "",
+                                    );
+                                    setEmployeePhone(value);
+                                    if (value.length !== 10) {
+                                      setEmployeePhoneError(
+                                        "Phone number must be 10 digits",
+                                      );
+                                    } else {
+                                      setEmployeePhoneError("");
+                                    }
+                                  }}
+                                  className="w-full text-xs"
+                                  isInvalid={!!employeePhoneError}
+                                  errorMessage={employeePhoneError}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeePhone && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeePhone}
+                            />
+                          )}
+                          {editSelectedEmployeePhone && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeePhone}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center">
+                    {/* <div className="flex items-center">
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="user" />
                       </div>
@@ -3009,17 +4039,83 @@ export default function ModalForm(props: {
                           />
                         )}
                       </div>
+                    </div> */}
+
+                    {/* Gender */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="user" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeGender && (
+                            <p>
+                              <strong>Gender: </strong> {employeeGender}
+                            </p>
+                          )}
+                          {editSelectedEmployeeGender && (
+                            <>
+                              <p>
+                                <strong>Gender:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Autocomplete
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  isDisabled={!editSelectedEmployeeGender}
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  size="sm"
+                                  defaultItems={[
+                                    { label: "Male", value: "Male" },
+                                    { label: "Female", value: "Female" },
+                                    { label: "Other", value: "Other" },
+                                  ]}
+                                  label="Select Gender"
+                                  placeholder={
+                                    employeeGender || "Select Gender"
+                                  }
+                                  className="w-full text-xs min-w-[80px]"
+                                  onSelectionChange={(key) => {
+                                    const selected = key as string;
+                                    setEmployeeGender(selected || "");
+                                  }}
+                                >
+                                  {({ label, value }) => (
+                                    <AutocompleteItem
+                                      key={value}
+                                      variant="shadow"
+                                      color={TOOL_TIP_COLORS.secondary}
+                                      className="text-xs"
+                                    >
+                                      {label}
+                                    </AutocompleteItem>
+                                  )}
+                                </Autocomplete>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeeGender && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeGender}
+                            />
+                          )}
+                          {editSelectedEmployeeGender && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeGender}
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center">
-                      {/* <div style={{ marginLeft: -5 }}>
-                      <SVGIconProvider iconName="icard" />
-                      </div>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Designation: </strong>
-                        {employeeDesignation}
-                      </p> */}
-
+                    {/* <div className="flex items-center">
+                    
                       <div style={{ marginLeft: -5 }}>
                         <SVGIconProvider iconName="doctor" />
                       </div>
@@ -3038,32 +4134,25 @@ export default function ModalForm(props: {
                             className="flex items-center"
                             style={{ marginLeft: 10 }}
                           >
-                            {/* <Input
-                            type="text"
-                            placeholder="Employee designation.."
-                            labelPlacement="outside"
-                            value={employeeDesignation}
-                            onChange={(e) => setEmployeeDesignation(e.target.value)}
-                          /> */}
-
+                           
                             <Autocomplete
                               color={TOOL_TIP_COLORS.secondary}
                               isDisabled={!editSelectedEmployeeDesignation}
                               labelPlacement="outside"
                               variant="bordered"
-                              defaultItems={designations} // Use the designations array as items
+                              defaultItems={designations} 
                               label="Select Designation"
                               placeholder={
                                 employeeDesignation || "Search Designation"
                               }
-                              // selectedKeys={[selectedDesignation]}
+                           
                               onSelectionChange={(key) => {
                                 const selected = designations.find(
                                   (designation) => designation.value === key,
                                 );
-                                // setTempDesignation(selected?.label || "");
+                              
                                 setEmployeeDesignation(selected?.label || "");
-                                // Temporarily set the designation
+                              
                               }}
                             >
                               {(item) => (
@@ -3073,7 +4162,7 @@ export default function ModalForm(props: {
                                   color={TOOL_TIP_COLORS.secondary}
                                 >
                                   {item.label}{" "}
-                                  {/* Display the label for each item */}
+                               
                                 </AutocompleteItem>
                               )}
                             </Autocomplete>
@@ -3099,165 +4188,253 @@ export default function ModalForm(props: {
                           />
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="clock" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Working Hours: </strong>
-                        {!editSelectedEmployeeShiftTime && employeeShiftTime}
-                      </p>
-                      {editSelectedEmployeeShiftTime && (
-                        <div className="flex items-center">
-                          <TimeInput
-                            color={TOOL_TIP_COLORS.secondary}
-                            label="From"
-                            labelPlacement="outside"
-                            variant="bordered"
-                            value={employeeShiftStartTime}
-                            startContent={<SVGIconProvider iconName="clock" />}
-                            onChange={(e) => {
-                              handleTimeChange("start", e.toString());
-                              setEmployeeShiftStartTime(e);
-                            }}
-                            isDisabled={!editSelectedEmployeeShiftTime}
-                          />
+                    </div> */}
 
-                          <div
-                            className="flex items-center"
-                            style={{ marginLeft: 10 }}
-                          >
-                            <TimeInput
-                              color={TOOL_TIP_COLORS.secondary}
-                              label="To"
-                              labelPlacement="outside"
-                              variant="bordered"
-                              value={employeeShiftEndTime}
-                              startContent={
-                                <SVGIconProvider iconName="clock" />
-                              }
-                              onChange={(e) => {
-                                handleTimeChange("end", e.toString());
-                                setEmployeeShiftEndTime(e);
-                              }}
-                              isDisabled={!editSelectedEmployeeShiftTime}
+                    {/* Designation */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="doctor" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeDesignation && (
+                            <p>
+                              <strong>Designation: </strong>{" "}
+                              {employeeDesignation}
+                            </p>
+                          )}
+                          {editSelectedEmployeeDesignation && (
+                            <>
+                              <p>
+                                <strong>Designation:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <Autocomplete
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  isDisabled={!editSelectedEmployeeDesignation}
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  defaultItems={designations}
+                                  label="Select Designation"
+                                  placeholder={
+                                    employeeDesignation || "Search Designation"
+                                  }
+                                  className="w-full text-xs"
+                                  onSelectionChange={(key) => {
+                                    const selected = designations.find(
+                                      (designation) =>
+                                        designation.value === key,
+                                    );
+                                    setEmployeeDesignation(
+                                      selected?.label || "",
+                                    );
+                                  }}
+                                >
+                                  {(item) => (
+                                    <AutocompleteItem
+                                      key={item.value}
+                                      variant="shadow"
+                                      color={TOOL_TIP_COLORS.secondary}
+                                      className="text-xs"
+                                    >
+                                      {item.label}
+                                    </AutocompleteItem>
+                                  )}
+                                </Autocomplete>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center ml-2">
+                          {!editSelectedEmployeeDesignation && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeDesignation}
                             />
-                          </div>
+                          )}
+                          {editSelectedEmployeeDesignation && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeDesignation}
+                            />
+                          )}
                         </div>
-                      )}
-                      <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
-                      >
-                        {!editSelectedEmployeeShiftTime && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeShiftTime}
-                          />
-                        )}
-                        {editSelectedEmployeeShiftTime && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeShiftTime}
-                          />
-                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="calendar" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Joined On: </strong>{" "}
-                      </p>
-                      {!editSelectedEmployeeJoiningDate && (
-                        <p className="text-sm sm:text-medium ml-2">
-                          {formatDateOne(employeeJoiningDate)}
-                        </p>
-                      )}
-
-                      {editSelectedEmployeeJoiningDate && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          {/* <DatePicker
-                                       showMonthAndYearPickers
-                                       label="Joining Date"
-                                       className="max-w-[284px]"
-                                       onChange={editEmployeeJoiningDate}
-                                       style={{ marginLeft: 0 }}
-                                     /> */}
-                        </div>
-                      )}
-                      {/* <div className="flex items-center" style={{ marginLeft: 10 }}>
-                                   {!editSelectedEmployeeJoiningDate && (
-                                     <IconButton
-                                       iconName="edit"
-                                       color={GLOBAL_DANGER_COLOR}
-                                       clickEvent={editEmployeeTime}
-                                     />
-                                   )}
-                                   {editSelectedEmployeeJoiningDate && (
-                                     <IconButton
-                                       iconName="followup"
-                                       color={GLOBAL_SUCCESS_COLOR}
-                                       clickEvent={editEmployeeTime}
-                                     />
-                                   )}
-                                 </div> */}
-                    </div>
-                    <div className="flex items-center">
-                      <div style={{ marginLeft: -5 }}>
-                        <SVGIconProvider iconName="key" />
-                      </div>
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Access Type: </strong>Super-Admin
-                      </p>
-                    </div>
-
-                    <div className="flex items-center">
-                      <SVGIconProvider iconName="birthday" />
-                      <p className="text-sm sm:text-medium ml-2">
-                        <strong>Date Of Birth: </strong>{" "}
-                      </p>
-                      {!editSelectedEmployeeDOB && (
-                        <p className="text-sm sm:text-medium ml-2">
-                          {employeeDOB}
-                        </p>
-                      )}
-
-                      {editSelectedEmployeeDOB && (
-                        <div
-                          className="flex items-center"
-                          style={{ marginLeft: 10 }}
-                        >
-                          <Input
-                            type="date"
-                            variant="bordered"
-                            value={employeeDOB}
-                            onChange={(e) => setEmployeeDOB(e.target.value)}
-                          />
-                        </div>
-                      )}
+                    {/* Working Hours */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
                       <div
-                        className="flex items-center"
-                        style={{ marginLeft: 10 }}
+                        className={`flex ${editSelectedEmployeeShiftTime ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
                       >
-                        {!editSelectedEmployeeDOB && (
-                          <IconButton
-                            iconName="edit"
-                            color={GLOBAL_DANGER_COLOR}
-                            clickEvent={editEmployeeDobTime}
-                          />
-                        )}
-                        {editSelectedEmployeeDOB && (
-                          <IconButton
-                            iconName="followup"
-                            color={GLOBAL_SUCCESS_COLOR}
-                            clickEvent={editEmployeeDobTime}
-                          />
-                        )}
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="clock" />
+                        </div>
+
+                        <div className="ml-1 w-full">
+                          {!editSelectedEmployeeShiftTime && (
+                            <p>
+                              <strong>Working Hours: </strong>{" "}
+                              {employeeShiftTime}
+                            </p>
+                          )}
+                          {editSelectedEmployeeShiftTime && (
+                            <>
+                              <p>
+                                <strong>Working Hours:</strong>
+                              </p>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center w-full mt-1 mb-2 gap-2">
+                                <TimeInput
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  label="From"
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  value={employeeShiftStartTime}
+                                  startContent={
+                                    <SVGIconProvider iconName="clock" />
+                                  }
+                                  onChange={(e) => {
+                                    handleTimeChange("start", e.toString());
+                                    setEmployeeShiftStartTime(e);
+                                  }}
+                                  isDisabled={!editSelectedEmployeeShiftTime}
+                                  className="w-full text-xs"
+                                />
+                                <TimeInput
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  label="To"
+                                  labelPlacement="outside"
+                                  variant="bordered"
+                                  value={employeeShiftEndTime}
+                                  startContent={
+                                    <SVGIconProvider iconName="clock" />
+                                  }
+                                  onChange={(e) => {
+                                    handleTimeChange("end", e.toString());
+                                    setEmployeeShiftEndTime(e);
+                                  }}
+                                  isDisabled={!editSelectedEmployeeShiftTime}
+                                  className="w-full text-xs"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div
+                          className={`flex items-center ml-2 ${editSelectedEmployeeShiftTime ? "self-start sm:self-center" : ""}`}
+                        >
+                          {!editSelectedEmployeeShiftTime && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeShiftTime}
+                            />
+                          )}
+                          {editSelectedEmployeeShiftTime && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeShiftTime}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Date Of Birth */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div
+                        className={`flex ${editSelectedEmployeeDOB ? "flex-col sm:flex-row items-start sm:items-center" : "items-center"} w-full`}
+                      >
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="birthday" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          {!editSelectedEmployeeDOB && (
+                            <p>
+                              <strong>Date Of Birth: </strong> {employeeDOB}
+                            </p>
+                          )}
+                          {editSelectedEmployeeDOB && (
+                            <>
+                              <p>
+                                <strong>Date Of Birth:</strong>
+                              </p>
+                              <div className="flex items-center w-full mt-1 mb-2">
+                                <DatePicker
+                                  showMonthAndYearPickers
+                                  label="Select Date of Birth"
+                                  value={
+                                    employeeDOB
+                                      ? parseDate(employeeDOB)
+                                      : undefined
+                                  }
+                                  onChange={(date) => {
+                                    if (date) {
+                                      const formattedDate = date.toString();
+                                      setEmployeeDOB(formattedDate);
+                                    }
+                                  }}
+                                  className="w-full text-xs"
+                                  color={TOOL_TIP_COLORS.secondary}
+                                  variant="bordered"
+                                  labelPlacement="outside"
+                                  maxValue={today("UTC")}
+                                  classNames={{
+                                    input: ["nextui-date-picker-input"],
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div
+                          className={`flex items-center ml-2 ${editSelectedEmployeeDOB ? "self-start sm:self-center" : ""}`}
+                        >
+                          {!editSelectedEmployeeDOB && (
+                            <IconButton
+                              iconName="edit"
+                              color={GLOBAL_DANGER_COLOR}
+                              clickEvent={editEmployeeDobTime}
+                            />
+                          )}
+                          {editSelectedEmployeeDOB && (
+                            <IconButton
+                              iconName="followup"
+                              color={GLOBAL_SUCCESS_COLOR}
+                              clickEvent={editEmployeeDobTime}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Joined On */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px]">
+                          <SVGIconProvider iconName="calendar" />
+                        </div>
+                        <div className="ml-2 w-full">
+                          <p>
+                            <strong>Joined On: </strong>{" "}
+                            {formatDateOne(employeeJoiningDate)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Access Type */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-10px]">
+                          <SVGIconProvider iconName="key" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Access Type: </strong>Super-Admin
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3348,75 +4525,170 @@ export default function ModalForm(props: {
           Are you sure you want to delete this employee?
         </h2>
         {loading ? (
-          <div className="absolute inset-0 flex justify-center items-center bg-gray-900  z-50">
+          <div className="absolute inset-0 flex justify-center items-center   z-50 bg-background/80 dark:bg-default-100/80 ">
             <Spinner size="lg" />
           </div>
         ) : (
-          <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-foreground/90">
-                Employee Details
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <SVGIconProvider iconName="user" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Name: </strong>
-                  {employeeName}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="email" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>email: </strong>
-                  {employeeEmail}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="phone" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Phone: </strong>+91- {employeePhone}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="icard" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Designation: </strong>
-                  {employeeDesignation}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="clock" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Working Hours: </strong>
-                  {employeeShiftTime}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="calendar" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Joined On: </strong>{" "}
-                  {formatDateOne(employeeJoiningDate)}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <div style={{ marginLeft: -5 }}>
-                  <SVGIconProvider iconName="key" />
+          <Card
+            className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto mt-4"
+            shadow="sm"
+          >
+            <CardBody>
+              <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-8 items-center justify-center">
+                <div className="relative col-span-6 md:col-span-4">
+                  <Image
+                    alt="Employee photo"
+                    className="object-cover"
+                    height={200}
+                    shadow="md"
+                    src={
+                      profilePhoto
+                        ? profilePhoto
+                        : employeeGender
+                          ? employeeGender === "Male"
+                            ? `${AWS_URL}/docpoc-images/user-male.jpg`
+                            : `${AWS_URL}/docpoc-images/user-female.jpg`
+                          : `${AWS_URL}/docpoc-images/user-male.jpg`
+                    }
+                    width="100%"
+                  />
                 </div>
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Access Type: </strong>Super-Admin
-                </p>
+                <div className="flex flex-col col-span-6 md:col-span-8 space-y=4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold text-foreground/90">
+                      Employee Details
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {/* Name */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="user" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Name: </strong>
+                            {employeeName}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Email */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="email" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Email: </strong>
+                            {employeeEmail}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Phone */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="phone" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Phone: </strong>+91- {employeePhone}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Gender */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="user" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Gender: </strong>
+                            {employeeGender}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Designation */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="icard" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Designation: </strong>
+                            {employeeDesignation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Working Hours */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="clock" />
+                        </div>
+                        <div className="ml-1 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Working Hours: </strong>
+                            {employeeShiftTime}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Joined On */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="calendar" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Joined On: </strong>{" "}
+                            {formatDateOne(employeeJoiningDate)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Access Type */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-10px] mt-1">
+                          <SVGIconProvider iconName="key" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Access Type: </strong>Super-Admin
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Date Of Birth */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center text-xs sm:text-base w-full mb-2">
+                      <div className="flex items-center w-full">
+                        <div className="ml-[-5px] mt-1">
+                          <SVGIconProvider iconName="birthday" />
+                        </div>
+                        <div className="ml-2 flex-1 min-w-0">
+                          <p className="break-words">
+                            <strong>Date Of Birth: </strong>
+                            {employeeDOB}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center">
-                <SVGIconProvider iconName="birthday" />
-                <p className="text-sm sm:text-medium ml-2">
-                  <strong>Date Of Birth: </strong> {employeeDOB}
-                </p>
-              </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         )}
       </div>
     );
@@ -3428,5 +4700,6 @@ export default function ModalForm(props: {
     //   );
     // }
   }
+
   return null;
 }

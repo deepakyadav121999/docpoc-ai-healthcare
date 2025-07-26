@@ -19,21 +19,21 @@ const ChartLine: React.FC<ChartLineProps> = ({
   footer,
 }) => {
   return (
-    <div className="col-span-12 rounded-[10px] bg-white px-7.5 pb-6 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-7">
-      <div className="mb-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="col-span-12 rounded-[10px] bg-white px-3 sm:px-7.5 pb-4 sm:pb-6 pt-4 sm:pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-7">
+      <div className="mb-2 sm:mb-3.5 flex flex-col gap-2 sm:gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h4 className="text-body-2xlg font-bold text-dark dark:text-white">
+          <h4 className="text-sm sm:text-body-2xlg font-bold text-dark dark:text-white">
             {label}
           </h4>
         </div>
       </div>
       <div>
-        <div className="-ml-4 -mr-5">
+        <div className="-ml-2 -mr-2 sm:-ml-4 sm:-mr-5">
           <ReactApexChart
             options={options}
             series={series}
             type="area"
-            height={310}
+            height={250}
           />
         </div>
       </div>

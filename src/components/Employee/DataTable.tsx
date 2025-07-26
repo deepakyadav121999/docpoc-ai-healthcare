@@ -341,12 +341,13 @@ export default function DataTable() {
 
         return (
           <User
-            avatarProps={{ radius: "lg", src: avatarSrc }}
-            // description={user.email}
-            name={cellValue}
-          >
-            {/* {user.email} */}
-          </User>
+            avatarProps={{
+              radius: "lg",
+              src: avatarSrc,
+              className: "datatable-avatar-img",
+            }}
+            name={<span className="datatable-avatar-name">{cellValue}</span>}
+          />
         );
       case "lastVisit":
         return (
@@ -649,6 +650,32 @@ export default function DataTable() {
           </div>
         )}
       </div>
+      {/* Responsive styles for user name and avatar in the table */}
+      <style jsx global>{`
+        .datatable-avatar-name {
+          display: block;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 110px;
+          font-size: 1rem;
+        }
+        @media (max-width: 650px) {
+          .datatable-avatar-name {
+            font-size: 0.85rem;
+            max-width: 60px;
+          }
+        }
+        .datatable-avatar-img {
+          width: 37px !important;
+          height: 37px !important;
+          min-width: 37px !important;
+          min-height: 37px !important;
+          border-radius: 14px !important;
+          object-fit: cover;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,19 +1,16 @@
-// "use client";
-// import React, { useEffect, useState } from "react";
-// import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
-
-// import ChartLine from "../Charts/ChartLine";
-// import { Spacer } from "@nextui-org/react";
-// import DataStatsDefault from "../DataStats/DataStatsDefault";
-// import { dataStatsDefault } from "@/types/dataStatsDefault";
-// import { SVGIconProvider } from "@/constants/svgIconProvider";
-// import { ApexOptions } from "apexcharts";
-// import axios from "axios";
-// import CustomCard from "./CustomCard";
-// import { Spinner } from "@nextui-org/spinner";
-// import { useSelector } from "react-redux";
-// import { RootState } from "../../store";
-// const API_URL = process.env.API_URL;
+"use client";
+import React, { useEffect, useState, useCallback } from "react";
+import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
+import ChartLine from "../Charts/ChartLine";
+import DataStatsDefault from "../DataStats/DataStatsDefault";
+import { dataStatsDefault } from "@/types/dataStatsDefault";
+import { SVGIconProvider } from "@/constants/svgIconProvider";
+import { ApexOptions } from "apexcharts";
+import axios from "axios";
+import CustomCard from "./CustomCard";
+import { Spinner } from "@nextui-org/spinner";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 // export default function App() {
 //   const profile = useSelector((state: RootState) => state.profile.data);
@@ -352,6 +349,11 @@
 // import { useSelector } from "react-redux";
 // import { RootState } from "../../store";
 // const API_URL = process.env.API_URL;
+
+// Utility function to trigger staff dashboard refresh from other components
+export const triggerStaffDashboardRefresh = () => {
+  window.dispatchEvent(new CustomEvent("refresh-staff-dashboard"));
+};
 
 // interface MonthlyData {
 //   month: string;
@@ -728,23 +730,10 @@
 //   return <OverView />;
 // }
 
-"use client";
-import React, { useEffect, useState, useCallback } from "react";
-import { GLOBAL_ICON_COLOR_WHITE } from "@/constants";
-import ChartLine from "../Charts/ChartLine";
-import DataStatsDefault from "../DataStats/DataStatsDefault";
-import { dataStatsDefault } from "@/types/dataStatsDefault";
-import { SVGIconProvider } from "@/constants/svgIconProvider";
-import { ApexOptions } from "apexcharts";
-import axios from "axios";
-import CustomCard from "./CustomCard";
-import { Spinner } from "@nextui-org/spinner";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-
 // Cache setup
 const API_CACHE: Record<string, { data: any; timestamp: number }> = {};
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_EXPIRY = 2 * 60 * 1000; // 2 minutes cache for more frequent updates
+// const POLLING_INTERVAL = 30 * 1000; // 30 seconds polling
 
 // interface MonthlyData {
 //   month: string;
@@ -758,6 +747,9 @@ export default function StaffDashboard() {
   const [dataStatsList, setDataStatsList] = useState<dataStatsDefault[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  // const [isPolling, setIsPolling] = useState(false);
+  const [isPolling] = useState(false);
 
   const [chartData, setChartData] = useState<{
     series: { name: string; data: number[] }[];
@@ -816,9 +808,13 @@ export default function StaffDashboard() {
     return { doctors: doctorCount, nurses: nurseCount, staff: staffCount };
   }, []);
 
-  // Memoized fetch with caching
+  // Memoized fetch with caching and real-time updates
   const fetchUsers = useCallback(
-    async (params?: { from?: string; to?: string }, cacheKey?: string) => {
+    async (
+      params?: { from?: string; to?: string },
+      cacheKey?: string,
+      forceRefresh = false,
+    ) => {
       try {
         const token = localStorage.getItem("docPocAuth_token");
         const fetchedBranchId = profile?.branchId;
@@ -827,8 +823,9 @@ export default function StaffDashboard() {
           throw new Error("Branch ID not available");
         }
 
-        // Check cache first
+        // Check cache first (unless force refresh)
         if (
+          !forceRefresh &&
           cacheKey &&
           API_CACHE[cacheKey] &&
           Date.now() - API_CACHE[cacheKey].timestamp < CACHE_EXPIRY
@@ -871,40 +868,48 @@ export default function StaffDashboard() {
   };
 
   // Optimized data loading with single API call if possible
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      if (isPolling && !forceRefresh) return; // Prevent multiple simultaneous requests
 
-    try {
-      // First try to fetch all data at once with a wider date range
-      const currentDate = new Date();
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(currentDate.getMonth() - 5);
-      sixMonthsAgo.setDate(1);
+      setLoading(true);
+      setError(null);
 
-      const allUsers = await fetchUsers(
-        {
-          from: sixMonthsAgo.toISOString(),
-          to: currentDate.toISOString(),
-        },
-        `all-users-${profile?.branchId}`,
-      );
+      try {
+        // First try to fetch all data at once with a wider date range
+        const currentDate = new Date();
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(currentDate.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
 
-      // If we got all data at once, process it
-      if (allUsers.length > 0) {
-        processAllDataAtOnce(allUsers);
-      } else {
-        // Fallback to individual month requests
-        await loadDataMonthByMonth();
+        const allUsers = await fetchUsers(
+          {
+            from: sixMonthsAgo.toISOString(),
+            to: currentDate.toISOString(),
+          },
+          `all-users-${profile?.branchId}`,
+          forceRefresh,
+        );
+
+        // If we got all data at once, process it
+        if (allUsers.length > 0) {
+          processAllDataAtOnce(allUsers);
+        } else {
+          // Fallback to individual month requests
+          await loadDataMonthByMonth(forceRefresh);
+        }
+
+        setLastUpdateTime(Date.now());
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Failed to load dashboard data. Please try again later.");
+        setDefaultData();
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Failed to load dashboard data. Please try again later.");
-      setDefaultData();
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchUsers, profile?.branchId]);
+    },
+    [fetchUsers, profile?.branchId, isPolling],
+  );
 
   // Process all data at once if API supports wide date ranges
   const processAllDataAtOnce = (allUsers: any[]) => {
@@ -937,9 +942,9 @@ export default function StaffDashboard() {
   };
 
   // Fallback method if we can't get all data at once
-  const loadDataMonthByMonth = async () => {
+  const loadDataMonthByMonth = async (forceRefresh = false) => {
     // Fetch current users
-    const currentUsers = await fetchUsers();
+    const currentUsers = await fetchUsers(undefined, undefined, forceRefresh);
     const currentCounts = countUsersByType(currentUsers);
 
     // Fetch previous month's data for growth calculation
@@ -950,6 +955,7 @@ export default function StaffDashboard() {
         to: prevMonthRange.to,
       },
       prevMonthRange.cacheKey,
+      forceRefresh,
     );
     const prevMonthCounts = countUsersByType(prevMonthUsers);
 
@@ -977,6 +983,7 @@ export default function StaffDashboard() {
           to: range.to,
         },
         range.cacheKey,
+        forceRefresh,
       );
       const counts = countUsersByType(users);
 
@@ -1109,27 +1116,44 @@ export default function StaffDashboard() {
     });
   };
 
-  // Debounce loading data when branchId changes
+  // Only load data on initial mount/branchId change and on manual refresh
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (profile?.branchId) {
-        loadData();
-      }
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(timer);
+    if (profile?.branchId) {
+      loadData(true); // Force refresh on initial load
+    }
   }, [profile?.branchId, loadData]);
+
+  // Manual refresh function (can be called from other components)
+  const refreshData = useCallback(() => {
+    loadData(true); // Force refresh
+  }, [loadData]);
+
+  // Listen for refresh events from other components
+  useEffect(() => {
+    const handleRefreshEvent = () => {
+      refreshData();
+    };
+    window.addEventListener("refresh-staff-dashboard", handleRefreshEvent);
+    return () => {
+      window.removeEventListener("refresh-staff-dashboard", handleRefreshEvent);
+    };
+  }, [refreshData]);
 
   const options: ApexOptions = {
     legend: {
       show: true,
       position: "top",
       horizontalAlign: "left",
+      fontSize: "12px",
+      itemMargin: {
+        horizontal: 8,
+        vertical: 4,
+      },
     },
     colors: ["#4b9c78", "#8155FF", "#FF9C55"],
     chart: {
       fontFamily: "Satoshi, sans-serif",
-      height: 310,
+      height: 250,
       type: "area",
       toolbar: {
         show: false,
@@ -1142,6 +1166,35 @@ export default function StaffDashboard() {
       },
     },
     responsive: [
+      {
+        breakpoint: 640,
+        options: {
+          chart: {
+            height: 200,
+          },
+          legend: {
+            fontSize: "10px",
+            itemMargin: {
+              horizontal: 4,
+              vertical: 2,
+            },
+          },
+          xaxis: {
+            labels: {
+              style: {
+                fontSize: "10px",
+              },
+            },
+          },
+          yaxis: {
+            labels: {
+              style: {
+                fontSize: "10px",
+              },
+            },
+          },
+        },
+      },
       {
         breakpoint: 1024,
         options: {
@@ -1220,15 +1273,31 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div className="py-2 px-2 flex flex-col justify-center items-center w-full m-1">
+    <div className="py-1 px-1 sm:py-2 sm:px-2 flex flex-col justify-center items-center w-full">
       {error && (
-        <div className="w-full mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+        <div className="w-full mb-2 sm:mb-4 p-2 sm:p-4 bg-red-100 text-red-700 rounded-lg text-xs sm:text-sm">
           {error}
         </div>
       )}
+
+      {/* Real-time indicator */}
+      <div className="w-full mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-2 h-2 rounded-full ${isPolling ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
+          ></div>
+          <span className="text-xs text-gray-600">
+            {isPolling ? "Updating..." : "Real-time data"}
+          </span>
+        </div>
+        <span className="text-xs text-gray-500">
+          Last updated: {new Date(lastUpdateTime).toLocaleTimeString()}
+        </span>
+      </div>
+
       <div className="flex flex-col w-full justify-between">
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3">
             <CustomCard />
             <CustomCard />
             <CustomCard />
@@ -1237,9 +1306,9 @@ export default function StaffDashboard() {
           <DataStatsDefault dataStatsList={dataStatsList} />
         )}
       </div>
-      <div className="flex flex-col w-full" style={{ marginTop: 45 }}>
+      <div className="flex flex-col w-full mt-4 sm:mt-8">
         {loading ? (
-          <div className="flex justify-center items-center h-80">
+          <div className="flex justify-center items-center h-60 sm:h-80">
             <Spinner size="lg" />
           </div>
         ) : (

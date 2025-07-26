@@ -341,11 +341,20 @@ export default function AppointmentTable() {
       if (columnKey === "email") {
         try {
           const userJson = JSON.parse(user.json || "{}");
-          const email = userJson.email || "N/A";
-
+          let email = userJson.email;
+          // Show N/A if email is null, undefined, empty, or the string 'null'
+          if (
+            !email ||
+            email.trim() === "" ||
+            email === "null" ||
+            email === null
+          ) {
+            email = "N/A";
+          }
           return <p>{email}</p>;
         } catch (error) {
           console.log(error);
+          return <p>N/A</p>;
         }
       }
       switch (columnKey) {
@@ -356,12 +365,26 @@ export default function AppointmentTable() {
               ? `${AWS_URL}/docpoc-images/user-male.jpg`
               : `${AWS_URL}/docpoc-images/user-female.jpg`;
           const avatarSrc = user.patient?.displayPicture || placeholderImage;
-
+          // Always use the latest patient name if available
+          const patientName = user.patient?.name || user.name;
+          // Truncate long names for display
+          const displayName =
+            typeof patientName === "string" && patientName.length > 18
+              ? patientName.slice(0, 15) + "..."
+              : patientName;
           return (
             <User
               avatarProps={{ radius: "lg", src: avatarSrc }}
               description={user.email}
-              name={cellValue}
+              name={
+                <span
+                  className="block max-w-[90px] sm:max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap"
+                  style={{ fontSize: "14px" }}
+                >
+                  {displayName}
+                </span>
+              }
+              title={patientName} // Tooltip with full name
             />
           );
         case "role":
@@ -829,6 +852,14 @@ export default function AppointmentTable() {
         </TableBody>
       </Table>
       {paginationContent}
+      <style jsx global>{`
+        @media (max-width: 480px) {
+          .user-name-mobile {
+            font-size: 12px !important;
+            max-width: 70px !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

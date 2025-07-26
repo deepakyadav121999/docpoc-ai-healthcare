@@ -140,17 +140,17 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   //   return `${hours}:${formattedMinutes} ${amPm}`;
   // }
 
-  const generateDateTime = (baseDate: string, time: Time) => {
-    const currentDate = new Date(baseDate); // Use the current date
-    return new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-      time && time.hour,
-      time && time.minute,
-      0,
-    ); // Convert to ISO format
-  };
+  // const generateDateTime = (baseDate: string, time: Time) => {
+  //   const currentDate = new Date(baseDate); // Use the current date
+  //   return new Date(
+  //     currentDate.getFullYear(),
+  //     currentDate.getMonth(),
+  //     currentDate.getDate(),
+  //     time && time.hour,
+  //     time && time.minute,
+  //     0,
+  //   ); // Convert to ISO format
+  // };
 
   const handleTimeChange = (
     time: Time,
@@ -165,8 +165,22 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       return;
     }
 
-    const isoTime = generateDateTime(formData.dateTime, time); // Combine selected date with time
-    setFormData({ ...formData, [field]: isoTime });
+    // Create a new date object from the selected date
+    const selectedDate = new Date(formData.dateTime);
+
+    // Set the hours and minutes from the time input
+    selectedDate.setHours(time.hour, time.minute, 0, 0);
+
+    // Update the form data with the new datetime
+    setFormData((prevData) => ({
+      ...prevData,
+      [field]: selectedDate.toISOString(),
+    }));
+
+    // Validate working hours after time change
+    if (formData.doctorId) {
+      validateWorkingHours();
+    }
   };
 
   // const handlePatientSelection = (patientId: string) => {
@@ -603,7 +617,30 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   maxDate.setMonth(minDate.getMonth() + 1);
 
   const handleDateChange = (date: string) => {
-    setFormData({ ...formData, dateTime: date });
+    // Update the date
+    setFormData((prevData) => {
+      // Get current times from existing startDateTime and endDateTime
+      const startTime = prevData.startDateTime
+        ? new Date(prevData.startDateTime)
+        : new Date();
+      const endTime = prevData.endDateTime
+        ? new Date(prevData.endDateTime)
+        : new Date();
+
+      // Create new Date objects with the new date but keeping the same time
+      const newStartDateTime = new Date(date);
+      newStartDateTime.setHours(startTime.getHours(), startTime.getMinutes());
+
+      const newEndDateTime = new Date(date);
+      newEndDateTime.setHours(endTime.getHours(), endTime.getMinutes());
+
+      return {
+        ...prevData,
+        dateTime: date,
+        startDateTime: newStartDateTime.toISOString(),
+        endDateTime: newEndDateTime.toISOString(),
+      };
+    });
   };
 
   const validateWorkingHours = () => {
