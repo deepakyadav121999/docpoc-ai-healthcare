@@ -169,49 +169,49 @@ const App: React.FC<ParentComponentProps> = ({
       <style>
         {" "}
         {`
-        /* Base styling for the button */
-        .responsive-button {
-          min-height: 55px;
-          font-size: 1rem;
-          padding: 0.8rem 1.5rem;
-        }
-
-        /* Adjustments for smaller screens */
-        @media (max-width: 768px) {
-          .responsive-button {
-            font-size: 0.9rem; /* Smaller font size */
-            padding: 0.7rem 1.2rem; /* Reduced padding */
-            min-height: 50px; /* Smaller height */
-          }
-.modal-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-height: 90vh; /* Adjust as needed */
-  overflow-y: auto;
-  width: 99%; /* Adjust as needed */
-  max-width: 800px; /* Adjust as needed */
-  // background: white;
-  border-radius: 15px;
-  padding-top:10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
-}
-
-/* Ensure the modal is scrollable */
-.modal-body {
-  max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
-  overflow-y: auto;
-}
-        }
-
-        @media (max-width: 480px) {
-          .responsive-button {
-            font-size: 0.7rem; /* Further reduce font size */
-            padding: 0.5rem 0.9rem; /* Further reduce padding */
-            min-height: 40px; /* Smaller height */
-          } 
-        }
+            /* Base styling for the button */
+              .responsive-button {
+                min-height: 55px;
+                font-size: 1rem;
+                padding: 0.8rem 1.5rem;
+              }
+      
+              /* Adjustments for smaller screens */
+              @media (max-width: 768px) {
+                .responsive-button {
+                  font-size: 0.9rem; /* Smaller font size */
+                  padding: 0.7rem 1.2rem; /* Reduced padding */
+                  min-height: 50px; /* Smaller height */
+                }
+      .modal-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-height: 90vh; /* Adjust as needed */
+        overflow-y: auto;
+        width: 97%; /* Adjust as needed */
+        max-width: 800px; /* Adjust as needed */
+        // background: white;
+        border-radius: 15px;
+        padding-top:10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);-
+      }
+      
+      /* Ensure the modal is scrollable */
+      .modal-body {
+        max-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+        overflow-y: auto;
+      }
+              }
+      
+              @media (max-width: 480px) {
+                .responsive-button {
+                  font-size: 0.7rem; /* Further reduce font size */
+                  padding: 0.5rem 0.9rem; /* Further reduce padding */
+                  min-height: 40px; /* Smaller height */
+                } 
+              }
 
         @media (min-width: 640px) and (max-width: 768px) {
   .modal-content {

@@ -163,6 +163,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
       missingFields.push("Gender");
     }
 
+    // Validate phone number length
+    if (formData.phone && formData.phone.length !== 10) {
+      setModalMessage({
+        success: "",
+        error: "Phone number must be exactly 10 digits.",
+      });
+      onOpen();
+      return;
+    }
+
     if (missingFields.length > 0) {
       setModalMessage({
         success: "",

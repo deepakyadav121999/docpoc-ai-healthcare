@@ -86,6 +86,16 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
       }
     });
 
+    // Validate phone number length
+    if (formData.phone && formData.phone.length !== 10) {
+      setModalMessage({
+        success: "",
+        error: "Phone number must be exactly 10 digits.",
+      });
+      onOpen();
+      return;
+    }
+
     if (missingFields.length > 0) {
       setModalMessage({
         success: "",
@@ -553,7 +563,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 labelPlacement="outside"
                 variant="bordered"
                 color={TOOL_TIP_COLORS.secondary}
-                placeholder="Address (Optional)"
+                placeholder="Address (Optional)
+                "
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })

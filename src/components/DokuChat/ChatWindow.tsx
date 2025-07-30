@@ -1,4 +1,4 @@
-import "regenerator-runtime/runtime";
+// import "regenerator-runtime/runtime";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

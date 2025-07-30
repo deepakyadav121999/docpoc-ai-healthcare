@@ -153,7 +153,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   // };
 
   const handleTimeChange = (
-    time: Time,
+    time: Time | null,
     field: "startDateTime" | "endDateTime",
   ) => {
     if (!formData.dateTime) {
@@ -162,6 +162,15 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         error: "Please select a date before setting the time.",
       });
       onOpen();
+      return;
+    }
+
+    // If time is null (user cleared the time), clear the field
+    if (!time) {
+      setFormData((prevData) => ({
+        ...prevData,
+        [field]: "",
+      }));
       return;
     }
 
@@ -617,6 +626,16 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   maxDate.setMonth(minDate.getMonth() + 1);
 
   const handleDateChange = (date: string) => {
+    // If date is empty (user cleared the date), clear date/time fields
+    if (!date) {
+      setFormData((prevData) => ({
+        ...prevData,
+        dateTime: "",
+        startDateTime: "",
+        endDateTime: "",
+      }));
+      return;
+    }
     // Update the date
     setFormData((prevData) => {
       // Get current times from existing startDateTime and endDateTime
@@ -775,7 +794,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
             <div className="p-0.5 sm:4.5">
               {/* Date Input */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 style={{ marginTop: 20 }}
               >
                 <Input
@@ -804,7 +823,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Time Inputs */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <TimeInput
@@ -848,7 +867,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Time Warning */}
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col w-full mb-4 sm:mb-2"
+                style={{ marginTop: 20 }}
+              >
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
                     {timeWarning}
@@ -858,7 +880,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Remarks */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Textarea
@@ -893,7 +915,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Appointment Type */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
@@ -933,7 +955,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Appointment Status */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
@@ -972,7 +994,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
 
               {/* Patient and Doctor Selection */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 {/* <Autocomplete
@@ -1081,7 +1103,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
               </div>
 
               {/* Time Warning (duplicate - keeping as per original) */}
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col w-full mb-4 sm:mb-2"
+                style={{ marginTop: 20 }}
+              >
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
                     {timeWarning}
@@ -1183,6 +1208,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
             `}
         </style>
         <Modal
+          backdrop="opaque"
           isOpen={showAddPatientModal}
           onClose={() => setShowAddPatientModal(false)}
           style={{
@@ -1198,7 +1224,9 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
           }}
         >
           <ModalContent className="modal-content">
-            <ModalHeader>Create New Patient</ModalHeader>
+            <ModalHeader className="flex flex-col gap-0.5">
+              Create New Patient
+            </ModalHeader>
             <ModalBody>
               <AddNewPatient onPatientAdded={handleNewPatientCreated} />
             </ModalBody>

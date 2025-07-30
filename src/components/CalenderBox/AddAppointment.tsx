@@ -880,7 +880,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               {/* <div className="mb-4.5 flex flex-col gap-4.5 xl:flex-row"></div> */}
               {/* <div className="flex flex-col w-full"></div> */}
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Input
@@ -919,7 +919,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 )}
               </div>
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <TimeInput
@@ -971,7 +971,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 )} */}
               </div>
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Textarea
@@ -1002,7 +1002,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 />
               </div>
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
@@ -1038,7 +1038,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               </div>
 
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 <Autocomplete
@@ -1073,7 +1073,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 </Autocomplete>
               </div>
               <div
-                className="sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
+                className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
                 {/* <Autocomplete
@@ -1179,7 +1179,10 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   )}
                 </Autocomplete>
               </div>
-              <div className="flex flex-col w-full" style={{ marginTop: 20 }}>
+              <div
+                className="flex flex-col w-full mb-4 sm:mb-2"
+                style={{ marginTop: 20 }}
+              >
                 {timeWarning && (
                   <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">
                     <p className=" text-xs sm:text-sm md:text-lg  ">
@@ -1191,7 +1194,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               </div>
 
               <div
-                className="flex flex-col w-full"
+                className="flex flex-col w-full mb-4 sm:mb-2"
                 // style={{ marginTop: 20 }}
               >
                 <label>
@@ -1207,7 +1210,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 </Checkbox>
               </div>
             </div>
-            <div className="flex justify-center mt-4">
+            <div className="flex justify-center mt-4 mb-4 sm:mb-2">
               <button
                 type="submit"
                 // onPress={onOpen}
