@@ -10,11 +10,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@internationalized/date": "^3.5.4",
-    "@mui/material": "^7.2.0",
-    "@mui/x-date-pickers": "^8.9.0",
     "@nextui-org/button": "^2.0.33",
     "@nextui-org/calendar": "^2.0.6",
     "@nextui-org/date-input": "^2.1.0",

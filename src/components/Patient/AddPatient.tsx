@@ -5,16 +5,15 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
-  DatePicker,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import CustomDatePicker from "./CustomDatePicker";
 
 import { useDisclosure } from "@nextui-org/react";
 
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { TOOL_TIP_COLORS } from "@/constants";
-import { parseDate, today } from "@internationalized/date";
 interface ModalMessage {
   success?: string;
   error?: string;
@@ -94,16 +93,6 @@ const AddPatient: React.FC<AddPatientProps> = ({
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     });
-
-    // Validate phone number length
-    if (formData.phone && formData.phone.length !== 10) {
-      setModalMessage({
-        success: "",
-        error: "Phone number must be exactly 10 digits.",
-      });
-      onOpen();
-      return;
-    }
 
     if (missingFields.length > 0) {
       setModalMessage({
@@ -299,7 +288,12 @@ const AddPatient: React.FC<AddPatientProps> = ({
         .nextui-autocomplete-input {
           font-size: 16px !important;
         }
-        .nextui-date-picker-input {
+        /* Custom DatePicker styles */
+        .custom-datepicker {
+          width: 100% !important;
+        }
+
+        .custom-datepicker input {
           font-size: 16px !important;
           min-height: 44px !important;
           touch-action: manipulation;
@@ -530,33 +524,32 @@ const AddPatient: React.FC<AddPatientProps> = ({
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-                {/* Date of Birth - use NextUI DatePicker */}
-                <DatePicker
-                  showMonthAndYearPickers
-                  label="Date of Birth"
-                  labelPlacement="outside"
-                  color={TOOL_TIP_COLORS.secondary}
-                  variant="bordered"
-                  className="w-full"
-                  classNames={{
-                    input: [
-                      "nextui-date-picker-input",
-                      "text-black dark:text-white",
-                    ],
-                  }}
-                  value={formData.dob ? parseDate(formData.dob) : undefined}
-                  onChange={(date) => {
-                    if (date) {
+                {/* Date of Birth - use Custom DatePicker */}
+                <div className="w-full">
+                  <label className="block text-sm font-small text-purple-500  mb-0.5">
+                    Date of Birth
+                  </label>
+                  <CustomDatePicker
+                    value={formData.dob ? new Date(formData.dob) : null}
+                    onChange={(date) => {
+                      if (!date) return; // Only update if a date is actually selected
+                      // Check if date is not in the future
+                      const today = new Date();
+                      today.setHours(23, 59, 59, 999); // End of today
+                      if (date > today) {
+                        return; // Don't allow future dates
+                      }
                       // Format as YYYY-MM-DD
-                      const d = date.toDate("UTC");
-                      const yyyy = d.getUTCFullYear();
-                      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-                      const dd = String(d.getUTCDate()).padStart(2, "0");
+                      const yyyy = date.getFullYear();
+                      const mm = String(date.getMonth() + 1).padStart(2, "0");
+                      const dd = String(date.getDate()).padStart(2, "0");
                       setFormData({ ...formData, dob: `${yyyy}-${mm}-${dd}` });
-                    }
-                  }}
-                  maxValue={today("UTC")}
-                />
+                    }}
+                    maxDate={new Date()}
+                    placeholder="Select Date of Birth"
+                    className="w-full hover:border-purple-600 focus:border-purple-600"
+                  />
+                </div>
               </div>
 
               <Textarea
@@ -574,7 +567,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 labelPlacement="outside"
                 variant="bordered"
                 value={formData.address}
-                placeholder="Address(Optional)"
+                placeholder="Address (Optional)"
                 color={TOOL_TIP_COLORS.secondary}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })

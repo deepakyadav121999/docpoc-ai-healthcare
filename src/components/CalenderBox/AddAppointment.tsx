@@ -4,7 +4,7 @@ import {
   AutocompleteItem,
   Button,
   Checkbox,
-  Input,
+  // Input,
   Modal,
   ModalBody,
   ModalContent,
@@ -13,7 +13,10 @@ import {
   Textarea,
   TimeInput,
   useDisclosure,
+  DatePicker,
 } from "@nextui-org/react";
+import { today, CalendarDate } from "@internationalized/date";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { TOOL_TIP_COLORS } from "@/constants";
@@ -782,6 +785,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({
     setShowAddPatientModal(false);
     fetchAppointmentTypes();
   };
+
+  const parseDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new CalendarDate(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate(),
+    );
+  };
   return (
     <div className="  grid grid-cols-1 gap-9  ">
       <style jsx global>{`
@@ -883,7 +895,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
-                <Input
+                {/* <Input
                   classNames={{
                     input: [
                       "text-black", // Light mode text color
@@ -906,6 +918,34 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   errorMessage={
                     dateTimeErrors.pastDate ? "Cannot select a past date" : ""
                   }
+                /> */}
+
+                <DatePicker
+                  label="Appointment Date"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  color={TOOL_TIP_COLORS.secondary}
+                  isDisabled={!edit}
+                  value={
+                    formData.dateTime ? parseDate(formData.dateTime) : null
+                  }
+                  onChange={(date) => {
+                    if (!date) return;
+                    const formattedDate = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
+                    handleDateChange(formattedDate);
+                  }}
+                  isInvalid={dateTimeErrors.pastDate}
+                  errorMessage={
+                    dateTimeErrors.pastDate ? "Cannot select a past date" : ""
+                  }
+                  minValue={today("UTC")} // This ensures users can't select dates before today
+                  classNames={{
+                    input: ["text-black", "dark:text-white"],
+                    inputWrapper: [
+                      "group-data-[has-value=true]:text-black",
+                      "dark:group-data-[has-value=true]:text-white",
+                    ],
+                  }}
                 />
               </div>
               <div className="flex flex-col w-full">

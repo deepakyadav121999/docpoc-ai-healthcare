@@ -17,8 +17,6 @@ import { RootState } from "../store";
 import { AppDispatch } from "../store";
 import { AuthProvider } from "@/components/auth-provider";
 import { ChatProvider } from "@/components/Context/ChatContext";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 // Auth Version Configuration
 // Set to 'v1' for old auth pages, 'v2' for new modern auth pages
@@ -231,11 +229,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <Provider store={store}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <ChatProvider>
-            <RootLayout>{children}</RootLayout>
-          </ChatProvider>
-        </LocalizationProvider>
+        <ChatProvider>
+          <RootLayout>{children}</RootLayout>
+        </ChatProvider>
       </Provider>
     </AuthProvider>
   );

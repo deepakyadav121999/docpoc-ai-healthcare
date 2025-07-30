@@ -19,9 +19,20 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(value || new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(value);
+  const [inputValue, setInputValue] = useState(
+    value
+      ? (() => {
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, "0");
+          const day = String(value.getDate()).padStart(2, "0");
+          return `${day}/${month}/${year}`;
+        })()
+      : "",
+  );
   const [view, setView] = useState<"calendar" | "year" | "month">("calendar");
   const [yearRange, setYearRange] = useState<number[]>([]);
   const [monthRange, setMonthRange] = useState<number[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,11 +84,81 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     setMonthRange(months);
   }, []);
 
-  const formatDate = (date: Date): string => {
+  // const formatDate = (date: Date): string => {
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, "0");
+  //   const day = String(date.getDate()).padStart(2, "0");
+  //   return `${year}-${month}-${day}`;
+  // };
+
+  const formatDateDDMMYYYY = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${day}/${month}/${year}`;
+  };
+
+  const parseManualDate = (dateString: string): Date | null => {
+    // Handle DD/MM/YYYY format
+    const ddMMyyyyRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = dateString.match(ddMMyyyyRegex);
+
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1; // Month is 0-indexed
+      const year = parseInt(match[3], 10);
+
+      const date = new Date(year, month, day);
+
+      // Validate the date
+      if (
+        date.getDate() === day &&
+        date.getMonth() === month &&
+        date.getFullYear() === year
+      ) {
+        return date;
+      }
+    }
+
+    // Also handle YYYY-MM-DD format for compatibility
+    const yyyyMMddRegex = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+    const match2 = dateString.match(yyyyMMddRegex);
+
+    if (match2) {
+      const year = parseInt(match2[1], 10);
+      const month = parseInt(match2[2], 10) - 1;
+      const day = parseInt(match2[3], 10);
+
+      const date = new Date(year, month, day);
+
+      if (
+        date.getDate() === day &&
+        date.getMonth() === month &&
+        date.getFullYear() === year
+      ) {
+        return date;
+      }
+    }
+
+    return null;
+  };
+
+  const handleManualDateInput = (value: string) => {
+    // Allow empty input
+    if (!value.trim()) {
+      setSelectedDate(null);
+      onChange(null);
+      return;
+    }
+
+    const parsedDate = parseManualDate(value);
+    if (parsedDate && parsedDate <= maxDate) {
+      setSelectedDate(parsedDate);
+      setCurrentDate(parsedDate);
+      setInputValue(formatDateDDMMYYYY(parsedDate));
+      onChange(parsedDate);
+      // Don't close picker immediately - let user see the result
+    }
   };
 
   const getDaysInMonth = (date: Date): number => {
@@ -111,9 +192,11 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
     setSelectedDate(date);
     setCurrentDate(date);
+    setInputValue(formatDateDDMMYYYY(date));
     onChange(date);
     setIsOpen(false);
     setView("calendar");
+    setIsTyping(false);
   };
 
   const handleMonthChange = (direction: "prev" | "next") => {
@@ -169,13 +252,39 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   return (
     <div className={`relative ${className}`} ref={pickerRef}>
       {/* Real input for focus/blur management */}
+
       <input
         ref={inputRef}
-        className={`w-full h-11 px-3 py-2 border border-gray-300 dark:border-dark-4 rounded-lg bg-white dark:bg-gray-dark text-gray-900 dark:text-white cursor-pointer hover:border-purple-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors${isOpen ? " ring-2 ring-purple-500" : ""}`}
-        value={selectedDate ? formatDate(selectedDate) : ""}
-        placeholder={placeholder}
-        readOnly
-        onClick={() => setIsOpen(!isOpen)}
+        placeholder="DD/MM/YYYY"
+        className={`w-full px-3 py-2 border border-gray-400 rounded-lg bg-white dark:bg-gray-dark text-gray-900 dark:text-white cursor-pointer hover:border-purple-600 focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition-colors text-base outline-none${isOpen ? " ring-2 ring-purple-600" : ""}`}
+        style={{
+          fontSize: "16px",
+          minHeight: "40px",
+          height: "40px",
+          touchAction: "manipulation",
+          borderColor: isOpen ? "#9333ea" : "#d1d5db",
+          boxShadow: isOpen ? "0 0 0 1px #9333ea" : undefined,
+          outline: "none",
+          borderWidth: "0.5px",
+        }}
+        value={inputValue}
+        // placeholder={placeholder}
+        readOnly={false}
+        onFocus={() => {
+          setIsTyping(false);
+          setIsOpen(true);
+        }}
+        onChange={(e) => {
+          setIsTyping(true);
+          setInputValue(e.target.value);
+          handleManualDateInput(e.target.value);
+        }}
+        onBlur={() => {
+          // Only close if not clicking on calendar
+          if (!isTyping) {
+            setTimeout(() => setIsOpen(false), 200);
+          }
+        }}
         aria-label={placeholder}
       />
       {/* Calendar icon overlay */}
@@ -200,12 +309,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-dark-4 rounded-lg shadow-lg dark:shadow-[0_4px_32px_rgba(0,0,0,0.7)] z-50">
+        <div className="absolute top-full left-0 mt-1 w-62 sm:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-dark-4 rounded-lg shadow-lg dark:shadow-[0_4px_32px_rgba(0,0,0,0.7)] z-50">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-dark-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <button
+                  type="button"
                   onClick={() => setView("month")}
                   onMouseDown={(e) => e.preventDefault()}
                   className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-2 rounded-md transition-colors"
@@ -213,6 +323,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                   {months[currentDate.getMonth()]}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setView("year")}
                   onMouseDown={(e) => e.preventDefault()}
                   className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-2 rounded-md transition-colors"
@@ -222,6 +333,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               </div>
               <div className="flex items-center space-x-1">
                 <button
+                  type="button"
                   onClick={() =>
                     view === "calendar"
                       ? handleMonthChange("prev")
@@ -244,6 +356,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                   </svg>
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     view === "calendar"
                       ? handleMonthChange("next")
@@ -291,10 +404,11 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                 <div className="grid grid-cols-7 gap-1">
                   {generateCalendarDays(currentDate).map((date, index) => (
                     <button
+                      type="button"
                       key={index}
                       onClick={() => date && handleDateSelect(date)}
                       disabled={!date || isDisabled(date)}
-                      className={`
+                      className={` 
                         w-8 h-8 text-sm rounded-md transition-colors
                         ${!date ? "invisible" : ""}
                         ${isToday(date!) ? "bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 font-semibold" : ""}
@@ -316,6 +430,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               <div className="grid grid-cols-3 gap-2">
                 {monthRange.map((month) => (
                   <button
+                    type="button"
                     key={month}
                     onClick={() => handleMonthSelect(month)}
                     onMouseDown={(e) => e.preventDefault()}
@@ -335,6 +450,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               <div className="grid grid-cols-4 gap-2 max-h-60 overflow-y-auto">
                 {yearRange.map((year) => (
                   <button
+                    type="button"
                     key={year}
                     onClick={() => handleYearSelect(year)}
                     onMouseDown={(e) => e.preventDefault()}
