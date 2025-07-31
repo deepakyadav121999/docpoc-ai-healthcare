@@ -5,16 +5,15 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
-  DatePicker,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 import { useDisclosure } from "@nextui-org/react";
-
+import CustomDatePicker from "./CustomDatePicker";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { TOOL_TIP_COLORS } from "@/constants";
-import { parseDate, today } from "@internationalized/date";
+// import { parseDate, today } from "@internationalized/date";
 
 interface AddPatientProps {
   onPatientAdded: () => void;
@@ -85,6 +84,16 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         missingFields.push(key.charAt(0).toUpperCase() + key.slice(1));
       }
     });
+
+    // Validate phone number length
+    if (formData.phone && formData.phone.length !== 10) {
+      setModalMessage({
+        success: "",
+        error: "Phone number must be exactly 10 digits.",
+      });
+      onOpen();
+      return;
+    }
 
     if (missingFields.length > 0) {
       setModalMessage({
@@ -509,33 +518,32 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-                {/* Date of Birth - use NextUI DatePicker */}
-                <DatePicker
-                  showMonthAndYearPickers
-                  label="Date of Birth"
-                  labelPlacement="outside"
-                  color={TOOL_TIP_COLORS.secondary}
-                  variant="bordered"
-                  className="w-full"
-                  classNames={{
-                    input: [
-                      "nextui-date-picker-input",
-                      "text-black dark:text-white",
-                    ],
-                  }}
-                  value={formData.dob ? parseDate(formData.dob) : undefined}
-                  onChange={(date) => {
-                    if (date) {
+                {/* Date of Birth - use Custom DatePicker */}
+                <div className="w-full">
+                  <label className="block text-sm font-small text-purple-500  mb-0.5">
+                    Date of Birth
+                  </label>
+                  <CustomDatePicker
+                    value={formData.dob ? new Date(formData.dob) : null}
+                    onChange={(date) => {
+                      if (!date) return;
+                      // Check if date is not in the future
+                      const today = new Date();
+                      today.setHours(23, 59, 59, 999);
+                      if (date > today) {
+                        return;
+                      }
                       // Format as YYYY-MM-DD
-                      const d = date.toDate("UTC");
-                      const yyyy = d.getUTCFullYear();
-                      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-                      const dd = String(d.getUTCDate()).padStart(2, "0");
+                      const yyyy = date.getFullYear();
+                      const mm = String(date.getMonth() + 1).padStart(2, "0");
+                      const dd = String(date.getDate()).padStart(2, "0");
                       setFormData({ ...formData, dob: `${yyyy}-${mm}-${dd}` });
-                    }
-                  }}
-                  maxValue={today("UTC")}
-                />
+                    }}
+                    maxDate={new Date()}
+                    placeholder="Select Date of Birth"
+                    className="w-full hover:border-purple-600 focus:border-purple-600"
+                  />
+                </div>
               </div>
 
               <Textarea
@@ -553,7 +561,8 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 labelPlacement="outside"
                 variant="bordered"
                 color={TOOL_TIP_COLORS.secondary}
-                placeholder="Address (Optional)"
+                placeholder="Address (Optional)
+                "
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })

@@ -805,7 +805,7 @@ export const AppointmentCalendar: React.FC = () => {
                     "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
                 }}
               >
-                <ModalContent>
+                <ModalContent className="mt-4 sm:mt-8">
                   {(onClose) => (
                     <>
                       <ModalHeader className="flex flex-col gap-1">

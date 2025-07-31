@@ -1068,8 +1068,8 @@ const Clinic = () => {
                 )}
                 {!isHospitalAvailable
                   ? isButtonLoading
-                    ? "Creating Hospital..."
-                    : "Create Hospital"
+                    ? "Creating Clinic..."
+                    : "Create Clinic"
                   : isButtonLoading
                     ? "Saving Changes..."
                     : "Save Changes"}

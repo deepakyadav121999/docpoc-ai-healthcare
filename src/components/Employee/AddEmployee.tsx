@@ -7,7 +7,7 @@ import {
   AutocompleteItem,
   // Spinner,
   TimeInput,
-  DatePicker,
+  // DatePicker,
 } from "@nextui-org/react";
 import { useState } from "react";
 import axios from "axios";
@@ -24,10 +24,12 @@ import { useDisclosure } from "@nextui-org/react";
 import { SVGIconProvider } from "@/constants/svgIconProvider";
 // import { Time } from "@internationalized/date";
 import { useEffect } from "react";
-import { today } from "@internationalized/date";
+// import { today } from "@internationalized/date";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import CustomDatePicker from "../Patient/CustomDatePicker";
+
 interface ModalMessage {
   success?: string;
   error?: string;
@@ -97,14 +99,14 @@ const AddUsers: React.FC<AddUsersProps> = ({
     setModalMessage({ success: "", error: "" });
     internalClose();
   };
-  const handleDobChange = (value: string) => {
-    const updatedJson = JSON.parse(formData.json);
-    updatedJson.dob = value; // Update the dob field in the JSON object
-    setFormData({
-      ...formData,
-      json: JSON.stringify(updatedJson), // Convert back to JSON string
-    });
-  };
+  // const handleDobChange = (value: string) => {
+  //   const updatedJson = JSON.parse(formData.json);
+  //   updatedJson.dob = value; // Update the dob field in the JSON object
+  //   setFormData({
+  //     ...formData,
+  //     json: JSON.stringify(updatedJson), // Convert back to JSON string
+  //   });
+  // };
 
   // const convertTo12HourFormat = (time: string): string => {
   //   const [hours, minutes] = time.split(":").map(Number);
@@ -161,6 +163,16 @@ const AddUsers: React.FC<AddUsersProps> = ({
     }
     if (!formData.gender) {
       missingFields.push("Gender");
+    }
+
+    // Validate phone number length
+    if (formData.phone && formData.phone.length !== 10) {
+      setModalMessage({
+        success: "",
+        error: "Phone number must be exactly 10 digits.",
+      });
+      onOpen();
+      return;
     }
 
     if (missingFields.length > 0) {
@@ -542,7 +554,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
               </div>
 
               <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5 xl:flex-row">
-                <DatePicker
+                {/* <DatePicker
                   color={TOOL_TIP_COLORS.secondary}
                   label="Date of Birth"
                   labelPlacement="outside"
@@ -566,7 +578,31 @@ const AddUsers: React.FC<AddUsersProps> = ({
                       handleDobChange(formattedDate);
                     }
                   }}
-                />
+                /> */}
+
+                <div className="w-full">
+                  <label className="block text-sm font-small text-purple-500 mb-0.5">
+                    Date of Birth
+                  </label>
+                  <CustomDatePicker
+                    value={
+                      JSON.parse(formData.json).dob
+                        ? new Date(JSON.parse(formData.json).dob)
+                        : null
+                    }
+                    onChange={(date) => {
+                      if (!date) return;
+                      const yyyy = date.getFullYear();
+                      const mm = String(date.getMonth() + 1).padStart(2, "0");
+                      const dd = String(date.getDate()).padStart(2, "0");
+                      const formattedDate = `${yyyy}-${mm}-${dd}`;
+                      handleJsonUpdate("dob", formattedDate);
+                    }}
+                    maxDate={new Date()}
+                    placeholder="Select Date of Birth"
+                    className="w-full hover:border-purple-600 focus:border-purple-600"
+                  />
+                </div>
               </div>
               <div className="mb-2.5 sm:mb-4.5 flex flex-col gap-2.5 sm:gap-4.5">
                 <Autocomplete

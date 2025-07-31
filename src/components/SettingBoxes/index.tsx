@@ -979,7 +979,7 @@ const SettingBoxes = () => {
                         type="text"
                         name="name"
                         id="fullName"
-                        placeholder="name"
+                        placeholder="Name"
                         value={formData.name || ""}
                         onChange={handleInputChange}
                       />

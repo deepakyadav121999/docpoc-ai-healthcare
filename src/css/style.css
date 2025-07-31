@@ -572,3 +572,32 @@ input[type="search"]::-webkit-search-cancel-button {
 .time {
   font-size: 32px;
 }
+
+/* Force purple border for MUI OutlinedInput in AddPatient modal */
+.add-patient-datepicker .MuiOutlinedInput-root {
+  border-radius: 7px !important;
+  min-height: 44px !important;
+  font-size: 16px !important;
+  color: #000 !important;
+  background: #fff !important;
+}
+
+.add-patient-datepicker .MuiOutlinedInput-notchedOutline {
+  border-color: #9333ea !important;
+}
+
+.add-patient-datepicker
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #9333ea !important;
+  box-shadow: 0 0 0 2px #9333ea40 !important;
+}
+
+.add-patient-datepicker .MuiInputLabel-root {
+  color: #9333ea !important;
+  font-size: 16px !important;
+}
+
+.add-patient-datepicker .MuiInputLabel-root.Mui-focused {
+  color: #9333ea !important;
+}
