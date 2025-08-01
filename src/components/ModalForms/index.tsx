@@ -1,5 +1,7 @@
 "use client";
-import { DatePicker, Spinner } from "@nextui-org/react";
+import { Spinner } from "@nextui-org/react";
+import CustomAppointmentDatePicker from "../BookingCalendar/CustomAppointmentDatePicker";
+import CustomDatePicker from "../Patient/CustomDatePicker";
 import React, { useEffect, useState, useRef } from "react";
 import {
   Card,
@@ -32,7 +34,7 @@ import {
   // getLocalTimeZone,
   // now,
   parseTime,
-  today,
+  // today,
 } from "@internationalized/date";
 
 // import ToolTip from "../Tooltip";
@@ -45,7 +47,7 @@ import { VisitHistoryTable } from "../Patient/VisitHistoryTable";
 import axios from "axios";
 import { Time } from "@internationalized/date";
 import { useDropzone } from "react-dropzone";
-import { parseDate } from "@internationalized/date";
+// import { parseDate } from "@internationalized/date";
 // import DocumentList from "../Patient/DocumentList";
 import Cropper, { Area } from "react-easy-crop";
 
@@ -1604,21 +1606,20 @@ export default function ModalForm(props: {
                           </p>
                         )}
                         {editAppointmentDate && (
-                          <DatePicker
-                            showMonthAndYearPickers
-                            color={TOOL_TIP_COLORS.secondary}
+                          <CustomAppointmentDatePicker
                             label="Appointment Date"
                             labelPlacement="outside"
                             variant="bordered"
-                            value={parseDate(
-                              tempDate.toISOString().split("T")[0],
-                            )}
+                            color="secondary"
+                            isRequired={false}
+                            disabled={false}
+                            value={tempDate}
                             onChange={(date) => {
-                              const newDate = new Date(date.toString());
-                              setTempDate(newDate);
+                              if (date) {
+                                setTempDate(date);
+                              }
                             }}
-                            className="w-full"
-                            minValue={today("UTC")}
+                            placeholder="DD/MM/YYYY"
                           />
                         )}
                       </div>
@@ -2709,34 +2710,28 @@ export default function ModalForm(props: {
                             <p className="mb-1">
                               <strong>Date of Birth:</strong>
                             </p>
-                            <DatePicker
-                              showMonthAndYearPickers
-                              label="Select Date of Birth"
-                              value={(() => {
-                                if (!patientDob) return undefined;
-                                try {
-                                  const parsed = parseDate(patientDob);
-                                  const now = today("UTC");
-                                  if (parsed.compare(now) > 0) return now;
-                                  return parsed;
-                                } catch (err) {
-                                  console.log(err);
-
-                                  // If parsing fails (invalid/future date), fallback to today
-                                  return today("UTC");
-                                }
-                              })()}
+                            <CustomDatePicker
+                              placeholder="DD/MM/YYYY"
+                              value={patientDob ? new Date(patientDob) : null}
                               onChange={(date) => {
                                 if (date) {
-                                  const formattedDate = date.toString();
+                                  // Create date in local timezone to avoid timezone issues
+                                  const year = date.getFullYear();
+                                  const month = String(
+                                    date.getMonth() + 1,
+                                  ).padStart(2, "0");
+                                  const day = String(date.getDate()).padStart(
+                                    2,
+                                    "0",
+                                  );
+                                  const formattedDate = `${year}-${month}-${day}`;
                                   setPatientDob(formattedDate);
+                                } else {
+                                  setPatientDob("");
                                 }
                               }}
-                              className="w-full text-xs"
-                              color={TOOL_TIP_COLORS.secondary}
-                              variant="bordered"
-                              labelPlacement="outside"
-                              maxValue={today("UTC")}
+                              maxDate={new Date()}
+                              className="w-full"
                             />
                           </>
                         )}
@@ -4362,28 +4357,29 @@ export default function ModalForm(props: {
                                 <strong>Date Of Birth:</strong>
                               </p>
                               <div className="flex items-center w-full mt-1 mb-2">
-                                <DatePicker
-                                  showMonthAndYearPickers
-                                  label="Select Date of Birth"
+                                <CustomDatePicker
+                                  placeholder="DD/MM/YYYY"
                                   value={
-                                    employeeDOB
-                                      ? parseDate(employeeDOB)
-                                      : undefined
+                                    employeeDOB ? new Date(employeeDOB) : null
                                   }
                                   onChange={(date) => {
                                     if (date) {
-                                      const formattedDate = date.toString();
+                                      // Create date in local timezone to avoid timezone issues
+                                      const year = date.getFullYear();
+                                      const month = String(
+                                        date.getMonth() + 1,
+                                      ).padStart(2, "0");
+                                      const day = String(
+                                        date.getDate(),
+                                      ).padStart(2, "0");
+                                      const formattedDate = `${year}-${month}-${day}`;
                                       setEmployeeDOB(formattedDate);
+                                    } else {
+                                      setEmployeeDOB("");
                                     }
                                   }}
-                                  className="w-full text-xs"
-                                  color={TOOL_TIP_COLORS.secondary}
-                                  variant="bordered"
-                                  labelPlacement="outside"
-                                  maxValue={today("UTC")}
-                                  classNames={{
-                                    input: ["nextui-date-picker-input"],
-                                  }}
+                                  maxDate={new Date()}
+                                  className="w-full"
                                 />
                               </div>
                             </>
