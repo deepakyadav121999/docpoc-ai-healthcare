@@ -8,7 +8,7 @@ import {
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import CustomDatePicker from "./CustomDatePicker";
+import CustomDatePicker from "../CustomComponent/CustomDatePicker";
 
 import { useDisclosure } from "@nextui-org/react";
 

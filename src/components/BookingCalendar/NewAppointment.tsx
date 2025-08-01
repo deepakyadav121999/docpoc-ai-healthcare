@@ -24,7 +24,7 @@ import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import AddNewPatient from "../Patient/AddNewPatient";
-import CustomAppointmentDatePicker from "./CustomAppointmentDatePicker";
+import CustomAppointmentDatePicker from "../CustomComponent/CustomAppointmentDatePicker";
 
 interface AutocompleteItem {
   value: string;

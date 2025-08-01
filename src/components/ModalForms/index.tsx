@@ -1,7 +1,7 @@
 "use client";
 import { Spinner } from "@nextui-org/react";
-import CustomAppointmentDatePicker from "../BookingCalendar/CustomAppointmentDatePicker";
-import CustomDatePicker from "../Patient/CustomDatePicker";
+import CustomAppointmentDatePicker from "../CustomComponent/CustomAppointmentDatePicker";
+import CustomDatePicker from "../CustomComponent/CustomDatePicker";
 import React, { useEffect, useState, useRef } from "react";
 import {
   Card,

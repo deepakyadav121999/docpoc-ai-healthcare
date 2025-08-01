@@ -28,7 +28,7 @@ import { useEffect } from "react";
 import EnhancedModal from "../common/Modal/EnhancedModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-import CustomDatePicker from "../Patient/CustomDatePicker";
+import CustomDatePicker from "../CustomComponent/CustomDatePicker";
 
 interface ModalMessage {
   success?: string;

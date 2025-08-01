@@ -15,7 +15,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 // Removed unused imports since we're using CustomAppointmentDatePicker
-import CustomAppointmentDatePicker from "../BookingCalendar/CustomAppointmentDatePicker";
+import CustomAppointmentDatePicker from "../CustomComponent/CustomAppointmentDatePicker";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
