@@ -13,9 +13,9 @@ import {
   Textarea,
   TimeInput,
   useDisclosure,
-  DatePicker,
 } from "@nextui-org/react";
-import { today, CalendarDate } from "@internationalized/date";
+// Removed unused imports since we're using CustomAppointmentDatePicker
+import CustomAppointmentDatePicker from "../BookingCalendar/CustomAppointmentDatePicker";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -153,7 +153,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
         // Ensure end time is after start time
         if (endTime <= startTime) {
           setTimeWarning("End time must be after start time");
-          return false;
+          // Don't block the appointment, just show warning
         }
       }
     }
@@ -165,7 +165,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   //   setFormData({ ...formData, dateTime: date });
   // };
 
-  const handleDateChange = (date: string) => {
+  const handleDateChange = (date: Date | null) => {
+    if (!date) {
+      setFormData({ ...formData, dateTime: "" });
+      setDateTimeErrors((prev) => ({ ...prev, pastDate: false }));
+      return;
+    }
+
     const selectedDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -176,7 +182,9 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       setDateTimeErrors((prev) => ({ ...prev, pastDate: false }));
     }
 
-    setFormData({ ...formData, dateTime: date });
+    // Format date as YYYY-MM-DD for consistency with existing logic
+    const formattedDate = selectedDate.toISOString().split("T")[0];
+    setFormData({ ...formData, dateTime: formattedDate });
   };
 
   const generateDateTime = (baseDate: string, time: Time) => {
@@ -410,11 +418,6 @@ const AddAppointment: React.FC<AddUsersProps> = ({
         setModalMessage({
           success: "",
           error: "Cannot book appointment at a past time",
-        });
-      } else if (timeWarning) {
-        setModalMessage({
-          success: "",
-          error: timeWarning,
         });
       }
       setSavingData(false);
@@ -786,14 +789,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
     fetchAppointmentTypes();
   };
 
-  const parseDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new CalendarDate(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-    );
-  };
+  // Remove parseDate function as it's no longer needed with CustomAppointmentDatePicker
   return (
     <div className="  grid grid-cols-1 gap-9  ">
       <style jsx global>{`
@@ -895,58 +891,38 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 className="mb-4 sm:mb-1.5 md:mb-2.5 lg:mb-3 flex flex-col gap-4.5 xl:flex-row"
                 // style={{ marginTop: 20 }}
               >
-                {/* <Input
-                  classNames={{
-                    input: [
-                      "text-black", // Light mode text color
-                      "dark:text-white", // Dark mode text color
-                    ],
-                    inputWrapper: [
-                      "group-data-[has-value=true]:text-black", // Light mode with value
-                      "dark:group-data-[has-value=true]:text-white", // Dark mode with value
-                    ],
-                  }}
-                  label="Appointment Date"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  isDisabled={!edit}
-                  type="date"
-                  value={formData.dateTime || ""}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  isInvalid={dateTimeErrors.pastDate}
-                  errorMessage={
-                    dateTimeErrors.pastDate ? "Cannot select a past date" : ""
-                  }
-                /> */}
-
-                <DatePicker
-                  label="Appointment Date"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  color={TOOL_TIP_COLORS.secondary}
-                  isDisabled={!edit}
-                  value={
-                    formData.dateTime ? parseDate(formData.dateTime) : null
-                  }
-                  onChange={(date) => {
-                    if (!date) return;
-                    const formattedDate = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-                    handleDateChange(formattedDate);
-                  }}
-                  isInvalid={dateTimeErrors.pastDate}
-                  errorMessage={
-                    dateTimeErrors.pastDate ? "Cannot select a past date" : ""
-                  }
-                  minValue={today("UTC")} // This ensures users can't select dates before today
-                  classNames={{
-                    input: ["text-black", "dark:text-white"],
-                    inputWrapper: [
-                      "group-data-[has-value=true]:text-black",
-                      "dark:group-data-[has-value=true]:text-white",
-                    ],
-                  }}
-                />
+                <div className="w-full xl:flex-1">
+                  <CustomAppointmentDatePicker
+                    label="Appointment Date"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    color="secondary"
+                    isRequired={false}
+                    disabled={!edit}
+                    placeholder="DD/MM/YYYY"
+                    value={
+                      formData.dateTime ? new Date(formData.dateTime) : null
+                    }
+                    onChange={handleDateChange}
+                    isInvalid={dateTimeErrors.pastDate}
+                    errorMessage={
+                      dateTimeErrors.pastDate ? "Cannot select a past date" : ""
+                    }
+                    onValidationChange={(isValid, _errorMessage) => {
+                      if (!isValid) {
+                        setDateTimeErrors((prev) => ({
+                          ...prev,
+                          pastDate: true,
+                        }));
+                      } else {
+                        setDateTimeErrors((prev) => ({
+                          ...prev,
+                          pastDate: false,
+                        }));
+                      }
+                    }}
+                  />
+                </div>
               </div>
               <div className="flex flex-col w-full">
                 {timeWarning && (
@@ -1030,6 +1006,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   labelPlacement="outside"
                   variant="bordered"
                   label="Remarks"
+                  placeholder="Enter Remarks"
                   defaultValue=""
                   errorMessage="The remarks should be at max 255 characters long."
                   isDisabled={!edit}
