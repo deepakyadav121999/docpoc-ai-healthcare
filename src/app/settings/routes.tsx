@@ -4,12 +4,12 @@ export const SETTING_TAB_KEYS = {
     name: "General",
     screen: ROUTES.SETTING_GENERAL,
   },
-  Usages: {
-    name: "Usages",
-    screen: ROUTES.SETTING_USAGE,
-  },
-  GoPremium: {
-    name: "Go Premium",
-    screen: ROUTES.SETTING_PREMIUM,
-  },
+  // Usages: {
+  //   name: "Usages",
+  //   screen: ROUTES.SETTING_USAGE,
+  // },
+  // GoPremium: {
+  //   name: "Go Premium",
+  //   screen: ROUTES.SETTING_PREMIUM,
+  // },
 };

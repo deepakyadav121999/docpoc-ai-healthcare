@@ -123,7 +123,7 @@ const ECommerce: React.FC = () => {
 
   const fetchDashboardData = async () => {
     if (!branchId) {
-      setError("Please Wait Redirecting You To Prfile Page..... ");
+      setError("Please Wait Redirecting You To Profile Page..... ");
       setLoading(false);
       return;
     }
@@ -366,6 +366,17 @@ const ECommerce: React.FC = () => {
 
   return (
     <>
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          /* Mobile-only scroll optimizations */
+          html,
+          body {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+          }
+        }
+      `}</style>
+
       <DataStatsOne stats={data.stats} />
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
