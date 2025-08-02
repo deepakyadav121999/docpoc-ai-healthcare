@@ -123,7 +123,7 @@ const ECommerce: React.FC = () => {
 
   const fetchDashboardData = async () => {
     if (!branchId) {
-      setError("Branch ID not available");
+      setError("Please Wait Redirecting You To Prfile Page..... ");
       setLoading(false);
       return;
     }

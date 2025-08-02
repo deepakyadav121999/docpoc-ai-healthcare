@@ -138,22 +138,46 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       errors.pastDate = selectedDate < today;
     }
 
-    // Validate time
-    if (formData.startDateTime) {
-      const startTime = new Date(formData.startDateTime);
-      errors.pastTime = startTime < now;
+    // Validate time - only if selected date is today
+    if (formData.startDateTime && formData.dateTime) {
+      const selectedDate = new Date(formData.dateTime);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isToday = selectedDate.getTime() === today.getTime();
 
-      // Also validate end time
-      if (formData.endDateTime) {
-        const endTime = new Date(formData.endDateTime);
-        if (endTime < now) {
+      if (isToday) {
+        const startTime = new Date(formData.startDateTime);
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const startHour = startTime.getHours();
+        const startMinute = startTime.getMinutes();
+
+        // Compare time components directly
+        if (
+          startHour < currentHour ||
+          (startHour === currentHour && startMinute < currentMinute)
+        ) {
           errors.pastTime = true;
         }
 
-        // Ensure end time is after start time
-        if (endTime <= startTime) {
-          setTimeWarning("End time must be after start time");
-          // Don't block the appointment, just show warning
+        // Also validate end time
+        if (formData.endDateTime) {
+          const endTime = new Date(formData.endDateTime);
+          const endHour = endTime.getHours();
+          const endMinute = endTime.getMinutes();
+
+          if (
+            endHour < currentHour ||
+            (endHour === currentHour && endMinute < currentMinute)
+          ) {
+            errors.pastTime = true;
+          }
+
+          // Ensure end time is after start time
+          if (endTime <= startTime) {
+            setTimeWarning("End time must be after start time");
+            // Don't block the appointment, just show warning
+          }
         }
       }
     }
@@ -257,26 +281,62 @@ const AddAppointment: React.FC<AddUsersProps> = ({
     }
 
     const isoTime = generateDateTime(formData.dateTime, time);
-    const now = new Date();
+    // const now = new Date();npx prettier --write .
+    const selectedDate = new Date(formData.dateTime);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if selected date is today
+    const isToday = selectedDate.getTime() === today.getTime();
 
     // For start time, ensure it's not in the past
-    if (field === "startDateTime" && isoTime < now) {
-      setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+    if (field === "startDateTime") {
+      if (isToday) {
+        const currentTime = new Date();
+        const currentHour = currentTime.getHours();
+        const currentMinute = currentTime.getMinutes();
+        const selectedHour = time.hour;
+        const selectedMinute = time.minute;
+
+        // Compare time components directly
+        if (
+          selectedHour < currentHour ||
+          (selectedHour === currentHour && selectedMinute < currentMinute)
+        ) {
+          setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+        } else {
+          setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+        }
+      } else {
+        setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+      }
     }
     // For end time, ensure it's after start time and not in the past
     else if (field === "endDateTime") {
       const startTime = new Date(formData.startDateTime);
       if (isoTime <= startTime) {
         setTimeWarning("End time must be after start time");
-      } else if (isoTime < now) {
-        setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+      } else if (isToday) {
+        const currentTime = new Date();
+        const currentHour = currentTime.getHours();
+        const currentMinute = currentTime.getMinutes();
+        const selectedHour = time.hour;
+        const selectedMinute = time.minute;
+
+        // Compare time components directly
+        if (
+          selectedHour < currentHour ||
+          (selectedHour === currentHour && selectedMinute < currentMinute)
+        ) {
+          setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+        } else {
+          setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+          setTimeWarning("");
+        }
       } else {
         setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
         setTimeWarning("");
       }
-    } else {
-      setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
-      setTimeWarning("");
     }
 
     setFormData({ ...formData, [field]: isoTime });
@@ -715,15 +775,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({
 
   useEffect(() => {
     if (formData.dateTime) {
-      const defaultStartTime = generateDateTime(
-        formData.dateTime,
-        new Time(8, 30),
-      );
-      const defaultEndTime = generateDateTime(formData.dateTime, new Time(9));
+      // Don't set default times - let user select manually
       setFormData((prevFormData) => ({
         ...prevFormData,
-        startDateTime: defaultStartTime,
-        endDateTime: defaultEndTime,
+        startDateTime: "",
+        endDateTime: "",
       }));
     }
   }, [formData.dateTime]);
@@ -953,10 +1009,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   label="Appointment Start Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(8, 30)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleTimeChange(time, "startDateTime")}
+                  onChange={(time) =>
+                    handleTimeChange(time as any, "startDateTime")
+                  }
                   isInvalid={dateTimeErrors.pastTime}
                   errorMessage={
                     dateTimeErrors.pastTime ? "Cannot select a past time" : ""
@@ -977,10 +1034,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   label="Appointment End Time"
                   labelPlacement="outside"
                   variant="bordered"
-                  defaultValue={new Time(9)}
                   startContent={<SVGIconProvider iconName="clock" />}
                   isDisabled={!edit}
-                  onChange={(time) => handleTimeChange(time, "endDateTime")}
+                  onChange={(time) =>
+                    handleTimeChange(time as any, "endDateTime")
+                  }
                 />
                 {/* {timeWarning && (
                    <div className="text-yellow-600 px-6.5 py-2 bg-yellow-100 border-l-4 border-yellow-500">{timeWarning}</div>

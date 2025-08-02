@@ -1,0 +1,168 @@
+/* Analog Clock Styles with Light/Dark Mode Support */
+
+.analog-clock-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.analog-clock-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+}
+
+/* Light Mode Styles */
+.analog-clock-wrapper .atp-clock {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.analog-clock-wrapper .atp-clock .atp-hand {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.analog-clock-wrapper .atp-clock .atp-hand.atp-minute {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.analog-clock-wrapper .atp-clock .atp-hand.atp-hour {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.analog-clock-wrapper .atp-clock .atp-center {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border: 2px solid #ffffff;
+}
+
+.analog-clock-wrapper .atp-clock .atp-number {
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.analog-clock-wrapper .atp-clock .atp-marker {
+  background: #cbd5e1;
+}
+
+.analog-clock-wrapper .atp-clock .atp-marker.atp-major {
+  background: #94a3b8;
+}
+
+/* Dark Mode Styles */
+.dark .analog-clock-wrapper .atp-clock {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 2px solid #475569;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-hand {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  box-shadow: 0 2px 4px rgba(168, 85, 247, 0.3);
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-hand.atp-minute {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-hand.atp-hour {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-center {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  border: 2px solid #1e293b;
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-number {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-marker {
+  background: #475569;
+}
+
+.dark .analog-clock-wrapper .atp-clock .atp-marker.atp-major {
+  background: #64748b;
+}
+
+/* Active/Dragging States */
+.analog-clock-wrapper .atp-clock.atp-dragging .atp-hand.atp-active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+.dark .analog-clock-wrapper .atp-clock.atp-dragging .atp-hand.atp-active {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%) !important;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+/* Hover Effects */
+.analog-clock-wrapper .atp-clock:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analog-clock-wrapper {
+    width: 250px;
+    height: 250px;
+  }
+
+  .analog-clock-container {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .analog-clock-wrapper {
+    width: 200px;
+    height: 200px;
+  }
+
+  .analog-clock-container {
+    padding: 0.25rem;
+  }
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+  .analog-clock-wrapper .atp-clock {
+    touch-action: manipulation;
+  }
+}
+
+/* Animation for dragging indicator */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.analog-clock-wrapper .atp-clock.atp-dragging::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 2px dashed #8b5cf6;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  pointer-events: none;
+}
+
+.dark .analog-clock-wrapper .atp-clock.atp-dragging::after {
+  border-color: #a855f7;
+}
