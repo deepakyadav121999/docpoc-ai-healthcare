@@ -404,8 +404,6 @@ const ECommerce: React.FC = () => {
             overscroll-behavior: contain;
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
           }
 
           /* Optimize scrolling containers */

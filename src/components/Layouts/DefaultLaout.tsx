@@ -61,8 +61,6 @@ export default function DefaultLayout({
             overscroll-behavior: contain;
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
           }
 
           * {
