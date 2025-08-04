@@ -385,46 +385,11 @@ const ECommerce: React.FC = () => {
 
   return (
     <>
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          /* Mobile-only scroll optimizations */
-          html,
-          body {
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-          }
-        }
-
-        /* iPhone-specific optimizations */
-        @supports (-webkit-touch-callout: none) {
-          html,
-          body {
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            overscroll-behavior: contain;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-          }
-
-          /* Optimize scrolling containers */
-          .dashboard-container {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            will-change: scroll-position;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-          }
-
-          /* Prevent momentum scrolling issues */
-          * {
-            -webkit-tap-highlight-color: transparent;
-          }
-        }
-      `}</style>
+   
 
       <DataStatsOne stats={data.stats} />
 
-      <div className="dashboard-container mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
+      <div className=" mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
         <div className="col-span-12">
           {/* <ChartOne /> */}
           <ChartOne

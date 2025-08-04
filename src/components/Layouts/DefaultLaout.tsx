@@ -51,32 +51,7 @@ export default function DefaultLayout({
 
   return (
     <>
-      <style jsx global>{`
-        /* iPhone-specific scroll optimizations */
-        @supports (-webkit-touch-callout: none) {
-          html,
-          body {
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            overscroll-behavior: contain;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-          }
-
-          * {
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          /* Optimize main content area */
-          .main-content-area {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            will-change: scroll-position;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-          }
-        }
-      `}</style>
+     
 
       {/* <!-- ===== Page Wrapper Star ===== --> */}
       <div className="flex h-screen overflow-hidden">
@@ -85,7 +60,7 @@ export default function DefaultLayout({
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Star ===== --> */}
-        <div className="main-content-area relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <div className=" relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
           {/* <!-- ===== Header Star ===== --> */}
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Header End ===== --> */}
