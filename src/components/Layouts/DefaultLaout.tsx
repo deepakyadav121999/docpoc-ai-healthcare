@@ -51,8 +51,6 @@ export default function DefaultLayout({
 
   return (
     <>
-     
-
       {/* <!-- ===== Page Wrapper Star ===== --> */}
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Star ===== --> */}
