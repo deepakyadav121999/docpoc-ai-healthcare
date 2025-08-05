@@ -58,9 +58,41 @@ const CustomAppointmentDatePicker: React.FC<
   const [monthRange, setMonthRange] = useState<number[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [internalError, setInternalError] = useState("");
+  // const [dropdownPosition, setDropdownPosition] = useState<"top" | "bottom">(
+  //   "bottom",
+  // );
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Calculate optimal dropdown position
+  // const calculateDropdownPosition = () => {
+  //   if (!pickerRef.current || !inputRef.current) return;
+
+  //   const inputRect = inputRef.current.getBoundingClientRect();
+  //   const viewportHeight = window.innerHeight;
+  //   const viewportWidth = window.innerWidth;
+
+  //   // Responsive height based on screen size
+  //   const isSmallScreen = viewportWidth < 640; // sm breakpoint
+  //   const dropdownHeight = isSmallScreen ? 240 : 280; // Smaller height for mobile
+
+  //   const spaceBelow = viewportHeight - inputRect.bottom;
+  //   const spaceAbove = inputRect.top;
+
+  //   // Add buffer for better UX
+  //   const buffer = 20;
+
+  //   // If not enough space below but enough space above, position above
+  //   if (
+  //     spaceBelow < dropdownHeight + buffer &&
+  //     spaceAbove > dropdownHeight + buffer
+  //   ) {
+  //     // setDropdownPosition("top");
+  //   } else {
+  //     // setDropdownPosition("bottom");
+  //   }
+  // };
 
   // Get today's date (for minimum date validation)
   const today = new Date();

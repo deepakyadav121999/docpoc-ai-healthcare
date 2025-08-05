@@ -964,20 +964,27 @@ export default function ModalForm(props: {
 
   // Update file name in state
   const handleFileNameChange = (fileName: string, newName: string) => {
-    setFileNames((prev) => ({ ...prev, [fileName]: newName }));
+    const updatedFileNames = { ...fileNames, [fileName]: newName };
+    setFileNames(updatedFileNames);
+    // Notify parent component about the file name change
+    props.onFilesChange(selectedFiles, updatedFileNames);
   };
 
   // Remove file and its name
   const removeFile = (fileName: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((file) => file.name !== fileName),
+    const updatedFiles = files.filter((file) => file.name !== fileName);
+    const updatedSelectedFiles = selectedFiles.filter(
+      (file) => file.name !== fileName,
     );
-    setFileNames((prev) => {
-      const updated = { ...prev };
-      delete updated[fileName];
-      return updated;
-    });
+    const updatedFileNames = { ...fileNames };
+    delete updatedFileNames[fileName];
+
+    setFiles(updatedFiles);
+    setSelectedFiles(updatedSelectedFiles);
+    setFileNames(updatedFileNames);
+
+    // Notify parent component about the file removal
+    props.onFilesChange(updatedSelectedFiles, updatedFileNames);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

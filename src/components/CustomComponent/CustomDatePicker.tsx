@@ -33,9 +33,41 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const [yearRange, setYearRange] = useState<number[]>([]);
   const [monthRange, setMonthRange] = useState<number[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<"top" | "bottom">(
+    "bottom",
+  );
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Calculate optimal dropdown position
+  const calculateDropdownPosition = () => {
+    if (!pickerRef.current || !inputRef.current) return;
+
+    const inputRect = inputRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    // Responsive height based on screen size
+    const isSmallScreen = viewportWidth < 640; // sm breakpoint
+    const dropdownHeight = isSmallScreen ? 240 : 280; // Smaller height for mobile
+
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+
+    // Add buffer for better UX
+    const buffer = 20;
+
+    // If not enough space below but enough space above, position above
+    if (
+      spaceBelow < dropdownHeight + buffer &&
+      spaceAbove > dropdownHeight + buffer
+    ) {
+      setDropdownPosition("top");
+    } else {
+      setDropdownPosition("bottom");
+    }
+  };
 
   const months = [
     "January",
@@ -83,6 +115,28 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     }
     setMonthRange(months);
   }, []);
+
+  // Calculate position when opening
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        calculateDropdownPosition();
+      }, 10);
+    }
+  }, [isOpen]);
+
+  // Recalculate on window resize (real-time positioning)
+  useEffect(() => {
+    const handleResize = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isOpen]);
 
   const formatDateDDMMYYYY = (date: Date): string => {
     const year = date.getFullYear();
@@ -546,18 +600,22 @@ z"
         </div>
       </div>
 
-      {/* Calendar Dropdown */}
+      {/* Calendar Dropdown - Smart Positioning */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-63 sm:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-50 overflow-hidden">
+        <div
+          className={`absolute left-0 w-56 sm:w-64 md:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-[9999] overflow-hidden max-h-[60vh] sm:max-h-none ${
+            dropdownPosition === "top" ? "bottom-full mb-2" : "top-full mt-2"
+          }`}
+        >
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r  ">
+          <div className="p-2 sm:p-4 bg-gradient-to-r">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <button
                   type="button"
                   onClick={(e) => handleViewChange("month", e)}
                   onMouseDown={(e) => e.preventDefault()}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-semibold  hover:bg-white/20 rounded-lg transition-colors"
+                  className="px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
                 >
                   {months[currentDate.getMonth()]}
                 </button>
@@ -565,7 +623,7 @@ z"
                   type="button"
                   onClick={(e) => handleViewChange("year", e)}
                   onMouseDown={(e) => e.preventDefault()}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-semibold  hover:bg-white/20 rounded-lg transition-colors"
+                  className="px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
                 >
                   {currentDate.getFullYear()}
                 </button>
@@ -624,16 +682,16 @@ z"
           </div>
 
           {/* Calendar Body */}
-          <div className="p-4">
+          <div className="p-2 sm:p-4">
             {view === "calendar" && (
               <div>
                 {/* Day Headers */}
-                <div className="grid grid-cols-7 gap-1 mb-0.5 sm:mb-2">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-2">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                     (day) => (
                       <div
                         key={day}
-                        className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-1"
+                        className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-0.5 sm:py-1"
                       >
                         {day}
                       </div>
@@ -642,7 +700,7 @@ z"
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                   {generateCalendarDays(currentDate).map((date, index) => (
                     <button
                       type="button"
@@ -657,14 +715,14 @@ z"
                       onMouseDown={(e) => e.preventDefault()}
                       disabled={!date || isDisabled(date)}
                       className={` 
-                       w-6 h-6 sm:w-8 sm:h-8 text-sm rounded-full transition-all duration-200 flex items-center justify-center font-medium
-                        ${!date ? "invisible" : ""}
-                        ${isToday(date!) && !isSelected(date!) ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700" : ""}
-                        ${isSelected(date!) ? "bg-purple-500 text-white shadow-lg transform scale-105" : ""}
-                        ${!isSelected(date!) && !isToday(date!) && date ? "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-300" : ""}
-                        ${isDisabled(date!) ? "text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50" : ""}
-                        ${date && date.getMonth() !== currentDate.getMonth() ? "text-gray-400 dark:text-gray-600 opacity-60" : ""}
-                      `}
+                         w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-xs sm:text-sm rounded-full transition-all duration-200 flex items-center justify-center font-medium
+                          ${!date ? "invisible" : ""}
+                          ${isToday(date!) && !isSelected(date!) ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700" : ""}
+                          ${isSelected(date!) ? "bg-purple-500 text-white shadow-lg transform scale-105" : ""}
+                          ${!isSelected(date!) && !isToday(date!) && date ? "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-300" : ""}
+                          ${isDisabled(date!) ? "text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50" : ""}
+                          ${date && date.getMonth() !== currentDate.getMonth() ? "text-gray-400 dark:text-gray-600 opacity-60" : ""}
+                        `}
                     >
                       {date ? date.getDate() : ""}
                     </button>

@@ -132,6 +132,7 @@ export default function OpaqueModal(props: {
   const uploadFiles = async (
     files: File[],
     foldername: string,
+    // fileNames?: { [key: string]: string },
   ): Promise<string[]> => {
     // const token = localStorage.getItem("docPocAuth_token");
     const sanitizedUsername = foldername
@@ -144,7 +145,21 @@ export default function OpaqueModal(props: {
     for (const file of files) {
       try {
         const data = new FormData();
-        data.append("file", file);
+
+        // Create unique filename for S3 to avoid conflicts
+        const timestamp = Date.now();
+        const fileExtension = file.name.split(".").pop();
+        const baseName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        const shortName = baseName.substring(0, 9); // Take first 9 characters
+        const uniqueFileName = `${shortName}_${timestamp}.${fileExtension}`;
+
+        // Create new File object with unique name for S3
+        const fileToUpload = new File([file], uniqueFileName, {
+          type: file.type,
+          lastModified: file.lastModified,
+        });
+
+        data.append("file", fileToUpload);
         data.append("folder", folderName);
         data.append("contentDisposition", "inline");
 
@@ -161,7 +176,7 @@ export default function OpaqueModal(props: {
         const response = await axios.request(config);
 
         if (response.data) {
-          const fileUrl = `${AWS_URL}/${folderName}/${file.name}`;
+          const fileUrl = `${AWS_URL}/${folderName}/${uniqueFileName}`;
           console.log("File uploaded successfully:", fileUrl);
           uploadedFileUrls.push(fileUrl);
         }
@@ -358,20 +373,27 @@ export default function OpaqueModal(props: {
       // Upload new files and get their URLs
       const uploadedFileUrls =
         selectedFiles.length > 0
-          ? await uploadFiles(selectedFiles, updatedPatientData.name || "")
+          ? await uploadFiles(
+              selectedFiles,
+              updatedPatientData.name || "",
+              // fileNames,
+            )
           : [];
 
       // Append new files to existing documents (array)
       const mergedDocuments: Array<any> = [...existingDocuments];
       uploadedFileUrls.forEach((url, idx) => {
         const file = selectedFiles[idx];
-        // Use custom name if provided, else fallback to default
-        const customName =
-          file && fileNames[file.name] && fileNames[file.name].trim()
+        // Use edited name for document display, fallback to original file name
+        const displayName =
+          file &&
+          fileNames &&
+          fileNames[file.name] &&
+          fileNames[file.name].trim()
             ? fileNames[file.name].trim()
-            : `document${mergedDocuments.length + 1}`;
+            : file.name || `document${mergedDocuments.length + 1}`;
         mergedDocuments.push({
-          name: customName,
+          name: displayName,
           url: url,
           date: new Date().toISOString(),
         });

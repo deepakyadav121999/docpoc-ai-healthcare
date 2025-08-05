@@ -428,21 +428,24 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   return (
     <>
       <div className="flex w-full justify-between items-center mb-4">
-        <Select
-          selectedKeys={[tab]}
-          onSelectionChange={(keys) => setTab(Array.from(keys)[0] as string)}
-          className="max-w-xs"
-          aria-label="Select document type"
-        >
-          {TABS.map((t) => (
-            <SelectItem key={t.value} value={t.value}>
-              {t.label}
-            </SelectItem>
-          ))}
-        </Select>
+        {/* Only show dropdown for documents mode, not for history mode */}
+        {viewMode !== "history" && (
+          <Select
+            selectedKeys={[tab]}
+            onSelectionChange={(keys) => setTab(Array.from(keys)[0] as string)}
+            className="max-w-xs"
+            aria-label="Select document type"
+          >
+            {TABS.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
+              </SelectItem>
+            ))}
+          </Select>
+        )}
         <Input
           isClearable
-          className="w-full max-w-[97%] sm:max-w-md"
+          className={`${viewMode === "history" ? "w-full" : "w-full max-w-[97%] sm:max-w-md"}`}
           placeholder={`Search by ${tab === "receipts" ? "code/date/amount" : "name/date"}..`}
           startContent={<SVGIconProvider iconName="search" />}
           value={filterValue}
