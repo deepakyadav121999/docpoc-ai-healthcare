@@ -411,7 +411,7 @@ const DropdownUser = () => {
                               Need Help?
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              We're here to help you
+                              We&apos;re here to help you
                             </p>
                           </div>
                         </div>

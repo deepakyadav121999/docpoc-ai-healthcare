@@ -3,7 +3,7 @@ import DarkModeSwitcher from "./DarkModeSwitcher";
 // import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
-import SearchForm from "@/components/Header/SearchForm";
+// import SearchForm from "@/components/Header/SearchForm";
 import SupportForm from "@/components/Header/SupportForm";
 import { useEffect, useState } from "react";
 
