@@ -77,6 +77,16 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
   useEffect(() => {
     if (editingRow !== null && editInputRef.current) {
       editInputRef.current.focus();
+      // Additional scroll handling for mobile
+      setTimeout(() => {
+        if (editInputRef.current) {
+          editInputRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        }
+      }, 200);
     }
   }, [editingRow]);
 
@@ -427,6 +437,35 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
 
   return (
     <>
+      <style jsx>{`
+        /* Mobile-specific styles for edit input fields */
+        @media (max-width: 768px) {
+          .edit-input-container {
+            position: relative;
+            z-index: 10;
+          }
+
+          .edit-input-container input:focus {
+            position: relative;
+            z-index: 20;
+            background: white !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            min-width: 120px !important;
+          }
+
+          /* Ensure the table cell can accommodate the input */
+          .table-cell-edit {
+            min-width: 140px;
+            position: relative;
+          }
+        }
+
+        /* Ensure smooth scrolling behavior */
+        html {
+          scroll-behavior: smooth;
+        }
+      `}</style>
       <div className="flex w-full justify-between items-center mb-4">
         {/* Only show dropdown for documents mode, not for history mode */}
         {viewMode !== "history" && (
@@ -503,9 +542,12 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
               return (
                 <TableRow key={realIdx}>
                   {columns.map((col) => (
-                    <TableCell key={col.key}>
+                    <TableCell
+                      key={col.key}
+                      className={col.key === "name" ? "table-cell-edit" : ""}
+                    >
                       {col.key === "name" && tab === "documents" ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 edit-input-container">
                           <input
                             ref={
                               editingRow === String(realIdx)
@@ -558,9 +600,16 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                                 setEditingRow(String(realIdx));
                                 setEditValue(item.name || "");
                                 setTimeout(() => {
-                                  if (editInputRef.current)
+                                  if (editInputRef.current) {
                                     editInputRef.current.focus();
-                                }, 0);
+                                    // Scroll the input into view on mobile
+                                    editInputRef.current.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "center",
+                                      inline: "nearest",
+                                    });
+                                  }
+                                }, 150);
                               }}
                               className="text-blue-500 hover:text-blue-700"
                             >
@@ -569,7 +618,7 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                           )}
                         </div>
                       ) : col.key === "name" && tab === "reports" ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 edit-input-container">
                           <input
                             ref={
                               editingRow === `report-${realIdx}`
@@ -622,9 +671,16 @@ export const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({
                                 setEditingRow(`report-${realIdx}`);
                                 setEditValue(item.name || "");
                                 setTimeout(() => {
-                                  if (editInputRef.current)
+                                  if (editInputRef.current) {
                                     editInputRef.current.focus();
-                                }, 0);
+                                    // Scroll the input into view on mobile
+                                    editInputRef.current.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "center",
+                                      inline: "nearest",
+                                    });
+                                  }
+                                }, 150);
                               }}
                               className="text-blue-500 hover:text-blue-700"
                             >
