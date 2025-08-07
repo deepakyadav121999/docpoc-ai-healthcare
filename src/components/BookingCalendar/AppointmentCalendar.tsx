@@ -805,13 +805,13 @@ export const AppointmentCalendar: React.FC = () => {
                     "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-50",
                 }}
               >
-                <ModalContent className="mt-4 sm:mt-8">
+                <ModalContent className="mt-4 sm:mt-8 bg-white dark:bg-gray-dark">
                   {(onClose) => (
                     <>
-                      <ModalHeader className="flex flex-col gap-1">
+                      <ModalHeader className="flex flex-col gap-1 text-gray-900 dark:text-white">
                         <p>Add New Appointment</p>
                       </ModalHeader>
-                      <ModalBody>
+                      <ModalBody className="text-gray-900 dark:text-white">
                         <NewAppointment
                           onUsersAdded={fetchAppointments}
                           startDateTime={modalData.startTime}
@@ -820,7 +820,7 @@ export const AppointmentCalendar: React.FC = () => {
                           onClose={handleModalClosew}
                         />
                       </ModalBody>
-                      <ModalFooter>
+                      <ModalFooter className="bg-white dark:bg-gray-dark">
                         <Button
                           color="danger"
                           variant="light"

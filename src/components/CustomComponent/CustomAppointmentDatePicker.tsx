@@ -273,18 +273,35 @@ const CustomAppointmentDatePicker: React.FC<
     return null;
   };
 
-  const isValidFutureDate = (date: Date): boolean => {
-    // Create fresh Date objects for comparison
-    const selectedDate = new Date(date);
-    const today = new Date();
+  // const isValidFutureDate = (date: Date): boolean => {
+  //   // NEW VALIDATION: Allow today and future dates, block only past dates
+  //   const selectedDateOnly = new Date(
+  //     date.getFullYear(),
+  //     date.getMonth(),
+  //     date.getDate(),
+  //   );
+  //   const todayDateOnly = new Date();
+  //   todayDateOnly.setHours(0, 0, 0, 0);
+  //   selectedDateOnly.setHours(0, 0, 0, 0);
 
-    // Reset time components to midnight for accurate date comparison
-    selectedDate.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+  //   // Use date strings for most reliable comparison
+  //   const selectedDateStr = selectedDateOnly.toDateString();
+  //   const todayDateStr = todayDateOnly.toDateString();
 
-    // Compare dates (>= allows today's date)
-    return selectedDate >= today;
-  };
+  //   // Allow today and future dates, block only past dates
+  //   const isValid = selectedDateOnly >= todayDateOnly;
+
+  //   console.log("NEW VALIDATION - Date check:", {
+  //     selectedDateStr,
+  //     todayDateStr,
+  //     selectedTimestamp: selectedDateOnly.getTime(),
+  //     todayTimestamp: todayDateOnly.getTime(),
+  //     isValid: isValid,
+  //     rule: "Allow today and future, block only past",
+  //   });
+
+  //   return isValid;
+  // };
 
   const handleManualDateInput = (value: string) => {
     setInternalError(""); // Clear internal error when user starts typing
@@ -305,19 +322,12 @@ const CustomAppointmentDatePicker: React.FC<
     if (value.length === 10) {
       const parsedDate = parseManualDate(value);
       if (parsedDate) {
-        if (isValidFutureDate(parsedDate)) {
-          setSelectedDate(parsedDate);
-          setCurrentDate(parsedDate);
-          onChange(parsedDate);
-          setInternalError("");
-          onValidationChange?.(true, "");
-        } else {
-          const errorMsg = "Cannot select past dates";
-          setInternalError(errorMsg);
-          setSelectedDate(null);
-          onChange(null);
-          onValidationChange?.(false, errorMsg);
-        }
+        // BYPASS: Let AddAppointment handle all validation
+        setSelectedDate(parsedDate);
+        setCurrentDate(parsedDate);
+        onChange(parsedDate);
+        setInternalError("");
+        onValidationChange?.(true, "");
       } else {
         const errorMsg = "Invalid date format. Please use DD/MM/YYYY";
         setInternalError(errorMsg);
@@ -358,11 +368,18 @@ const CustomAppointmentDatePicker: React.FC<
   };
 
   const handleDateSelect = (date: Date) => {
-    if (!isValidFutureDate(date)) {
-      setInternalError("Cannot select past dates");
-      return;
-    }
+    console.log("DEBUG - handleDateSelect called with:", {
+      date: date.toDateString(),
+      dateTime: date.getTime(),
+      localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
 
+    // BYPASS internal validation - let AddAppointment handle all validation
+    console.log(
+      "BYPASS - Skipping internal date validation, letting AddAppointment handle it",
+    );
+
+    console.log("DEBUG - Date accepted, calling onChange");
     setSelectedDate(date);
     setCurrentDate(date);
     setInputValue(formatDateDDMMYYYY(date));
@@ -479,7 +496,8 @@ const CustomAppointmentDatePicker: React.FC<
 
   const isDateDisabled = (date: Date | null): boolean => {
     if (!date) return false;
-    return !isValidFutureDate(date);
+    // BYPASS: Let AddAppointment handle all validation, don't disable any dates here
+    return false;
   };
 
   const displayError = internalError || errorMessage;
@@ -504,7 +522,9 @@ const CustomAppointmentDatePicker: React.FC<
 
       {/* Label */}
       {label && labelPlacement === "outside" && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        <label
+          className={`block text-sm font-medium mb-1.5 ${disabled ? "text-gray-400 dark:text-gray-600" : "text-gray-700 dark:text-gray-300"}`}
+        >
           {label}
           {isRequired && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -518,8 +538,8 @@ const CustomAppointmentDatePicker: React.FC<
           disabled={disabled}
           className={`
             w-full px-3 py-2 pr-10 border rounded-lg transition-all duration-200 text-base outline-none
-            ${currentColorClass.bg} ${currentColorClass.text} 
-            ${displayError ? "border-red-500 ring-red-200" : isOpen ? `${currentColorClass.focusBorder} ${currentColorClass.focusRing} ring-2` : currentColorClass.border}
+            ${disabled ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed" : currentColorClass.bg + " " + currentColorClass.text} 
+            ${!disabled && displayError ? "border-red-500 ring-red-200" : !disabled && isOpen ? `${currentColorClass.focusBorder} ${currentColorClass.focusRing} ring-2` : !disabled ? currentColorClass.border : ""}
           `}
           style={{
             fontSize: "16px",
@@ -585,7 +605,7 @@ const CustomAppointmentDatePicker: React.FC<
 
         {/* Calendar icon */}
         <div
-          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${disabled ? "opacity-40" : ""}`}
           style={{ zIndex: 2 }}
         >
           <div className="w-7 h-7 ">
@@ -599,6 +619,7 @@ const CustomAppointmentDatePicker: React.FC<
                 width="100%"
                 viewBox="0 0 106 85"
                 enable-background="new 0 0 106 85"
+                className={disabled ? "text-gray-400 dark:text-gray-600" : ""}
               >
                 <path
                   fill="#6B46C1"
@@ -740,7 +761,7 @@ z"
       </div>
 
       {/* Error Message */}
-      {displayError && (
+      {displayError && !disabled && (
         <div className="text-red-600 text-sm mt-1 px-1">{displayError}</div>
       )}
 

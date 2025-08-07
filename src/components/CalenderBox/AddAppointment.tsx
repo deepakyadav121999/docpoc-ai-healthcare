@@ -107,6 +107,19 @@ const AddAppointment: React.FC<AddUsersProps> = ({
     pastDate: false,
     pastTime: false,
   });
+
+  // Loading states for individual components
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [appointmentTypesLoading, setAppointmentTypesLoading] = useState(false);
+  const [appointmentStatusLoading, setAppointmentStatusLoading] =
+    useState(false);
+
+  // Pagination states for patients
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientPageSize] = useState(20);
+  const [hasMorePatients, setHasMorePatients] = useState(true);
+  const [allPatients, setAllPatients] = useState<AutocompleteItem[]>([]);
   // function extractTime(dateTime: string): string {
   //   const date = new Date(dateTime);
   //   let hours = date.getHours();
@@ -123,60 +136,100 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   // }
 
   const validateDateTime = () => {
-    const now = new Date();
+    // const now = new Date();
     const errors = {
       pastDate: false,
       pastTime: false,
     };
 
-    // Validate date
+    // NEW VALIDATION: Validate date - allow today and future, block only past
     if (formData.dateTime) {
-      const selectedDate = new Date(formData.dateTime);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Compare just the date part
+      // Parse the YYYY-MM-DD format safely
+      const [year, month, day] = formData.dateTime
+        .split("-")
+        .map((num) => parseInt(num, 10));
+      const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+      const todayDate = new Date();
 
-      errors.pastDate = selectedDate < today;
+      // Reset hours to ensure date-only comparison
+      selectedDate.setHours(0, 0, 0, 0);
+      todayDate.setHours(0, 0, 0, 0);
+
+      const isPastDate = selectedDate < todayDate;
+
+      console.log("NEW VALIDATION - validateDateTime:", {
+        formDataDateTime: formData.dateTime,
+        selectedDate: selectedDate.toDateString(),
+        todayDate: todayDate.toDateString(),
+        isPastDate,
+        rule: "Block only past dates, allow today and future",
+      });
+
+      errors.pastDate = isPastDate;
     }
 
-    // Validate time - only if selected date is today
+    // NEW VALIDATION: Time validation - block only past times on today
     if (formData.startDateTime && formData.dateTime) {
-      const selectedDate = new Date(formData.dateTime);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const isToday = selectedDate.getTime() === today.getTime();
+      // Parse the YYYY-MM-DD format safely
+      const [year, month, day] = formData.dateTime
+        .split("-")
+        .map((num) => parseInt(num, 10));
+      const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+      const todayDate = new Date();
+
+      // Reset hours to ensure date-only comparison
+      selectedDate.setHours(0, 0, 0, 0);
+      todayDate.setHours(0, 0, 0, 0);
+
+      const isToday = selectedDate.getTime() === todayDate.getTime();
+
+      console.log("NEW VALIDATION - Time check:", {
+        isToday,
+        selectedDate: selectedDate.toDateString(),
+        todayDate: todayDate.toDateString(),
+        startDateTime: formData.startDateTime,
+      });
 
       if (isToday) {
         const startTime = new Date(formData.startDateTime);
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const startHour = startTime.getHours();
-        const startMinute = startTime.getMinutes();
+        const currentTime = new Date();
 
-        // Compare time components directly
-        if (
-          startHour < currentHour ||
-          (startHour === currentHour && startMinute < currentMinute)
-        ) {
+        // Convert to minutes for easy comparison
+        const currentTotalMinutes =
+          currentTime.getHours() * 60 + currentTime.getMinutes();
+        const startTotalMinutes =
+          startTime.getHours() * 60 + startTime.getMinutes();
+
+        console.log("NEW VALIDATION - Time comparison:", {
+          currentTime: currentTime.toLocaleTimeString(),
+          startTime: startTime.toLocaleTimeString(),
+          currentTotalMinutes,
+          startTotalMinutes,
+          isPastTime: startTotalMinutes <= currentTotalMinutes,
+          rule: "Block only past times on today, allow future times",
+        });
+
+        // Block only past times on today
+        if (startTotalMinutes <= currentTotalMinutes) {
           errors.pastTime = true;
         }
 
         // Also validate end time
         if (formData.endDateTime) {
           const endTime = new Date(formData.endDateTime);
-          const endHour = endTime.getHours();
-          const endMinute = endTime.getMinutes();
+          const endTotalMinutes =
+            endTime.getHours() * 60 + endTime.getMinutes();
 
-          if (
-            endHour < currentHour ||
-            (endHour === currentHour && endMinute < currentMinute)
-          ) {
+          // Block past end times on today
+          if (endTotalMinutes <= currentTotalMinutes) {
             errors.pastTime = true;
           }
 
           // Ensure end time is after start time
-          if (endTime <= startTime) {
+          if (endTotalMinutes <= startTotalMinutes) {
             setTimeWarning("End time must be after start time");
-            // Don't block the appointment, just show warning
+          } else {
+            setTimeWarning("");
           }
         }
       }
@@ -196,19 +249,47 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       return;
     }
 
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    console.log("DEBUG - handleDateChange input:", {
+      originalDate: date,
+      dateString: date.toDateString(),
+      dateISO: date.toISOString(),
+    });
 
-    if (selectedDate < today) {
+    // NEW VALIDATION: Allow today and future dates, block only past dates
+    const selectedDateOnly = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
+    const todayDateOnly = new Date();
+    todayDateOnly.setHours(0, 0, 0, 0);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+
+    const isPastDate = selectedDateOnly < todayDateOnly;
+
+    console.log("NEW VALIDATION - AddAppointment date check:", {
+      selectedDate: selectedDateOnly.toDateString(),
+      todayDate: todayDateOnly.toDateString(),
+      selectedTime: selectedDateOnly.getTime(),
+      todayTime: todayDateOnly.getTime(),
+      isPastDate,
+      rule: "Block only past dates, allow today and future",
+    });
+
+    if (isPastDate) {
       setDateTimeErrors((prev) => ({ ...prev, pastDate: true }));
     } else {
       setDateTimeErrors((prev) => ({ ...prev, pastDate: false }));
     }
 
-    // Format date as YYYY-MM-DD for consistency with existing logic
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+    // Store date as YYYY-MM-DD format (timezone-safe)
+    const year = selectedDateOnly.getFullYear();
+    const month = String(selectedDateOnly.getMonth() + 1).padStart(2, "0");
+    const day = String(selectedDateOnly.getDate()).padStart(2, "0");
+    const formattedDate = `${year}-${month}-${day}`;
     setFormData({ ...formData, dateTime: formattedDate });
+
+    console.log("DEBUG - Stored dateTime:", formattedDate);
   };
 
   const generateDateTime = (baseDate: string, time: Time) => {
@@ -281,61 +362,98 @@ const AddAppointment: React.FC<AddUsersProps> = ({
     }
 
     const isoTime = generateDateTime(formData.dateTime, time);
-    // const now = new Date();npx prettier --write .
-    const selectedDate = new Date(formData.dateTime);
+
+    // Parse the YYYY-MM-DD format safely
+    const [year, month, day] = formData.dateTime
+      .split("-")
+      .map((num) => parseInt(num, 10));
+    const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    // Reset hours to ensure date-only comparison
+    selectedDate.setHours(0, 0, 0, 0);
+    todayDate.setHours(0, 0, 0, 0);
 
     // Check if selected date is today
-    const isToday = selectedDate.getTime() === today.getTime();
+    const isToday = selectedDate.getTime() === todayDate.getTime();
 
-    // For start time, ensure it's not in the past
+    console.log("DEBUG - handleTimeChange:", {
+      field,
+      time: `${time.hour}:${time.minute}`,
+      isToday,
+      selectedDate: selectedDate.toDateString(),
+      todayDate: todayDate.toDateString(),
+    });
+
+    // NEW VALIDATION: For start time, block only past times on today
     if (field === "startDateTime") {
       if (isToday) {
         const currentTime = new Date();
-        const currentHour = currentTime.getHours();
-        const currentMinute = currentTime.getMinutes();
-        const selectedHour = time.hour;
-        const selectedMinute = time.minute;
+        const currentTotalMinutes =
+          currentTime.getHours() * 60 + currentTime.getMinutes();
+        const selectedTotalMinutes = time.hour * 60 + time.minute;
 
-        // Compare time components directly
-        if (
-          selectedHour < currentHour ||
-          (selectedHour === currentHour && selectedMinute < currentMinute)
-        ) {
+        console.log("NEW VALIDATION - Start time check:", {
+          currentTime: currentTime.toLocaleTimeString(),
+          selectedTime: `${time.hour}:${time.minute}`,
+          currentTotalMinutes,
+          selectedTotalMinutes,
+          isPastTime: selectedTotalMinutes <= currentTotalMinutes,
+          rule: "Block only past times on today",
+        });
+
+        // Block only past times on today
+        if (selectedTotalMinutes <= currentTotalMinutes) {
           setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
         } else {
           setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
         }
       } else {
+        // Future dates: allow any time
         setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
       }
     }
-    // For end time, ensure it's after start time and not in the past
+    // NEW VALIDATION: For end time, check start time relationship and past time on today
     else if (field === "endDateTime") {
       const startTime = new Date(formData.startDateTime);
-      if (isoTime <= startTime) {
-        setTimeWarning("End time must be after start time");
-      } else if (isToday) {
-        const currentTime = new Date();
-        const currentHour = currentTime.getHours();
-        const currentMinute = currentTime.getMinutes();
-        const selectedHour = time.hour;
-        const selectedMinute = time.minute;
+      const startTotalMinutes =
+        startTime.getHours() * 60 + startTime.getMinutes();
+      const endTotalMinutes = time.hour * 60 + time.minute;
 
-        // Compare time components directly
-        if (
-          selectedHour < currentHour ||
-          (selectedHour === currentHour && selectedMinute < currentMinute)
-        ) {
-          setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
-        } else {
-          setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
-          setTimeWarning("");
-        }
+      if (endTotalMinutes <= startTotalMinutes) {
+        setTimeWarning("End time must be after start time");
       } else {
-        setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
         setTimeWarning("");
+
+        if (isToday) {
+          const currentTime = new Date();
+          const currentTotalMinutes =
+            currentTime.getHours() * 60 + currentTime.getMinutes();
+
+          console.log("NEW VALIDATION - End time check:", {
+            currentTime: currentTime.toLocaleTimeString(),
+            endTime: `${time.hour}:${time.minute}`,
+            currentTotalMinutes,
+            endTotalMinutes,
+            isPastTime: endTotalMinutes <= currentTotalMinutes,
+            rule: "Block only past times on today",
+          });
+
+          // Block only past times on today
+          if (endTotalMinutes <= currentTotalMinutes) {
+            setDateTimeErrors((prev) => ({ ...prev, pastTime: true }));
+          } else {
+            setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+          }
+        } else {
+          // Future dates: allow any time
+          setDateTimeErrors((prev) => ({ ...prev, pastTime: false }));
+        }
       }
     }
 
@@ -472,12 +590,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       if (dateTimeErrors.pastDate) {
         setModalMessage({
           success: "",
-          error: "Cannot book appointment on a past date",
+          error:
+            "Cannot book appointment on past dates. Please select today or a future date.",
         });
       } else if (dateTimeErrors.pastTime) {
         setModalMessage({
           success: "",
-          error: "Cannot book appointment at a past time",
+          error:
+            "Cannot book appointment at past times for today. Please select a future time.",
         });
       }
       setSavingData(false);
@@ -615,15 +735,11 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   };
 
   const fetchAppointmentTypes = async () => {
-    setLoading(true);
+    setAppointmentTypesLoading(true);
     try {
       const token = localStorage.getItem("docPocAuth_token");
-
-      // const userId = profile?.id;
-
       const fetchedBranchId = profile?.branchId;
 
-      // Step 3: Fetch Appointment Types
       const appointmentTypeEndpoint = `${API_URL}/appointment/types/${fetchedBranchId}`;
       const response = await axios.get(appointmentTypeEndpoint, {
         headers: {
@@ -641,90 +757,128 @@ const AddAppointment: React.FC<AddUsersProps> = ({
         }),
       );
       setAppointmentTypeList(transformedTypes);
+    } catch (error) {
+      console.error("Error fetching appointment types:", error);
+    } finally {
+      setAppointmentTypesLoading(false);
+    }
+  };
 
-      // Step 4: Fetch Appointment Status
+  const fetchAppointmentStatus = async () => {
+    setAppointmentStatusLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const fetchedBranchId = profile?.branchId;
+
       const appointmentStatusEndpoint = `${API_URL}/appointment/status/${fetchedBranchId}`;
-      const response2 = await axios.get(appointmentStatusEndpoint, {
+      const response = await axios.get(appointmentStatusEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      const transformedStatus: AutocompleteItem[] = response2.data.map(
+      const transformedStatus: AutocompleteItem[] = response.data.map(
         (type: any) => ({
           label: type.status,
           value: type.id,
         }),
       );
       setAppointmentStatusList(transformedStatus);
+    } catch (error) {
+      console.error("Error fetching appointment status:", error);
+    } finally {
+      setAppointmentStatusLoading(false);
+    }
+  };
 
-      // Step 5: Fetch Patients
+  const fetchPatients = async (page = 1, append = false) => {
+    setPatientsLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const fetchedBranchId = profile?.branchId;
+
       const patientsendpoint = `${API_URL}/patient/list/${fetchedBranchId}`;
-      const params: any = {};
-      params.page = 1;
-      params.pageSize = 1000;
-      // params.from = "2024-12-04T03:32:25.812Z";
-      // params.to = "2024-12-11T03:32:25.815Z";
-      params.notificationStatus = [
-        "Whatsapp notifications paused",
-        "SMS notifications paused",
-      ];
-      const response3 = await axios.get(patientsendpoint, {
+      const params: any = {
+        page,
+        pageSize: 10000,
+        notificationStatus: [
+          "Whatsapp notifications paused",
+          "SMS notifications paused",
+        ],
+      };
+
+      const response = await axios.get(patientsendpoint, {
         params,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      // console.log(response3.data.rows)
-      const transformedPatients: AutocompleteItem[] = response3.data.rows.map(
+
+      const transformedPatients: AutocompleteItem[] = response.data.rows.map(
         (patient: any) => ({
           label: patient.name,
           value: patient.id,
           description: `${patient.phone} | ${patient.email}`,
-          dob: patient.dob, // Include DOB
+          dob: patient.dob,
         }),
       );
-      // setPatientList(transformedPatients);
-      // setPatientList([
-      //   {
-      //     label: "Create New Patient...",
-      //     value: "create-new-patient",
-      //     description: "Click to add a new patient",
-      //     dob: "",
-      //     workingHours: "",
-      //   },
-      //   ...transformedPatients,
-      // ]);
-      setPatientList((prev) => [
-        prev[0], // Keep the first item (Create New Patient)
-        ...transformedPatients,
-      ]);
 
-      // Step 6: Fetch  Doctors
+      if (append) {
+        setAllPatients((prev) => [...prev, ...transformedPatients]);
+        setPatientList((prev) => [
+          prev[0], // Keep "Create New Patient" option
+          ...allPatients,
+          ...transformedPatients,
+        ]);
+      } else {
+        setAllPatients(transformedPatients);
+        setPatientList([
+          {
+            label: "Create New Patient...",
+            value: "create-new-patient",
+            description: "Click to add a new patient",
+            dob: "",
+            workingHours: "",
+          },
+          ...transformedPatients,
+        ]);
+      }
+
+      // Check if there are more patients
+      setHasMorePatients(response.data.rows.length === patientPageSize);
+      setPatientPage(page);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+    } finally {
+      setPatientsLoading(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    setDoctorsLoading(true);
+    try {
+      const token = localStorage.getItem("docPocAuth_token");
+      const fetchedBranchId = profile?.branchId;
+
       const doctorsEndpoint = `${API_URL}/user/list/${fetchedBranchId}`;
+      const params: any = {
+        page: 1,
+        pageSize: 100,
+      };
 
-      // const params: any = {};
-
-      params.page = 1;
-      params.pageSize = 100;
-      // params.from = '2024-12-04T03:32:25.812Z';
-      // params.to = '2024-12-11T03:32:25.815Z';
-
-      const response4 = await axios.get(doctorsEndpoint, {
+      const response = await axios.get(doctorsEndpoint, {
         params,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      const allUsers = response4.data.rows;
 
-      // Filter and transform only doctors
+      const allUsers = response.data.rows;
       const doctors = allUsers.filter((user: any) => {
         try {
           const userJson = JSON.parse(user.json);
-          // return userJson.designation === "Doctor"; // Check if designation is "Doctor"
           return (
             userJson.designation &&
             (userJson.designation.toLowerCase() === "doctor" ||
@@ -739,12 +893,12 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       const transformedDoctors: AutocompleteItem[] = doctors.map(
         (doctor: any) => {
           try {
-            const doctorJson = JSON.parse(doctor.json || "{}"); // Parse the `json` string into an object
+            const doctorJson = JSON.parse(doctor.json || "{}");
             return {
               label: doctor.name,
               value: doctor.id,
               description: `${doctor.phone} | ${doctor.email}`,
-              workingHours: doctorJson.workingHours || "Not Available", // Extract `workingHours` or fallback
+              workingHours: doctorJson.workingHours || "Not Available",
             };
           } catch (err) {
             console.error("Error parsing doctor JSON for working hours:", err);
@@ -752,25 +906,24 @@ const AddAppointment: React.FC<AddUsersProps> = ({
               label: doctor.name,
               value: doctor.id,
               description: `${doctor.phone} | ${doctor.email}`,
-              workingHours: "Not Available", // Fallback if JSON parsing fails
+              workingHours: "Not Available",
             };
           }
         },
       );
       setDoctorList(transformedDoctors);
-
-      //  console.log(transformedDoctors)
     } catch (error) {
-      console.error("Error fetching appointment types:", error || error);
+      console.error("Error fetching doctors:", error);
     } finally {
-      setLoading(false);
+      setDoctorsLoading(false);
     }
   };
 
   useEffect(() => {
-    // fetchDoctors()
-    // fetchPatients()
     fetchAppointmentTypes();
+    fetchAppointmentStatus();
+    fetchPatients();
+    fetchDoctors();
   }, []);
 
   useEffect(() => {
@@ -783,6 +936,18 @@ const AddAppointment: React.FC<AddUsersProps> = ({
       }));
     }
   }, [formData.dateTime]);
+
+  // Real-time validation effect - updates every minute to prevent past appointments
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (formData.dateTime || formData.startDateTime || formData.endDateTime) {
+        console.log("DEBUG - Real-time validation check");
+        validateDateTime();
+      }
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [formData.dateTime, formData.startDateTime, formData.endDateTime]);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -842,12 +1007,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
   // };
   const handleNewPatientCreated = () => {
     setShowAddPatientModal(false);
-    fetchAppointmentTypes();
+    // Refresh patient list when new patient is created
+    fetchPatients(1, false);
   };
 
   // Remove parseDate function as it's no longer needed with CustomAppointmentDatePicker
   return (
-    <div className="  grid grid-cols-1 gap-9  ">
+    <div className="grid grid-cols-1 gap-9">
+      {/* Removed overlay - just disable fields during creation */}
       <style jsx global>{`
         .nextui-input,
         .nextui-input-wrapper input,
@@ -954,7 +1121,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                     variant="bordered"
                     color="secondary"
                     isRequired={false}
-                    disabled={!edit}
+                    disabled={!edit || savingData}
                     placeholder="DD/MM/YYYY"
                     value={
                       formData.dateTime ? new Date(formData.dateTime) : null
@@ -962,10 +1129,16 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                     onChange={handleDateChange}
                     isInvalid={dateTimeErrors.pastDate}
                     errorMessage={
-                      dateTimeErrors.pastDate ? "Cannot select a past date" : ""
+                      dateTimeErrors.pastDate
+                        ? "Cannot select past dates. Today and future dates are allowed."
+                        : ""
                     }
-                    onValidationChange={(isValid, _errorMessage) => {
-                      if (!isValid) {
+                    onValidationChange={(isValid, errorMessage) => {
+                      console.log(
+                        "NEW VALIDATION - onValidationChange called:",
+                        { isValid, errorMessage },
+                      );
+                      if (!isValid && errorMessage.includes("past")) {
                         setDateTimeErrors((prev) => ({
                           ...prev,
                           pastDate: true,
@@ -986,6 +1159,14 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                     <p className=" text-xs sm:text-sm md:text-lg">
                       {" "}
                       {timeWarning}
+                    </p>
+                  </div>
+                )}
+                {formData.dateTime && !dateTimeErrors.pastDate && (
+                  <div className="text-blue-600 px-6.5 py-2 bg-blue-100 border-l-4 border-blue-500">
+                    <p className="text-xs sm:text-sm md:text-lg">
+                      💡 Tip: For todays appointments, please select a time at
+                      least 1 minute in the future from the current time.
                     </p>
                   </div>
                 )}
@@ -1010,13 +1191,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   labelPlacement="outside"
                   variant="bordered"
                   startContent={<SVGIconProvider iconName="clock" />}
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   onChange={(time) =>
                     handleTimeChange(time as any, "startDateTime")
                   }
                   isInvalid={dateTimeErrors.pastTime}
                   errorMessage={
-                    dateTimeErrors.pastTime ? "Cannot select a past time" : ""
+                    dateTimeErrors.pastTime
+                      ? "Cannot select past times for today. Please select a future time."
+                      : ""
                   }
                 />
                 <TimeInput
@@ -1035,7 +1218,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   labelPlacement="outside"
                   variant="bordered"
                   startContent={<SVGIconProvider iconName="clock" />}
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   onChange={(time) =>
                     handleTimeChange(time as any, "endDateTime")
                   }
@@ -1067,7 +1250,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   placeholder="Enter Remarks"
                   defaultValue=""
                   errorMessage="The remarks should be at max 255 characters long."
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -1092,10 +1275,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   defaultItems={appointmentTypeList}
                   label="Select Appointment Type"
-                  placeholder="Search Appointment Type"
+                  placeholder={
+                    appointmentTypesLoading
+                      ? "Loading..."
+                      : "Search Appointment Type"
+                  }
+                  isLoading={appointmentTypesLoading}
                   onSelectionChange={(key) =>
                     handleTypeSelection(key as string)
                   }
@@ -1128,10 +1316,15 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   defaultItems={appointmentStatusList}
                   label="Select Appointment Status"
-                  placeholder="Search Appointment Status"
+                  placeholder={
+                    appointmentStatusLoading
+                      ? "Loading..."
+                      : "Search Appointment Status"
+                  }
+                  isLoading={appointmentStatusLoading}
                   onSelectionChange={(key) =>
                     handleStatusSelection(key as string)
                   }
@@ -1186,13 +1379,21 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   defaultItems={patientList}
                   label="Select Patient"
-                  placeholder="Search a Patient"
+                  placeholder={
+                    patientsLoading ? "Loading..." : "Search a Patient"
+                  }
+                  isLoading={patientsLoading}
                   onSelectionChange={(key) =>
                     handlePatientSelection(key as string)
                   }
+                  onLoadMore={() => {
+                    if (hasMorePatients && !patientsLoading) {
+                      fetchPatients(patientPage + 1, true);
+                    }
+                  }}
                   defaultFilter={(textValue, inputValue) => {
                     // Always show "Create New Patient" option regardless of search
                     if (textValue === "Create New Patient...") {
@@ -1234,10 +1435,13 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                   color={TOOL_TIP_COLORS.secondary}
                   labelPlacement="outside"
                   variant="bordered"
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                   defaultItems={doctorList}
                   label="Select Doctor"
-                  placeholder="Search a Doctor"
+                  placeholder={
+                    doctorsLoading ? "Loading..." : "Search a Doctor"
+                  }
+                  isLoading={doctorsLoading}
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, doctorId: key as string })
                   }
@@ -1279,7 +1483,7 @@ const AddAppointment: React.FC<AddUsersProps> = ({
                 <Checkbox
                   color={TOOL_TIP_COLORS.secondary}
                   defaultSelected={true}
-                  isDisabled={!edit}
+                  isDisabled={!edit || savingData}
                 >
                   All appointments get notified to the patient by default.
                 </Checkbox>
