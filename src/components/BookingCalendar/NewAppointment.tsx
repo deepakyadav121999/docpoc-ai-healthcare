@@ -458,6 +458,10 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
   };
   const handleModalClose = () => {
     setModalMessage({ success: "", error: "" });
+    // Reset loading states when modal closes
+    setSavingData(false);
+    setIsSubmitting(false);
+    setLoading(false);
     internalOnClose();
   };
 
@@ -528,15 +532,21 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     // setDateError("");
     // setIsDateValid(true);
     setTimeError("");
+    setSavingData(false);
     setIsSubmitting(false);
     setLoading(false);
+    setDateTimeErrors({
+      pastDate: false,
+      pastTime: false,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingData(true);
 
-    if (isSubmitting) return;
+    if (isSubmitting || savingData) return;
+
+    setSavingData(true);
     setIsSubmitting(true);
 
     if (!validateDateTime()) {
@@ -564,6 +574,18 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
       setModalMessage({
         success: "",
         error: timeError,
+      });
+      setSavingData(false);
+      setIsSubmitting(false);
+      onOpen();
+      return;
+    }
+
+    // Check for time warning (working hours)
+    if (timeWarning) {
+      setModalMessage({
+        success: "",
+        error: timeWarning,
       });
       setSavingData(false);
       setIsSubmitting(false);
@@ -624,6 +646,7 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         success: "",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
+      setSavingData(false);
       setIsSubmitting(false);
       onOpen();
       return;
@@ -636,8 +659,9 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
         success: "",
         error: "No access token found. Please log in again.",
       });
+      setSavingData(false);
+      setIsSubmitting(false);
       setLoading(false);
-      // setSavingData(false);
       onOpen();
       return;
     }
