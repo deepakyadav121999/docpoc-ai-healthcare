@@ -287,7 +287,7 @@ const ChatCard: React.FC<ChatCardProps> = ({ appointments = [] }) => {
 
             <div className="flex flex-1 items-center justify-between overflow-hidden">
               <div className="min-w-0">
-                <h5 className="font-medium text-dark dark:text-white truncate truncate max-w-[120px]">
+                <h5 className="font-medium text-dark dark:text-white truncate  max-w-[120px]">
                   {chat.name}
                 </h5>
                 <p className="truncate  max-w-[180px]">

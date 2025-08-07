@@ -190,12 +190,14 @@ const ChartThree: React.FC<ChartThreeProps> = ({
     const labels: string[] = Array.from(visitTypeCounts.keys());
     const series: number[] = Array.from(visitTypeCounts.values());
 
-    // Default colors with fallbacks
+    // Default colors with fallbacks - 6 colors for better variety
     const defaultColors: string[] = [
-      "#5750F1",
-      "#5475E5",
-      "#8099EC",
-      "#ADBCF2",
+      "#ebc1b0", // Primary purple
+      "#5475E5", // Blue
+      "#8099EC", // Light blue
+      "#ADBCF2", // Very light blue
+      "#f5d3dc", // Red
+      "#4ECDC4", // Teal
     ];
     const colors: string[] = labels.map(
       (_, index) => defaultColors[index % defaultColors.length],
@@ -214,6 +216,12 @@ const ChartThree: React.FC<ChartThreeProps> = ({
   const percentages: number[] = series.map((value: number) =>
     total > 0 ? Math.round((value / total) * 100) : 0,
   );
+
+  // Helper function to truncate only very long labels
+  const truncateLabel = (label: string, maxLength: number = 25): string => {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength) + "...";
+  };
 
   const options: ApexOptions = {
     chart: {
@@ -293,18 +301,49 @@ const ChartThree: React.FC<ChartThreeProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[350px]">
+      <div className="mx-auto w-full max-w-[400px]">
         <div className="-mx-7.5 flex flex-wrap items-center justify-center gap-y-2.5">
+          <style jsx>{`
+            .visit-type-label {
+              font-size: 14px !important;
+              line-height: 1.4 !important;
+            }
+            @media (max-width: 768px) {
+              .visit-type-label {
+                max-width: 140px !important;
+                font-size: 13px !important;
+              }
+            }
+            @media (max-width: 640px) {
+              .visit-type-label {
+                max-width: 120px !important;
+                font-size: 12px !important;
+              }
+            }
+            @media (max-width: 480px) {
+              .visit-type-label {
+                max-width: 100px !important;
+                font-size: 11px !important;
+              }
+            }
+          `}</style>
           {labels.map((label: string, index: number) => (
             <div key={index} className="w-full px-7.5 sm:w-1/2">
               <div className="flex w-full items-center">
                 <span
-                  className="mr-2 block h-3 w-full max-w-3 rounded-full"
+                  className="mr-3 flex-shrink-0 block h-3 w-3 rounded-full"
                   style={{ backgroundColor: colors[index] }}
                 ></span>
                 <p className="flex w-full justify-between text-body-sm font-medium text-dark dark:text-dark-6">
-                  <span>{label}</span>
-                  <span>{percentages[index]}%</span>
+                  <span
+                    className="visit-type-label max-w-[160px] sm:max-w-[190px] lg:max-w-[220px]"
+                    title={label}
+                  >
+                    {truncateLabel(label, 30)}
+                  </span>
+                  <span className="flex-shrink-0 ml-2 font-semibold">
+                    {percentages[index]}%
+                  </span>
                 </p>
               </div>
             </div>
