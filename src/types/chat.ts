@@ -7,4 +7,5 @@ export type Chat = {
   time: string;
   textCount: number;
   dot: number;
+  appointmentData?: any; // Optional appointment data for click handling
 };
