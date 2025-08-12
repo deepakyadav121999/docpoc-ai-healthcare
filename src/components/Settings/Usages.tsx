@@ -12,6 +12,10 @@ import {
   formatBytes,
 } from "@/api/usage";
 import StorageChartSkeleton from "./StorageChartSkeleton";
+import DataStatsDefault from "../DataStats/DataStatsDefault";
+import { dataStatsDefault } from "@/types/dataStatsDefault";
+import { SVGIconProvider } from "@/constants/svgIconProvider";
+import UsageStatsSkeleton from "./UsageStatsSkeleton";
 
 const Usages = () => {
   const [usageData, setUsageData] = useState<any>(null);
@@ -36,7 +40,16 @@ const Usages = () => {
 
   // Show skeleton while loading
   if (loading) {
-    return <StorageChartSkeleton />;
+    return (
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+        <div className="flex flex-col w-full">
+          <UsageStatsSkeleton />
+          <div className="mt-8">
+            <StorageChartSkeleton />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Calculate real values from API data - NO hardcoded fallbacks except 0
@@ -46,6 +59,52 @@ const Usages = () => {
   const usagePercentage =
     totalStorage > 0 ? calculateUsagePercentage(usedStorage, totalStorage) : 0;
   const freePercentage = 100 - usagePercentage;
+
+  // Extract AI tokens and WhatsApp credits data
+  const aiTokensUsed = usageData?.ai_tokens?.currentPeriod?.usage ?? 0;
+  const aiTokensLimit = usageData?.ai_tokens?.currentPeriod?.limit ?? 0;
+  const whatsappUsed = usageData?.whatsapp_credits?.currentPeriod?.usage ?? 0;
+  const whatsappLimit = usageData?.whatsapp_credits?.currentPeriod?.limit ?? 0;
+
+  // Calculate percentages for the data stats cards
+  const aiTokensPercentage =
+    aiTokensLimit > 0
+      ? Math.min(Math.round((aiTokensUsed / aiTokensLimit) * 100), 100)
+      : 0;
+  const whatsappPercentage =
+    whatsappLimit > 0
+      ? Math.min(Math.round((whatsappUsed / whatsappLimit) * 100), 100)
+      : 0;
+  const storagePercentage =
+    totalStorage > 0
+      ? Math.min(Math.round((usedStorage / totalStorage) * 100), 100)
+      : 0;
+
+  // Data stats for the cards (similar to Premium.tsx but with AI tokens instead of last month)
+  const dataStatsListUsage: dataStatsDefault[] = [
+    {
+      icon: <SVGIconProvider iconName="whats-app" color="#FF9C55" />,
+      color: "#1bb520",
+      title:
+        "Total whatsapp credit left (each credit is one whatsapp notification)",
+      value: `Total: ${whatsappUsed}/${whatsappLimit} credits`,
+      growthRate: whatsappPercentage,
+    },
+    {
+      icon: <SVGIconProvider iconName="ai" color="#8155FF" />,
+      color: "#c4b7f7",
+      title: "AI tokens used for document processing and analysis",
+      value: `AI Tokens: ${aiTokensUsed.toLocaleString()}/${aiTokensLimit.toLocaleString()}`,
+      growthRate: aiTokensPercentage,
+    },
+    {
+      icon: <SVGIconProvider iconName="document" color="#8155FF" />,
+      color: "#FF9C55",
+      title: "Combined size of all the documents generated till date.",
+      value: `Documents: ${formatBytes(usedStorage)}`,
+      growthRate: storagePercentage,
+    },
+  ];
 
   const series = [usedStorage, freeStorage];
 
@@ -192,46 +251,53 @@ const Usages = () => {
     ],
   };
   return (
-    <div className="grid grid-cols-1 gap-9">
+    <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
       <div className="flex flex-col w-full">
-        {/* <!-- Contact Form --> */}
-        <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
-          <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
-            {/* <h3 className="font-semibold text-dark dark:text-white">
-              Storage Usages
-            </h3> */}
-            <div className="flex flex-col w-full justify-center">
-              <div style={{ wordWrap: "break-word" }}>
-                <h3
-                  style={{ color: GLOBAL_ACTION_ICON_COLOR }}
-                  className="text-sm sm:text-base"
-                >
-                  As your current app is the free version, storage is limited to{" "}
-                  {totalStorage > 0
-                    ? formatBytes(totalStorage)
-                    : "250 Mega Bytes"}
-                  . Storage can be increased by either upgrade to premium or
-                  purchasing storage credits.
-                </h3>
-              </div>
+        {/* Data Stats Cards */}
+        <DataStatsDefault dataStatsList={dataStatsListUsage} />
 
-              <ChartCircular
-                series={series}
-                options={options}
-                data={[
-                  {
-                    label: `Used (${formatBytes(usedStorage)})`,
-                    percentage: usagePercentage,
-                    color: GLOBAL_DANGER_COLOR,
-                  },
-                  {
-                    label: `Free (${formatBytes(freeStorage)})`,
-                    percentage: freePercentage,
-                    color: GLOBAL_ACTION_ICON_COLOR,
-                  },
-                ]}
-                label="Storage Overview"
-              />
+        {/* Storage Chart Section */}
+        <div className="mt-8">
+          <div className="grid grid-cols-1 gap-9">
+            <div className="flex flex-col w-full">
+              <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+                <div className="border-b border-stroke px-6.5 py-4 dark:border-dark-3 flex flex-row gap-9">
+                  <div className="flex flex-col w-full justify-center">
+                    <div style={{ wordWrap: "break-word" }}>
+                      <h3
+                        style={{ color: GLOBAL_ACTION_ICON_COLOR }}
+                        className="text-sm sm:text-base"
+                      >
+                        As your current app is the free version, storage is
+                        limited to{" "}
+                        {totalStorage > 0
+                          ? formatBytes(totalStorage)
+                          : "250 Mega Bytes"}
+                        . Storage can be increased by either upgrade to premium
+                        or purchasing storage credits.
+                      </h3>
+                    </div>
+
+                    <ChartCircular
+                      series={series}
+                      options={options}
+                      data={[
+                        {
+                          label: `Used (${formatBytes(usedStorage)})`,
+                          percentage: usagePercentage,
+                          color: GLOBAL_DANGER_COLOR,
+                        },
+                        {
+                          label: `Free (${formatBytes(freeStorage)})`,
+                          percentage: freePercentage,
+                          color: GLOBAL_ACTION_ICON_COLOR,
+                        },
+                      ]}
+                      label="Storage Overview"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -62,8 +62,10 @@ const Premium = () => {
 
   const storageUsed = usageData?.storage_bytes?.currentPeriod?.usage ?? 0;
   const storageLimit = usageData?.storage_bytes?.currentPeriod?.limit ?? 0;
-  // const storageAdditionalCredits =
-  //   usageData?.storage_bytes?.credits?.additional ?? 0;
+
+  // Extract AI tokens data
+  const aiTokensUsed = usageData?.ai_tokens?.currentPeriod?.usage ?? 0;
+  const aiTokensLimit = usageData?.ai_tokens?.currentPeriod?.limit ?? 0;
 
   // Calculate growth rates (safe division)
   const whatsappPercentage =
@@ -74,22 +76,26 @@ const Premium = () => {
     storageLimit > 0
       ? Math.min(Math.round((storageUsed / storageLimit) * 100), 100)
       : 0;
+  const aiTokensPercentage =
+    aiTokensLimit > 0
+      ? Math.min(Math.round((aiTokensUsed / aiTokensLimit) * 100), 100)
+      : 0;
 
   const dataStatsListCredit: dataStatsDefault[] = [
     {
-      icon: <SVGIconProvider iconName="storage" color="#FF9C55" />,
-      color: "#4b9c78",
+      icon: <SVGIconProvider iconName="whats-app" color="#FF9C55" />,
+      color: "#1bb520",
       title:
         "Total whatsapp credit left (each credit is one whatsapp notification)",
       value: `Total: ${whatsappUsed}/${whatsappLimit} credits`,
       growthRate: whatsappPercentage,
     },
     {
-      icon: <SVGIconProvider iconName="calendar" color="#FF9C55" />,
-      color: "#8155FF",
-      title: "Storage used since last 30 days",
-      value: `Last Month: ${formatBytes(storageUsed)}`,
-      growthRate: storagePercentage,
+      icon: <SVGIconProvider iconName="ai" color="#8155FF" />,
+      color: "#c4b7f7",
+      title: "AI tokens used for document processing and analysis",
+      value: `AI Tokens: ${aiTokensUsed.toLocaleString()}/${aiTokensLimit.toLocaleString()}`,
+      growthRate: aiTokensPercentage,
     },
     {
       icon: <SVGIconProvider iconName="document" color="#8155FF" />,

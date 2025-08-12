@@ -1067,6 +1067,207 @@ export const SVGIconProvider: React.FC<SVGIconProps> = ({
           </g>
         </svg>
       );
+    case "ai":
+      return (
+        <svg
+          height="40px"
+          width="40px"
+          viewBox="0 0 512 512"
+          xmlns="http://www.w3.org/2000/svg"
+          fill={color || "#8155FF"}
+        >
+          <g>
+            {/* AI Brain/Chip Icon */}
+            <path d="M384 64H128c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64zM128 96h256c17.7 0 32 14.3 32 32v256c0 17.7-14.3 32-32 32H128c-17.7 0-32-14.3-32-32V128c0-17.7 14.3-32 32-32z" />
+            {/* Central processing unit */}
+            <rect
+              x="160"
+              y="160"
+              width="192"
+              height="192"
+              rx="16"
+              fill={color || "#8155FF"}
+              opacity="0.3"
+            />
+
+            {/* Circuit patterns */}
+            <rect
+              x="128"
+              y="180"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="128"
+              y="220"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="128"
+              y="260"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="128"
+              y="300"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+
+            <rect
+              x="352"
+              y="180"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="352"
+              y="220"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="352"
+              y="260"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="352"
+              y="300"
+              width="32"
+              height="8"
+              fill={color || "#8155FF"}
+            />
+
+            <rect
+              x="180"
+              y="128"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="220"
+              y="128"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="260"
+              y="128"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="300"
+              y="128"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+
+            <rect
+              x="180"
+              y="352"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="220"
+              y="352"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="260"
+              y="352"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+            <rect
+              x="300"
+              y="352"
+              width="8"
+              height="32"
+              fill={color || "#8155FF"}
+            />
+
+            {/* Neural network dots */}
+            <circle cx="200" cy="200" r="6" fill={color || "#8155FF"} />
+            <circle cx="256" cy="200" r="6" fill={color || "#8155FF"} />
+            <circle cx="312" cy="200" r="6" fill={color || "#8155FF"} />
+
+            <circle cx="200" cy="256" r="8" fill={color || "#8155FF"} />
+            <circle cx="312" cy="256" r="8" fill={color || "#8155FF"} />
+
+            <circle cx="200" cy="312" r="6" fill={color || "#8155FF"} />
+            <circle cx="256" cy="312" r="6" fill={color || "#8155FF"} />
+            <circle cx="312" cy="312" r="6" fill={color || "#8155FF"} />
+
+            {/* Connection lines */}
+            <line
+              x1="200"
+              y1="200"
+              x2="200"
+              y2="256"
+              stroke={color || "#8155FF"}
+              strokeWidth="2"
+              opacity="0.6"
+            />
+            <line
+              x1="312"
+              y1="200"
+              x2="312"
+              y2="256"
+              stroke={color || "#8155FF"}
+              strokeWidth="2"
+              opacity="0.6"
+            />
+            <line
+              x1="200"
+              y1="256"
+              x2="312"
+              y2="256"
+              stroke={color || "#8155FF"}
+              strokeWidth="2"
+              opacity="0.6"
+            />
+            <line
+              x1="200"
+              y1="256"
+              x2="200"
+              y2="312"
+              stroke={color || "#8155FF"}
+              strokeWidth="2"
+              opacity="0.6"
+            />
+            <line
+              x1="312"
+              y1="256"
+              x2="312"
+              y2="312"
+              stroke={color || "#8155FF"}
+              strokeWidth="2"
+              opacity="0.6"
+            />
+          </g>
+        </svg>
+      );
     case "whats-app":
       return (
         <svg
