@@ -43,6 +43,14 @@ const CustomAppointmentDatePicker: React.FC<
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(value || new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(value);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    placement: "bottom" as "top" | "bottom",
+    horizontalAlignment: "left" as "left" | "right",
+    height: 400,
+    width: 320,
+  });
   const [inputValue, setInputValue] = useState(
     value
       ? (() => {
@@ -64,35 +72,142 @@ const CustomAppointmentDatePicker: React.FC<
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Calculate optimal dropdown position
-  // const calculateDropdownPosition = () => {
-  //   if (!pickerRef.current || !inputRef.current) return;
+  const calculateDropdownPosition = () => {
+    if (!pickerRef.current || !inputRef.current) return;
 
-  //   const inputRect = inputRef.current.getBoundingClientRect();
-  //   const viewportHeight = window.innerHeight;
-  //   const viewportWidth = window.innerWidth;
+    const inputRect = inputRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-  //   // Responsive height based on screen size
-  //   const isSmallScreen = viewportWidth < 640; // sm breakpoint
-  //   const dropdownHeight = isSmallScreen ? 240 : 280; // Smaller height for mobile
+    // Responsive dropdown dimensions based on screen size
+    const isSmallScreen = viewportWidth < 640; // sm breakpoint
+    const isMediumScreen = viewportWidth < 768; // md breakpoint
+    const dropdownHeight = isSmallScreen ? 280 : isMediumScreen ? 340 : 400;
+    const dropdownWidth = isSmallScreen ? 260 : isMediumScreen ? 320 : 320;
 
-  //   const spaceBelow = viewportHeight - inputRect.bottom;
-  //   const spaceAbove = inputRect.top;
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+    const spaceRight = viewportWidth - inputRect.left;
+    // const spaceLeft = inputRect.right;
 
-  //   // Add buffer for better UX
-  //   const buffer = 20;
+    // Add buffer for better UX
+    const buffer = 20;
 
-  //   // If not enough space below but enough space above, position above
-  //   if (
-  //     spaceBelow < dropdownHeight + buffer &&
-  //     spaceAbove > dropdownHeight + buffer
-  //   ) {
-  //     // setDropdownPosition("top");
-  //   } else {
-  //     // setDropdownPosition("bottom");
-  //   }
-  // };
+    // Determine vertical placement
+    // On small screens, prefer top placement if there's not enough space below
+    const placement =
+      isSmallScreen &&
+      spaceBelow < dropdownHeight + buffer &&
+      spaceAbove >= dropdownHeight + buffer
+        ? "top"
+        : spaceBelow >= dropdownHeight + buffer
+          ? "bottom"
+          : spaceAbove >= dropdownHeight + buffer
+            ? "top"
+            : spaceBelow > spaceAbove
+              ? "bottom"
+              : "top";
+
+    // Adjust dropdown height if there's not enough space in either direction
+    let adjustedDropdownHeight = dropdownHeight;
+    const minHeight = isSmallScreen ? 220 : 200;
+
+    // For small screens, be more aggressive about height reduction
+    if (isSmallScreen) {
+      adjustedDropdownHeight = Math.min(adjustedDropdownHeight, 260);
+    }
+
+    if (placement === "bottom" && spaceBelow < dropdownHeight + buffer) {
+      adjustedDropdownHeight = Math.max(minHeight, spaceBelow - buffer);
+    } else if (placement === "top" && spaceAbove < dropdownHeight + buffer) {
+      adjustedDropdownHeight = Math.max(minHeight, spaceAbove - buffer);
+    }
+
+    // Determine horizontal alignment
+    const horizontalAlignment = spaceRight >= dropdownWidth ? "left" : "right";
+
+    // Calculate positions
+    let top = 0;
+    let left = 0;
+
+    // For small screens, use a smaller gap to prevent excessive spacing
+    const gap = isSmallScreen ? 2 : 8;
+
+    // On very small screens, force the dropdown to open closer to the input
+    if (isSmallScreen && placement === "bottom") {
+      // Check if there's enough space below, if not, reduce the gap further
+      if (spaceBelow < adjustedDropdownHeight + 20) {
+        top = inputRect.bottom + 1; // Minimal gap
+      }
+    }
+
+    if (placement === "bottom") {
+      top = inputRect.bottom + gap;
+    } else {
+      top = inputRect.top - adjustedDropdownHeight - gap;
+    }
+
+    if (horizontalAlignment === "left") {
+      left = inputRect.left;
+    } else {
+      left = inputRect.right - dropdownWidth;
+    }
+
+    // Ensure dropdown doesn't go off-screen
+    left = Math.max(
+      buffer,
+      Math.min(left, viewportWidth - dropdownWidth - buffer),
+    );
+
+    if (placement === "bottom") {
+      top = Math.min(top, viewportHeight - adjustedDropdownHeight - buffer);
+    } else {
+      top = Math.max(buffer, top);
+    }
+
+    setDropdownPosition({
+      top,
+      left,
+      placement,
+      horizontalAlignment,
+      height: adjustedDropdownHeight,
+      width: dropdownWidth,
+    });
+  };
+
+  // Effect to recalculate position when dropdown opens or on resize
+  useEffect(() => {
+    if (isOpen) {
+      // Add a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        calculateDropdownPosition();
+      }, 10);
+
+      const handleResize = () => {
+        if (isOpen) {
+          calculateDropdownPosition();
+        }
+      };
+
+      const handleScroll = () => {
+        if (isOpen) {
+          calculateDropdownPosition();
+        }
+      };
+
+      window.addEventListener("resize", handleResize);
+      window.addEventListener("scroll", handleScroll, true);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("resize", handleResize);
+        window.removeEventListener("scroll", handleScroll, true);
+      };
+    }
+  }, [isOpen]);
 
   // Get today's date (for minimum date validation)
   const today = new Date();
@@ -166,7 +281,9 @@ const CustomAppointmentDatePicker: React.FC<
     const handleClickOutside = (event: MouseEvent) => {
       if (
         pickerRef.current &&
-        !pickerRef.current.contains(event.target as Node)
+        !pickerRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setView("calendar");
@@ -504,22 +621,6 @@ const CustomAppointmentDatePicker: React.FC<
 
   return (
     <div className={`relative ${className}`} ref={pickerRef}>
-      <style jsx>{`
-        @media (max-width: 640px) {
-          .calendar-dropdown {
-            width: 270px !important;
-            max-height: 320px !important;
-          }
-        }
-
-        @media (max-width: 375px) {
-          .calendar-dropdown {
-            width: 250px !important;
-            max-height: 300px !important;
-          }
-        }
-      `}</style>
-
       {/* Label */}
       {label && labelPlacement === "outside" && (
         <label
@@ -767,16 +868,40 @@ z"
 
       {/* Calendar Dropdown */}
       {isOpen && !disabled && (
-        <div className="calendar-dropdown absolute top-full left-0 mt-2 w-full max-w-xs sm:max-w-sm md:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-50 overflow-hidden">
+        <div
+          ref={dropdownRef}
+          className="calendar-dropdown fixed bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl overflow-hidden"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            zIndex: 9999,
+            width: `${dropdownPosition.width}px`,
+            maxHeight: `${dropdownPosition.height}px`,
+          }}
+        >
+          {/* Arrow indicator */}
+          <div
+            className={`absolute w-3 h-3 bg-white dark:bg-gray-dark border-l border-t border-gray-200 dark:border-gray-600 transform rotate-45 ${
+              dropdownPosition.placement === "top"
+                ? "bottom-[-6px]"
+                : "top-[-6px]"
+            }`}
+            style={{
+              left:
+                dropdownPosition.horizontalAlignment === "left"
+                  ? "20px"
+                  : "calc(100% - 32px)",
+            }}
+          />
           {/* Header */}
-          <div className="p-3 sm:p-4 bg-gradient-to-r">
+          <div className="p-2 sm:p-3 md:p-4 bg-gradient-to-r">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <button
                   type="button"
                   onClick={(e) => handleViewChange("month", e)}
                   onMouseDown={(e) => e.preventDefault()}
-                  className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
+                  className="px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
                 >
                   {months[currentDate.getMonth()]}
                 </button>
@@ -784,7 +909,7 @@ z"
                   type="button"
                   onClick={(e) => handleViewChange("year", e)}
                   onMouseDown={(e) => e.preventDefault()}
-                  className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
+                  className="px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1 text-xs sm:text-sm font-semibold hover:bg-white/20 rounded-lg transition-colors"
                 >
                   {currentDate.getFullYear()}
                 </button>
@@ -798,7 +923,7 @@ z"
                       : handleYearChange("prev", e)
                   }
                   onMouseDown={(e) => e.preventDefault()}
-                  className="p-1 sm:p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-0.5 sm:p-1 md:p-1.5 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4"
@@ -822,7 +947,7 @@ z"
                       : handleYearChange("next", e)
                   }
                   onMouseDown={(e) => e.preventDefault()}
-                  className="p-1 sm:p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-0.5 sm:p-1 md:p-1.5 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4"
@@ -843,16 +968,19 @@ z"
           </div>
 
           {/* Calendar Body */}
-          <div className="p-3 sm:p-4">
+          <div
+            className="p-2 sm:p-3 md:p-4 flex flex-col"
+            style={{ minHeight: "200px" }}
+          >
             {view === "calendar" && (
-              <div>
+              <div className="h-full flex flex-col">
                 {/* Day Headers */}
-                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1.5">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                     (day) => (
                       <div
                         key={day}
-                        className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-1"
+                        className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-0.5"
                       >
                         {day}
                       </div>
@@ -861,7 +989,7 @@ z"
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 flex-1">
                   {generateCalendarDays(currentDate).map((date, index) => (
                     <button
                       type="button"
@@ -876,7 +1004,7 @@ z"
                       onMouseDown={(e) => e.preventDefault()}
                       disabled={!date || isDateDisabled(date)}
                       className={`
-                        w-6 h-6 sm:w-8 sm:h-8 text-xs sm:text-sm rounded-full transition-all duration-200 flex items-center justify-center font-medium
+                        w-7 h-7 sm:w-8 sm:h-8 text-xs sm:text-sm rounded-full transition-all duration-200 flex items-center justify-center font-medium
                         ${!date ? "invisible" : ""}
                         ${isToday(date!) && !isSelected(date!) ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700" : ""}
                         ${isSelected(date!) ? "bg-purple-500 text-white shadow-lg transform scale-105" : ""}
@@ -894,7 +1022,7 @@ z"
 
             {/* Month Selection */}
             {view === "month" && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 h-full items-center justify-center">
                 {monthRange.map((month) => {
                   const currentYear = new Date().getFullYear();
                   const currentMonth = new Date().getMonth();
@@ -911,7 +1039,7 @@ z"
                       onMouseDown={(e) => e.preventDefault()}
                       disabled={!isCurrentOrFutureMonth}
                       className={`
-                        px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm rounded-lg transition-all duration-200 font-medium
+                        px-1.5 py-1.5 sm:px-2 sm:py-2  text-xs sm:text-sm rounded-lg transition-all duration-200 font-medium
                         ${currentDate.getMonth() === month ? "bg-purple-500 text-white shadow-md transform scale-105" : ""}
                         ${currentDate.getMonth() !== month && isCurrentOrFutureMonth ? "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-300" : ""}
                         ${!isCurrentOrFutureMonth ? "text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50" : ""}
@@ -926,7 +1054,7 @@ z"
 
             {/* Year Selection */}
             {view === "year" && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 sm:max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 h-full overflow-y-auto">
                 {yearRange.map((year) => (
                   <button
                     type="button"
@@ -934,7 +1062,7 @@ z"
                     onClick={(e) => handleYearSelect(year, e)}
                     onMouseDown={(e) => e.preventDefault()}
                     className={`
-                      px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 font-medium
+                      px-1.5 py-1.5 sm:px-2 sm:py-2  text-xs sm:text-sm rounded-lg transition-all duration-200 font-medium
                       ${currentDate.getFullYear() === year ? "bg-purple-500 text-white shadow-md transform scale-105" : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-300"}
                     `}
                   >

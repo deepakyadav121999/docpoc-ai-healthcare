@@ -1,11 +1,16 @@
 "use client";
-import React, { useState } from "react";
-import { SubscriptionPlan, formatBytes } from "@/api/usage";
+import React, { useState, useEffect } from "react";
+import {
+  SubscriptionPlan,
+  formatBytes,
+  MySubscriptionResponse,
+} from "@/api/usage";
 import { Button } from "@nextui-org/react";
 
 interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
   loading?: boolean;
+  currentSubscription?: MySubscriptionResponse | null;
 }
 
 type BillingPeriod = "monthly" | "quarterly" | "yearly";
@@ -13,9 +18,38 @@ type BillingPeriod = "monthly" | "quarterly" | "yearly";
 const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   plans,
   loading = false,
+  currentSubscription,
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState<string>("basic"); // Default to basic
-  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+  // Determine the current plan name from subscription or default to "basic"
+  const getCurrentPlanName = (): string => {
+    if (currentSubscription?.plan?.name) {
+      return currentSubscription.plan.name;
+    }
+    return "basic"; // Default fallback
+  };
+
+  // Get billing period from current subscription or default to monthly
+  const getCurrentBillingPeriod = (): BillingPeriod => {
+    if (currentSubscription?.subscription?.billingCycle) {
+      const cycle = currentSubscription.subscription.billingCycle;
+      if (cycle === "quarterly" || cycle === "yearly") {
+        return cycle as BillingPeriod;
+      }
+    }
+    return "monthly"; // Default fallback
+  };
+
+  const [selectedPlan, setSelectedPlan] =
+    useState<string>(getCurrentPlanName());
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(
+    getCurrentBillingPeriod(),
+  );
+
+  // Update selected plan when currentSubscription changes
+  useEffect(() => {
+    setSelectedPlan(getCurrentPlanName());
+    setBillingPeriod(getCurrentBillingPeriod());
+  }, [currentSubscription]);
 
   const getPrice = (plan: SubscriptionPlan, period: BillingPeriod): string => {
     switch (period) {
@@ -95,7 +129,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {plans.map((plan) => {
           const isSelected = selectedPlan === plan.name;
-          const isBasic = plan.planType === "basic";
+          const isCurrentPlan = currentSubscription?.plan?.name === plan.name;
           const price = getPrice(plan, billingPeriod);
 
           return (
@@ -114,7 +148,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {plan.displayName}
                   </h4>
-                  {isBasic && (
+                  {isCurrentPlan && (
                     <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                       Current
                     </span>
@@ -200,19 +234,19 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               {/* Action Button */}
               <Button
                 className={`w-full ${
-                  isBasic
+                  isCurrentPlan
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
                     : isSelected
                       ? "bg-blue-500 text-white hover:bg-blue-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 }`}
-                disabled={isBasic}
+                disabled={isCurrentPlan}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!isBasic) handleUpgrade(plan.id);
+                  if (!isCurrentPlan) handleUpgrade(plan.id);
                 }}
               >
-                {isBasic
+                {isCurrentPlan
                   ? "Current Plan"
                   : isSelected
                     ? "Upgrade Now"

@@ -77,6 +77,46 @@ export default function App() {
   console.log(appointmentMessage);
 
   const profile = useSelector((state: RootState) => state.profile.data);
+  // Fetch fresh user details by id to determine documents status
+  const [userDetailJson, setUserDetailJson] = React.useState<any>({});
+  const [userDetailLoading, setUserDetailLoading] =
+    React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    const fetchUserDetail = async () => {
+      if (!profile?.id) return;
+      try {
+        const token = localStorage.getItem("docPocAuth_token");
+        const endpoint = `${API_URL}/user/${profile.id}`;
+        const res = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const parsed = res?.data?.json ? JSON.parse(res.data.json) : {};
+        setUserDetailJson(parsed);
+      } catch (e) {
+        console.log(e);
+        setUserDetailJson({});
+      } finally {
+        setUserDetailLoading(false);
+      }
+    };
+    fetchUserDetail();
+  }, [profile?.id]);
+
+  const hasAadhar = Boolean(userDetailJson?.documents?.aadharPan?.documentUrl);
+  const hasCertificate = Boolean(
+    userDetailJson?.documents?.certificate?.documentUrl,
+  );
+  const isAadharVerified = Boolean(
+    userDetailJson?.documents?.aadharPan?.documentVerified,
+  );
+  const isCertificateVerified = Boolean(
+    userDetailJson?.documents?.certificate?.documentVerified,
+  );
+  const isDocsVerified = isAadharVerified && isCertificateVerified;
   const [users, setUsers] = React.useState<Patient[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   // const [error, setError] = React.useState<string | null>(null);
@@ -381,8 +421,31 @@ export default function App() {
   // };
 
   const topContent = React.useMemo(() => {
+    // Determine warning message based on missing or unverified documents
+    let warningMessage: string | null = null;
+    if (!userDetailLoading) {
+      if (!hasAadhar && !hasCertificate) {
+        warningMessage =
+          "Please submit your documents (Aadhar/PAN & valid medical degree) to start creating patient.";
+      } else if (!hasAadhar) {
+        warningMessage =
+          "Please submit your documents (Aadhar/PAN) to start creating patient.";
+      } else if (!hasCertificate) {
+        warningMessage =
+          "Please submit your documents (valid medical degree) to start creating patient.";
+      } else if (!isDocsVerified) {
+        warningMessage =
+          "Your documents are under process. Until then, please complete clinic and employee setup. Note: patient creation requires document verification.";
+      }
+    }
+
     return (
       <div className="flex flex-col gap-4">
+        {warningMessage && (
+          <div className="p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
+            {warningMessage}
+          </div>
+        )}
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
@@ -446,22 +509,28 @@ export default function App() {
               </DropdownMenu>
             </Dropdown>
             {/* <Calendar /> */}
-            <OpaqueDefaultModal
-              headingName="Add New Patient"
-              child={
-                <AddPatient
-                  onPatientAdded={fetchPatients}
-                  onClose={handleModalClose}
-                  onMessage={(message) => {
-                    setAppointmentMessage(message);
-                    if (message.success) {
-                      setTimeout(() => handleModalClose(), 2000);
-                    }
-                  }}
-                />
-              }
-              onClose={handleModalClose}
-            />
+            {isDocsVerified ? (
+              <OpaqueDefaultModal
+                headingName="Add New Patient"
+                child={
+                  <AddPatient
+                    onPatientAdded={fetchPatients}
+                    onClose={handleModalClose}
+                    onMessage={(message) => {
+                      setAppointmentMessage(message);
+                      if (message.success) {
+                        setTimeout(() => handleModalClose(), 2000);
+                      }
+                    }}
+                  />
+                }
+                onClose={handleModalClose}
+              />
+            ) : (
+              <Button variant="flat" isDisabled style={{ minHeight: 55 }}>
+                Add New Patient
+              </Button>
+            )}
           </div>
         </div>
         <div className="flex justify-between items-center">
@@ -490,6 +559,10 @@ export default function App() {
     onRowsPerPageChange,
     users.length,
     hasSearchFilter,
+    hasAadhar,
+    hasCertificate,
+    isDocsVerified,
+    userDetailLoading,
   ]);
 
   const bottomContent = React.useMemo(() => {

@@ -9,7 +9,18 @@ interface DataStatsDefaultProps {
 const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
   dataStatsList,
 }) => {
-  // const columnLength = dataStatsList.length || 3;
+  // Function to determine font size based on text length
+  const getFontSizeClass = (text: string): string => {
+    const length = text.length;
+    if (length > 20) {
+      return "text-xs sm:text-sm"; // Smaller font for very long text
+    } else if (length > 15) {
+      return "text-sm sm:text-base"; // Medium font for long text
+    } else {
+      return "text-sm sm:text-heading-6"; // Original font for normal text
+    }
+  };
+
   return (
     <div
       className={`grid grid-cols-1 gap-2 sm:gap-4 md:gap-6 2xl:gap-7.5 md:grid-cols-3`}
@@ -28,7 +39,9 @@ const DataStatsDefault: React.FC<DataStatsDefaultProps> = ({
 
           <div className="mt-3 sm:mt-6 flex items-end justify-between">
             <div>
-              <h4 className="mb-1 sm:mb-1.5 text-sm sm:text-heading-6 font-bold text-dark dark:text-white">
+              <h4
+                className={`mb-1 sm:mb-1.5 ${getFontSizeClass(item.value)} font-bold text-dark dark:text-white`}
+              >
                 {item.value}
               </h4>
               <span className="text-xs sm:text-body-sm font-medium">

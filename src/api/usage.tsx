@@ -122,6 +122,100 @@ export const clearUsageCache = (): void => {
   };
 };
 
+// Interface for current subscription response
+export interface MySubscriptionResponse {
+  subscription: {
+    id: string;
+    userId: string;
+    planId: string;
+    status: string;
+    billingCycle: string;
+    paymentStatus: string;
+    startedAt: string;
+    expiresAt: string;
+    nextBillingDate: string;
+    cancelledAt: string | null;
+    amountPaid: string;
+    paymentMethod: string;
+    paymentTransactionId: string;
+    customLimits: any;
+    customFeatures: any;
+    notes: string | null;
+    autoRenew: boolean;
+    gracePeriodDays: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    plan: SubscriptionPlan;
+    user: any;
+  };
+  plan: SubscriptionPlan;
+  user: any;
+  remainingDays: number;
+  usageStatus: any;
+}
+
+// Cache for current subscription data
+let mySubscriptionCache: {
+  data: MySubscriptionResponse | null;
+  timestamp: number;
+} = {
+  data: null,
+  timestamp: 0,
+};
+
+// Fetch current user subscription
+export const getMySubscription =
+  async (): Promise<MySubscriptionResponse | null> => {
+    const now = Date.now();
+
+    // Check if we have cached data that's still valid
+    if (
+      mySubscriptionCache.data &&
+      now - mySubscriptionCache.timestamp < CACHE_DURATION
+    ) {
+      console.log("Returning cached subscription data");
+      return mySubscriptionCache.data;
+    }
+
+    const token = localStorage.getItem("docPocAuth_token");
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      console.log("Fetching fresh subscription data from API");
+      const response = await axios.get(
+        `${API_URL}/subscription/my-subscription`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      // Update cache
+      mySubscriptionCache = {
+        data: response.data,
+        timestamp: now,
+      };
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching subscription data:", error);
+
+      // If we have old cached data, return it as fallback
+      if (mySubscriptionCache.data) {
+        console.log("API failed, returning stale cached subscription data");
+        return mySubscriptionCache.data;
+      }
+
+      // Return null if no subscription found (user has no subscription)
+      return null;
+    }
+  };
+
 // Subscription Plans Interface
 export interface SubscriptionPlan {
   id: string;
