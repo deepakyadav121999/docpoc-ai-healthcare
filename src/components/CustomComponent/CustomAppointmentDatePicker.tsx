@@ -178,35 +178,51 @@ const CustomAppointmentDatePicker: React.FC<
     });
   };
 
-  // Effect to recalculate position when dropdown opens or on resize
+  // Effect to recalculate position when dropdown opens or on resize/scroll
   useEffect(() => {
-    if (isOpen) {
-      // Add a small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        calculateDropdownPosition();
-      }, 10);
+    if (!isOpen) return;
 
-      const handleResize = () => {
-        if (isOpen) {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      calculateDropdownPosition();
+    }, 10);
+
+    const tickingRef = { current: false } as { current: boolean };
+
+    const handleResize = () => {
+      if (!isOpen) return;
+      calculateDropdownPosition();
+    };
+
+    const handleScroll = (e: Event) => {
+      if (!isOpen) return;
+      // Ignore scrolls originating from inside the picker or dropdown
+      const target = e.target as Node | null;
+      if (
+        (pickerRef.current && target && pickerRef.current.contains(target)) ||
+        (dropdownRef.current && target && dropdownRef.current.contains(target))
+      ) {
+        return;
+      }
+
+      if (!tickingRef.current) {
+        tickingRef.current = true;
+        window.requestAnimationFrame(() => {
           calculateDropdownPosition();
-        }
-      };
+          tickingRef.current = false;
+        });
+      }
+    };
 
-      const handleScroll = () => {
-        if (isOpen) {
-          calculateDropdownPosition();
-        }
-      };
+    window.addEventListener("resize", handleResize, { passive: true });
+    // Use non-capturing passive scroll to avoid reacting to internal scrolls and reduce jank
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
-      window.addEventListener("resize", handleResize);
-      window.addEventListener("scroll", handleScroll, true);
-
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener("resize", handleResize);
-        window.removeEventListener("scroll", handleScroll, true);
-      };
-    }
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize as EventListener);
+      window.removeEventListener("scroll", handleScroll as EventListener);
+    };
   }, [isOpen]);
 
   // Get today's date (for minimum date validation)
