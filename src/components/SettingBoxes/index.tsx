@@ -1605,7 +1605,7 @@ const SettingBoxes = () => {
                         </p>{" "}
                       </div>
                     ) : (
-                      <p>Upadte Profile</p>
+                      <p>Update Profile</p>
                     )}
                   </button>
                   <EnhancedModal

@@ -662,7 +662,7 @@ export default function OpaqueModal(props: {
         isOpen={isOpen}
         onClose={onClose}
         style={{ maxWidth: 800 }}
-        className="max-h-[90vh] overflow-y-auto relative"
+        className="max-h-[98vh] overflow-y-auto relative"
       >
         {loading && (
           <div className="fixed inset-0 flex items-center justify-center bg-white/60 z-[2000] w-full h-full">
