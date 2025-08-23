@@ -129,8 +129,16 @@
 
 // export default ChartThree;
 import { ApexOptions } from "apexcharts";
-import React from "react";
+import React, { useState, useMemo } from "react";
 import ReactApexChart from "react-apexcharts";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+} from "@nextui-org/react";
+import { ChevronDownIcon } from "@/components/CalenderBox/ChevronDownIcon";
 
 interface VisitType {
   id: string;
@@ -142,6 +150,7 @@ interface Appointment {
   visitType: {
     name: string;
   };
+  startDateTime: string;
 }
 
 interface ChartThreeProps {
@@ -155,13 +164,75 @@ interface ChartData {
   colors: string[];
 }
 
+type TimeFilter = "today" | "thisWeek" | "thisMonth";
+
 const ChartThree: React.FC<ChartThreeProps> = ({
   types = [],
   appointments = [],
 }) => {
+  // State for time filter - default to "thisMonth"
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("thisMonth");
+
+  // Filter appointments by date only (no time consideration)
+  const filteredAppointments = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return appointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.startDateTime);
+      const appointmentDay = new Date(
+        appointmentDate.getFullYear(),
+        appointmentDate.getMonth(),
+        appointmentDate.getDate(),
+      );
+
+      switch (timeFilter) {
+        case "today":
+          return appointmentDay.getTime() === today.getTime();
+
+        case "thisWeek":
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(today.getDate() - today.getDay());
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          return appointmentDay >= startOfWeek && appointmentDay <= endOfWeek;
+
+        case "thisMonth":
+          const startOfMonth = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            1,
+          );
+          const endOfMonth = new Date(
+            today.getFullYear(),
+            today.getMonth() + 1,
+            0,
+          );
+          return appointmentDay >= startOfMonth && appointmentDay <= endOfMonth;
+
+        default:
+          return true;
+      }
+    });
+  }, [appointments, timeFilter]);
+
+  // Helper function to get filter label
+  const getFilterLabel = () => {
+    switch (timeFilter) {
+      case "today":
+        return "Today";
+      case "thisWeek":
+        return "This Week";
+      case "thisMonth":
+        return "This Month";
+      default:
+        return "This Month";
+    }
+  };
+
   // Process the data to get visit type counts with proper TypeScript typing
   const getVisitTypeData = (): ChartData => {
-    if (!types.length || !appointments.length) {
+    if (!types.length || !filteredAppointments.length) {
       return {
         series: [0],
         labels: ["No Data"],
@@ -177,8 +248,8 @@ const ChartThree: React.FC<ChartThreeProps> = ({
       visitTypeCounts.set(type.name, 0);
     });
 
-    // Count appointments for each type with proper null checks
-    appointments.forEach((appointment: Appointment) => {
+    // Count filtered appointments for each type with proper null checks
+    filteredAppointments.forEach((appointment: Appointment) => {
       const typeName: string | undefined = appointment.visitType?.name;
       if (typeName && visitTypeCounts.has(typeName)) {
         const currentCount: number = visitTypeCounts.get(typeName) || 0;
@@ -282,11 +353,44 @@ const ChartThree: React.FC<ChartThreeProps> = ({
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white px-7.5 pb-7 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-5">
-      <div className="mb-9 justify-between gap-4 sm:flex">
-        <div>
-          <h4 className="text-body-2xlg font-bold text-dark dark:text-white">
-            Visit Types
-          </h4>
+      <div className="mb-9">
+        <h4 className="text-body-2xlg font-bold text-dark dark:text-white mb-3">
+          Visit Types
+        </h4>
+        <div className="flex justify-end">
+          <Dropdown>
+            <DropdownTrigger>
+              <Button
+                variant="flat"
+                size="sm"
+                endContent={<ChevronDownIcon className="text-small" />}
+                className="text-xs min-w-unit-20 h-8 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-0"
+              >
+                {getFilterLabel()}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Time filter"
+              onAction={(key) => {
+                setTimeFilter(key as TimeFilter);
+              }}
+              selectedKeys={[timeFilter]}
+              selectionMode="single"
+            >
+              <DropdownItem key="today" onClick={(e) => e.stopPropagation()}>
+                Today
+              </DropdownItem>
+              <DropdownItem key="thisWeek" onClick={(e) => e.stopPropagation()}>
+                This Week
+              </DropdownItem>
+              <DropdownItem
+                key="thisMonth"
+                onClick={(e) => e.stopPropagation()}
+              >
+                This Month
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
       </div>
 

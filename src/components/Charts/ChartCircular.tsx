@@ -40,18 +40,21 @@ const ChartThree: React.FC<ChartThreeProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[350px]">
+      <div className="mx-auto w-full max-w-[450px]">
         <div className="-mx-7.5 flex flex-wrap items-center justify-center gap-y-2.5">
           {data.map((item, index) => (
             <div key={index} className="w-full px-7.5 sm:w-1/2">
               <div className="flex w-full items-center">
                 <span
-                  className="mr-2 block h-3 w-full max-w-3 rounded-full"
+                  className="mr-3 flex-shrink-0 block h-3 w-3 sm:h-3 sm:w-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 ></span>
-                <p className="flex w-full justify-between text-body-sm font-medium text-dark dark:text-dark-6">
-                  <span> {item.label} </span>
-                  <span> {item.percentage}% </span>
+                <p className="flex w-full justify-between text-body-sm font-medium text-gray-900 dark:text-gray-300">
+                  <span className="truncate"> {item.label} </span>
+                  <span className="whitespace-nowrap ml-2">
+                    {" "}
+                    {item.percentage}%{" "}
+                  </span>
                 </p>
               </div>
             </div>

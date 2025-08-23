@@ -7,6 +7,7 @@ interface CustomDatePickerProps {
   placeholder?: string;
   maxDate?: Date;
   className?: string;
+  disabled?: boolean;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -15,6 +16,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   placeholder = "Select Date",
   maxDate = new Date(),
   className = "",
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(value || new Date());
@@ -372,12 +374,15 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`} ref={pickerRef}>
+    <div
+      className={`relative ${className} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      ref={pickerRef}
+    >
       {/* Real input for focus/blur management */}
       <input
         ref={inputRef}
         placeholder="DD/MM/YYYY"
-        className={`w-full px-3 py-2 pr-10 border rounded-lg bg-white dark:bg-gray-dark text-gray-900 dark:text-white cursor-pointer hover:border-purple-800 focus:border-purple-800 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition-all duration-200 text-base outline-none ${
+        className={`w-full px-3 py-2 pr-10 border rounded-lg bg-white dark:bg-gray-dark text-gray-900 dark:text-white ${disabled ? "cursor-not-allowed" : "cursor-pointer"} ${!disabled ? "hover:border-purple-800 focus:border-purple-800 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800" : ""} transition-all duration-200 text-base outline-none ${
           isOpen
             ? "border-purple-800 ring-2 ring-purple-200 dark:ring-purple-800"
             : "border-gray-300 dark:border-gray-600"
@@ -389,17 +394,21 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           touchAction: "manipulation",
         }}
         value={inputValue}
-        readOnly={false}
+        readOnly={disabled ? true : false}
+        disabled={disabled}
         onFocus={() => {
+          if (disabled) return;
           setIsTyping(false);
           setIsOpen(true);
         }}
         onClick={() => {
+          if (disabled) return;
           // Always open calendar on click, even if input already has focus
           setIsTyping(false);
           setIsOpen(true);
         }}
         onChange={(e) => {
+          if (disabled) return;
           setIsTyping(true);
           // Format and validate input as user types
           const formattedValue = formatInputValue(e.target.value);
@@ -415,6 +424,10 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           }
         }}
         onKeyDown={(e) => {
+          if (disabled) {
+            e.preventDefault();
+            return;
+          }
           // Allow navigation keys, backspace, delete
           const allowedKeys = [
             "Backspace",
@@ -436,6 +449,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           }
         }}
         onBlur={(e) => {
+          if (disabled) return;
           // Only close if not clicking on calendar elements
           const relatedTarget = e.relatedTarget as HTMLElement;
           if (!relatedTarget || !pickerRef.current?.contains(relatedTarget)) {
@@ -601,7 +615,7 @@ z"
       </div>
 
       {/* Calendar Dropdown - Smart Positioning */}
-      {isOpen && (
+      {isOpen && !disabled && (
         <div
           className={`absolute left-0 w-56 sm:w-64 md:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-[9999] overflow-hidden max-h-[60vh] sm:max-h-none ${
             dropdownPosition === "top" ? "bottom-full mb-2" : "top-full mt-2"
