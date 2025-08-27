@@ -617,7 +617,7 @@ z"
       {/* Calendar Dropdown - Smart Positioning */}
       {isOpen && !disabled && (
         <div
-          className={`absolute left-0 w-56 sm:w-64 md:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-[9999] overflow-hidden max-h-[60vh] sm:max-h-none ${
+          className={`absolute left-0 w-64 sm:w-72 md:w-80 bg-white dark:bg-gray-dark border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl dark:shadow-2xl z-[9999] overflow-hidden max-h-[60vh] sm:max-h-none ${
             dropdownPosition === "top" ? "bottom-full mb-2" : "top-full mt-2"
           }`}
         >

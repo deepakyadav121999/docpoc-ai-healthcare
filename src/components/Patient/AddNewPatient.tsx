@@ -5,6 +5,7 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
+  Button,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -455,7 +456,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                       e.preventDefault();
                     }
                   }}
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
 
                 <Autocomplete
@@ -480,7 +481,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, gender: key as string })
                   }
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -523,7 +524,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     }
                   }}
                   maxLength={10}
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
                 <Input
                   classNames={{
@@ -551,7 +552,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     //   setErrors((prev) => [...prev, "Please enter a valid email address."]);
                     // }
                   }}
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
               </div>
 
@@ -579,7 +580,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, bloodGroup: key as string })
                   }
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -611,7 +612,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     maxDate={new Date()}
                     placeholder="Select Date of Birth"
                     className="w-full hover:border-purple-600 focus:border-purple-600"
-                    disabled={shouldDisable}
+                    disabled={shouldDisable || loading}
                   />
                 </div>
               </div>
@@ -637,7 +638,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                isDisabled={!edit || shouldDisable}
+                isDisabled={!edit || shouldDisable || loading}
               />
 
               <div className="flex justify-center mt-2 sm:mt-4">
@@ -650,7 +651,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                       status: value ? "Active" : "Inactive",
                     })
                   }
-                  isDisabled={!edit || shouldDisable}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   Active Status
                 </Checkbox>
@@ -666,17 +667,17 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
             </div>
 
             <div className="flex justify-center mt-2 sm:mt-4 ">
-              <button
+              <Button
                 type="submit"
-                // isDisabled={!edit || loading}
-                // color={TOOL_TIP_COLORS.secondary}
+                isDisabled={shouldDisable || loading}
+                color={TOOL_TIP_COLORS.secondary}
                 // onPress={onOpen}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                // className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 250, marginBottom: 20 }}
-                disabled={shouldDisable}
+                // disabled={shouldDisable || loading}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
 
               <EnhancedModal
                 isOpen={isOpen}

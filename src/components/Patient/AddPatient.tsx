@@ -5,6 +5,7 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
+  Button,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -392,7 +393,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                       e.preventDefault();
                     }
                   }}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 />
 
                 <Autocomplete
@@ -417,7 +418,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, gender: key as string })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -460,7 +461,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                     }
                   }}
                   maxLength={10}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 />
                 <Input
                   classNames={{
@@ -485,10 +486,10 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   onBlur={() => {
                     // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     // if (!emailRegex.test(e.target.value)) {
-                    //   setErrors((prev) => [...prev, "Please enter a valid email address."]);
+                    //   setErrors((prev) => [...prev, "Please enter a valid email address."];
                     // }
                   }}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 />
               </div>
 
@@ -516,7 +517,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, bloodGroup: key as string })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -548,6 +549,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                     maxDate={new Date()}
                     placeholder="Select Date of Birth"
                     className="w-full hover:border-purple-600 focus:border-purple-600"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -572,7 +574,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                isDisabled={!edit}
+                isDisabled={!edit || loading}
               />
 
               <div className="flex justify-center mt-2 sm:mt-4">
@@ -585,7 +587,7 @@ const AddPatient: React.FC<AddPatientProps> = ({
                       status: value ? "Active" : "Inactive",
                     })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                 >
                   Active Status
                 </Checkbox>
@@ -601,16 +603,16 @@ const AddPatient: React.FC<AddPatientProps> = ({
             </div>
 
             <div className="flex justify-center mt-2 sm:mt-4 ">
-              <button
+              <Button
                 type="submit"
-                // isDisabled={!edit || loading}
-                // color={TOOL_TIP_COLORS.secondary}
+                isDisabled={!edit || loading}
+                color={TOOL_TIP_COLORS.secondary}
                 // onPress={onOpen}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                // className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 280, marginBottom: 20 }}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
 
               <EnhancedModal
                 isOpen={isOpen}

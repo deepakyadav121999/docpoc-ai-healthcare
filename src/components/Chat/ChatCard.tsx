@@ -201,6 +201,21 @@ const ChatCard: React.FC<ChatCardProps> = ({
   // Use ref for throttling to avoid dependency issues
   const lastFetchTimeRef = useRef<number>(0);
   const THROTTLE_DELAY = 2000;
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (isOpen) {
+      header?.classList.remove("z-999");
+      header?.classList.add("z-0");
+    }
+    // else if(isNotificationOpen) {
+    //     header?.classList.remove("z-999");
+    //   header?.classList.add("z-0");
+    // }
+    else {
+      header?.classList.remove("z-0");
+      header?.classList.add("z-999");
+    }
+  }, [isOpen]);
 
   // Fetch filtered appointments from API
   const fetchFilteredAppointments = useCallback(
