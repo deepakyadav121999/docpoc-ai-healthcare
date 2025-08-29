@@ -1,5 +1,11 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import axios from "axios";
 import {
   Table,
@@ -12,11 +18,17 @@ import {
   Pagination,
   Selection,
   Spinner,
+  Input,
+  DatePicker,
 } from "@nextui-org/react";
 import { columns, statusOptions } from "./data";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-// import debounce from "lodash.debounce";
+import { SearchIcon } from "../CalenderBox/SearchIcon";
+import { CalendarDate, parseDate } from "@internationalized/date";
+import { getLocalTimeZone } from "@internationalized/date";
+import debounce from "lodash.debounce";
+import type { DebouncedFunc } from "lodash";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -45,15 +57,23 @@ export default function ReportDataTable() {
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [totalCount, setTotalCount] = useState(0);
-  const [filterValue] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter] = useState<Selection>("all");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDateShow, setSelectedDateShow] = useState<string | null>(null);
 
   const API_URL = process.env.API_URL;
   const hasSearchFilter = Boolean(filterValue);
+
+  const debouncedFetchRef =
+    useRef<DebouncedFunc<(searchValue: string) => void>>();
+  const debouncedDateFetchRef =
+    useRef<DebouncedFunc<(date: string | null) => void>>();
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -66,21 +86,29 @@ export default function ReportDataTable() {
       }
 
       // Set default date range (adjust as needed)
-      const fromDate = "2022-01-01T05:19:15.544Z";
-      const toDate = "3000-05-02T05:19:15.545Z";
+      let fromDate = "2022-01-01T05:19:15.544Z";
+      let toDate = "3000-05-02T05:19:15.545Z";
 
-      //  const endpoint = searchName
-      //     ? `${API_URL}/DocPOC/v1/reports/name/${searchName}`
-      //     : `${API_URL}/DocPOC/v1/reports/list/${branchId} `;
+      // Use selected date if available
+      if (selectedDate) {
+        fromDate = selectedDate;
+        toDate = selectedDate;
+      }
+
       const endpoint = `${API_URL}/reports/list/${branchId}`;
 
-      const params = {
+      const params: any = {
         page,
         pageSize: rowsPerPage,
         from: fromDate,
         to: toDate,
         reportType: ["MEDICAL_REPORT", "INVOICE"],
       };
+
+      // Add search filter if available - fix the condition
+      if (filterValue) {
+        params.name = filterValue;
+      }
 
       const response = await axios.get(endpoint, {
         params,
@@ -98,11 +126,37 @@ export default function ReportDataTable() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, profile?.branchId]);
+  }, [page, rowsPerPage, profile?.branchId, selectedDate, filterValue]);
 
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
+
+  // Initialize debounced search - fix the implementation
+  useEffect(() => {
+    debouncedFetchRef.current = debounce((searchValue: string) => {
+      setFilterValue(searchValue);
+      setPage(1);
+      // Don't call fetchReports here, let the useEffect handle it
+    }, 500);
+
+    return () => {
+      debouncedFetchRef.current?.cancel();
+    };
+  }, []);
+
+  // Initialize debounced date filtering - fix the implementation
+  useEffect(() => {
+    debouncedDateFetchRef.current = debounce((date: string | null) => {
+      setSelectedDate(date);
+      setPage(1);
+      // Don't call fetchReports here, let the useEffect handle it
+    }, 500);
+
+    return () => {
+      debouncedDateFetchRef.current?.cancel();
+    };
+  }, []);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -213,39 +267,70 @@ export default function ReportDataTable() {
     }
   }, []);
 
-  // const onRowsPerPageChange = useCallback(
-  //   (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //     setRowsPerPage(Number(e.target.value));
-  //     setPage(1);
-  //   },
-  //   [],
-  // );
+  // Search functionality - fix the implementation
+  const onSearchChange = (value?: string) => {
+    const val = value || "";
+    setSearchTerm(val);
+    setPage(1);
+    debouncedFetchRef.current?.(val);
+  };
 
-  // const debouncedFetchReports = useMemo(
-  //   () => debounce((value: string) => fetchReports(), 500),
-  //   [fetchReports],
-  // );
+  const onClear = useCallback(() => {
+    debouncedFetchRef.current?.cancel();
+    setFilterValue("");
+    setSearchTerm("");
+    setPage(1);
+    // fetchReports will be called automatically by useEffect
+  }, []);
 
-  // const onSearchChange = useCallback(
-  //   (value?: string) => {
-  //     setFilterValue(value || "");
-  //     setPage(1);
-  //     debouncedFetchReports(value || "");
-  //   },
-  //   [debouncedFetchReports],
-  // );
+  // Date filtering functionality - fix the implementation
+  const handleDateChange = (date: CalendarDate | null) => {
+    if (date) {
+      const jsDate = date.toDate(getLocalTimeZone());
+      const formattedDate = `${jsDate.getFullYear()}-${String(jsDate.getMonth() + 1).padStart(2, "0")}-${String(jsDate.getDate()).padStart(2, "0")}`;
+      setSelectedDateShow(formattedDate);
+      debouncedDateFetchRef.current?.(formattedDate);
+    } else {
+      setSelectedDateShow(null);
+      debouncedDateFetchRef.current?.(null);
+    }
+  };
 
-  // const onClear = useCallback(() => {
-  //   setFilterValue("");
-  //   setPage(1);
-  // }, []);
-
-  // const onStatusFilterChange = (selected: Selection) => {
-  //   // const selectedStatuses = Array.from(selected) as string[];
-  //   setStatusFilter(selected);
-  //   setPage(1);
-  //   // You can add status filtering logic here if needed
-  // };
+  const topContent = useMemo(() => {
+    return (
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+        <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-wrap xl:flex-nowrap gap-3 justify-between sm:items-end w-full items-center">
+            <Input
+              isClearable
+              className="w-full sm:w-[calc(50%-0.75rem)] h-[40px] sm:h-[45px] md:h-[50px]"
+              placeholder="Search by patient name..."
+              startContent={<SearchIcon />}
+              value={searchTerm}
+              onClear={onClear}
+              onValueChange={onSearchChange}
+            />
+            <DatePicker
+              showMonthAndYearPickers
+              label="Report date"
+              className="w-full sm:w-[calc(50%-0.75rem)] h-[42px] sm:h-[46px] md:h-[51px]"
+              value={
+                selectedDateShow && /^\d{4}-\d{2}-\d{2}$/.test(selectedDateShow)
+                  ? parseDate(selectedDateShow)
+                  : undefined
+              }
+              onChange={handleDateChange}
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-default-400 text-small">
+              {`Total ${totalCount} Reports`}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }, [searchTerm, selectedDateShow, totalCount, onClear, onSearchChange]);
 
   const bottomContent = useMemo(() => {
     return (
@@ -270,6 +355,7 @@ export default function ReportDataTable() {
 
   return (
     <div className="relative">
+      {topContent}
       <Table
         aria-label="Report Details"
         isHeaderSticky
