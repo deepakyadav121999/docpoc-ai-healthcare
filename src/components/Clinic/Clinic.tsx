@@ -371,6 +371,8 @@ const Clinic = () => {
       errors.workingDays = "At least one working day must be selected.";
     if (selectedDepartments.length === 0)
       errors.departments = "At least one department must be selected.";
+    if (!detectedLocation.trim())
+      errors.detectedLocation = "Location detection is required.";
 
     if (Object.keys(errors).length > 0) {
       // setErrors(errors); // Set the errors in state for further use
@@ -1073,11 +1075,16 @@ const Clinic = () => {
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"
-                  label="Detected Location"
+                  label="Detected Location *"
                   value={detectedLocation}
                   isReadOnly
                   color={TOOL_TIP_COLORS.secondary}
                   isDisabled={isButtonLoading || !edit}
+                  description={
+                    !detectedLocation.trim()
+                      ? "Please detect your location to continue"
+                      : "Location detected successfully"
+                  }
                 />
 
                 <button
