@@ -582,16 +582,16 @@ const NewAppointment: React.FC<NewAppointmentProps> = ({
     }
 
     // Check for time warning (working hours)
-    if (timeWarning) {
-      setModalMessage({
-        success: "",
-        error: timeWarning,
-      });
-      setSavingData(false);
-      setIsSubmitting(false);
-      onOpen();
-      return;
-    }
+    // if (timeWarning) {
+    //   setModalMessage({
+    //     success: "",
+    //     error: timeWarning,
+    //   });
+    //   setSavingData(false);
+    //   setIsSubmitting(false);
+    //   onOpen();
+    //   return;
+    // }
 
     if (new Date(formData.startDateTime) >= new Date(formData.endDateTime)) {
       setModalMessage({

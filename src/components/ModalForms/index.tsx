@@ -244,6 +244,7 @@ export default function ModalForm(props: {
     updated.setHours(original.getHours());
     updated.setMinutes(original.getMinutes());
     updated.setSeconds(original.getSeconds());
+    updated.setMilliseconds(0); // Ensure milliseconds are zero
 
     return updated.toISOString();
   };
@@ -658,6 +659,7 @@ export default function ModalForm(props: {
       });
 
       const appointment = response.data;
+
       setAppointmentDateTime(appointment.startDateTime);
       // setAppointmentPatientId(appointment.patientId);
       setAppointmentBranch(appointment.branchId);
@@ -809,8 +811,10 @@ export default function ModalForm(props: {
         // patientId: appointmentPatientId,
         startDateTime: startDateTime,
         endDateTime: endDateTime,
+        dateTime: appointmentDate, // Add the missing dateTime field
         type: appointmentType,
       };
+
       props.onDataChange(updatedData);
     }
   }, [
@@ -841,6 +845,7 @@ export default function ModalForm(props: {
     // appointmentPatientId,
     startDateTime,
     endDateTime,
+    appointmentDate, // Add appointmentDate to dependencies
   ]);
 
   const editBloodGroup = () => {
@@ -1484,7 +1489,7 @@ export default function ModalForm(props: {
         </div>
         <Card
           // isBlurred
-          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto "
+          className="border-none bg-background/60 dark:bg-default-100/50 max-w-[800px] mx-auto"
           shadow="sm"
         >
           <CardBody>
@@ -1642,8 +1647,18 @@ export default function ModalForm(props: {
                             iconName="followup"
                             color={GLOBAL_SUCCESS_COLOR}
                             clickEvent={() => {
-                              const newAppointmentDate = tempDate.toISOString();
-                              setAppointmentDate(newAppointmentDate);
+                              // Create date-only string for dateTime field (YYYY-MM-DD format)
+                              const year = tempDate.getFullYear();
+                              const month = String(
+                                tempDate.getMonth() + 1,
+                              ).padStart(2, "0");
+                              const day = String(tempDate.getDate()).padStart(
+                                2,
+                                "0",
+                              );
+                              const dateOnlyString = `${year}-${month}-${day}T00:00:00.000Z`;
+
+                              setAppointmentDate(dateOnlyString);
                               setStartDateTime(
                                 updateDatePreservingTime(
                                   tempDate,

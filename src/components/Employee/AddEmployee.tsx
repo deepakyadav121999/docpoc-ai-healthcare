@@ -401,7 +401,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                       e.preventDefault();
                     }
                   }}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                   maxLength={70}
                 />
 
@@ -438,7 +438,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   onSelectionChange={(key) =>
                     handleJsonUpdate("designation", key as string)
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                   color={TOOL_TIP_COLORS.secondary}
                 >
                   {(item) => (
@@ -456,7 +456,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     // defaultValue={new Time(8, 45)}
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("start", e.toString())}
-                    isDisabled={!edit}
+                    isDisabled={!edit || loading}
                     classNames={{
                       input: [
                         "text-black", // Light mode text color
@@ -476,7 +476,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     // defaultValue={new Time(6, 45)}
                     startContent={<SVGIconProvider iconName="clock" />}
                     onChange={(e) => handleTimeChange("end", e.toString())}
-                    isDisabled={!edit}
+                    isDisabled={!edit || loading}
                     classNames={{
                       input: [
                         "text-black", // Light mode text color
@@ -515,7 +515,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     }
                   }}
                   maxLength={10}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                   classNames={{
                     input: [
                       "text-black", // Light mode text color
@@ -538,7 +538,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     setFormData({ ...formData, email: e.target.value })
                   }
                   onBlur={() => {}}
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                   classNames={{
                     input: [
                       "text-black", // Light mode text color
@@ -601,6 +601,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     maxDate={new Date()}
                     placeholder="Select Date of Birth"
                     className="w-full hover:border-purple-600 focus:border-purple-600"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -626,7 +627,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, gender: key as string })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || loading}
                   color={TOOL_TIP_COLORS.secondary}
                 >
                   {(item) => (
@@ -677,6 +678,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("setAppointments", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Set Appointments
                   </Checkbox>
@@ -685,6 +687,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("editDoctor", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Edit Doctor
                   </Checkbox>
@@ -693,6 +696,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("editCreatePatients", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Edit/Create Patients
                   </Checkbox>
@@ -701,6 +705,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("editCreateStaffs", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Edit/Create Staffs
                   </Checkbox>
@@ -709,6 +714,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("editCreateReminders", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Edit/Create Reminders
                   </Checkbox>
@@ -717,6 +723,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                     onValueChange={(value) =>
                       handleAccessChange("editCreatePayments", value)
                     }
+                    isDisabled={!edit || loading}
                   >
                     Edit/Create Payments
                   </Checkbox>
@@ -747,6 +754,7 @@ const AddUsers: React.FC<AddUsersProps> = ({
                 type="submit"
                 className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 250, marginBottom: 20 }}
+                disabled={loading}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>

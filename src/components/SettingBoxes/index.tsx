@@ -60,6 +60,19 @@ interface UserJsonData {
   designation?: string;
   workingHours?: string;
   bio?: string;
+  documents?: {
+    aadharPan?: {
+      documentName: string;
+      documentUrl: string;
+      documentVerified: boolean;
+      documentNumber: string;
+    };
+    certificate?: {
+      documentName: string;
+      documentUrl: string;
+      documentVerified: boolean;
+    };
+  };
   [key: string]: any;
 }
 // interface PasswordFormData {
@@ -92,6 +105,14 @@ const SettingBoxes = () => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  // Mandatory documents state
+  // No longer storing Aadhar/PAN number; only files/URLs
+  const [aadharPanFile, setAadharPanFile] = useState<File | null>(null);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [aadharPanRemovePending, setAadharPanRemovePending] = useState(false);
+  const [certificateRemovePending, setCertificateRemovePending] =
+    useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const designations: Designation[] = [
@@ -125,6 +146,22 @@ const SettingBoxes = () => {
     : {};
   const currentDesignation = userJsonData.designation || "";
   const currentBio = userJsonData.bio || "";
+
+  // Prefill existing documents info (if any)
+  useEffect(() => {
+    try {
+      if (userJsonData?.documents?.aadharPan?.documentNumber) {
+        setAadharPanNumber(userJsonData.documents.aadharPan.documentNumber);
+      }
+      // initialize remove flags based on whether docs exist (default: not removing)
+      setAadharPanRemovePending(false);
+      setCertificateRemovePending(false);
+    } catch (e) {
+      console.log(e);
+      // no-op on malformed json
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.json]);
 
   // Store the original profile for reset and dirty check
   const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(
@@ -728,6 +765,150 @@ const SettingBoxes = () => {
   const handleUpdatePhoto = () => {
     setShowUploadSection(true);
     setShowSaveButton(true);
+  };
+
+  // ---------- Mandatory documents helpers ----------
+  const handleAadharPanUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setAadharPanFile(file);
+  };
+
+  const handleCertificateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setCertificateFile(file);
+  };
+
+  const uploadToS3 = async (file: File, folder: string): Promise<string> => {
+    const sanitizedUsername = profile.name
+      .replace(/\s+/g, "")
+      .toLowerCase()
+      .slice(0, 9);
+    const folderName = `${sanitizedUsername}${profile.id.slice(-6)}/${folder}`;
+
+    const data = new FormData();
+    data.append("file", file);
+    data.append("folder", folderName);
+    data.append("contentDisposition", "inline");
+
+    const config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: `${NEXT_PUBLIC_S3_BUCKET_URL}`,
+      headers: { "Content-Type": "multipart/form-data" },
+      data,
+    } as const;
+
+    await axios.request(config as any);
+    return `${NEXT_PUBLIC_AWS_URL}/${folderName}/${file.name}`;
+  };
+
+  const handleSaveDocuments = async () => {
+    // Determine what currently exists
+    const hasExistingAadhar = !!userJsonData.documents?.aadharPan?.documentUrl;
+    const hasExistingCert = !!userJsonData.documents?.certificate?.documentUrl;
+
+    // Determine what user intends to keep after this save
+    const willKeepAadhar =
+      !aadharPanRemovePending && (aadharPanFile || hasExistingAadhar);
+    const willKeepCert =
+      !certificateRemovePending && (certificateFile || hasExistingCert);
+
+    // Validate at least one document if neither kept
+    if (!willKeepAadhar && !willKeepCert) {
+      setModalMessage({
+        success: "",
+        error: "Please upload at least one document to continue",
+      });
+      onOpen();
+      return;
+    }
+
+    // No longer collecting Aadhar/PAN number
+
+    try {
+      setDocumentsLoading(true);
+
+      // Upload only what is newly selected
+      let aadharPanUrl = hasExistingAadhar
+        ? userJsonData.documents!.aadharPan!.documentUrl
+        : undefined;
+      let certificateUrl = hasExistingCert
+        ? userJsonData.documents!.certificate!.documentUrl
+        : undefined;
+
+      if (aadharPanFile) {
+        aadharPanUrl = await uploadToS3(aadharPanFile, "aadhar-pan");
+      }
+      if (certificateFile) {
+        certificateUrl = await uploadToS3(certificateFile, "certificate");
+      }
+
+      // Build documents object respecting pending removals and new uploads
+      const nextDocuments: any = { ...(userJsonData.documents || {}) };
+      if (aadharPanRemovePending) {
+        delete nextDocuments.aadharPan;
+      } else if (willKeepAadhar && aadharPanUrl) {
+        nextDocuments.aadharPan = {
+          documentName: "Aadhar/PAN Card",
+          documentUrl: aadharPanUrl,
+          documentVerified: false,
+        };
+      } else {
+        delete nextDocuments.aadharPan;
+      }
+
+      if (certificateRemovePending) {
+        delete nextDocuments.certificate;
+      } else if (willKeepCert && certificateUrl) {
+        nextDocuments.certificate = {
+          documentName: "Certificate/Degree",
+          documentUrl: certificateUrl,
+          documentVerified: false,
+        };
+      } else {
+        delete nextDocuments.certificate;
+      }
+
+      const updatedJson: UserJsonData = {
+        ...userJsonData,
+        documents: nextDocuments,
+      };
+
+      const token = localStorage.getItem("docPocAuth_token");
+      const userEndpoint = `${API_URL}/user`;
+      const updatedUserData = {
+        ...userProfile,
+        json: JSON.stringify(updatedJson),
+      };
+
+      const updateResponse = await axios.patch(userEndpoint, updatedUserData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (updateResponse.data?.access_token) {
+        setAccessToken(updateResponse.data.access_token);
+      }
+
+      setUserProfile(updateResponse.data);
+      setFormData(updateResponse.data);
+      setModalMessage({ success: "Documents saved", error: "" });
+      onOpen();
+
+      // reset local inputs
+      setAadharPanFile(null);
+      setCertificateFile(null);
+      setAadharPanRemovePending(false);
+      setCertificateRemovePending(false);
+    } catch (err) {
+      console.log(err);
+      setModalMessage({ success: "", error: "Failed to save documents" });
+      onOpen();
+    } finally {
+      setDocumentsLoading(false);
+    }
   };
 
   // const handleImageClick = () => {
@@ -1424,7 +1605,7 @@ const SettingBoxes = () => {
                         </p>{" "}
                       </div>
                     ) : (
-                      <p>Upadte Profile</p>
+                      <p>Update Profile</p>
                     )}
                   </button>
                   <EnhancedModal
@@ -1876,6 +2057,199 @@ const SettingBoxes = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mandatory Documents */}
+        <div className="col-span-5 xl:col-span-3">
+          <div className="rounded-[10px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card">
+            <div className="border-b border-stroke px-7 py-4 dark:border-dark-3">
+              <h3
+                className={`font-medium ${documentsLoading ? "text-gray-400 dark:text-gray-500" : "text-dark dark:text-white"}`}
+              >
+                Mandatory Documents
+              </h3>
+            </div>
+            <div className="p-7">
+              {/* Aadhar / PAN Number removed per requirement */}
+
+              {/* Aadhar / PAN Upload */}
+              <div className="mb-5.5">
+                <label
+                  className={`mb-3 block text-body-sm font-medium ${documentsLoading ? "text-gray-400 dark:text-gray-500" : "text-dark dark:text-white"}`}
+                >
+                  Upload Aadhar / PAN Card
+                </label>
+                <div
+                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.aadharPan?.documentUrl && !aadharPanRemovePending) ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
+                    onChange={handleAadharPanUpload}
+                    disabled={
+                      documentsLoading ||
+                      (!!userJsonData.documents?.aadharPan?.documentUrl &&
+                        !aadharPanRemovePending)
+                    }
+                  />
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M10.4613 2.07827C10.3429 1.94876 10.1755 1.875 10 1.875C9.82453 1.875 9.65714 1.94876 9.53873 2.07827L6.2054 5.7241C5.97248 5.97885 5.99019 6.37419 6.24494 6.6071C6.49969 6.84002 6.89502 6.82232 7.12794 6.56756L9.375 4.10984V13.3333C9.375 13.6785 9.65482 13.9583 10 13.9583C10.3452 13.9583 10.625 13.6785 10.625 13.3333V4.10984L12.8721 6.56756C13.105 6.82232 13.5003 6.84002 13.7551 6.6071C14.0098 6.37419 14.0275 5.97885 13.7946 5.7241L10.4613 2.07827Z"
+                          fill="#5750F1"
+                        />
+                        <path
+                          d="M3.125 12.5C3.125 12.1548 2.84518 11.875 2.5 11.875C2.15482 11.875 1.875 12.1548 1.875 12.5V12.5457C1.87498 13.6854 1.87497 14.604 1.9721 15.3265C2.07295 16.0765 2.2887 16.7081 2.79029 17.2097C3.29189 17.7113 3.92345 17.9271 4.67354 18.0279C5.39602 18.125 6.31462 18.125 7.45428 18.125H12.5457C13.6854 18.125 14.604 18.125 15.3265 18.0279C16.0766 17.9271 16.7081 17.7113 17.2097 17.2097C17.7113 16.7081 17.9271 16.0765 18.0279 15.3265C18.125 14.604 18.125 13.6854 18.125 12.5457V12.5C18.125 12.1548 17.8452 11.875 17.5 11.875C17.1548 11.875 16.875 12.1548 16.875 12.5C16.875 13.6962 16.8737 14.5304 16.789 15.1599C16.7068 15.7714 16.5565 16.0952 16.3258 16.3258C16.0952 16.5565 15.7714 16.7068 15.1599 16.789C14.5304 16.8737 13.6962 16.875 12.5 16.875H7.5C6.30382 16.875 5.46956 16.8737 4.8401 16.789C4.22862 16.7068 3.90481 16.5565 3.67418 16.3258C3.44354 16.0952 3.29317 15.7714 3.21096 15.1599C3.12633 14.5304 3.125 13.6962 3.125 12.5Z"
+                          fill="#5750F1"
+                        />
+                      </svg>
+                    </span>
+                    <p className="mt-2.5 text-body-sm font-medium">
+                      <span className="text-primary">Click to upload</span>{" "}
+                      Aadhar/PAN card
+                    </p>
+                    <p className="mt-1 text-body-xs">
+                      PDF, PNG, JPG or JPEG (max 5MB)
+                    </p>
+                  </div>
+                </div>
+                {(userJsonData.documents?.aadharPan?.documentUrl &&
+                  !aadharPanRemovePending) ||
+                aadharPanFile ? (
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    {userJsonData.documents?.aadharPan?.documentUrl &&
+                    !aadharPanRemovePending ? (
+                      <a
+                        href={userJsonData.documents.aadharPan.documentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline"
+                      >
+                        View uploaded document
+                      </a>
+                    ) : (
+                      <span className="text-green-600">
+                        {aadharPanFile?.name}
+                      </span>
+                    )}
+                    {userJsonData.documents?.aadharPan?.documentUrl &&
+                    !aadharPanRemovePending ? (
+                      <button
+                        type="button"
+                        className="ml-3 text-red-600 hover:underline"
+                        onClick={() => setAadharPanRemovePending(true)}
+                        disabled={documentsLoading}
+                      >
+                        remove ×
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Certificate Upload */}
+              <div className="mb-5.5">
+                <label
+                  className={`mb-3 block text-body-sm font-medium ${documentsLoading ? "text-gray-400 dark:text-gray-500" : "text-dark dark:text-white"}`}
+                >
+                  Upload Certificate / Degree
+                </label>
+                <div
+                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.certificate?.documentUrl && !certificateRemovePending) ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
+                    onChange={handleCertificateUpload}
+                    disabled={
+                      documentsLoading ||
+                      (!!userJsonData.documents?.certificate?.documentUrl &&
+                        !certificateRemovePending)
+                    }
+                  />
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="flex h-13.5 w-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M10.4613 2.07827C10.3429 1.94876 10.1755 1.875 10 1.875C9.82453 1.875 9.65714 1.94876 9.53873 2.07827L6.2054 5.7241C5.97248 5.97885 5.99019 6.37419 6.24494 6.6071C6.49969 6.84002 6.89502 6.82232 7.12794 6.56756L9.375 4.10984V13.3333C9.375 13.6785 9.65482 13.9583 10 13.9583C10.3452 13.9583 10.625 13.6785 10.625 13.3333V4.10984L12.8721 6.56756C13.105 6.82232 13.5003 6.84002 13.7551 6.6071C14.0098 6.37419 14.0275 5.97885 13.7946 5.7241L10.4613 2.07827Z"
+                          fill="#5750F1"
+                        />
+                        <path
+                          d="M3.125 12.5C3.125 12.1548 2.84518 11.875 2.5 11.875C2.15482 11.875 1.875 12.1548 1.875 12.5V12.5457C1.87498 13.6854 1.87497 14.604 1.9721 15.3265C2.07295 16.0765 2.2887 16.7081 2.79029 17.2097C3.29189 17.7113 3.92345 17.9271 4.67354 18.0279C5.39602 18.125 6.31462 18.125 7.45428 18.125H12.5457C13.6854 18.125 14.604 18.125 15.3265 18.0279C16.0766 17.9271 16.7081 17.7113 17.2097 17.2097C17.7113 16.7081 17.9271 16.0765 18.0279 15.3265C18.125 14.604 18.125 13.6854 18.125 12.5457V12.5C18.125 12.1548 17.8452 11.875 17.5 11.875C17.1548 11.875 16.875 12.1548 16.875 12.5C16.875 13.6962 16.8737 14.5304 16.789 15.1599C16.7068 15.7714 16.5565 16.0952 16.3258 16.3258C16.0952 16.5565 15.7714 16.7068 15.1599 16.789C14.5304 16.8737 13.6962 16.875 12.5 16.875H7.5C6.30382 16.875 5.46956 16.8737 4.8401 16.789C4.22862 16.7068 3.90481 16.5565 3.67418 16.3258C3.44354 16.0952 3.29317 15.7714 3.21096 15.1599C3.12633 14.5304 3.125 13.6962 3.125 12.5Z"
+                          fill="#5750F1"
+                        />
+                      </svg>
+                    </span>
+                    <p className="mt-2.5 text-body-sm font-medium">
+                      <span className="text-primary">Click to upload</span>{" "}
+                      Certificate/Degree
+                    </p>
+                    <p className="mt-1 text-body-xs">
+                      PDF, PNG, JPG or JPEG (max 5MB)
+                    </p>
+                  </div>
+                </div>
+                {(userJsonData.documents?.certificate?.documentUrl &&
+                  !certificateRemovePending) ||
+                certificateFile ? (
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    {userJsonData.documents?.certificate?.documentUrl &&
+                    !certificateRemovePending ? (
+                      <a
+                        href={userJsonData.documents.certificate.documentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline"
+                      >
+                        View uploaded document
+                      </a>
+                    ) : (
+                      <span className="text-green-600">
+                        {certificateFile?.name}
+                      </span>
+                    )}
+                    {userJsonData.documents?.certificate?.documentUrl &&
+                    !certificateRemovePending ? (
+                      <button
+                        type="button"
+                        className="ml-3 text-red-600 hover:underline"
+                        onClick={() => setCertificateRemovePending(true)}
+                        disabled={documentsLoading}
+                      >
+                        remove ×
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="button"
+                    className="flex items-center justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90 disabled:opacity-50"
+                    onClick={handleSaveDocuments}
+                    disabled={documentsLoading}
+                  >
+                    {documentsLoading ? "Saving..." : "Save Documents"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

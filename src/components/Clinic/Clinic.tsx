@@ -51,6 +51,7 @@ const Clinic = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
   const [isButtonLoading, setIsButtonLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [workingDays] = useState([
     "monday",
     "tuesday",
@@ -227,8 +228,10 @@ const Clinic = () => {
   const flipEdit = () => {
     setEdit(!edit);
   };
-  const fetchHospitalDetails = async () => {
+  const fetchHospitalDetails = async (__isRetry = false) => {
     setLoading(true);
+    setError(null);
+
     try {
       const token = localStorage.getItem("docPocAuth_token");
 
@@ -288,12 +291,38 @@ const Clinic = () => {
         setEdit(false);
         setIsMultipleBranch(false);
       }
-    } catch (error) {
-      console.error("Error fetching hospital details:", error);
+    } catch (err: any) {
+      console.error("Error fetching hospital details:", err);
+
+      // Determine error message based on error type
+      let errorMessage = "Something went wrong. Please refresh to try again.";
+
+      if (
+        err?.code === "NETWORK_ERROR" ||
+        err?.message?.includes("network") ||
+        err?.message?.includes("Network")
+      ) {
+        errorMessage =
+          "Network error. Please check your connection and refresh.";
+      } else if (
+        err?.code === "ECONNRESET" ||
+        err?.message?.includes("ECONNRESET")
+      ) {
+        errorMessage = "Connection was reset. Please refresh to try again.";
+      } else if (err?.response?.status === 429) {
+        errorMessage = "Too many requests. Please wait a moment and refresh.";
+      } else if (err?.response?.status >= 500) {
+        errorMessage = "Server error. Please refresh to try again.";
+      } else if (err?.response?.status === 401) {
+        errorMessage = "Session expired. Please login again.";
+      }
+
+      setError(errorMessage);
+      setIsHospitalAvailable(false);
+      setEdit(true);
+    } finally {
       setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
@@ -342,6 +371,8 @@ const Clinic = () => {
       errors.workingDays = "At least one working day must be selected.";
     if (selectedDepartments.length === 0)
       errors.departments = "At least one department must be selected.";
+    if (!detectedLocation.trim())
+      errors.detectedLocation = "Location detection is required.";
 
     if (Object.keys(errors).length > 0) {
       // setErrors(errors); // Set the errors in state for further use
@@ -588,6 +619,47 @@ const Clinic = () => {
 
   // Add or update the handler for saved address click to only fill address
 
+  // Show error state
+  if (error && !loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:gap-9 m-1 sm:m-2">
+        <div className="flex flex-col w-full">
+          <div className="rounded-[15px] border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 p-6 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-red-600 dark:text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 18.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                  Unable to Load Clinic Details
+                </h3>
+                <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+                <button
+                  onClick={() => fetchHospitalDetails(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return loading ? (
     <div className="flex items-center justify-center min-h-[400px]">
       <Spinner size="lg" color="primary" />
@@ -646,7 +718,7 @@ const Clinic = () => {
               </div>
 
               <div className="flex items-center">
-                {!isHospitalAvailable && !loading && (
+                {!isHospitalAvailable && !loading && !error && (
                   <p className="text-red-500 font-semibold text-sm sm:text-base text-center sm:text-left">
                     Please create a clinic/hospital first.
                   </p>
@@ -1003,11 +1075,16 @@ const Clinic = () => {
                   variant="bordered"
                   type="text"
                   labelPlacement="outside"
-                  label="Detected Location"
+                  label="Detected Location *"
                   value={detectedLocation}
                   isReadOnly
                   color={TOOL_TIP_COLORS.secondary}
                   isDisabled={isButtonLoading || !edit}
+                  description={
+                    !detectedLocation.trim()
+                      ? "Please detect your location to continue"
+                      : "Location detected successfully"
+                  }
                 />
 
                 <button

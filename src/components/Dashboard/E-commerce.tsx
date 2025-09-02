@@ -404,7 +404,10 @@ const ECommerce: React.FC = () => {
           types={data.visitTypes.types}
           appointments={data.visitTypes.appointments}
         />
-        <ChatCard appointments={data?.visitTypes.appointments} />
+        <ChatCard
+          appointments={data?.visitTypes.appointments}
+          onRefresh={fetchDashboardData}
+        />
       </div>
     </>
   );

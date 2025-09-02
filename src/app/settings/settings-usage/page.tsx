@@ -6,7 +6,7 @@ import { SETTING_TAB_KEYS } from "../routes";
 import { ROUTES } from "@/constants/routes";
 import { TOOL_TIP_COLORS } from "@/constants";
 import Usages from "@/components/Settings/Usages";
-import Premium from "@/components/Settings/Premium";
+// import Premium from "@/components/Settings/Premium";
 export const metadata: Metadata = {
   title: "DocPOC.",
   description: "Manage easy.",
@@ -23,7 +23,7 @@ const SettingsUsage = () => {
           options={SETTING_TAB_KEYS}
           color={TOOL_TIP_COLORS.primary}
         />
-        <Premium />
+        {/* <Premium /> */}
         <Usages />
       </div>
     </DefaultLayout>

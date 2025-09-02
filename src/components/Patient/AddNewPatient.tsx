@@ -5,9 +5,12 @@ import {
   Textarea,
   Autocomplete,
   AutocompleteItem,
+  Button,
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 import { useDisclosure } from "@nextui-org/react";
 import CustomDatePicker from "../CustomComponent/CustomDatePicker";
@@ -22,6 +25,7 @@ const API_URL = process.env.API_URL;
 
 const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   const [edit] = useState(true);
+  const profile = useSelector((state: RootState) => state.profile.data);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -46,6 +50,64 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
   // const [message, setmessage] = useState("");
   // const [errmessage, seterrmessage] = useState("");
   const [modalMessage, setModalMessage] = useState({ success: "", error: "" });
+  // Fetch fresh user details by ID to decide gating
+  const [userDetailJson, setUserDetailJson] = useState<any>({});
+  const [userDetailLoading, setUserDetailLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchUserDetail = async () => {
+      if (!profile?.id) return;
+      try {
+        const token = localStorage.getItem("docPocAuth_token");
+        const endpoint = `${API_URL}/user/${profile.id}`;
+        const res = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const parsed = res?.data?.json ? JSON.parse(res.data.json) : {};
+        setUserDetailJson(parsed);
+      } catch (e) {
+        console.log(e);
+        setUserDetailJson({});
+      } finally {
+        setUserDetailLoading(false);
+      }
+    };
+    fetchUserDetail();
+  }, [profile?.id]);
+
+  const hasAadhar = Boolean(userDetailJson?.documents?.aadharPan?.documentUrl);
+  const hasCertificate = Boolean(
+    userDetailJson?.documents?.certificate?.documentUrl,
+  );
+  const isAadharVerified = Boolean(
+    userDetailJson?.documents?.aadharPan?.documentVerified,
+  );
+  const isCertificateVerified = Boolean(
+    userDetailJson?.documents?.certificate?.documentVerified,
+  );
+  const isDocsVerified = isAadharVerified && isCertificateVerified;
+
+  // Determine warning message
+  let warningMessage: string | null = null;
+  if (!userDetailLoading) {
+    if (!hasAadhar && !hasCertificate) {
+      warningMessage =
+        "Please submit your documents (Aadhar/PAN & valid medical degree) to start creating patient.";
+    } else if (!hasAadhar) {
+      warningMessage =
+        "Please submit your documents (Aadhar/PAN) to start creating patient.";
+    } else if (!hasCertificate) {
+      warningMessage =
+        "Please submit your documents (valid medical degree) to start creating patient.";
+    } else if (!isDocsVerified) {
+      warningMessage =
+        "Your documents are under process. Until then, please complete clinic and employee setup. Note: patient creation requires document verification.";
+    }
+  }
+  const shouldDisable = userDetailLoading || Boolean(warningMessage);
   // const handleOpen = () => {
   //   setmessage("");
   //   onClose();
@@ -57,6 +119,9 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (shouldDisable) {
+      return;
+    }
     const missingFields: string[] = [];
 
     // for (const key in formData) {
@@ -348,6 +413,11 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
         }
       `}</style>
       <div className="flex flex-col w-full">
+        {!userDetailLoading && warningMessage && (
+          <div className="mb-2 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
+            {warningMessage}
+          </div>
+        )}
         <div className="rounded-[15px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card ">
           <form onSubmit={handleSubmit}>
             <div className=" p-2.5 sm:p-4.5">
@@ -386,7 +456,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                       e.preventDefault();
                     }
                   }}
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
 
                 <Autocomplete
@@ -411,7 +481,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, gender: key as string })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -454,7 +524,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     }
                   }}
                   maxLength={10}
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
                 <Input
                   classNames={{
@@ -482,7 +552,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     //   setErrors((prev) => [...prev, "Please enter a valid email address."]);
                     // }
                   }}
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 />
               </div>
 
@@ -510,7 +580,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                   onSelectionChange={(key) =>
                     setFormData({ ...formData, bloodGroup: key as string })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   {(item) => (
                     <AutocompleteItem key={item.label}>
@@ -542,6 +612,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                     maxDate={new Date()}
                     placeholder="Select Date of Birth"
                     className="w-full hover:border-purple-600 focus:border-purple-600"
+                    disabled={shouldDisable || loading}
                   />
                 </div>
               </div>
@@ -567,7 +638,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                isDisabled={!edit}
+                isDisabled={!edit || shouldDisable || loading}
               />
 
               <div className="flex justify-center mt-2 sm:mt-4">
@@ -580,7 +651,7 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
                       status: value ? "Active" : "Inactive",
                     })
                   }
-                  isDisabled={!edit}
+                  isDisabled={!edit || shouldDisable || loading}
                 >
                   Active Status
                 </Checkbox>
@@ -596,16 +667,17 @@ const AddNewPatient: React.FC<AddPatientProps> = ({ onPatientAdded }) => {
             </div>
 
             <div className="flex justify-center mt-2 sm:mt-4 ">
-              <button
+              <Button
                 type="submit"
-                // isDisabled={!edit || loading}
-                // color={TOOL_TIP_COLORS.secondary}
+                isDisabled={shouldDisable || loading}
+                color={TOOL_TIP_COLORS.secondary}
                 // onPress={onOpen}
-                className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
+                // className="rounded-[7px] p-[13px] font-medium hover:bg-opacity-90 text-white  bg-purple-500 "
                 style={{ minWidth: 250, marginBottom: 20 }}
+                // disabled={shouldDisable || loading}
               >
                 {loading ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
 
               <EnhancedModal
                 isOpen={isOpen}
