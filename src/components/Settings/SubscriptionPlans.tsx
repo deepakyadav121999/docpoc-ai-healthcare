@@ -70,8 +70,8 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   ): {
     basePrice: string; // rounded base price for display
     gstAmount: string; // GST based on displayed base (for completeness)
-    totalPrice: string; // final payable amount (API base ± discounts, with GST) rounded
-    originalPrice: string; // displayed total before discount (rounded)
+    totalPrice: string; // final payable amount (API base with GST) rounded
+    originalPrice: string; // displayed total (rounded)
     discountPercentage?: string;
   } => {
     const apiBasePrice = parseFloat(getPrice(plan, period));
@@ -81,21 +81,21 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     const displayOriginalTotal = Math.round(displayBasePrice * 1.18); // ensures 2822 -> 3330
     const displayGstAmount = displayOriginalTotal - displayBasePrice;
 
-    // PAYMENT/LOGIC values use the precise API base price
+    // PAYMENT/LOGIC values use the precise API base price (no discount applied)
     const preciseTotalWithGst = apiBasePrice * 1.18;
 
-    // For yearly plans, apply discount to final payable amount (on precise total)
+    // Set discount percentage for UI display only (no actual discount calculation)
     let discountPercentage = undefined as string | undefined;
-    let finalPayableAmount = preciseTotalWithGst;
     if (period === "yearly" && plan.name.toLowerCase() !== "basic") {
-      finalPayableAmount = preciseTotalWithGst * 0.8; // 20% discount on total
-      discountPercentage = "20";
+      discountPercentage = "20"; // Just for UI badge display
+    } else if (period === "quarterly" && plan.name.toLowerCase() === "silver") {
+      discountPercentage = "5"; // Just for UI badge display
     }
 
     return {
       basePrice: displayBasePrice.toFixed(0),
       gstAmount: displayGstAmount.toFixed(0),
-      totalPrice: Math.round(finalPayableAmount).toFixed(0),
+      totalPrice: Math.round(preciseTotalWithGst).toFixed(0), // Use original price without discount
       originalPrice: displayOriginalTotal.toFixed(0),
       discountPercentage,
     };
@@ -190,7 +190,9 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         },
         modal: {
           ondismiss: function () {
+            // Clear loading state immediately when modal is dismissed
             setPaymentLoading(null);
+            setError(null);
           },
         },
         handler: async function (response: any) {
@@ -321,7 +323,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         },
         {
           title: "Secure Your Digital Records",
-          subtitle: `(${formatBytes(plan.storageLimitBytes)} of Data Storage)`,
+          subtitle: `(${plan.storageLimitBytes === -1 ? "Unlimited" : formatBytes(plan.storageLimitBytes)} of Data Storage)`,
           icon: "🗄️",
         },
         {
@@ -349,7 +351,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         },
         {
           title: "Never Worry About Space",
-          subtitle: `(${formatBytes(plan.storageLimitBytes)} Storage)`,
+          subtitle: `(${plan.storageLimitBytes === -1 ? "Unlimited" : formatBytes(plan.storageLimitBytes)} Storage)`,
           icon: "☁️",
         },
         {
