@@ -21,18 +21,18 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   loading = false,
   currentSubscription,
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState<string>("basic");
+  // const [selectedPlan, setSelectedPlan] = useState<string>("basic");
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Determine the current plan name from subscription or default to "basic"
-  const getCurrentPlanName = (): string => {
-    if (currentSubscription?.plan?.name) {
-      return currentSubscription.plan.name;
-    }
-    return "basic"; // Default fallback
-  };
+  // const getCurrentPlanName = (): string => {
+  //   if (currentSubscription?.plan?.name) {
+  //     return currentSubscription.plan.name;
+  //   }
+  //   return "basic"; // Default fallback
+  // };
 
   // Get billing period from current subscription or default to monthly
   const getCurrentBillingPeriod = (): BillingPeriod => {
@@ -47,7 +47,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
 
   // Update selected plan when currentSubscription changes
   useEffect(() => {
-    setSelectedPlan(getCurrentPlanName());
+    // setSelectedPlan(getCurrentPlanName());
     setBillingPeriod(getCurrentBillingPeriod());
   }, [currentSubscription]);
 
@@ -478,214 +478,200 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {plans
-          .filter((plan) => {
-            // Check if user already has a premium plan (silver or higher)
-            const userHasPremium =
-              currentSubscription?.plan?.name &&
-              currentSubscription.plan.name.toLowerCase() !== "basic";
+      <div className="flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-1 gap-6 w-full max-w-md lg:max-w-lg xl:max-w-xl">
+          {plans
+            .filter((plan) => {
+              // Check if user already has a premium plan (silver or higher)
+              const userHasPremium =
+                currentSubscription?.plan?.name &&
+                currentSubscription.plan.name.toLowerCase() !== "basic";
 
-            // If user has premium, only show basic plan and their current plan
-            if (userHasPremium) {
+              // If user has premium, only show basic plan and their current plan
+              if (userHasPremium) {
+                return (
+                  plan.name.toLowerCase() === "basic" ||
+                  plan.name.toLowerCase() ===
+                    currentSubscription?.plan?.name?.toLowerCase()
+                );
+              }
+
+              // For basic users, hide the basic plan and only show premium plans
+              return plan.name.toLowerCase() !== "basic";
+            })
+            .map((plan) => {
+              // const isSelected = selectedPlan === plan.name;
+              const isCurrentPlan =
+                currentSubscription?.plan?.name === plan.name;
+              const price = getPrice(plan, billingPeriod);
+              const priceWithGST = getPriceWithGST(plan, billingPeriod);
+              const colors = getPlanColor(plan.name);
+              const badge = getPlanBadge(plan.name);
+              const features = getPlanFeatures(plan);
+              const isPaymentLoading = paymentLoading === plan.id;
+
               return (
-                plan.name.toLowerCase() === "basic" ||
-                plan.name.toLowerCase() ===
-                  currentSubscription?.plan?.name?.toLowerCase()
-              );
-            }
-
-            // For basic users, show all plans
-            return true;
-          })
-          .map((plan) => {
-            const isSelected = selectedPlan === plan.name;
-            const isCurrentPlan = currentSubscription?.plan?.name === plan.name;
-            const price = getPrice(plan, billingPeriod);
-            const priceWithGST = getPriceWithGST(plan, billingPeriod);
-            const colors = getPlanColor(plan.name);
-            const badge = getPlanBadge(plan.name);
-            const features = getPlanFeatures(plan);
-            const isPaymentLoading = paymentLoading === plan.id;
-
-            return (
-              <div
-                key={plan.id}
-                className={`relative rounded-xl border-2 p-3 transition-all cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1 ${
-                  colors.bg
-                } ${
-                  isSelected
-                    ? `${colors.border} ring-2 ring-offset-2 ring-blue-500`
-                    : colors.border
-                }`}
-                onClick={() => setSelectedPlan(plan.name)}
-              >
-                {/* Top Badge */}
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <div
-                    className={`px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full text-xs font-bold ${colors.badge} flex items-center gap-1`}
-                  >
-                    <span>{badge.icon}</span>
-                    <span>{badge.text}</span>
+                <div
+                  key={plan.id}
+                  className={`relative rounded-xl border-2 p-3 transition-all cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1 ${
+                    colors.bg
+                  } ${colors.border}`}
+                  // onClick={() => setSelectedPlan(plan.name)}
+                >
+                  {/* Top Badge */}
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <div
+                      className={`px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full text-xs font-bold ${colors.badge} flex items-center gap-1`}
+                    >
+                      <span>{badge.icon}</span>
+                      <span>{badge.text}</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Plan Header */}
-                <div className="text-center mb-4 mt-3 ">
-                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    {plan.displayName}
-                  </h4>
+                  {/* Plan Header */}
+                  <div className="text-center mb-4 mt-3 ">
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      {plan.displayName}
+                    </h4>
 
-                  {/* Price */}
-                  <div className="mb-2">
-                    {plan.name.toLowerCase() === "basic" ? (
-                      <div className="flex items-baseline justify-center">
-                        <span className={`text-3xl font-bold ${colors.price}`}>
-                          ₹{price}
-                        </span>
-                        <span className="text-base text-gray-500 dark:text-gray-400 ml-1">
-                          {getPeriodLabel(billingPeriod)}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className="flex items-baseline justify-center mb-1">
+                    {/* Price */}
+                    <div className="mb-2">
+                      {plan.name.toLowerCase() === "basic" ? (
+                        <div className="flex items-baseline justify-center">
                           <span
                             className={`text-3xl font-bold ${colors.price}`}
                           >
-                            ₹{priceWithGST.basePrice}
+                            ₹{price}
+                          </span>
+                          <span className="text-base text-gray-500 dark:text-gray-400 ml-1">
+                            {getPeriodLabel(billingPeriod)}
                           </span>
                         </div>
-                        <div className="text-base text-gray-500 dark:text-gray-400 mb-1">
-                          {billingPeriod === "quarterly"
-                            ? "per quarter"
-                            : billingPeriod === "yearly"
-                              ? "per year"
-                              : "per month"}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Total (incl. 18% GST): ₹{priceWithGST.originalPrice}
-                        </div>
-                      </div>
-                    )}
-                    {billingPeriod === "quarterly" &&
-                      plan.name.toLowerCase() === "silver" && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
-                            Save 5%
-                          </span>
+                      ) : (
+                        <div className="text-center">
+                          <div className="flex items-baseline justify-center mb-1">
+                            <span
+                              className={`text-3xl font-bold ${colors.price}`}
+                            >
+                              ₹{priceWithGST.basePrice}
+                            </span>
+                          </div>
+                          <div className="text-base text-gray-500 dark:text-gray-400 mb-1">
+                            {billingPeriod === "quarterly"
+                              ? "per quarter"
+                              : billingPeriod === "yearly"
+                                ? "per year"
+                                : "per month"}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Total (incl. 18% GST): ₹{priceWithGST.originalPrice}
+                          </div>
                         </div>
                       )}
-                    {billingPeriod === "yearly" &&
-                      plan.name.toLowerCase() !== "basic" && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
-                            Save 20%
-                          </span>
-                        </div>
-                      )}
-                  </div>
-
-                  {isCurrentPlan && (
-                    <div className="mt-2">
-                      <span className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
-                        Current Plan
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Features List */}
-                <div className="space-y-2 mb-4">
-                  {features.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <div className="flex items-center justify-center flex-shrink-0 mt-0.5">
-                        {feature.icon === "star" ? (
-                          <svg
-                            className="w-5 h-5 text-yellow-500"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-5 h-4 text-green-500"
-                            fill="currentColor"
-                            viewBox="0 0 17 17"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                      {billingPeriod === "quarterly" &&
+                        plan.name.toLowerCase() === "silver" && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
+                              Save 5%
+                            </span>
+                          </div>
                         )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-gray-900 dark:text-white text-xs md:text-sm leading-tight">
-                          {feature.title}
-                        </div>
-                        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-0.5 leading-tight">
-                          {feature.subtitle}
-                        </div>
-                      </div>
+                      {billingPeriod === "yearly" &&
+                        plan.name.toLowerCase() !== "basic" && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
+                              Save 20%
+                            </span>
+                          </div>
+                        )}
                     </div>
-                  ))}
-                </div>
 
-                {/* Action Button */}
-                <Button
-                  className={`w-full py-2 text-sm font-semibold rounded-xl transition-all transform hover:scale-105 ${
-                    isCurrentPlan
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                      : plan.name.toLowerCase() === "basic"
-                        ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
-                        : plan.name.toLowerCase() === "silver"
-                          ? "bg-purple-500 hover:bg-purple-600 text-white shadow-lg"
-                          : colors.button
-                  } ${isCurrentPlan ? "" : "shadow-lg hover:shadow-xl"}`}
-                  disabled={isCurrentPlan || isPaymentLoading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isCurrentPlan && !isPaymentLoading) {
-                      handleUpgrade(plan.id, plan.name);
-                    }
-                  }}
-                >
-                  {isPaymentLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processing...
-                    </div>
-                  ) : isCurrentPlan ? (
-                    "Current Plan"
-                  ) : plan.name.toLowerCase() === "basic" ? (
-                    "💚 Launch Your Free Clinic"
-                  ) : plan.name.toLowerCase() === "silver" ? (
-                    "→ Continue"
-                  ) : (
-                    "→ Continue"
-                  )}
-                </Button>
-
-                {/* Selection Radio */}
-                <div className="absolute top-6 right-6">
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 transition-all ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-500 shadow-lg"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="w-3 h-3 bg-white rounded-full m-0.5"></div>
+                    {isCurrentPlan && (
+                      <div className="mt-2">
+                        <span className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
+                          Current Plan
+                        </span>
+                      </div>
                     )}
                   </div>
+
+                  {/* Features List */}
+                  <div className="space-y-2 mb-4">
+                    {features.map((feature, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <div className="flex items-center justify-center flex-shrink-0 mt-0.5">
+                          {feature.icon === "star" ? (
+                            <svg
+                              className="w-5 h-5 text-yellow-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-5 h-4 text-green-500"
+                              fill="currentColor"
+                              viewBox="0 0 17 17"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-gray-900 dark:text-white text-xs md:text-sm leading-tight">
+                            {feature.title}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-0.5 leading-tight">
+                            {feature.subtitle}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action Button */}
+                  <Button
+                    className={`w-full py-2 text-sm font-semibold rounded-xl transition-all transform hover:scale-105 ${
+                      isCurrentPlan
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                        : plan.name.toLowerCase() === "basic"
+                          ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
+                          : plan.name.toLowerCase() === "silver"
+                            ? "bg-purple-500 hover:bg-purple-600 text-white shadow-lg"
+                            : colors.button
+                    } ${isCurrentPlan ? "" : "shadow-lg hover:shadow-xl"}`}
+                    disabled={isCurrentPlan || isPaymentLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isCurrentPlan && !isPaymentLoading) {
+                        handleUpgrade(plan.id, plan.name);
+                      }
+                    }}
+                  >
+                    {isPaymentLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Processing...
+                      </div>
+                    ) : isCurrentPlan ? (
+                      "Current Plan"
+                    ) : plan.name.toLowerCase() === "basic" ? (
+                      "💚 Launch Your Free Clinic"
+                    ) : plan.name.toLowerCase() === "silver" ? (
+                      "→ Continue"
+                    ) : (
+                      "→ Continue"
+                    )}
+                  </Button>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+        </div>
       </div>
     </div>
   );
