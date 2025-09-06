@@ -274,7 +274,9 @@ const ChatCard: React.FC<ChatCardProps> = ({
 
         console.log(`Filter: ${filter}`);
         console.log(`Current time: ${currentTime.toISOString()}`);
-        console.log(`Current day of week: ${currentTime.getDay()} (0=Sun, 6=Sat)`);
+        console.log(
+          `Current day of week: ${currentTime.getDay()} (0=Sun, 6=Sat)`,
+        );
         console.log(`From: ${fromDate.toISOString()}`);
         console.log(`To: ${toDate.toISOString()}`);
 
