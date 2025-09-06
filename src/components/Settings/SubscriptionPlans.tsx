@@ -68,21 +68,18 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     plan: SubscriptionPlan,
     period: BillingPeriod,
   ): {
-    basePrice: string; // rounded base price for display
-    gstAmount: string; // GST based on displayed base (for completeness)
-    totalPrice: string; // final payable amount (API base with GST) rounded
-    originalPrice: string; // displayed total (rounded)
+    basePrice: string; // API price minus 18% GST (base price for display)
+    gstAmount: string; // 18% GST amount
+    totalPrice: string; // final payable amount (API price with GST already included)
+    originalPrice: string; // API price (total with GST)
     discountPercentage?: string;
   } => {
-    const apiBasePrice = parseFloat(getPrice(plan, period));
+    const apiPriceWithGST = parseFloat(getPrice(plan, period));
 
-    // DISPLAY values should be based on the rounded base price
-    const displayBasePrice = Math.round(apiBasePrice);
-    const displayOriginalTotal = Math.round(displayBasePrice * 1.18); // ensures 2822 -> 3330
-    const displayGstAmount = displayOriginalTotal - displayBasePrice;
-
-    // PAYMENT/LOGIC values use the precise API base price (no discount applied)
-    const preciseTotalWithGst = apiBasePrice * 1.18;
+    // Calculate base price by removing 18% GST from API price
+    // If API price = base + 18% GST, then base = API price / 1.18
+    const basePrice = apiPriceWithGST / 1.18;
+    const gstAmount = apiPriceWithGST - basePrice;
 
     // Set discount percentage for UI display only (no actual discount calculation)
     let discountPercentage = undefined as string | undefined;
@@ -93,10 +90,10 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     }
 
     return {
-      basePrice: displayBasePrice.toFixed(0),
-      gstAmount: displayGstAmount.toFixed(0),
-      totalPrice: Math.round(preciseTotalWithGst).toFixed(0), // Use original price without discount
-      originalPrice: displayOriginalTotal.toFixed(0),
+      basePrice: Math.round(basePrice).toFixed(0),
+      gstAmount: Math.round(gstAmount).toFixed(0),
+      totalPrice: Math.round(apiPriceWithGST).toFixed(0), // API price is already the total with GST
+      originalPrice: Math.round(apiPriceWithGST).toFixed(0), // API price is the total
       discountPercentage,
     };
   };
@@ -143,12 +140,8 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         throw new Error("Plan not found");
       }
 
-      // Get price based on billing period (including GST for non-basic plans)
-      const priceInfo = getPriceWithGST(selectedPlan, billingPeriod);
-      const finalAmount =
-        selectedPlan.name.toLowerCase() === "basic"
-          ? parseFloat(getPrice(selectedPlan, billingPeriod))
-          : parseFloat(priceInfo.totalPrice); // Use final payable amount for payment
+      // Get price based on billing period
+      const finalAmount = parseFloat(getPrice(selectedPlan, billingPeriod));
       const amountInPaise = Math.round(finalAmount * 100); // Convert to paise
 
       // Get the correct Razorpay payment button ID based on billing cycle
@@ -571,7 +564,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                               : "per month"}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Incl. 18% GST: ₹{priceWithGST.originalPrice}
+                          Total (incl. 18% GST): ₹{priceWithGST.originalPrice}
                         </div>
                       </div>
                     )}

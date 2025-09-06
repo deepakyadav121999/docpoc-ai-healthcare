@@ -240,7 +240,7 @@ const ChatCard: React.FC<ChatCardProps> = ({
         let fromDate: Date;
         let toDate: Date;
 
-        // Set date ranges based on filter - always start from CURRENT TIME
+        // Set date ranges based on filter - always start from CURRENT TIME for UPCOMING appointments
         switch (filter) {
           case "today":
             fromDate = new Date(currentTime); // From current time (e.g., 12:14 PM)
@@ -251,7 +251,8 @@ const ChatCard: React.FC<ChatCardProps> = ({
           case "thisWeek":
             fromDate = new Date(currentTime); // From current time (e.g., 12:14 PM)
             toDate = new Date(currentTime);
-            toDate.setDate(currentTime.getDate() + (6 - currentTime.getDay())); // End of this week
+            // Show next 7 days from current time
+            toDate.setDate(currentTime.getDate() + 7);
             toDate.setHours(23, 59, 59, 999);
             break;
 
@@ -273,6 +274,9 @@ const ChatCard: React.FC<ChatCardProps> = ({
 
         console.log(`Filter: ${filter}`);
         console.log(`Current time: ${currentTime.toISOString()}`);
+        console.log(
+          `Current day of week: ${currentTime.getDay()} (0=Sun, 6=Sat)`,
+        );
         console.log(`From: ${fromDate.toISOString()}`);
         console.log(`To: ${toDate.toISOString()}`);
 
