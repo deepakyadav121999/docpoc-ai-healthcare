@@ -151,7 +151,7 @@ const SettingBoxes = () => {
   useEffect(() => {
     try {
       if (userJsonData?.documents?.aadharPan?.documentNumber) {
-        setAadharPanNumber(userJsonData.documents.aadharPan.documentNumber);
+        // setAadharPanNumber(userJsonData.documents.aadharPan.documentNumber);
       }
       // initialize remove flags based on whether docs exist (default: not removing)
       setAadharPanRemovePending(false);
@@ -2082,7 +2082,7 @@ const SettingBoxes = () => {
                   Upload Aadhar / PAN Card
                 </label>
                 <div
-                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.aadharPan?.documentUrl && !aadharPanRemovePending) ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
+                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.aadharPan?.documentUrl && !aadharPanRemovePending) || userJsonData.documents?.aadharPan?.documentVerified ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
                 >
                   <input
                     type="file"
@@ -2092,7 +2092,8 @@ const SettingBoxes = () => {
                     disabled={
                       documentsLoading ||
                       (!!userJsonData.documents?.aadharPan?.documentUrl &&
-                        !aadharPanRemovePending)
+                        !aadharPanRemovePending) ||
+                      userJsonData.documents?.aadharPan?.documentVerified
                     }
                   />
                   <div className="flex flex-col items-center justify-center">
@@ -2144,14 +2145,31 @@ const SettingBoxes = () => {
                     )}
                     {userJsonData.documents?.aadharPan?.documentUrl &&
                     !aadharPanRemovePending ? (
-                      <button
-                        type="button"
-                        className="ml-3 text-red-600 hover:underline"
-                        onClick={() => setAadharPanRemovePending(true)}
-                        disabled={documentsLoading}
-                      >
-                        remove ×
-                      </button>
+                      userJsonData.documents.aadharPan.documentVerified ? (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-xs font-medium">Verified</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ml-3 text-red-600 hover:underline"
+                          onClick={() => setAadharPanRemovePending(true)}
+                          disabled={documentsLoading}
+                        >
+                          remove ×
+                        </button>
+                      )
                     ) : null}
                   </div>
                 ) : null}
@@ -2165,7 +2183,7 @@ const SettingBoxes = () => {
                   Upload Certificate / Degree
                 </label>
                 <div
-                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.certificate?.documentUrl && !certificateRemovePending) ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
+                  className={`relative mb-2 block w-full appearance-none rounded-xl border border-dashed border-gray-4 bg-gray-2 px-4 py-4 dark:border-dark-3 dark:bg-dark-2 ${documentsLoading || (userJsonData.documents?.certificate?.documentUrl && !certificateRemovePending) || userJsonData.documents?.certificate?.documentVerified ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary dark:hover:border-primary"}`}
                 >
                   <input
                     type="file"
@@ -2175,7 +2193,8 @@ const SettingBoxes = () => {
                     disabled={
                       documentsLoading ||
                       (!!userJsonData.documents?.certificate?.documentUrl &&
-                        !certificateRemovePending)
+                        !certificateRemovePending) ||
+                      userJsonData.documents?.certificate?.documentVerified
                     }
                   />
                   <div className="flex flex-col items-center justify-center">
@@ -2227,14 +2246,31 @@ const SettingBoxes = () => {
                     )}
                     {userJsonData.documents?.certificate?.documentUrl &&
                     !certificateRemovePending ? (
-                      <button
-                        type="button"
-                        className="ml-3 text-red-600 hover:underline"
-                        onClick={() => setCertificateRemovePending(true)}
-                        disabled={documentsLoading}
-                      >
-                        remove ×
-                      </button>
+                      userJsonData.documents.certificate.documentVerified ? (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-xs font-medium">Verified</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ml-3 text-red-600 hover:underline"
+                          onClick={() => setCertificateRemovePending(true)}
+                          disabled={documentsLoading}
+                        >
+                          remove ×
+                        </button>
+                      )
                     ) : null}
                   </div>
                 ) : null}
@@ -2244,7 +2280,13 @@ const SettingBoxes = () => {
                     type="button"
                     className="flex items-center justify-center rounded-[7px] bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90 disabled:opacity-50"
                     onClick={handleSaveDocuments}
-                    disabled={documentsLoading}
+                    disabled={
+                      documentsLoading ||
+                      (!aadharPanFile &&
+                        !certificateFile &&
+                        !aadharPanRemovePending &&
+                        !certificateRemovePending)
+                    }
                   >
                     {documentsLoading ? "Saving..." : "Save Documents"}
                   </button>
