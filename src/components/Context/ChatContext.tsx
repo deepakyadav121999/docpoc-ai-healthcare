@@ -28,8 +28,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setSessionId(newSessionId);
     setMessages([
       {
-        id: "initial",
-        text: "Hello! I am Doku, your AI assistant. How can I help you today?",
+        id: "initial-" + Date.now(),
+        text: "Hello! I am Doku, your AI assistant. I will help you perform healthcare actions like creating appointments, sending reminders, generating reports, and managing patients. How can I help you today?",
         sender: "doku",
         timestamp: new Date().toISOString(),
       },

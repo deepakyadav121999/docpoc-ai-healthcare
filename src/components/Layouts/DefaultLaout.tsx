@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import Doku from "../DokuChat";
+import AIChatInterface from "../AIChat/AIChatInterface";
 // import { useEffect } from "react";
 // import axios from "axios";
 
@@ -64,17 +64,13 @@ export default function DefaultLayout({
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Star ===== --> */}
-          <main>
-            <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-              {children}
-              {/* {React.cloneElement(children as React.ReactElement, { profile })} */}
-            </div>
+          <main className="flex-1 flex flex-col">
+            <AIChatInterface />
           </main>
           {/* <!-- ===== Main Content End ===== --> */}
         </div>
         {/* <!-- ===== Content Area End ===== --> */}
       </div>
-      <Doku />
       {/* <!-- ===== Page Wrapper End ===== --> */}
     </>
   );

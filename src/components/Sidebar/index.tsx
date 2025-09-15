@@ -11,57 +11,46 @@ import { SVGIconProvider } from "@/constants/svgIconProvider";
 import LogoutModal from "../common/Modal/LogoutModal";
 import { useDisclosure } from "@nextui-org/react";
 import { useEffect } from "react";
+import { useChat } from "@/components/Context/ChatContext";
+import { getChatSessions } from "@/api/doku-chat";
 const menuGroups = [
   {
-    name: "MAIN MENU",
+    name: "AI ASSISTANT",
     menuItems: [
       {
-        icon: <SVGIconProvider iconName="dashboard" />,
-        label: "Dashboard",
+        icon: (
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+          </svg>
+        ),
+        label: "New Chat",
         route: "/",
+        isNewChat: true,
       },
       {
-        icon: <SVGIconProvider iconName="calendar" />,
-        label: "Appointments",
-        route: "/appointment",
+        icon: (
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+          </svg>
+        ),
+        label: "History",
+        route: "/history",
       },
       {
-        icon: <SVGIconProvider iconName="rupee" />,
-        label: "Payments",
-        route: "/payment/create-entry",
-      },
-      {
-        icon: <SVGIconProvider iconName="smalldocument" />,
-        label: "Reports",
-        route: "/reports",
-      },
-
-      {
-        icon: <SVGIconProvider iconName="patient" />,
-        label: "Patients",
-        route: "/patient",
-      },
-      {
-        icon: <SVGIconProvider iconName="employee" />,
-        label: "Employees",
-        route: "/employee",
-      },
-
-      {
-        icon: <SVGIconProvider iconName="reminder" />,
-        label: "Reminders",
-        route: "/reminders",
+        icon: (
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+        ),
+        label: "Back to App",
+        route: "https://portal.docpoc.app",
+        isExternal: true,
       },
     ],
   },
   {
-    name: "OTHERS",
+    name: "ACCOUNT",
     menuItems: [
-      {
-        icon: <SVGIconProvider iconName="setting" />,
-        label: "Settings",
-        route: "/settings",
-      },
       {
         icon: <SVGIconProvider iconName="sign-out" />,
         label: "Sign Out",
@@ -84,7 +73,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [loadingItem, setLoadingItem] = useState<string | null>(null); // Track which menu item is loading
 
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const { startNewChat } = useChat();
   // const [isNavigating, setIsNavigating] = useState(false);
+
+  const loadChatHistory = async () => {
+    try {
+      const sessions = await getChatSessions(10, 0);
+      setChatHistory(sessions);
+    } catch (error) {
+      console.error("Failed to load chat history:", error);
+    }
+  };
 
   useEffect(() => {
     const rootElement = document.documentElement;
@@ -128,18 +129,31 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   //   setLoadingItem(null); // Reset the loading state after navigation
   // };
 
-  const handleMenuItemClick = async (route: string, label: string) => {
-    if (pathname === route) return; // Don't navigate if already on the same route
+  const handleMenuItemClick = async (route: string, label: string, isNewChat: boolean = false, isExternal: boolean = false) => {
+    if (pathname === route && !isNewChat) return; // Don't navigate if already on the same route
 
     setLoadingItem(label);
-    // setIsNavigating(true);
-
-    try {
-      await router.push(route);
-    } catch (error) {
-      console.error("Navigation error:", error);
+    
+    if (isExternal) {
+      // Handle external link
+      window.open(route, '_blank');
       setLoadingItem(null);
-      // setIsNavigating(false);
+    } else if (isNewChat) {
+      // Handle new chat creation
+      try {
+        startNewChat();
+        await router.push("/");
+      } catch (error) {
+        console.error("Navigation error:", error);
+        setLoadingItem(null);
+      }
+    } else {
+      try {
+        await router.push(route);
+      } catch (error) {
+        console.error("Navigation error:", error);
+        setLoadingItem(null);
+      }
     }
   };
 
@@ -181,14 +195,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     <>
       <ClickOutside onClick={() => setSidebarOpen(false)}>
         <aside
-          className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden border-r border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark lg:static lg:translate-x-0 ${
+          className={`absolute left-0 top-0 z-9999 flex h-screen w-72 sm:w-80 flex-col overflow-y-hidden border-r border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark lg:static lg:translate-x-0 ${
             sidebarOpen
               ? "translate-x-0 duration-300 ease-linear"
               : "-translate-x-full"
           }`}
         >
           {/* <!-- SIDEBAR HEADER --> */}
-          <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 xl:py-10">
+          <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-5.5 lg:py-6.5 xl:py-10">
             <Link href="/">
               <Image
                 width={65}
@@ -241,7 +255,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
           <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
             {/* <!-- Sidebar Menu --> */}
-            <nav className="mt-1 px-4 lg:px-6">
+            <nav className="mt-1 px-3 sm:px-4 lg:px-6">
               {menuGroups.map((group, groupIndex) => (
                 <div key={groupIndex}>
                   <h3 className="mb-5 text-sm font-medium text-dark-4 dark:text-dark-6">
@@ -256,6 +270,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           label: string;
                           route: string;
                           children?: Array<{ label: string; route: string }>;
+                          isNewChat?: boolean;
+                          isExternal?: boolean;
                         },
                         menuIndex,
                       ) => {
@@ -282,6 +298,70 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               </span>
                             </button>
                           </li>
+                        ) : menuItem.label === "History" ? (
+                          <li key={menuIndex}>
+                            <button
+                              onClick={() => {
+                                setShowHistory(!showHistory);
+                                if (!showHistory) {
+                                  loadChatHistory();
+                                }
+                              }}
+                              className={`relative flex items-center gap-3 rounded-[7px] px-3.5 py-3 font-medium duration-300 ease-in-out w-full ${
+                                showHistory
+                                  ? "bg-primary/[.07] text-primary dark:bg-white/10 dark:text-white"
+                                  : "text-dark-4 hover:bg-gray-2 dark:text-gray-5 dark:hover:bg-white/10"
+                              }`}
+                            >
+                              {menuItem.icon}
+                              <span className="text-md font-medium">
+                                {menuItem.label}
+                              </span>
+                              <svg
+                                className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                                  showHistory ? "rotate-180" : ""
+                                }`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                            {showHistory && (
+                              <div className="ml-4 mt-2 space-y-2">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 px-3.5">
+                                  Recent Conversations
+                                </div>
+                                {chatHistory.length > 0 ? (
+                                  chatHistory.slice(0, 5).map((chat, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => {
+                                        // Handle chat selection
+                                        console.log("Selected chat:", chat);
+                                      }}
+                                      className="w-full text-left px-3.5 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                                    >
+                                      <div className="truncate">
+                                        {chat.title || "Untitled Chat"}
+                                      </div>
+                                      <div className="text-xs text-gray-400 dark:text-gray-500">
+                                        {new Date(chat.timestamp).toLocaleDateString()}
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 px-3.5 py-2">
+                                    No recent chats
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </li>
                         ) : (
                           <SidebarItem
                             key={menuIndex}
@@ -289,13 +369,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             isActive={isActive}
                             pageName={pageName}
                             setPageName={setPageName}
-                            loading={loadingItem === menuItem.label} // Pass loading state to SidebarItem
+                            loading={loadingItem === menuItem.label}
                             onClick={() =>
                               handleMenuItemClick(
                                 menuItem.route,
                                 menuItem.label,
+                                menuItem.isNewChat || false,
+                                menuItem.isExternal || false,
                               )
-                            } // Handle click
+                            }
                           />
                         );
                       },
