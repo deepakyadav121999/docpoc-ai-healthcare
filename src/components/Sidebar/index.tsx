@@ -20,7 +20,7 @@ const menuGroups = [
       {
         icon: (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
           </svg>
         ),
         label: "New Chat",
@@ -30,7 +30,11 @@ const menuGroups = [
       {
         icon: (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+              clipRule="evenodd"
+            />
           </svg>
         ),
         label: "History",
@@ -39,7 +43,7 @@ const menuGroups = [
       {
         icon: (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
         ),
         label: "Back to App",
@@ -80,10 +84,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   const loadChatHistory = async () => {
     try {
+      console.log("Loading chat history...");
       const sessions = await getChatSessions(10, 0);
-      setChatHistory(sessions);
+      console.log("Chat sessions loaded:", sessions);
+      setChatHistory(sessions || []);
     } catch (error) {
       console.error("Failed to load chat history:", error);
+      setChatHistory([]);
     }
   };
 
@@ -129,27 +136,60 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   //   setLoadingItem(null); // Reset the loading state after navigation
   // };
 
-  const handleMenuItemClick = async (route: string, label: string, isNewChat: boolean = false, isExternal: boolean = false) => {
-    if (pathname === route && !isNewChat) return; // Don't navigate if already on the same route
+  const handleMenuItemClick = async (
+    route: string,
+    label: string,
+    isNewChat: boolean = false,
+    isExternal: boolean = false,
+  ) => {
+    console.log("handleMenuItemClick called with:", {
+      route,
+      label,
+      isNewChat,
+      isExternal,
+      currentPath: pathname,
+    });
+
+    if (pathname === route && !isNewChat) {
+      console.log("Already on the same route, skipping navigation");
+      return; // Don't navigate if already on the same route
+    }
 
     setLoadingItem(label);
-    
+    console.log("Loading state set for:", label);
+
     if (isExternal) {
       // Handle external link
-      window.open(route, '_blank');
+      console.log("Opening external link:", route);
+      window.open(route, "_blank");
       setLoadingItem(null);
     } else if (isNewChat) {
       // Handle new chat creation
       try {
+        console.log("Starting new chat...");
         startNewChat();
-        await router.push("/");
+        console.log("New chat started successfully");
+        // Clear loading state immediately after starting new chat
+        setLoadingItem(null);
+        console.log("Loading state cleared");
+
+        // Only navigate if we're not already on the home page
+        if (pathname !== "/") {
+          console.log("Navigating to home page...");
+          await router.push("/");
+          console.log("Navigation completed");
+        } else {
+          console.log("Already on home page, no navigation needed");
+        }
       } catch (error) {
         console.error("Navigation error:", error);
         setLoadingItem(null);
       }
     } else {
       try {
+        console.log("Navigating to route:", route);
         await router.push(route);
+        console.log("Navigation completed");
       } catch (error) {
         console.error("Navigation error:", error);
         setLoadingItem(null);
@@ -343,14 +383,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                       onClick={() => {
                                         // Handle chat selection
                                         console.log("Selected chat:", chat);
+                                        // TODO: Load the selected chat conversation
+                                        // This would require implementing a function to load chat messages
+                                        // For now, just close the history panel
+                                        setShowHistory(false);
                                       }}
                                       className="w-full text-left px-3.5 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                                     >
                                       <div className="truncate">
-                                        {chat.title || "Untitled Chat"}
+                                        {chat.title ||
+                                          chat.sessionId ||
+                                          "Untitled Chat"}
                                       </div>
                                       <div className="text-xs text-gray-400 dark:text-gray-500">
-                                        {new Date(chat.timestamp).toLocaleDateString()}
+                                        {chat.timestamp
+                                          ? new Date(
+                                              chat.timestamp,
+                                            ).toLocaleDateString()
+                                          : "Unknown date"}
                                       </div>
                                     </button>
                                   ))
@@ -361,6 +411,35 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 )}
                               </div>
                             )}
+                          </li>
+                        ) : menuItem.label === "New Chat" ? (
+                          <li key={menuIndex}>
+                            <button
+                              onClick={() =>
+                                handleMenuItemClick(
+                                  menuItem.route,
+                                  menuItem.label,
+                                  menuItem.isNewChat || false,
+                                  menuItem.isExternal || false,
+                                )
+                              }
+                              disabled={loadingItem === menuItem.label}
+                              className={`relative flex items-center gap-3 rounded-[7px] px-3.5 py-3 font-medium duration-300 ease-in-out w-full ${
+                                isActive
+                                  ? "bg-primary/[.07] text-primary dark:bg-white/10 dark:text-white"
+                                  : "text-dark-4 hover:bg-gray-2 dark:text-gray-5 dark:hover:bg-white/10"
+                              }`}
+                            >
+                              {menuItem.icon}
+                              <span className="text-md font-medium">
+                                {menuItem.label}
+                              </span>
+                              {loadingItem === menuItem.label && (
+                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                                </div>
+                              )}
+                            </button>
                           </li>
                         ) : (
                           <SidebarItem

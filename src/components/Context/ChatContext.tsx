@@ -23,17 +23,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [view, setView] = useState<View>("chat");
 
   const startNewChat = () => {
+    console.log("ChatContext: Starting new chat...");
     setView("chat");
     const newSessionId = generateUUID();
+    console.log("ChatContext: Generated new session ID:", newSessionId);
     setSessionId(newSessionId);
-    setMessages([
-      {
-        id: "initial-" + Date.now(),
-        text: "Hello! I am Doku, your AI assistant. I will help you perform healthcare actions like creating appointments, sending reminders, generating reports, and managing patients. How can I help you today?",
-        sender: "doku",
-        timestamp: new Date().toISOString(),
-      },
-    ]);
+    const initialMessage = {
+      id: "initial-" + Date.now(),
+      text: "Hello! I am Doku, your AI assistant. I will help you perform healthcare actions like creating appointments, sending reminders, generating reports, and managing patients. How can I help you today?",
+      sender: "doku",
+      timestamp: new Date().toISOString(),
+    };
+    console.log("ChatContext: Setting initial message:", initialMessage);
+    setMessages([initialMessage]);
+    console.log("ChatContext: New chat started successfully");
   };
 
   return (

@@ -7,11 +7,13 @@ import AIChatInterface from "../AIChat/AIChatInterface";
 // import axios from "axios";
 
 // const API_URL = process.env.API_URL;
-export default function DefaultLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DefaultLayout(
+  {
+    // children,
+  }: {
+    children: React.ReactNode;
+  },
+) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // const [profile, setProfile] = useState<any>(null); // State to store profile data
